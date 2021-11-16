@@ -1,8 +1,8 @@
 import json
 import numpy as np
 import os
-from common.vecs import Orientation, vec3f, sum_vecs, rotate, get_rotation_matrix
-from common.api_call import call_api, generate_json
+from .common.vecs import Orientation, Vec, rotate, get_rotation_matrix
+from .common.api_call import call_api, generate_json
 from typing import Any, Dict, List, Tuple
 
 
@@ -12,7 +12,7 @@ if not os.path.exists('./block_definitions.json'):
     jsons = [ 
         generate_json(method="Definitions.BlockDefinitions")
         ]
-    res = json.loads(call_api(jsons=jsons))
+    res = call_api(jsons=jsons)[0]
     # transform to map of type:id
     block_definitions = {v['Type']:v for v in [entry['DefinitionId'] for entry in res['result']]}
     with open('./block_definitions.json', 'w') as f:
@@ -30,7 +30,7 @@ class Block:
         self.block_type = block_type
         self.orientation_forward = orientation_forward.value
         self.orientation_up = orientation_up.value
-        self.position = vec3f(0., 0., 0.)
+        self.position = Vec.v3f(0., 0., 0.)
     
     def __str__(self) -> str:
         return f'{self.block_type} at {self.position}; OF {self.orientation_forward}; OU {self.orientation_up}'
@@ -53,9 +53,9 @@ def get_block_dim(block: Block) -> float:
 
 class Structure:
     def __init__(self,
-                 origin: Dict[str, Any],
-                 orientation_forward: Dict[str, Any],
-                 orientation_up: Dict[str, Any],
+                 origin: Vec,
+                 orientation_forward: Vec,
+                 orientation_up: Vec,
                  dimensions: Tuple[int, int, int] = (10, 10, 10)) -> None:
         self._VALUE = 0.5
         self.origin_coords = origin
@@ -70,7 +70,7 @@ class Structure:
     def add_block(self,
                   block: Block,
                   grid_position: Tuple[int, int, int]) -> None:
-        k, j, i = grid_position
+        i, j, k = grid_position
         assert self._structure[i][j][k] == 0.5, f'Error when attempting to place block {block.block_type}: space already occupied.'
         block_size = get_block_size(block)
         if block_size != 's':
@@ -86,29 +86,29 @@ class Structure:
         dx, dy, dz = 0., 0., 0.
         if i > 0:
             for e in self._structure[0:i, j, k]:
-                dz += get_block_dim(self._blocks[e]) if e > self._VALUE else e
+                dx += get_block_dim(self._blocks[e]) if e > self._VALUE else e
         if j > 0:
             for e in self._structure[i, 0:j, k]:
                 dy += get_block_dim(self._blocks[e]) if e > self._VALUE else e
         if k > 0:
             for e in self._structure[i, j, 0:k]:
-                dx += get_block_dim(self._blocks[e]) if e > self._VALUE else e        
-        block.position = sum_vecs(self.origin_coords, vec3f(dx, dy, dz))
+                dz += get_block_dim(self._blocks[e]) if e > self._VALUE else e        
+        block.position = self.origin_coords.sum(Vec.v3f(dx, dy, dz))
         # update block orientation
 #         block.orientation_forward = rotate(self.rotation_matrix, block.orientation_forward)
 #         block.orientation_up = rotate(self.rotation_matrix, block.orientation_up)
     
     def get_all_blocks(self) -> List[Block]:
-        return self._blocks.values()
+        return list(self._blocks.values())
 
 def place_blocks(blocks: List[Block]) -> None:
     # prepare jsons
     jsons = [generate_json(method="Admin.Blocks.PlaceAt",
                            params={
                                "blockDefinitionId": block_definitions[block.block_type],
-                               "position": block.position,
-                               "orientationForward": block.orientation_forward,
-                               "orientationUp": block.orientation_up
+                               "position": block.position.as_dict(),
+                               "orientationForward": block.orientation_forward.as_dict(),
+                               "orientationUp": block.orientation_up.as_dict()
                            }) for block in blocks]
     # place blocks
     call_api(jsons=jsons)

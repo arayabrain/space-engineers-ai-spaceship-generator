@@ -1,8 +1,9 @@
-from common.api_call import get_base_values
-from common.vecs import Orientation
-from structure import *
+from pcgsepy.common.api_call import GameMode, get_base_values, toggle_gamemode
+from pcgsepy.common.vecs import Orientation
+from pcgsepy.structure import *
 
 def main():
+    toggle_gamemode(mode=GameMode.PLACING)
     base_position, orientation_forward, orientation_up = get_base_values()
     structure = Structure(origin=base_position,
                         orientation_forward=orientation_forward,
@@ -18,8 +19,8 @@ def main():
                                     orientation_up=Orientation.UP
                                     ),
                                     grid_position=(0, 5, 0))
-
     place_blocks(structure.get_all_blocks())
+    toggle_gamemode(mode=GameMode.EVALUATING)
 
 if __name__=="__main__":
     main()

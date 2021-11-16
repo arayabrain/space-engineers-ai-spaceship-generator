@@ -1,8 +1,18 @@
+from enum import Enum
 import json
 import random
 import socket
 import time
 from typing import Any, Dict, List, Optional, Tuple
+
+from .vecs import Vec
+from ..config import HOST, PORT
+
+
+class GameMode(Enum):
+    PLACING = False
+    EVALUATING = True
+
 
 def generate_json(method: str,
                   params: Optional[List[Any]] = None) -> Dict[str, Any]:
@@ -60,13 +70,13 @@ def recv_with_timeout(s: socket.socket,
     # join all parts to make final string
     return ''.join(total_data)
 
-def call_api(host: str,
-             port: int,
-             jsons: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def call_api(host: str = HOST,
+             port: int = PORT,
+             jsons: List[Dict[str, Any]] = {}) -> List[Dict[str, Any]]:
     # open socket for communication
     s = socket.socket(family=socket.AF_INET,
                       type=socket.SOCK_STREAM)
-    s.connect((host, port))    
+    s.connect((host, port))
     # send methods as compacted JSON bytearray
     s.sendall(compactify_jsons(jsons=jsons).encode('utf-8'))
     # get response
@@ -76,3 +86,16 @@ def call_api(host: str,
     # due to TCP streming packets, it's possible some JSON-RPC responses are the same;
     # workaround: identify unique JSON-RPC responses by unique id
     return [json.loads(x) for x in list(set(res.strip().split('\r\n')))]
+
+def get_base_values() -> Tuple[Vec, Vec, Vec]:
+    obs = call_api(jsons=[generate_json(method="Observer.Observe")])[0]
+    base_position = Vec.from_json(obs['result']['Position'])
+    orientation_forward = Vec.from_json(obs['result']['OrientationForward'])
+    orientation_up = Vec.from_json(obs['result']['Camera']['OrientationUp'])
+    return base_position, orientation_forward, orientation_up
+
+def toggle_gamemode(mode: GameMode) -> None:
+    # "we plan to change the API and rename this function in near future" (@Karel Hovorka)
+    # Switch between `GameMode.PLACING` (fast) and `GameMode.EVALUATING` (slow).
+    call_api(jsons=[generate_json(method="Admin.SetFrameLimitEnabled",
+                                  params=[mode.value])])
