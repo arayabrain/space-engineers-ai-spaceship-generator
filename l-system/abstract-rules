@@ -1,2 +1,16 @@
 begin 1 cockpit+corridor
-+corridor 1 +corridor+corridor
+# Corridor along X
++corridor 0.34 +corridor+corridor
++corridor 0.33 +corridor[!corridor]
++corridor 0.33 +corridor[>corridor]
+#+corridor 0.25 +corridor+engine
+# Corridor along Y
+!corridor 0.34 !corridor[+corridor]
+!corridor 0.33 !corridor!corridor
+!corridor 0.33 !corridor[>corridor]
+#!corridor 0.25 !corridor!engine
+# Corridor along Z
+>corridor 0.34 >corridor[+corridor]
+>corridor 0.33 >corridor[!corridor]
+>corridor 0.33 >corridor>corridor
+#>corridor 0.25 >corridor>engine
