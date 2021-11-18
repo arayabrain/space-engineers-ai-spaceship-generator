@@ -1,7 +1,4 @@
-cockpit 1 CFU++++
-#+corridor 1 +[b<b<b<b<b!b!b!b!b!b>b>b>b>b?b?b?b?b]
-+corridor 1 +[BFU+++++BFU+++++BFU!!!!!BFU!!!!!BFU<<<<<BFU<<<<<BFU?????BFU?????BFU>>>>>BFU]+++++
-#!corridor 1 !B!!!!!
-!corridor 1 !!!!!
-#>corridor 1 >B>>>>>
->corridor 1 >>>>>
+cockpit 1 LargeBlockCockpitFU++++
++corridor 1 +rotXccwY[LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU<<<<<LargeBlockArmorBlockFU<<<<<LargeBlockArmorBlockFU?????LargeBlockArmorBlockFUrotZcwY?????LargeBlockArmorBlockFU>>>>>LargeBlockArmorBlockFU]+++++
+>corridor 1 >
+!corridor 1 !
