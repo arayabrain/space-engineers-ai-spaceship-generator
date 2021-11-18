@@ -3,6 +3,7 @@ import numpy as np
 import os
 from .common.vecs import Orientation, Vec, rotate, get_rotation_matrix
 from .common.api_call import call_api, generate_json
+from .config import FUSE_OVERLAPS
 from typing import Any, Dict, List, Tuple
 
 
@@ -70,29 +71,58 @@ class Structure:
         self.dimensions = dimensions
         self._structure: np.ndarray = 0.5 * np.ones(dimensions)  # keeps track of occupied spaces
         self._blocks: Dict[float, Block] = {}  # keeps track of blocks info
-            
+    
+    @property
+    def starting_coords(self) -> Tuple[int, int, int]:
+        x, y, z = self.dimensions
+        return Vec.v3i(x // 2, y // 2, z // 2)
+
     def add_block(self,
                   block: Block,
                   grid_position: Tuple[int, int, int]) -> None:
         i, j, k = grid_position
+        if FUSE_OVERLAPS and self._structure[i][j][k] != 0.5: return
         assert self._structure[i][j][k] == 0.5, f'Error when attempting to place block {block.block_type}: space already occupied.'
         r = block.size
         if r != 1:
             # update neighbouring cells
             n, target = np.sum(self._structure[i:i+r, j:j+r, k:k+r]) - self._VALUE, self._VALUE * ((r ** 3) - 1)
+            if FUSE_OVERLAPS and n != target: return
             assert n == target, f'Error when placing block {block.block_type}: block would intersect already existing block(s).'
         block_id = float(self._VALUE + len(self._blocks.keys()) + 1)  # unique sequential block id as key in dict
         self._structure[i:i+r, j:j+r, k:k+r] = block_id  # volume of block id
-        self._blocks[block_id] = block
+        self._blocks[block_id] = {'block': block,
+                                  'grid_idxs': (i, j, k)}
+        self._update_block_pos_rot(block, (i, j, k))
+
+    def _update_block_pos_rot(self,
+                             block: Block,
+                             grid_coords: Tuple[int, int, int]) -> None:
+        i, j, k = grid_coords
         # update block position
         dx = self._compute_offset('x', i, j, k)
         dy = self._compute_offset('y', i, j, k)
         dz = self._compute_offset('z', i, j, k)
         block.position = self.origin_coords.sum(Vec.v3f(dx, dy, dz))
         # update block orientation
-#         block.orientation_forward = rotate(self.rotation_matrix, block.orientation_forward)
-#         block.orientation_up = rotate(self.rotation_matrix, block.orientation_up)
+        # block.orientation_forward = rotate(self.rotation_matrix, block.orientation_forward)
+        # block.orientation_up = rotate(self.rotation_matrix, block.orientation_up)
     
+    def update(self,
+               origin: Vec,
+               orientation_forward: Vec,
+               orientation_up: Vec) -> None:
+        # update structure position and orientation
+        self.origin_coords = origin
+        self.orientation_forward = orientation_forward
+        self.orientation_up = orientation_up
+        # update all blocks accordingly
+        blocks = self.get_all_blocks()
+        grid_coords = [x['grid_idxs'] for x in self._blocks.values()]
+        for block, coords in zip(blocks, grid_coords):
+            self._update_block_pos_rot(block=block,
+                                       grid_coords=coords)
+
     def _compute_offset(self,
                         dimension: str,
                         i: int = 0,
@@ -111,15 +141,15 @@ class Structure:
         while n < len(vs):
             v = vs[n]
             if v > self._VALUE:
-                offset +=  self._blocks[v].dim
-                n += self._blocks[v].size
+                offset +=  self._blocks[v]['block'].dim
+                n += self._blocks[v]['block'].size
             else:
                 offset += v
                 n += 1
         return offset
     
     def get_all_blocks(self) -> List[Block]:
-        return list(self._blocks.values())
+        return [b['block'] for b in self._blocks.values()]
 
 def place_blocks(blocks: List[Block]) -> None:
     # prepare jsons
