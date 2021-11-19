@@ -1,0 +1,10 @@
+# axis frame for testing
+#axis 1 XYZ
+# SPACESHIP
+# Starting condition
+begin 1 eye
+eye 0.8 eyeeye
+eye 0.05 eyeRotXcwY[eye]
+eye 0.05 eyeRotXccwY[eye]
+eye 0.05 eyeRotXcwZ[eye]
+eye 0.05 eyeRotXccwZ[eye]

@@ -1,0 +1,7 @@
+# AXIS for testing
+#X 1 [+SmallBlockArmorBlockFU+SmallBlockArmorBlockFU---SmallBlockArmorBlockFU]
+#Y 1 [!SmallBlockArmorBlockFU!SmallBlockArmorBlockFU!SmallBlockArmorBlockFU????SmallBlockArmorBlockFU]
+#Z 1 [>SmallBlockArmorBlockFU>SmallBlockArmorBlockFU>SmallBlockArmorBlockFU>SmallBlockArmorBlockFU<<<<<SmallBlockArmorBlockFU]
+# SPACESHIP
+cockpit 1 LargeBlockCockpitFU+++++
+eye 1 LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU?????LargeBlockArmorBlockFU?????LargeBlockArmorBlockFU+++++++++++++++
