@@ -1,6 +1,9 @@
 import json
 import numpy as np
 import os
+import matplotlib.pyplot as plt
+from mpl_toolkits import mplot3d
+
 from .common.vecs import Orientation, Vec, rotate, get_rotation_matrix
 from .common.api_call import call_api, generate_json
 from .config import FUSE_OVERLAPS
@@ -53,7 +56,6 @@ class Block:
     
     def __repr__(self) -> str:
         return f'{self.block_type} at {self.position}; OF {self.orientation_forward}; OU {self.orientation_up}'
-
 
 
 class Structure:
@@ -151,7 +153,9 @@ class Structure:
     def get_all_blocks(self) -> List[Block]:
         return [b['block'] for b in self._blocks.values()]
 
-def place_blocks(blocks: List[Block]) -> None:
+
+def place_blocks(blocks: List[Block],
+                 sequential: False) -> None:
     # prepare jsons
     jsons = [generate_json(method="Admin.Blocks.PlaceAt",
                            params={
@@ -161,4 +165,29 @@ def place_blocks(blocks: List[Block]) -> None:
                                "orientationUp": block.orientation_up.as_dict()
                            }) for block in blocks]
     # place blocks
-    call_api(jsons=jsons)
+    if not sequential:
+        call_api(jsons=jsons)
+    else:
+        for j in jsons:
+            call_api(jsons=j)
+
+def plot_structure(structure: Structure,
+                   title: str,
+                   axis_limits: Tuple[int, int, int],
+                   title_len: int = 30,
+                   save: bool = False) -> None:
+        ax = plt.axes(projection='3d')
+        arr = structure._structure != structure._VALUE
+        x, y, z = np.nonzero(arr)
+        ax.scatter(x, y, z, c=np.ones(len(x)), cmap='jet', linewidth=0.1)
+        ax.set_xlim3d(0, axis_limits[0])
+        ax.set_ylim3d(0, axis_limits[1])
+        ax.set_zlim3d(0, axis_limits[2])
+        ax.set_xlabel("$\\vec{x}$")
+        ax.set_ylabel("$\\vec{y}$")
+        ax.set_zlabel("$\\vec{z}$")
+        title = title if len(title) <= title_len else title[:title_len - 3] + '...'
+        plt.title(title)
+        if save:
+            plt.savefig(f'{title}.png', transparent=True)
+        plt.show()
