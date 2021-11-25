@@ -3,5 +3,18 @@
 #Y 1 [!SmallBlockArmorBlockFU!SmallBlockArmorBlockFU!SmallBlockArmorBlockFU????SmallBlockArmorBlockFU]
 #Z 1 [>SmallBlockArmorBlockFU>SmallBlockArmorBlockFU>SmallBlockArmorBlockFU>SmallBlockArmorBlockFU<<<<<SmallBlockArmorBlockFU]
 # SPACESHIP
-cockpit 1 LargeBlockCockpitFU+++++
-eye 1 LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU?????LargeBlockArmorBlockFU?????LargeBlockArmorBlockFU+++++++++++++++
+#eye 1 LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU?????LargeBlockArmorBlockFU?????LargeBlockArmorBlockFU+++++++++++++++
+# cockpits
+# simple cockpit
+cockpit 0.25 +++++LargeBlockCockpitFU<<<<<
+# square-edges cockpit
+cockpit 0.40 LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU!!!!!LargeBlockCockpitFU?????+++++LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU?????LargeBlockArmorBlockFU?????<<<<<
+# rounded-edges cockpit
+cockpit 0.35 LargeBlockArmorSlopeUL+++++LargeBlockArmorBlockFU!!!!!LargeBlockCockpitFU?????+++++LargeBlockArmorSlopeUR!!!!!LargeBlockArmorBlockFU!!!!!LargeBlockArmorSlopeDR-----LargeBlockArmorBlockFU-----LargeBlockArmorSlopeDL?????LargeBlockArmorBlockFU?????<<<<<
+# corridors
+# square corridor
+corridor 0.5 LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU?????LargeBlockArmorBlockFU?????<<<<<
+# rounded corridor
+corridor 0.5 LargeBlockArmorSlopeUL+++++LargeBlockArmorBlockFU+++++LargeBlockArmorSlopeUR!!!!!LargeBlockArmorBlockFU!!!!!LargeBlockArmorSlopeDR-----LargeBlockArmorBlockFU-----LargeBlockArmorSlopeDL?????LargeBlockArmorBlockFU?????<<<<<
+# thrusters
+thruster 1 LargeBlockSmallHydrogenThrustBU++++++++++LargeBlockSmallHydrogenThrustBU!!!!!!!!!!LargeBlockSmallHydrogenThrustBU----------LargeBlockSmallHydrogenThrustBU??????????LargeBlockSmallHydrogenThrustBU<<<<<

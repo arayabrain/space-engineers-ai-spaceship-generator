@@ -2,9 +2,14 @@
 #axis 1 XYZ
 # SPACESHIP
 # Starting condition
-begin 1 eye
-eye 0.6 eyeeye
-eye 0.1 eyeRotXcwY[eye]
-eye 0.1 eyeRotXccwY[eye]
-eye 0.1 eyeRotXcwZ[eye]
-eye 0.1 eyeRotXccwZ[eye]
+#begin 1 eye
+#eye 0.6 eyeeye
+#eye 0.1 eyeRotXcwY[eye]
+#eye 0.1 eyeRotXccwY[eye]
+#eye 0.1 eyeRotXcwZ[eye]
+#eye 0.1 eyeRotXccwZ[eye]
+begin 1 cockpitcorridor
+corridor] 1 corridorthruster]
+corridor 0.7 corridorcorridor
+corridor 0.15 corridor?????RotZcwY[corridor]!!!!!
+corridor 0.15 corridor-----RotZcwX[corridor]+++++
