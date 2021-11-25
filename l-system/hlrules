@@ -3,8 +3,8 @@
 # SPACESHIP
 # Starting condition
 begin 1 eye
-eye 0.8 eyeeye
-eye 0.05 eyeRotXcwY[eye]
-eye 0.05 eyeRotXccwY[eye]
-eye 0.05 eyeRotXcwZ[eye]
-eye 0.05 eyeRotXccwZ[eye]
+eye 0.6 eyeeye
+eye 0.1 eyeRotXcwY[eye]
+eye 0.1 eyeRotXccwY[eye]
+eye 0.1 eyeRotXcwZ[eye]
+eye 0.1 eyeRotXccwZ[eye]
