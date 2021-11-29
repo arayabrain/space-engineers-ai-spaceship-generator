@@ -23,7 +23,7 @@ def convert_xml_to_structure(root_node: ET.Element,
                             orientation_forward=Orientation.FORWARD.value,
                             orientation_up=Orientation.UP.value,
                             dimensions=(struct_dim, struct_dim, struct_dim))
-    for grid in root_node.findall('.//{*}CubeGrid'):
+    for grid in root_node.findall('.//CubeGrid'):
         grid_size = None
         for child in grid:
             if child.tag == 'GridSizeEnum':
