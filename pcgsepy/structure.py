@@ -4,12 +4,11 @@ import os
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 
-from .common.vecs import Orientation, Vec, rotate
+from .config import *
+from .common.vecs import Orientation, Vec
 from .common.api_call import call_api, generate_json
-from .config import FUSE_OVERLAPS
 from .lsystem.constraints import HLStructure, build_polyhedron
 from typing import Any, Dict, List, Tuple
-
 
 # block_definitions as a module-level variable
 if not os.path.exists('./block_definitions.json'):
@@ -58,8 +57,7 @@ class Structure:
     def __init__(self,
                  origin: Vec,
                  orientation_forward: Vec,
-                 orientation_up: Vec,
-                 dimensions: Tuple[int, int, int] = (10, 10, 10)) -> None:
+                 orientation_up: Vec) -> None:
         # self._structure = HLStructure()  # keeps track of occupied spaces
         self._VALUE = 0.5
         self.origin_coords = origin
@@ -153,9 +151,10 @@ class Structure:
             legend[1][i] = ks[v - 1]
         ax.legend(*legend, bbox_to_anchor=(1.2, 1),
                   loc="upper left", title="Block types")
-        ax.set_xlim3d(0, max_x + 5)
-        ax.set_ylim3d(0, max_y + 5)
-        ax.set_zlim3d(0, max_z + 5)
+        axis_limit = max(max_x + 5, max_y + 5, max_z + 5)
+        ax.set_xlim3d(0, axis_limit)
+        ax.set_ylim3d(0, axis_limit)
+        ax.set_zlim3d(0, axis_limit)
         ax.set_xlabel("$\\vec{x}$")
         ax.set_ylabel("$\\vec{y}$")
         ax.set_zlabel("$\\vec{z}$")

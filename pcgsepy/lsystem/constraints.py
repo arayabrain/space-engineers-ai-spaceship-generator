@@ -1,7 +1,7 @@
 from enum import Enum, auto
 from Geometry3D import *
 import itertools
-from typing import Callable
+from typing import Any, Callable, Dict
 
 from ..common.vecs import Vec
 
@@ -21,12 +21,13 @@ class ConstraintHandler:
                  name: str,
                  level: ConstraintLevel,
                  when: ConstraintTime,
-                 f: Callable[[str], bool]):
+                 f: Callable[[str, Dict[str, Any]], bool]):
         self.name = name
         self.level = level
         self.when = when
         self.constraint = f
-
+        self.extra_args = {}
+    
     def __repr__(self) -> str:
         return f'Constraint {self.name} ({self.level.name}) at {self.when.name}'
 
@@ -41,13 +42,14 @@ class HLStructure:
         self.polygons.append(p)
 
     def test_intersections(self) -> bool:
+        # We can maybe save some time by not checking ALL combinations of polygons
         for p1, p2 in list(itertools.combinations(self.polygons, 2)):
             i = intersection(p1, p2)
             # faces on the same plane are ok, we don't want intersections
             if i is not None and type(i) == ConvexPolyhedron:
                 self.intersections.append(i)
         return len(self.intersections) > 0
-
+        
     def show(self) -> None:
         r = Renderer()
         for p in self.polygons:

@@ -62,6 +62,9 @@ class Vec:
     def __str__(self) -> str:
         return str(self.as_dict())
     
+    def __repr__(self) -> str:
+        return str(self.as_dict())
+    
     def largest_dim(self) -> Any:
         if self.x >= self.y and (self.z is None or self.x >= self.z):
             return self.x
@@ -102,7 +105,6 @@ class Vec:
         else:
             return (self.x, self.y)
 
-
 class Orientation(Enum):
     UP = Vec.v3i(0, 1, 0)
     DOWN = Vec.v3i(0, -1, 0)
@@ -111,6 +113,30 @@ class Orientation(Enum):
     FORWARD = Vec.v3i(0, 0, -1)
     BACKWARD = Vec.v3i(0, 0, 1)
 
+orientation_from_str = {
+    'U': Orientation.UP,
+    'D': Orientation.DOWN,
+    'R': Orientation.RIGHT,
+    'L': Orientation.LEFT,
+    'F': Orientation.FORWARD,
+    'B': Orientation.BACKWARD
+}
+
+def orientation_from_vec(vec) -> Orientation:
+    if vec.x == 0:
+        if vec.y == 0:
+            if vec.z == 1:
+                return Orientation.FORWARD
+            else:
+                return Orientation.BACKWARD
+        elif vec.y == 1:
+            return Orientation.UP
+        else:
+            return Orientation.DOWN
+    elif vec.x == 1:
+        return Orientation.RIGHT
+    else:
+        return Orientation.LEFT
 
 character_camera_dist = Vec.v3f(0., 1.6369286, 0.)
 
@@ -123,8 +149,8 @@ character_camera_dist = Vec.v3f(0., 1.6369286, 0.)
 #     x = np.cross(z, y)
 #     return np.column_stack((x, y, -z))
 
-def rotate(rotation_matrix: np.ndarray,
-           vector: Vec) -> Vec:
-    v = vector.as_array()
-    v = np.dot(rotation_matrix, v)
-    return Vec.from_np(v)
+# def rotate(rotation_matrix: np.ndarray,
+#            vector: Vec) -> Vec:
+#     v = vector.as_array()
+#     v = np.dot(rotation_matrix, v)
+#     return Vec.from_np(v)

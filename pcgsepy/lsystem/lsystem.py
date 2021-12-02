@@ -4,8 +4,10 @@ from .rules import RuleMaker
 from .parser import LParser
 from .solver import LSolver
 from .constraints import ConstraintHandler
+from .structure_maker import StructureMaker
 from ..structure import Structure
 from ..common.vecs import Orientation, Vec
+
 
 class LSystem:
     def __init__(self,
@@ -31,14 +33,12 @@ class LSystem:
     
     def apply_rules(self,
                     starting_axiom: str,
-                    structure_dims: Tuple[int, int, int],
                     iterations: int = 1,
                     make_graph: bool = False) -> Structure:        
-        base_position, orientation_forward, orientation_up = Vec.v3f(0., 0., 0.), Orientation.FORWARD.value, Orientation.UP.value
+        base_position, orientation_forward, orientation_up = Vec.v3i(0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
         structure = Structure(origin=base_position,
                               orientation_forward=orientation_forward,
-                              orientation_up=orientation_up,
-                              dimensions=structure_dims)
+                              orientation_up=orientation_up)
         print('### HL SOLVER ###')
         hl_axiom = self.hlsolver.solve(axiom=starting_axiom,
                                        iterations=iterations,
@@ -47,8 +47,9 @@ class LSystem:
         ll_axiom = self.llsolver.solve(axiom=hl_axiom,
                                        iterations=1)   
                        
-        self.llsolver.fill_structure(structure=structure,
-                                     axiom=ll_axiom)
+        structure = StructureMaker(atoms_alphabet=self.llsolver.atoms_alphabet,
+                                   position=base_position).fill_structure(structure=structure,
+                                                                          axiom=ll_axiom)
         
         structure.sanify()
         
