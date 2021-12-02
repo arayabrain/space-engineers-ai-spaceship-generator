@@ -114,14 +114,14 @@ class Orientation(Enum):
 
 character_camera_dist = Vec.v3f(0., 1.6369286, 0.)
 
-def get_rotation_matrix(forward: Vec,
-                        up: Vec) -> np.ndarray:
-    f = forward.as_array()
-    u = up.as_array()
-    z = f / np.sqrt(np.dot(f, f))
-    y = u / np.sqrt(np.dot(u, u))
-    x = np.cross(z, y)
-    return np.column_stack((x, y, -z))
+# def get_rotation_matrix(forward: Vec,
+#                         up: Vec) -> np.ndarray:
+#     f = forward.as_array()
+#     u = up.as_array()
+#     z = f / np.sqrt(np.dot(f, f))
+#     y = u / np.sqrt(np.dot(u, u))
+#     x = np.cross(z, y)
+#     return np.column_stack((x, y, -z))
 
 def rotate(rotation_matrix: np.ndarray,
            vector: Vec) -> Vec:

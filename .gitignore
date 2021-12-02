@@ -1,4 +1,5 @@
 .ipynb_checkpoints/*
+.virtual_documents/*
 __pycache__/*
 PCGSEPy.egg-info/*
 block_definitions.json

@@ -4,32 +4,28 @@ import os
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 
-from .common.vecs import Orientation, Vec, rotate, get_rotation_matrix
+from .common.vecs import Orientation, Vec, rotate
 from .common.api_call import call_api, generate_json
 from .config import FUSE_OVERLAPS
+from .lsystem.constraints import HLStructure, build_polyhedron
 from typing import Any, Dict, List, Tuple
 
 
 # block_definitions as a module-level variable
 if not os.path.exists('./block_definitions.json'):
     # poll API for block definition ids
-    jsons = [ 
+    jsons = [
         generate_json(method="Definitions.BlockDefinitions")
-        ]
+    ]
     res = call_api(jsons=jsons)[0]
     # transform to map of type:id
-    block_definitions = {v['Type']:v for v in [entry['DefinitionId'] for entry in res['result']]}
+    block_definitions = {v['Type']: v for v in [
+        entry['DefinitionId'] for entry in res['result']]}
     with open('./block_definitions.json', 'w') as f:
         json.dump(block_definitions, f)
 else:
     with open('./block_definitions.json', 'r') as f:
         block_definitions = json.load(f)
-
-_blocks_dims = {
-    's': 0.5,  # small
-    'n': 1.,  # normal
-    'l': 2.5  # large
-}
 
 _blocks_sizes = {
     's': 1,
@@ -47,13 +43,13 @@ class Block:
         self.orientation_forward = orientation_forward.value
         self.orientation_up = orientation_up.value
         self.position = Vec.v3f(0., 0., 0.)
-        self._type = 's' if self.block_type.startswith('Small') else ('l'if self.block_type.startswith('Large') else 'n')
-        self.dim = _blocks_dims[self._type]
+        self._type = 's' if self.block_type.startswith('Small') else (
+            'l'if self.block_type.startswith('Large') else 'n')
         self.size = _blocks_sizes[self._type]
-    
+
     def __str__(self) -> str:
         return f'{self.block_type} at {self.position}; OF {self.orientation_forward}; OU {self.orientation_up}'
-    
+
     def __repr__(self) -> str:
         return f'{self.block_type} at {self.position}; OF {self.orientation_forward}; OU {self.orientation_up}'
 
@@ -64,52 +60,61 @@ class Structure:
                  orientation_forward: Vec,
                  orientation_up: Vec,
                  dimensions: Tuple[int, int, int] = (10, 10, 10)) -> None:
+        # self._structure = HLStructure()  # keeps track of occupied spaces
         self._VALUE = 0.5
         self.origin_coords = origin
         self.orientation_forward = orientation_forward
         self.orientation_up = orientation_up
-        self.rotation_matrix = get_rotation_matrix(forward=self.orientation_forward,
-                                                   up=self.orientation_up)
-        self.dimensions = dimensions
-        self._structure: np.ndarray = 0.5 * np.ones(dimensions)  # keeps track of occupied spaces
-        self._blocks: Dict[float, Block] = {}  # keeps track of blocks info
-    
-    @property
-    def starting_coords(self) -> Tuple[int, int, int]:
-        x, y, z = self.dimensions
-        return Vec.v3i(x // 2, y // 2, z // 2)
+        # keeps track of blocks info
+        self._blocks: Dict[Tuple(int, int, int), Block] = {}
 
     def add_block(self,
                   block: Block,
                   grid_position: Tuple[int, int, int]) -> None:
         i, j, k = grid_position
-        if FUSE_OVERLAPS and self._structure[i][j][k] != 0.5: return
-        assert self._structure[i][j][k] == 0.5, f'Error when attempting to place block {block.block_type}: space already occupied.'
-        r = block.size
-        if r != 1:
-            # update neighbouring cells
-            n, target = np.sum(self._structure[i:i+r, j:j+r, k:k+r]) - self._VALUE, self._VALUE * ((r ** 3) - 1)
-            if FUSE_OVERLAPS and n != target: return
-            assert n == target, f'Error when placing block {block.block_type}: block would intersect already existing block(s).'
-        block_id = float(self._VALUE + len(self._blocks.keys()) + 1)  # unique sequential block id as key in dict
-        self._structure[i:i+r, j:j+r, k:k+r] = block_id  # volume of block id
-        self._blocks[block_id] = {'block': block,
-                                  'grid_idxs': (i, j, k)}
-        self._update_block_pos_rot(block, (i, j, k))
+        # cube = build_polyhedron(position=Vec.v3i(i, j, k),
+        #                         dims=Vec.v3i(block.size * self._VALUE,
+        #                                      block.size * self._VALUE,
+        #                                      block.size * self._VALUE))
+        # self._structure.add_hl_poly(p=cube)
+        # if self._structure.test_intersections():
+        #     raise Exception(f'Error when placing block {block.block_type}: block intersect with existing block(s))')
+        self._blocks[(i, j, k)] = block
 
-    def _update_block_pos_rot(self,
-                             block: Block,
-                             grid_coords: Tuple[int, int, int]) -> None:
-        i, j, k = grid_coords
-        # update block position
-        dx = self._compute_offset('x', i, j, k)
-        dy = self._compute_offset('y', i, j, k)
-        dz = self._compute_offset('z', i, j, k)
-        block.position = self.origin_coords.sum(Vec.v3f(dx, dy, dz))
-        # update block orientation
-        # block.orientation_forward = rotate(self.rotation_matrix, block.orientation_forward)
-        # block.orientation_up = rotate(self.rotation_matrix, block.orientation_up)
-    
+    @property
+    def _min_dims(self) -> Tuple[int, int, int]:
+        min_x, min_y, min_z = 0, 0, 0
+        for x, y, z in self._blocks.keys():
+            if x < min_x:
+                min_x = x
+            if y < min_y:
+                min_y = y
+            if z < min_z:
+                min_z = z
+        return min_x, min_y, min_z
+
+    @property
+    def _max_dims(self) -> Tuple[int, int, int]:
+        max_x, max_y, max_z = 0, 0, 0
+        for x, y, z in self._blocks.keys():
+            if x > max_x:
+                max_x = x
+            if y > max_y:
+                max_y = y
+            if z > max_z:
+                max_z = z
+        return max_x, max_y, max_z
+
+    def sanify(self) -> None:
+        min_x, min_y, min_z = self._min_dims
+        updated_blocks = {}
+        for x, y, z in self._blocks.keys():
+            block = self._blocks[(x, y, z)]
+            self.origin_coords.sum(
+                Vec.v3i(x=x - min_x, y=y - min_y, z=z - min_z))
+            updated_blocks[(x - min_x, y - min_y, z - min_z)] = block
+        self._blocks = updated_blocks
+
     def update(self,
                origin: Vec,
                orientation_forward: Vec,
@@ -119,39 +124,47 @@ class Structure:
         self.orientation_forward = orientation_forward
         self.orientation_up = orientation_up
         # update all blocks accordingly
-        blocks = self.get_all_blocks()
-        grid_coords = [x['grid_idxs'] for x in self._blocks.values()]
-        for block, coords in zip(blocks, grid_coords):
-            self._update_block_pos_rot(block=block,
-                                       grid_coords=coords)
+        self.sanify()
 
-    def _compute_offset(self,
-                        dimension: str,
-                        i: int = 0,
-                        j: int = 0,
-                        k: int = 0) -> float:
-        if dimension == 'x' and i > 0:
-            vs = self._structure[:i, j, k]
-        elif dimension == 'y' and j > 0:
-            vs = self._structure[i, :j, k]
-        elif dimension == 'z' and k > 0:
-            vs = self._structure[i, j, :k]
-        else:
-            return 0.
-        n = 0
-        offset = 0.
-        while n < len(vs):
-            v = vs[n]
-            if v > self._VALUE:
-                offset +=  self._blocks[v]['block'].dim
-                n += self._blocks[v]['block'].size
-            else:
-                offset += v
-                n += 1
-        return offset
-    
     def get_all_blocks(self) -> List[Block]:
-        return [b['block'] for b in self._blocks.values()]
+        return list(self._blocks.values())
+
+    def show(self,
+             title: str,
+             title_len: int = 90,
+             save: bool = False) -> None:
+        max_x, max_y, max_z = self._max_dims
+        structure = np.zeros(shape=(max_x + 5, max_y + 5, max_z + 5),
+                             dtype=np.uint32)
+        ks = list(block_definitions.keys())
+        for i, j, k in self._blocks.keys():
+            block = self._blocks[(i, j, k)]
+            r = block.size
+            v = ks.index(block.block_type)
+            structure[i:i+r, j:j+r, k:k+r] = v + 1
+
+        ax = plt.axes(projection='3d')
+        arr = np.nonzero(structure)
+        x, y, z = arr
+        cs = [structure[i, j, k] for i, j, k in zip(x, y, z)]
+        scatter = ax.scatter(x, y, z, c=cs, cmap='jet', linewidth=0.1)
+        legend = scatter.legend_elements()
+        for i, v in zip(range(len(legend[1])), np.unique(structure[np.nonzero(structure)])):
+            legend[1][i] = ks[v - 1]
+        ax.legend(*legend, bbox_to_anchor=(1.2, 1),
+                  loc="upper left", title="Block types")
+        ax.set_xlim3d(0, max_x + 5)
+        ax.set_ylim3d(0, max_y + 5)
+        ax.set_zlim3d(0, max_z + 5)
+        ax.set_xlabel("$\\vec{x}$")
+        ax.set_ylabel("$\\vec{y}$")
+        ax.set_zlabel("$\\vec{z}$")
+        plot_title = title if len(
+            title) <= title_len else title[:title_len - 3] + '...'
+        plt.title(plot_title)
+        if save:
+            plt.savefig(f'{title}.png', transparent=True)
+        plt.show()
 
 
 def place_blocks(blocks: List[Block],
@@ -170,24 +183,3 @@ def place_blocks(blocks: List[Block],
     else:
         for j in jsons:
             call_api(jsons=j)
-
-def plot_structure(structure: Structure,
-                   title: str,
-                   axis_limits: Tuple[int, int, int],
-                   title_len: int = 30,
-                   save: bool = False) -> None:
-        ax = plt.axes(projection='3d')
-        arr = structure._structure != structure._VALUE
-        x, y, z = np.nonzero(arr)
-        ax.scatter(x, y, z, c=np.ones(len(x)), cmap='jet', linewidth=0.1)
-        ax.set_xlim3d(0, axis_limits[0])
-        ax.set_ylim3d(0, axis_limits[1])
-        ax.set_zlim3d(0, axis_limits[2])
-        ax.set_xlabel("$\\vec{x}$")
-        ax.set_ylabel("$\\vec{y}$")
-        ax.set_zlabel("$\\vec{z}$")
-        title = title if len(title) <= title_len else title[:title_len - 3] + '...'
-        plt.title(title)
-        if save:
-            plt.savefig(f'{title}.png', transparent=True)
-        plt.show()
