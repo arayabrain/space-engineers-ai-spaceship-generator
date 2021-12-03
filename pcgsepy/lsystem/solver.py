@@ -24,7 +24,7 @@ class LSolver:
         for i in range(n):
             axiom = self.parser.expand(axiom=axiom)
         if dc_check and len([c for c in self.constraints if c.when == ConstraintTime.DURING]) > 0:
-            print('--- EXPANDING AXIOM ---\n', axiom)
+            print(f'--- EXPANDING AXIOM ---\n{axiom}')
             print('--- EXPANSION CONSTRAINTS CHECK ---')
             if not self._check_constraints(axiom=axiom,
                                            when=ConstraintTime.DURING)[ConstraintLevel.HARD_CONSTRAINT]:

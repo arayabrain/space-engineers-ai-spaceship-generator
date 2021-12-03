@@ -74,45 +74,44 @@ def wheels_plane_constraint(axiom: str,
         for wheel in wheels:
             added = False
             for group in wheel_groups:
-                ref_wheel = group['wheels'][0]
+                ref_wheel = group["wheels"][0]
                 ref_x, ref_y, ref_z = ref_wheel.position.as_tuple()
                 x, y, z = wheel.position.as_tuple()
-                if group['on'] == 'any':
+                if group["on"] == "any":
                     if x == ref_x:
-                        group['on'] == 'x'
-                        group['wheels'].append(wheel)
+                        group["on"] = "x"
+                        group["wheels"].append(wheel)
                         added = True
                         break
                     elif y == ref_y:
-                        group['on'] == 'y'
-                        group['wheels'].append(wheel)
+                        group["on"] = "y"
+                        group["wheels"].append(wheel)
                         added = True
                         break
                     elif z == ref_z:
-                        group['on'] == 'z'
-                        group['wheels'].append(wheel)
+                        group["on"] = "z"
+                        group["wheels"].append(wheel)
                         added = True
                         break
-                elif group['on'] == 'x':
+                elif group["on"] == "x":
                     if x == ref_x:
-                        group['wheels'].append(wheel)
+                        group["wheels"].append(wheel)
                         added = True
                         break
-                elif group['on'] == 'y':
+                elif group["on"] == "y":
                     if y == ref_y:
-                        group['wheels'].append(wheel)
+                        group["wheels"].append(wheel)
                         added = True
                         break
-                elif group['on'] == 'z':
+                elif group["on"] == "z":
                     if z == ref_z:
-                        group['wheels'].append(wheel)
+                        group["wheels"].append(wheel)
                         added = True
                         break
             if not added:
-                wheel_groups.append({'on': 'any',
-                                     'wheels': [wheel]})
+                wheel_groups.append({"on": "any", "wheels": [wheel]})
         # check that at least one group of wheels is on same orientation UP as the cockpit
         sat = False
-        for group in wheels_groups:
+        for group in wheel_groups:
             sat |= group['wheels'][0].orientation_up == cockpit.orientation_up
         return sat
