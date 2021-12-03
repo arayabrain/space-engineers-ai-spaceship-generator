@@ -6,11 +6,11 @@
 #eye 1 LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU?????LargeBlockArmorBlockFU?????LargeBlockArmorBlockFU+++++++++++++++
 # cockpits
 # simple cockpit
-cockpit 0.25 LargeBlockCockpitFU
+cockpit 0.25 LargeBlockCockpit(F,U)
 # square-edges cockpit
-cockpit 0.40 LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU!!!!!LargeBlockCockpitFU?????+++++LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU?????LargeBlockArmorBlockFU?????
+cockpit 0.40 LargeBlockArmorBlock(F,U)+++++LargeBlockArmorBlock(F,U)!!!!!LargeBlockCockpit(F,U)?????+++++LargeBlockArmorBlock(F,U)!!!!!LargeBlockArmorBlock(F,U)!!!!!LargeBlockArmorBlock(F,U)-----LargeBlockArmorBlock(F,U)-----LargeBlockArmorBlock(F,U)?????LargeBlockArmorBlock(F,U)?????
 # rounded-edges cockpit
-cockpit 0.35 LargeBlockArmorSlopeUL+++++LargeBlockArmorBlockFU!!!!!LargeBlockCockpitFU?????+++++LargeBlockArmorSlopeUR!!!!!LargeBlockArmorBlockFU!!!!!LargeBlockArmorSlopeDR-----LargeBlockArmorBlockFU-----LargeBlockArmorSlopeDL?????LargeBlockArmorBlockFU?????
+cockpit 0.35 LargeBlockArmorSlope(U,L)+++++LargeBlockArmorBlock(F,U)!!!!!LargeBlockCockpit(F,U)?????+++++LargeBlockArmorSlope(U,R)!!!!!LargeBlockArmorBlock(F,U)!!!!!LargeBlockArmorSlope(D,R)-----LargeBlockArmorBlock(F,U)-----LargeBlockArmorSlope(D,L)?????LargeBlockArmorBlock(F,U)?????
 # corridors
 # square corridor
 corridor 0.5 LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU?????LargeBlockArmorBlockFU?????
