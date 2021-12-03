@@ -65,6 +65,13 @@ class Vec:
     def __repr__(self) -> str:
         return str(self.as_dict())
     
+    def __eq__(self,
+               other: 'Vec') -> bool:
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        else:
+            return False
+    
     def largest_dim(self) -> Any:
         if self.x >= self.y and (self.z is None or self.x >= self.z):
             return self.x

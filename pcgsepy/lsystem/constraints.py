@@ -43,11 +43,18 @@ class HLStructure:
 
     def test_intersections(self) -> bool:
         # We can maybe save some time by not checking ALL combinations of polygons
-        for p1, p2 in list(itertools.combinations(self.polygons, 2)):
-            i = intersection(p1, p2)
-            # faces on the same plane are ok, we don't want intersections
-            if i is not None and type(i) == ConvexPolyhedron:
-                self.intersections.append(i)
+        
+        # for p1, p2 in list(itertools.combinations(self.polygons, 2)):
+        
+        for i in range(len(self.polygons)):
+            p1 = self.polygons[i]
+            for j in range(i - 1, 0, -1):
+                p2 = self.polygons[j]
+                
+                i = intersection(p1, p2)
+                # faces on the same plane are ok, we don't want intersections
+                if i is not None and type(i) == ConvexPolyhedron:
+                    self.intersections.append(i)
         return len(self.intersections) > 0
         
     def show(self) -> None:

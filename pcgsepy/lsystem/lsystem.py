@@ -42,7 +42,7 @@ class LSystem:
         print('### HL SOLVER ###')
         hl_axiom = self.hlsolver.solve(axiom=starting_axiom,
                                        iterations=iterations,
-                                       axioms_per_iteration=2)
+                                       axioms_per_iteration=3)
         print('\n### LL SOLVER ###')
         ll_axiom = self.llsolver.solve(axiom=hl_axiom,
                                        iterations=1)   
@@ -56,4 +56,4 @@ class LSystem:
         if make_graph:
             structure.show(title=hl_axiom)
         
-        return structure
+        return structure, hl_axiom, ll_axiom

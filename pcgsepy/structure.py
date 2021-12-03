@@ -65,18 +65,13 @@ class Structure:
         self.orientation_up = orientation_up
         # keeps track of blocks info
         self._blocks: Dict[Tuple(int, int, int), Block] = {}
+        self.ks = list(block_definitions.keys())
 
     def add_block(self,
                   block: Block,
                   grid_position: Tuple[int, int, int]) -> None:
         i, j, k = grid_position
-        # cube = build_polyhedron(position=Vec.v3i(i, j, k),
-        #                         dims=Vec.v3i(block.size * self._VALUE,
-        #                                      block.size * self._VALUE,
-        #                                      block.size * self._VALUE))
-        # self._structure.add_hl_poly(p=cube)
-        # if self._structure.test_intersections():
-        #     raise Exception(f'Error when placing block {block.block_type}: block intersect with existing block(s))')
+        block.position = Vec.v3f(i, j, k)
         self._blocks[(i, j, k)] = block
 
     @property
@@ -108,8 +103,7 @@ class Structure:
         updated_blocks = {}
         for x, y, z in self._blocks.keys():
             block = self._blocks[(x, y, z)]
-            self.origin_coords.sum(
-                Vec.v3i(x=x - min_x, y=y - min_y, z=z - min_z))
+            block.position = self.origin_coords.sum(Vec.v3i(x=x - min_x, y=y - min_y, z=z - min_z))
             updated_blocks[(x - min_x, y - min_y, z - min_z)] = block
         self._blocks = updated_blocks
 
@@ -126,21 +120,23 @@ class Structure:
 
     def get_all_blocks(self) -> List[Block]:
         return list(self._blocks.values())
-
+    
+    def as_array(self) -> np.ndarray:
+        max_x, max_y, max_z = self._max_dims
+        structure = np.zeros(shape=(max_x + 5, max_y + 5, max_z + 5),
+                             dtype=np.uint32)
+        for i, j, k in self._blocks.keys():
+            block = self._blocks[(i, j, k)]
+            r = block.size
+            v = self.ks.index(block.block_type)
+            structure[i:i+r, j:j+r, k:k+r] = v + 1
+        return structure
+    
     def show(self,
              title: str,
              title_len: int = 90,
              save: bool = False) -> None:
-        max_x, max_y, max_z = self._max_dims
-        structure = np.zeros(shape=(max_x + 5, max_y + 5, max_z + 5),
-                             dtype=np.uint32)
-        ks = list(block_definitions.keys())
-        for i, j, k in self._blocks.keys():
-            block = self._blocks[(i, j, k)]
-            r = block.size
-            v = ks.index(block.block_type)
-            structure[i:i+r, j:j+r, k:k+r] = v + 1
-
+        structure = self.as_array()
         ax = plt.axes(projection='3d')
         arr = np.nonzero(structure)
         x, y, z = arr
@@ -148,10 +144,10 @@ class Structure:
         scatter = ax.scatter(x, y, z, c=cs, cmap='jet', linewidth=0.1)
         legend = scatter.legend_elements()
         for i, v in zip(range(len(legend[1])), np.unique(structure[np.nonzero(structure)])):
-            legend[1][i] = ks[v - 1]
+            legend[1][i] = self.ks[v - 1]
         ax.legend(*legend, bbox_to_anchor=(1.2, 1),
                   loc="upper left", title="Block types")
-        axis_limit = max(max_x + 5, max_y + 5, max_z + 5)
+        axis_limit = max(structure.shape)
         ax.set_xlim3d(0, axis_limit)
         ax.set_ylim3d(0, axis_limit)
         ax.set_zlim3d(0, axis_limit)

@@ -17,4 +17,6 @@ corridor 0.5 LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU+++++LargeBlockArm
 # rounded corridor
 corridor 0.5 LargeBlockArmorSlopeUL+++++LargeBlockArmorBlockFU+++++LargeBlockArmorSlopeUR!!!!!LargeBlockArmorBlockFU!!!!!LargeBlockArmorSlopeDR-----LargeBlockArmorBlockFU-----LargeBlockArmorSlopeDL?????LargeBlockArmorBlockFU?????
 # thrusters
-thruster 1 LargeBlockSmallHydrogenThrustBU++++++++++LargeBlockSmallHydrogenThrustBU!!!!!!!!!!LargeBlockSmallHydrogenThrustBU----------LargeBlockSmallHydrogenThrustBU??????????LargeBlockSmallHydrogenThrustBU
+thruster 1 LargeBlockSmallHydrogenThrustBU++++++++++LargeBlockSmallHydrogenThrustBU!!!!!!!!!!LargeBlockSmallHydrogenThrustBU----------LargeBlockSmallHydrogenThrustBU??????????
+# wheels
+wheels 1 OffroadSmallRealWheel1x1FU++++++++++OffroadSmallRealWheel1x1FU!!!!!!!!!!OffroadSmallRealWheel1x1FU----------OffroadSmallRealWheel1x1FU??????????
