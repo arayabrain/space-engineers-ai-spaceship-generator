@@ -4,3 +4,4 @@ common/__pycache__/*
 common/.ipynb_checkpoints/*
 lsystem/__pycache__/*
 lsystem/.ipynb_checkpoints/*
+*pyc

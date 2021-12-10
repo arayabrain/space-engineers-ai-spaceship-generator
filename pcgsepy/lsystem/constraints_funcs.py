@@ -1,63 +1,89 @@
 import numpy as np
-from typing import Any, Dict, List, Tuple
-from .constraints import HLStructure
-from .actions import AtomAction
-from .structure_maker import StructureMaker
+from typing import Any, Dict
+
+from ..structure import Structure, IntersectionException
 from ..common.vecs import Vec, Orientation
-from ..structure import Structure
+from .structure_maker import LLStructureMaker
 
 
-def components_constraint(axiom: str,
-                          extra_args: Dict[str, Any]) -> bool:
+def components_constraint(axiom: str, extra_args: Dict[str, Any]) -> bool:
     req_tiles = extra_args['req_tiles']
-    
+
     components_ok = True
     for c in req_tiles:
         components_ok &= c in axiom
     return components_ok
 
 
-def intersection_constraint(axiom: str,
-                            extra_args: Dict[str, Any]) -> bool:
-    position = Vec.v3i(0, 0, 0)
-    hl_structure = StructureMaker(atoms_alphabet=extra_args['alphabet'],
-                                  position=position).fill_structure(structure=None,
-                                                                    axiom=axiom,
-                                                                    additional_args={
-                                                                        'tiles_dimensions': extra_args['tiles_dimensions']
-                                                                    })
-    intersections = hl_structure.test_intersections()
-    if intersections:
-        hl_structure.show()
-    return not intersections
-
-def symmetry_constraint(axiom: str,
-                        extra_args: Dict[str, Any]) -> bool:
-    # get low-level structure representation
-    base_position, orientation_forward, orientation_up = Vec.v3i(0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
+def intersection_constraint(axiom: str, extra_args: Dict[str, Any]) -> bool:
+    base_position, orientation_forward, orientation_up = Vec.v3i(
+        0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
     structure = Structure(origin=base_position,
                           orientation_forward=orientation_forward,
                           orientation_up=orientation_up)
-    structure = StructureMaker(atoms_alphabet=extra_args['alphabet'],
-                               position=base_position).fill_structure(structure=structure,
-                                                                      axiom=axiom,
-                                                                      additional_args={}).as_array()
+    try:
+        structure = LLStructureMaker(atoms_alphabet=extra_args['alphabet'],
+                                     position=base_position).fill_structure(
+                                         structure=structure,
+                                         axiom=axiom,
+                                         additional_args={
+                                             'intersection_checking': True
+                                         })
+        structure.update(origin=base_position,
+                         orientation_forward=orientation_forward,
+                         orientation_up=orientation_up)
+        # check block intersecting after placement
+        max_x, max_y, max_z = structure._max_dims
+        matrix = np.zeros(shape=(max_x + 5, max_y + 5, max_z + 5),
+                          dtype=np.uint8)
+        for i, j, k in structure._blocks.keys():
+            block = structure._blocks[(i, j, k)]
+            r = block.size
+            if np.sum(matrix[i:i + r, j:j + r, k:k + r]) == 0:
+                matrix[i:i + r, j:j + r, k:k + r] = 1
+            else:
+                return False
+    except IntersectionException:
+        return False
+    return True
+
+
+def symmetry_constraint(axiom: str, extra_args: Dict[str, Any]) -> bool:
+    # get low-level structure representation
+    base_position, orientation_forward, orientation_up = Vec.v3i(
+        0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
+    structure = Structure(origin=base_position,
+                          orientation_forward=orientation_forward,
+                          orientation_up=orientation_up)
+    structure = LLStructureMaker(atoms_alphabet=extra_args['alphabet'],
+                                 position=base_position).fill_structure(
+                                     structure=structure,
+                                     axiom=axiom,
+                                     additional_args={})
+    structure.update(origin=base_position,
+                     orientation_forward=orientation_forward,
+                     orientation_up=orientation_up)
+
+    structure = structure.as_array()
+
     is_symmetric = False
     for dim in range(3):
         is_symmetric |= np.array_equal(structure, np.flip(structure, axis=dim))
     return is_symmetric
 
-def wheels_plane_constraint(axiom: str,
-                            extra_args: Dict[str, Any]) -> bool:
+
+def wheels_plane_constraint(axiom: str, extra_args: Dict[str, Any]) -> bool:
     # get low-level blocks (cockpit and wheels)
-    base_position, orientation_forward, orientation_up = Vec.v3i(0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
+    base_position, orientation_forward, orientation_up = Vec.v3i(
+        0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
     structure = Structure(origin=base_position,
                           orientation_forward=orientation_forward,
                           orientation_up=orientation_up)
-    blocks = StructureMaker(atoms_alphabet=extra_args['alphabet'],
-                            position=base_position).fill_structure(structure=structure,
-                                                                   axiom=axiom,
-                                                                   additional_args={}).get_all_blocks()
+    blocks = LLStructureMaker(atoms_alphabet=extra_args['alphabet'],
+                              position=base_position).fill_structure(
+                                  structure=structure,
+                                  axiom=axiom,
+                                  additional_args={}).get_all_blocks()
     cockpit = None
     wheels = []
     for b in blocks:
@@ -110,7 +136,7 @@ def wheels_plane_constraint(axiom: str,
                         break
             if not added:
                 wheel_groups.append({"on": "any", "wheels": [wheel]})
-        # check that at least one group of wheels is on same orientation UP as the cockpit
+        # check at least one group of wheels has same orientation UP as cockpit
         sat = False
         for group in wheel_groups:
             sat |= group['wheels'][0].orientation_up == cockpit.orientation_up

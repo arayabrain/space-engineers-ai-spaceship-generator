@@ -1,9 +1,11 @@
 from enum import Enum
 import numpy as np
 
-from ..common.vecs import Orientation
 
 class AtomAction(Enum):
+    """
+    Enumerator for actions defined for an axiom's atom.
+    """
     MOVE = 'move'
     PLACE = 'place'
     POP = 'pop'
@@ -12,6 +14,10 @@ class AtomAction(Enum):
 
 
 class Rotations(Enum):
+    """
+    Enumerator for all possible rotations.
+    Format: 'Axis cw/ccw OtherAxis'.
+    """
     XcwY = 'XcwY'
     XcwZ = 'XcwZ'
     YcwX = 'YcwX'
@@ -26,31 +32,18 @@ class Rotations(Enum):
     ZccwY = 'ZccwY'
 
 
+# Rotation matrices for each rotation as NumPy matrices.
 rotation_matrices = {
-    # R_z with -sinTheta
     Rotations.XcwY: np.asarray([[0, 1, 0], [-1, 0, 0], [0, 0, 1]]),
-    # R_z
     Rotations.XccwY: np.asarray([[0, -1, 0], [1, 0, 0], [0, 0, 1]]),
-    # R_y with -sinTheta
-    Rotations.XcwZ: np.asarray([[0, 0, -1], [0, 1, 0], [1, 0, 0]]),
-    # R_y
-    Rotations.XccwZ: np.asarray([[0, 0, 1], [0, 1, 0], [-1, 0, 0]]),
-
-    # R_z with -sinTheta
-    Rotations.YcwX: np.asarray([[0, -1, 0], [1, 0, 0], [0, 0, 1]]),
-    # R_z
-    Rotations.YccwX: np.asarray([[0, 1, 0], [-1, 0, 0], [0, 0, 1]]),
-    # R_x with -sinTheta
+    Rotations.XcwZ: np.asarray([[0, 0, 1], [0, 1, 0], [-1, 0, 0]]),
+    Rotations.XccwZ: np.asarray([[0, 0, -1], [0, 1, 0], [1, 0, 0]]),
+    Rotations.YcwX: np.asarray([[0, 1, 0], [-1, 0, 0], [0, 0, 1]]),
+    Rotations.YccwX: np.asarray([[0, -1, 0], [1, 0, 0], [0, 0, 1]]),
     Rotations.YcwZ: np.asarray([[1, 0, 0], [0, 0, 1], [0, -1, 0]]),
-    # R_x
-    Rotations.YccwZ: np.asarray([[1, 0, 0], [0, 0, -1], [0, 1, 1]]),
-
-    # R_y with -sinTheta
-    Rotations.ZcwX: np.asarray([[0, 0, -1], [0, 1, 0], [1, 0, 0]]),
-    # R_y
-    Rotations.ZccwX: np.asarray([[0, 0, 1], [0, 1, 0], [-1, 0, 0]]),
-    # R_x with -sinTheta
+    Rotations.YccwZ: np.asarray([[1, 0, 0], [0, 0, -1], [0, 1, 0]]),
+    Rotations.ZcwX: np.asarray([[0, 0, 1], [0, 1, 0], [-1, 0, 0]]),
+    Rotations.ZccwX: np.asarray([[0, 0, -1], [0, 1, 0], [1, 0, 0]]),
     Rotations.ZcwY: np.asarray([[1, 0, 0], [0, 0, 1], [0, -1, 0]]),
-    # R_x
-    Rotations.ZccwY: np.asarray([[1, 0, 0], [0, 0, -1], [0, 1, 1]])
+    Rotations.ZccwY: np.asarray([[1, 0, 0], [0, 0, -1], [0, 1, 0]])
 }

@@ -1,22 +1,17 @@
-# AXIS for testing
-#X 1 [+SmallBlockArmorBlockFU+SmallBlockArmorBlockFU---SmallBlockArmorBlockFU]
-#Y 1 [!SmallBlockArmorBlockFU!SmallBlockArmorBlockFU!SmallBlockArmorBlockFU????SmallBlockArmorBlockFU]
-#Z 1 [>SmallBlockArmorBlockFU>SmallBlockArmorBlockFU>SmallBlockArmorBlockFU>SmallBlockArmorBlockFU<<<<<SmallBlockArmorBlockFU]
 # SPACESHIP
-#eye 1 LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU?????LargeBlockArmorBlockFU?????LargeBlockArmorBlockFU+++++++++++++++
 # cockpits
 # simple cockpit
-cockpit 0.25 LargeBlockCockpit(F,U)
+cockpit 0.25 +(5)!(5)LargeBlockCockpit(F,U)?(5)-(5)
 # square-edges cockpit
-cockpit 0.40 LargeBlockArmorBlock(F,U)+++++LargeBlockArmorBlock(F,U)!!!!!LargeBlockCockpit(F,U)?????+++++LargeBlockArmorBlock(F,U)!!!!!LargeBlockArmorBlock(F,U)!!!!!LargeBlockArmorBlock(F,U)-----LargeBlockArmorBlock(F,U)-----LargeBlockArmorBlock(F,U)?????LargeBlockArmorBlock(F,U)?????
+cockpit 0.40 LargeBlockArmorBlock(F,U)+(5)LargeBlockArmorBlock(F,U)!(5)LargeBlockCockpit(F,U)?(5)+(5)LargeBlockArmorBlock(F,U)!(5)LargeBlockArmorBlock(F,U)!(5)LargeBlockArmorBlock(F,U)-(5)LargeBlockArmorBlock(F,U)-(5)LargeBlockArmorBlock(F,U)?(5)LargeBlockArmorBlock(F,U)?(5)
 # rounded-edges cockpit
-cockpit 0.35 LargeBlockArmorSlope(U,L)+++++LargeBlockArmorBlock(F,U)!!!!!LargeBlockCockpit(F,U)?????+++++LargeBlockArmorSlope(U,R)!!!!!LargeBlockArmorBlock(F,U)!!!!!LargeBlockArmorSlope(D,R)-----LargeBlockArmorBlock(F,U)-----LargeBlockArmorSlope(D,L)?????LargeBlockArmorBlock(F,U)?????
+cockpit 0.35 LargeBlockArmorSlope(U,L)+(5)LargeBlockArmorBlock(F,U)!(5)LargeBlockCockpit(F,U)?(5)+(5)LargeBlockArmorSlope(U,R)!(5)LargeBlockArmorBlock(F,U)!(5)LargeBlockArmorSlope(D,R)-(5)LargeBlockArmorBlock(F,U)-(5)LargeBlockArmorSlope(D,L)?(5)LargeBlockArmorBlock(F,U)?(5)
 # corridors
 # square corridor
-corridor 0.5 LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU+++++LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU!!!!!LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU-----LargeBlockArmorBlockFU?????LargeBlockArmorBlockFU?????
+corridor 0.5 LargeBlockArmorBlock(F,U)+(5)LargeBlockArmorBlock(F,U)+(5)LargeBlockArmorBlock(F,U)!(5)LargeBlockArmorBlock(F,U)!(5)LargeBlockArmorBlock(F,U)-(5)LargeBlockArmorBlock(F,U)-(5)LargeBlockArmorBlock(F,U)?(5)LargeBlockArmorBlock(F,U)?(5)
 # rounded corridor
-corridor 0.5 LargeBlockArmorSlopeUL+++++LargeBlockArmorBlockFU+++++LargeBlockArmorSlopeUR!!!!!LargeBlockArmorBlockFU!!!!!LargeBlockArmorSlopeDR-----LargeBlockArmorBlockFU-----LargeBlockArmorSlopeDL?????LargeBlockArmorBlockFU?????
+corridor 0.5 LargeBlockArmorSlope(U,L)+(5)LargeBlockArmorBlock(F,U)+(5)LargeBlockArmorSlope(U,R)!(5)LargeBlockArmorBlock(F,U)!(5)LargeBlockArmorSlope(D,R)-(5)LargeBlockArmorBlock(F,U)-(5)LargeBlockArmorSlope(D,L)?(5)LargeBlockArmorBlock(F,U)?(5)
 # thrusters
-thruster 1 LargeBlockSmallHydrogenThrustBU++++++++++LargeBlockSmallHydrogenThrustBU!!!!!!!!!!LargeBlockSmallHydrogenThrustBU----------LargeBlockSmallHydrogenThrustBU??????????
+thruster 1 LargeBlockSmallHydrogenThrust(B,U)+(10)LargeBlockSmallHydrogenThrust(B,U)!(10)LargeBlockSmallHydrogenThrust(B,U)-(10)LargeBlockSmallHydrogenThrust(B,U)?(10)
 # wheels
-wheels 1 OffroadSmallRealWheel1x1FU++++++++++OffroadSmallRealWheel1x1FU!!!!!!!!!!OffroadSmallRealWheel1x1FU----------OffroadSmallRealWheel1x1FU??????????
+wheels 1 OffroadSmallRealWheel1x1(F,U)+(10)OffroadSmallRealWheel1x1(F,U)!(10)OffroadSmallRealWheel1x1(F,U)-(10)OffroadSmallRealWheel1x1(F,U)?(10)

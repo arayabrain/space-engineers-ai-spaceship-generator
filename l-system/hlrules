@@ -1,10 +1,9 @@
-# axis frame for testing
-#axis 1 XYZ
 # SPACESHIP
 # Starting condition
-begin 1 cockpit>>>>>corridor>>>>>
-corridor>>>>>] 0.5 corridor>>>>>thruster]
-corridor>>>>>] 0.5 corridor>>>>>wheels]
-corridor>>>>> 0.7 corridor>>>>>corridor>>>>>
-corridor>>>>> 0.15 corridorRotZcwY[>>>>>corridor>>>>>]>>>>>
-corridor>>>>> 0.15 corridorRotZcwX[>>>>>corridor>>>>>]>>>>>
+begin 1 cockpitcorridor(X)
+# Corridors
+corridor(x)] 0.5 corridor(x)thruster]
+corridor(x)] 0.5 corridor(x)wheels]
+corridor(x) 0.2 corridor(X)corridor(X)
+corridor(x) 0.4 corridor(x)[RotZccwXcorridor(X)]
+corridor(x) 0.4 corridor(x)[RotZccwYcorridor(X)]

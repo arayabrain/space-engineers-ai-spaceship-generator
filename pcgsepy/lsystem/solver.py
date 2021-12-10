@@ -1,21 +1,28 @@
-from typing import Dict
+from typing import Any, Dict
 
 from .actions import *
-from .constraints import *
-from .parser import LParser
+from .constraints import ConstraintHandler, ConstraintTime, ConstraintLevel
+from .parser import HLParser, HLtoMLTranslator, LParser, LLParser
 from ..structure import *
 from ..common.vecs import orientation_from_str
 
 
 class LSolver:
     def __init__(self,
-                 atoms_alphabet: Dict[str, Dict[AtomAction, Any]],
-                 parser: LParser):
-        self.atoms_alphabet = atoms_alphabet
+                 parser: LParser,
+                 atoms_alphabet: Dict[str, Any],
+                 extra_args: Dict[str, Any]):
         self.parser = parser
+        self.atoms_alphabet = atoms_alphabet
         self.constraints = []
         self.inner_loops_during = 5
         self.inner_loops_end = 5
+        self.translator = None
+        if isinstance(self.parser, HLParser):
+            self.translator = HLtoMLTranslator(alphabet=self.atoms_alphabet,
+                                               tiles_dims=extra_args['tiles_dimensions'],
+                                               tiles_block_offset=extra_args['tiles_block_offset'])
+            self.ll_rules = extra_args['ll_rules']
 
     def _forward_expansion(self,
                            axiom: str,
@@ -41,8 +48,14 @@ class LSolver:
         for l in sat.keys():
             for c in self.constraints:
                 if c.when == when and c.level == l:
-                    s = c.constraint(axiom=axiom,
-                                     extra_args=c.extra_args)
+                    if c.needs_ll and self.translator:
+                        ml_axiom = self.translator.transform(axiom=axiom)
+                        ml_axiom = LLParser(rules=self.ll_rules).expand(axiom=ml_axiom)
+                        s = c.constraint(axiom=ml_axiom,
+                                         extra_args=c.extra_args)
+                    else:
+                        s = c.constraint(axiom=axiom,
+                                         extra_args=c.extra_args)
                     print(f'{c}:\t{s}')
                     sat[l] &= s
         return sat
@@ -53,7 +66,6 @@ class LSolver:
               axioms_per_iteration: int = 1) -> str:
         all_axioms = [axiom[:]]
         # forward expansion + DURING constraints check
-        dc_check = False
         for i in range(iterations):
             print(
                 f'Expansion n.{i+1}/{iterations}; current number of axioms: {len(all_axioms)}')
@@ -73,7 +85,7 @@ class LSolver:
         if len([c for c in self.constraints if c.when == ConstraintTime.END]) > 0:
             to_rem = []
             for axiom in all_axioms:
-                print(f'--- AXIOM ---\n', axiom)
+                print(f'--- AXIOM ---\n{axiom}')
                 print('--- FINAL CONSTRAINTS CHECK---')
                 if not self._check_constraints(axiom=axiom,
                                                when=ConstraintTime.END)[ConstraintLevel.HARD_CONSTRAINT]:
@@ -91,4 +103,3 @@ class LSolver:
     def add_constraint(self,
                        c: ConstraintHandler) -> None:
         self.constraints.append(c)
-        c.extra_args['alphabet'] = self.atoms_alphabet

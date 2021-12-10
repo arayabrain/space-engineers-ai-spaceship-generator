@@ -1,5 +1,4 @@
 import configparser
-import json
 import os
 
 config = configparser.ConfigParser()
@@ -13,3 +12,13 @@ PORT = config['API'].getint('port')
 COMMON_ATOMS = config['L-SYSTEM'].get('common_atoms')
 # json file with high level atoms and dimensions
 HL_ATOMS = config['L-SYSTEM'].get('hl_atoms')
+# ranges of parametric l-system
+pl_range = config['L-SYSTEM'].get('pl_range').strip().split(',')
+PL_LOW, PL_HIGH = int(pl_range[0]), int(pl_range[1])
+# required tiles for constraint components_constraint
+REQ_TILES = config['L-SYSTEM'].get('req_tiles').split(',')
+# L-system variables
+# number of iterations (high level)
+N_ITERATIONS = config['L-SYSTEM'].getint('n_iterations')
+# number of axioms generated at each expansion step
+N_APE = config['L-SYSTEM'].getint('n_axioms_generated')

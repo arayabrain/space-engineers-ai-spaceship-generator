@@ -1,9 +1,11 @@
 from typing import List
 import numpy as np
 
+
 class StochasticRules:
     def __init__(self):
         self._rules = {}
+        self.lhs_alphabet = set()
 
     def add_rule(self,
                  lhs: str,
@@ -14,10 +16,14 @@ class StochasticRules:
             self._rules[lhs][1].append(p)
         else:
             self._rules[lhs] = ([rhs], [p])
+        lhs = lhs.replace('(x)', '').replace(']', '')
+        self.lhs_alphabet.add(lhs)
 
     def rem_rule(self,
                  lhs: str) -> None:
         self._rules.pop(lhs)
+        lhs = lhs.replace('(x)', '').replace(']', '')
+        self.lhs_alphabet.pop(lhs)
 
     def get_lhs(self) -> List[str]:
         return self._rules.keys()
@@ -39,7 +45,7 @@ class RuleMaker:
                  ruleset: str):
         with open(ruleset, 'r') as f:
             self.ruleset = f.readlines()
-    
+
     def get_rules(self) -> StochasticRules:
         rules = StochasticRules()
         for rule in self.ruleset:
