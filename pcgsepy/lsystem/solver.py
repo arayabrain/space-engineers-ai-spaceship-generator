@@ -1,4 +1,5 @@
-from typing import Any, Dict
+import logging
+from typing import Any, Dict, List
 
 from .actions import *
 from .constraints import ConstraintHandler, ConstraintTime, ConstraintLevel
@@ -31,8 +32,7 @@ class LSolver:
         for i in range(n):
             axiom = self.parser.expand(axiom=axiom)
         if dc_check and len([c for c in self.constraints if c.when == ConstraintTime.DURING]) > 0:
-            print(f'--- EXPANDING AXIOM ---\n{axiom}')
-            print('--- EXPANSION CONSTRAINTS CHECK ---')
+            logging.getLogger('base-logger').debug(msg=f'Expanding axiom {axiom}')
             if not self._check_constraints(axiom=axiom,
                                            when=ConstraintTime.DURING)[ConstraintLevel.HARD_CONSTRAINT]:
                 axiom = None  # do not continue expansion if it breaks hard constraints during expansion
@@ -56,19 +56,18 @@ class LSolver:
                     else:
                         s = c.constraint(axiom=axiom,
                                          extra_args=c.extra_args)
-                    print(f'{c}:\t{s}')
+                    logging.getLogger('base-logger').debug(msg=f'\t{c}:\t{s}')
                     sat[l] &= s
         return sat
 
     def solve(self,
               axiom: str,
               iterations: int,
-              axioms_per_iteration: int = 1) -> str:
+              axioms_per_iteration: int = 1) -> List[str]:
         all_axioms = [axiom[:]]
         # forward expansion + DURING constraints check
         for i in range(iterations):
-            print(
-                f'Expansion n.{i+1}/{iterations}; current number of axioms: {len(all_axioms)}')
+            logging.getLogger('base-logger').info(f'Expansion n.{i+1}/{iterations}; current number of axioms: {len(all_axioms)}')
             new_all_axioms = []
             for axiom in all_axioms:
                 for _ in range(axioms_per_iteration):
@@ -85,8 +84,7 @@ class LSolver:
         if len([c for c in self.constraints if c.when == ConstraintTime.END]) > 0:
             to_rem = []
             for axiom in all_axioms:
-                print(f'--- AXIOM ---\n{axiom}')
-                print('--- FINAL CONSTRAINTS CHECK---')
+                logging.getLogger('base-logger').debug(f'Finalizing axiom {axiom}')
                 if not self._check_constraints(axiom=axiom,
                                                when=ConstraintTime.END)[ConstraintLevel.HARD_CONSTRAINT]:
                     to_rem.append(axiom)
@@ -94,11 +92,7 @@ class LSolver:
             for a in to_rem:
                 all_axioms.remove(a)
 
-        # TODO: think of a better return choice
-        if all_axioms:
-            return all_axioms[0]
-        else:
-            raise Exception('No axiom could satisfy all HARD constraints')
+        return all_axioms
 
     def add_constraint(self,
                        c: ConstraintHandler) -> None:
