@@ -63,7 +63,8 @@ class LSolver:
     def solve(self,
               axiom: str,
               iterations: int,
-              axioms_per_iteration: int = 1) -> List[str]:
+              axioms_per_iteration: int = 1,
+              check_sat: bool = True) -> List[str]:
         all_axioms = [axiom[:]]
         # forward expansion + DURING constraints check
         for i in range(iterations):
@@ -74,14 +75,14 @@ class LSolver:
                     new_axiom = axiom[:]
                     new_axiom = self._forward_expansion(axiom=new_axiom,
                                                         n=1,
-                                                        dc_check=i > 0)
+                                                        dc_check=i > 0 and check_sat)
                     if new_axiom is not None:
                         new_all_axioms.append(new_axiom)
             all_axioms = new_all_axioms
             all_axioms = list(set(all_axioms))  # remove duplicates
 
         # END constraints check + possible backtracking
-        if len([c for c in self.constraints if c.when == ConstraintTime.END]) > 0:
+        if check_sat and len([c for c in self.constraints if c.when == ConstraintTime.END]) > 0:
             to_rem = []
             for axiom in all_axioms:
                 logging.getLogger('base-logger').debug(f'Finalizing axiom {axiom}')

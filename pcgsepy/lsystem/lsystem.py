@@ -14,6 +14,7 @@ class LSystem:
     def __init__(self, hl_solver: LSolver, ll_solver: LSolver):
         self.hlsolver = hl_solver
         self.llsolver = ll_solver
+        self.check_sat = True
 
     def add_hl_constraint(self, c: ConstraintHandler) -> None:
         self.hlsolver.add_constraint(c)
@@ -26,7 +27,8 @@ class LSystem:
                       iterations: int = 1) -> List[str]:
         return self.hlsolver.solve(axiom=starting_axiom,
                                    iterations=iterations,
-                                   axioms_per_iteration=N_APE)
+                                   axioms_per_iteration=N_APE,
+                                   check_sat=self.check_sat)
 
     def get_ml_axioms(self,
                       hl_axioms: List[str]) -> List[str]:
@@ -37,7 +39,9 @@ class LSystem:
         ll_axioms, to_rem = [], []
         for i, ml_axiom in enumerate(ml_axioms):
             ll_axiom = self.llsolver.solve(axiom=ml_axiom,
-                                           iterations=1)
+                                           iterations=1,
+                                           axioms_per_iteration=1,
+                                           check_sat=self.check_sat)
             if ll_axiom:
                 ll_axioms.extend(ll_axiom)
             else:
