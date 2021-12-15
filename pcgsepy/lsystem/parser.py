@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import numpy as np
-from typing import Any, Dict, List
+from random import random, randint
+from typing import Any, Dict, List, Optional
 
 from ..config import PL_LOW, PL_HIGH
 from .rules import StochasticRules
@@ -168,3 +169,63 @@ class LLParser(LParser):
                     break
             i += 1
         return axiom
+
+
+class TreeNode:
+    def __init__(self,
+                 name: str,
+                 param: Optional[int] = None,
+                 parent: Optional['TreeNode'] = None):
+        self.name = name
+        self.param = param
+        self.parent = parent
+        self.childs = []
+
+    def __str__(self) -> str:
+        s = self.name
+        s += f'({self.param})' if self.param else ''
+        s += ''.join([f'[{c}]' if c.name.startswith('Rot') else str(c) for c in self.childs])
+        return s
+
+    def __repr__(self) -> str:
+        return f'{self.name}({self.param if self.param else ""}):{len(self.childs)}'
+
+    def __eq__(self,
+               other: 'TreeNode') -> bool:
+        return str(self) == str(other)
+
+    def pick_random_subnode(self,
+                            has_n: bool = False) -> Optional['TreeNode']:
+        r = random() > 0.75
+        if (r and not has_n and self.param is None) or (r and has_n and self.param is not None):
+            return self
+        else:
+            if self.childs:
+                return self.childs[randint(0, len(self.childs) - 1)].pick_random_subnode(has_n=has_n)
+            else:
+                return None
+
+
+def axiom_to_tree(axiom: str,
+                  translator: HLtoMLTranslator) -> TreeNode:
+    list_axiom = translator._axiom_as_list(axiom)
+
+    nodes = [TreeNode(name=list_axiom[0]['atom'],
+                      param=list_axiom[0]['n'])]
+    parents = []
+
+    for i, axiom in enumerate(list_axiom[1:]):
+        if axiom.get('n', None) is not None or axiom['atom'].startswith('Rot'):
+            new_node = TreeNode(name=axiom['atom'],
+                                param=axiom.get('n', None),
+                                parent=nodes[-1])
+            nodes[-1].childs.append(new_node)
+            nodes.append(new_node)
+        elif axiom['atom'] == '[':
+            parents.append(nodes[-1])
+        elif axiom['atom'] == ']':
+            p = parents.pop(-1)
+            i = nodes.index(p)
+            nodes = nodes[:i+1]
+
+    return nodes[0]

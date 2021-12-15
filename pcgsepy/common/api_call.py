@@ -113,10 +113,10 @@ def recv_with_timeout(s: socket.socket,
             else:
                 # sleep to indicate a gap
                 time.sleep(0.1)
-        except s.error as msg:
+        except Exception:
             # note: Exceptions are thrown due to socket not reading anything
             # before and after data is passed
-            print(f'Socket error:\n{msg}')
+            pass
     # join all parts to make final string
     return ''.join(total_data)
 

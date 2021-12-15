@@ -22,3 +22,10 @@ REQ_TILES = config['L-SYSTEM'].get('req_tiles').split(',')
 N_ITERATIONS = config['L-SYSTEM'].getint('n_iterations')
 # number of axioms generated at each expansion step
 N_APE = config['L-SYSTEM'].getint('n_axioms_generated')
+
+# lower bound for mutation
+MUTATION_LOW = config['GENOPS'].getint('mutations_lower_bound')
+# upper bound for mutation
+MUTATION_HIGH = config['GENOPS'].getint('mutations_upper_bound')
+# default number of single axiom's mutations
+MUTATION_DEFAULT_N = config['GENOPS'].getint('mutations_n')
