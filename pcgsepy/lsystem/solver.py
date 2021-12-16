@@ -40,10 +40,11 @@ class LSolver:
 
     def _check_constraints(self,
                            axiom: str,
-                           when: ConstraintTime) -> Dict[ConstraintLevel, bool]:
+                           when: ConstraintTime,
+                           keep_track: bool = False) -> Dict[ConstraintLevel, bool]:
         sat = {
-            ConstraintLevel.SOFT_CONSTRAINT: True,
-            ConstraintLevel.HARD_CONSTRAINT: True,
+            ConstraintLevel.SOFT_CONSTRAINT: True if not keep_track else [True, 0],
+            ConstraintLevel.HARD_CONSTRAINT: True if not keep_track else [True, 0],
         }
         for l in sat.keys():
             for c in self.constraints:
@@ -57,7 +58,11 @@ class LSolver:
                         s = c.constraint(axiom=axiom,
                                          extra_args=c.extra_args)
                     logging.getLogger('base-logger').debug(msg=f'\t{c}:\t{s}')
-                    sat[l] &= s
+                    if keep_track:
+                        sat[l][0] &= s
+                        sat[l][1] += (1 if l == ConstraintLevel.HARD_CONSTRAINT else 0.5) if not s else 0
+                    else:
+                        sat[l] &= s
         return sat
 
     def solve(self,
