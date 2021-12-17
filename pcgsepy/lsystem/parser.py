@@ -195,15 +195,24 @@ class TreeNode:
         return str(self) == str(other)
 
     def pick_random_subnode(self,
+                            p: float,
                             has_n: bool = False) -> Optional['TreeNode']:
-        r = random() > 0.75
+        r = random() > p
         if (r and not has_n and self.param is None) or (r and has_n and self.param is not None):
             return self
         else:
             if self.childs:
-                return self.childs[randint(0, len(self.childs) - 1)].pick_random_subnode(has_n=has_n)
+                return self.childs[randint(0, len(self.childs) - 1)].pick_random_subnode(p=p,
+                                                                                         has_n=has_n)
             else:
                 return None
+
+    def n_mutable_childs(self) -> int:
+        n = 1 if self.param else 0
+        if self.childs:
+            return n + sum([c.n_mutable_childs() for c in self.childs])
+        else:
+            return n
 
 
 def axiom_to_tree(axiom: str,

@@ -27,5 +27,9 @@ N_APE = config['L-SYSTEM'].getint('n_axioms_generated')
 MUTATION_LOW = config['GENOPS'].getint('mutations_lower_bound')
 # upper bound for mutation
 MUTATION_HIGH = config['GENOPS'].getint('mutations_upper_bound')
-# default number of single axiom's mutations
-MUTATION_DEFAULT_N = config['GENOPS'].getint('mutations_n')
+# initial mutation probability
+MUTATION_INITIAL_P = config['GENOPS'].getfloat('mutations_initial_p')
+# mutation decay
+MUTATION_DECAY = config['GENOPS'].getfloat('mutations_decay')
+# crossover probability
+CROSSOVER_P = config['GENOPS'].getfloat('crossover_p')

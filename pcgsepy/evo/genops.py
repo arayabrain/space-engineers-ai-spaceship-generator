@@ -2,12 +2,12 @@ from random import randint
 from typing import List
 
 from pcgsepy.lsystem.parser import axiom_to_tree, HLtoMLTranslator
-from pcgsepy.config import MUTATION_DEFAULT_N, MUTATION_HIGH, MUTATION_LOW
+from pcgsepy.config import CROSSOVER_P, MUTATION_INITIAL_P, MUTATION_DECAY,  MUTATION_HIGH, MUTATION_LOW
 
 
 def mutate(axiom: str,
            translator: HLtoMLTranslator,
-           to_mutate: int = MUTATION_DEFAULT_N) -> str:
+           n_iteration: int) -> str:
     """
     Apply mutation to the parameters of the axiom.
 
@@ -17,8 +17,8 @@ def mutate(axiom: str,
         The axiom to mutate.
     translator : HLtoMLTranslator
         The `HLtoMLTranslator` used to convert the axiom to a `TreeNode`.
-    to_mutate : int
-        The number of nodes to apply mutation to (default: *see config file*)
+    n_iteration : int
+        The current iteration number (used to compute decayed mutation probability).
 
     Returns
     -------
@@ -27,10 +27,14 @@ def mutate(axiom: str,
     """
     r = axiom_to_tree(axiom=axiom,
                       translator=translator)
+    n = r.n_mutable_childs()
+    p = MUTATION_INITIAL_P - (n_iteration * MUTATION_DECAY)
+    to_mutate = int(p * n)
 
     for_mutation = []
     while len(for_mutation) < to_mutate:
-        node = r.pick_random_subnode(has_n=True)
+        node = r.pick_random_subnode(has_n=True,
+                                     p=p)
         if node is not None and node not in for_mutation:
             for_mutation.append(node)
 
@@ -77,12 +81,12 @@ def crossover(a1: str,
         b1, b2 = None, None
         while b1 is None or b2 is None:
             if b1:
-                b2 = a2.pick_random_subnode()
+                b2 = a2.pick_random_subnode(p=CROSSOVER_P)
             elif b2:
-                b1 = a1.pick_random_subnode()
+                b1 = a1.pick_random_subnode(p=CROSSOVER_P)
             else:
-                b1 = a1.pick_random_subnode()
-                b2 = a2.pick_random_subnode()
+                b1 = a1.pick_random_subnode(p=CROSSOVER_P)
+                b2 = a2.pick_random_subnode(p=CROSSOVER_P)
 
         s1 = s1.replace(str(b1), str(b2))
         s2 = s2.replace(str(b2), str(b1))
