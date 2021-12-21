@@ -1,8 +1,38 @@
-from random import randint
+import math
+from random import random, randint
 from typing import List
 
 from pcgsepy.lsystem.parser import axiom_to_tree, HLtoMLTranslator
-from pcgsepy.config import CROSSOVER_P, MUTATION_INITIAL_P, MUTATION_DECAY,  MUTATION_HIGH, MUTATION_LOW
+from pcgsepy.config import CROSSOVER_P, MUTATION_INITIAL_P, MUTATION_DECAY
+from pcgsepy.config import MUTATION_HIGH, MUTATION_LOW
+
+
+def roulette_wheel_selection(axioms: List[str],
+                             fitnesses: List[float]) -> str:
+    """
+    Apply roulette-wheel (fitness proportional) selection with fixed point
+    trick.
+
+    Parameters
+    ----------
+    axioms: List[str]
+        The list of axioms from which select from.
+    fitnesses : List[float]
+        The list of fitness values associated to each axiom
+
+    Returns
+    -------
+    str
+        The selected axiom.
+    """
+    s = sum(fitnesses)
+    r = s * random()
+    p = 0.
+    for i, f in enumerate(fitnesses):
+        p += f
+        if p >= r:
+            return axioms[i]
+    raise Exception('Unable to find axiom')
 
 
 def mutate(axiom: str,
@@ -18,28 +48,27 @@ def mutate(axiom: str,
     translator : HLtoMLTranslator
         The `HLtoMLTranslator` used to convert the axiom to a `TreeNode`.
     n_iteration : int
-        The current iteration number (used to compute decayed mutation probability).
+        The current iteration number (used to compute decayed mutation
+        probability).
 
     Returns
     -------
     str
         The mutate axiom.
     """
-    r = axiom_to_tree(axiom=axiom,
-                      translator=translator)
+    r = axiom_to_tree(axiom=axiom, translator=translator)
     n = r.n_mutable_childs()
-    p = MUTATION_INITIAL_P - (n_iteration * MUTATION_DECAY)
+    p = max(MUTATION_INITIAL_P / math.exp(n_iteration * MUTATION_DECAY), 0)
     to_mutate = int(p * n)
 
     for_mutation = []
     while len(for_mutation) < to_mutate:
-        node = r.pick_random_subnode(has_n=True,
-                                     p=p)
+        node = r.pick_random_subnode(has_n=True, p=p)
         if node is not None and node not in for_mutation:
             for_mutation.append(node)
 
     for node in for_mutation:
-        new_param = node.param + randint(MUTATION_LOW, MUTATION_HIGH+1)
+        new_param = node.param + randint(MUTATION_LOW, MUTATION_HIGH + 1)
         node.param = new_param if new_param > 0 else 1
 
     return str(r)
@@ -48,10 +77,11 @@ def mutate(axiom: str,
 def crossover(a1: str,
               a2: str,
               n_childs: int,
-              translator: HLtoMLTranslator,) -> List[str]:
+              translator: HLtoMLTranslator) -> List[str]:
     """
     Apply crossover between two axioms.
-    Note: may never terminate if `n_childs` is greater than the maximum number of possible offsprings.
+    Note: may never terminate if `n_childs` is greater than the maximum number
+    of possible offsprings.
 
     Parameters
     ----------
@@ -69,10 +99,8 @@ def crossover(a1: str,
     List[str]
         A list containing the new offspring axioms.
     """
-    a1 = axiom_to_tree(axiom=a1,
-                       translator=translator)
-    a2 = axiom_to_tree(axiom=a2,
-                       translator=translator)
+    a1 = axiom_to_tree(axiom=a1, translator=translator)
+    a2 = axiom_to_tree(axiom=a2, translator=translator)
     childs = []
     while len(childs) < n_childs:
         s1 = str(a1)
@@ -88,8 +116,8 @@ def crossover(a1: str,
                 b1 = a1.pick_random_subnode(p=CROSSOVER_P)
                 b2 = a2.pick_random_subnode(p=CROSSOVER_P)
 
-        s1 = s1.replace(str(b1), str(b2))
-        s2 = s2.replace(str(b2), str(b1))
+        s1 = s1.replace(str(b1), str(b2), 1)
+        s2 = s2.replace(str(b2), str(b1), 1)
 
         childs.append(s1)
         childs.append(s2)

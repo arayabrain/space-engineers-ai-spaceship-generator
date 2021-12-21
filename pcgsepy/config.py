@@ -33,3 +33,12 @@ MUTATION_INITIAL_P = config['GENOPS'].getfloat('mutations_initial_p')
 MUTATION_DECAY = config['GENOPS'].getfloat('mutations_decay')
 # crossover probability
 CROSSOVER_P = config['GENOPS'].getfloat('crossover_p')
+
+POP_SIZE = config['FI2POP'].getint('population_size')
+N_RETRIES = config['FI2POP'].getint('n_initial_retries')
+N_GENS = config['FI2POP'].getint('n_generations')
+
+USE_BBOX = config['FI2POP'].get('use_bounding_box')
+if USE_BBOX:
+    bbox = config['FI2POP'].get('bounding_box').split(',')
+    BBOX_X, BBOX_Y, BBOX_Z = float(bbox[0]), float(bbox[1]), float(bbox[2])

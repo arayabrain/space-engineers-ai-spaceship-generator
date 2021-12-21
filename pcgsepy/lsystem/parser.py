@@ -43,7 +43,6 @@ class HLParser(LParser):
                     if n is not None or '(X)' in rhs:
                         # update rhs to include parameters
                         rhs = rhs.replace('(x)', f'({n})')
-                        # TODO: get low-high values from config
                         rhs = rhs.replace(
                             '(X)', f'({np.random.randint(PL_LOW, PL_HIGH)})')
                     axiom = axiom[:i] + rhs + axiom[i + offset:]
@@ -121,7 +120,7 @@ class HLtoMLTranslator:
                 elif a == 'RotZcwX':
                     c = f"-({next_offset})"
                 elif a == 'RotZcwY':
-                    c = f"?({self.tbo[a]})"
+                    c = f"?({next_offset})"
                 elif a == 'RotZccwY':
                     c = f"!({dims.y})>({next_dims.y - dims.z})"
                 elif a == 'RotXcwY':
