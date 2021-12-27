@@ -95,7 +95,7 @@ class LLStructureMaker(StructureMaker):
         i = 0
         while i < len(axiom):
             offset = 0
-            for a in self.atoms_alphabet.keys():
+            for a in reversed(self.atoms_alphabet.keys()):
                 if axiom.startswith(a, i):
                     offset += len(a)
                     # check for atom's parameters
