@@ -38,8 +38,7 @@ def convert_xml_to_structure(root_node: ET.Element,
     """
     structure = Structure(origin=Vec.v3f(0., 0., 0.),
                           orientation_forward=Orientation.FORWARD.value,
-                          orientation_up=Orientation.UP.value,
-                          dimensions=(struct_dim, struct_dim, struct_dim))
+                          orientation_up=Orientation.UP.value)
     for grid in root_node.findall('.//CubeGrid'):
         grid_size = None
         for child in grid:
@@ -47,10 +46,9 @@ def convert_xml_to_structure(root_node: ET.Element,
                 grid_size = grid_enum_to_offset[child.text]
             elif child.tag == 'CubeBlocks':
                 for block_node in child:  # CubeBlocks node
-                    if block_node.tag == 'MyObjectBuilder_CubeBlock':
+                    if block_node.tag.startswith('MyObjectBuilder_'):
                         block_type = ''
                         position = (0, 0, 0)
-                        # TODO: Update this according to XML
                         orientations = {
                             'Forward': Orientation.FORWARD,
                             'Up': Orientation.UP}
@@ -68,11 +66,9 @@ def convert_xml_to_structure(root_node: ET.Element,
                                 }
                         if not block_type:
                             continue
-                    block = Block(block_type=block_type,
-                                  orientation_forward=orientations['Forward'],
-                                  orientation_up=orientations['Up'])
-                    structure.add_block(block=block,
-                                        grid_position=((struct_dim // 2) + position[0],
-                                                       (struct_dim // 2) + position[1],
-                                                       (struct_dim // 2) + position[2]))
+                        block = Block(block_type=block_type,
+                                      orientation_forward=orientations['Forward'],
+                                      orientation_up=orientations['Up'])
+                        structure.add_block(block=block,
+                                            grid_position=position)
     return structure
