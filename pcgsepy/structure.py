@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 import numpy as np
 import os
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from .common.vecs import Orientation, Vec
 from .common.api_call import call_api, generate_json
@@ -289,7 +289,8 @@ class Structure:
 
 
 def place_blocks(blocks: List[Block],
-                 sequential: False) -> None:
+                 sequential: False,
+                 grid_id: Optional[str] = None) -> None:
     """
     Place the blocks in-game.
 
@@ -298,18 +299,24 @@ def place_blocks(blocks: List[Block],
     blocks : List[Block]
         The list of blocks.
     sequential : bool
-        Flag to either make the `Admin.Blocks.PlaceAt` call for each block or for the entire list.
+        Flag to either make the `Admin.Blocks.PlaceAt` call for each block or
+        for the entire list.
+    grid_id : Optional[str]
+        The grid id. If set, the command `Admins.Blocks.PlaceInGrid` is used
+        instead.
     """
     # prepare jsons
+    method = 'Admins.Blocks.PlaceInGrid' if grid_id else 'Admin.Blocks.PlaceAt'
+    params = {"gridID": grid_id} if grid_id else {}
     jsons = [
         generate_json(
-            method="Admin.Blocks.PlaceAt",
-            params={
+            method=method,
+            params=dict(params, **{
                 "blockDefinitionId": block_definitions[block.block_type],
                 "position": block.position.as_dict(),
                 "orientationForward": block.orientation_forward.as_dict(),
                 "orientationUp": block.orientation_up.as_dict()
-            }) for block in blocks
+            })) for block in blocks
     ]
     # place blocks
     if not sequential:
