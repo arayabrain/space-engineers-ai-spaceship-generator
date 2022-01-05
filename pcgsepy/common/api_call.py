@@ -38,7 +38,7 @@ def generate_json(method: str,
         "jsonrpc": "2.0",
         "method": method,
         "params": params if params else [],
-        "id": random.getrandbits(16)
+        "id": random.getrandbits(32)
     }
 
 

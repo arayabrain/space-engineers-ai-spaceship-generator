@@ -12,11 +12,7 @@ to_orientation = {
     'Backward': Orientation.BACKWARD
 }
 
-grid_enum_to_offset = {
-    'Small': 1,
-    'Normal': 2,
-    'Large': 5
-}
+grid_enum_to_offset = {'Small': 1, 'Normal': 2, 'Large': 5}
 
 
 def convert_xml_to_structure(root_node: ET.Element,
@@ -51,7 +47,8 @@ def convert_xml_to_structure(root_node: ET.Element,
                         position = (0, 0, 0)
                         orientations = {
                             'Forward': Orientation.FORWARD,
-                            'Up': Orientation.UP}
+                            'Up': Orientation.UP
+                        }
                         for p in block_node:
                             if p.tag == 'SubtypeName':
                                 block_type = p.text
@@ -61,14 +58,16 @@ def convert_xml_to_structure(root_node: ET.Element,
                                             grid_size * int(p.attrib['z']))
                             elif p.tag == 'BlockOrientation':
                                 orientations = {
-                                    'Forward': to_orientation[p.attrib['Forward']],
-                                    'Up': to_orientation[p.attrib['Up']]
+                                    'Forward':
+                                        to_orientation[p.attrib['Forward']],
+                                    'Up':
+                                        to_orientation[p.attrib['Up']]
                                 }
                         if not block_type:
                             continue
-                        block = Block(block_type=block_type,
-                                      orientation_forward=orientations['Forward'],
-                                      orientation_up=orientations['Up'])
-                        structure.add_block(block=block,
-                                            grid_position=position)
+                        block = Block(
+                            block_type=block_type,
+                            orientation_forward=orientations['Forward'],
+                            orientation_up=orientations['Up'])
+                        structure.add_block(block=block, grid_position=position)
     return structure

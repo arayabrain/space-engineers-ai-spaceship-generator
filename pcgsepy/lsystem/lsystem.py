@@ -82,3 +82,22 @@ class LSystem:
                 structure.show(title=hl_axioms[i])
 
         return structures, hl_axioms, ll_axioms
+
+
+def merge_axioms(axioms: List[str]) -> str:
+    """
+    Merge axioms in a single axiom.
+
+    Parameters
+    ----------
+    axioms : List[str]
+        The list of axioms to merge, ordered.
+
+    Returns
+    -------
+    str
+        The merged axiom
+    """
+    # any additional control on alignment etc. should
+    # be done here.
+    return ''.join(axioms)

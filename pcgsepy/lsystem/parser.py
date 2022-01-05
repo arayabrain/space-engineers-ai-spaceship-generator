@@ -40,11 +40,12 @@ class HLParser(LParser):
                             lhs += ']'
                             offset += 1
                     rhs = self.rules.get_rhs(lhs=lhs)
-                    if n is not None or '(X)' in rhs:
+                    if n is not None or '(X)' in rhs or '(Y)' in rhs:
                         # update rhs to include parameters
                         rhs = rhs.replace('(x)', f'({n})')
-                        rhs = rhs.replace(
-                            '(X)', f'({np.random.randint(PL_LOW, PL_HIGH)})')
+                        rhs_n = np.random.randint(PL_LOW, PL_HIGH)
+                        rhs = rhs.replace('(X)', f'({rhs_n})')
+                        rhs = rhs.replace('(Y)', f'({min(1, n - rhs_n)})')
                     axiom = axiom[:i] + rhs + axiom[i + offset:]
                     i += len(rhs) - 1
                     break
@@ -88,6 +89,7 @@ class HLtoMLTranslator:
     def _to_midlvl(self, atoms_list: List[Dict[str, Any]]) -> str:
         last_parents = []
         new_axiom = ''
+        rotations = []
 
         for i, atom in enumerate(atoms_list):
             a = atom['atom']
@@ -100,8 +102,13 @@ class HLtoMLTranslator:
             # Translate w/ correction to mid-level
             # Placeable tile
             if a in self.td.keys():
-                new = [f"{a}>({dims.z})" for _ in range(n)]
+                new = [f"{a}!({dims.y})" for _ in range(n)]
                 new_axiom += ''.join(new)
+                # Add closing wall
+                if (i == len(atoms_list) - 1 and a.startswith('corridor')) or (
+                        i + 1 < len(atoms_list) and
+                        atoms_list[i + 1]['atom'] == ']'):
+                    new_axiom += 'corridorwall!(15)'
             # Position stack manipulation
             elif a == '[' or a == ']':
                 new_axiom += a
@@ -112,17 +119,19 @@ class HLtoMLTranslator:
                     if atoms_list[j].get('n', None) is not None:
                         next_tile = atoms_list[j]['atom']
                         break
+                rotations.append(a)
+                last_dims = self.td[last_parents[-1]]
                 next_dims = self.td[next_tile]
                 next_offset = self.tbo[next_tile]
                 c = ''
                 if a == 'RotZccwX':
-                    c = f"+({dims.x})>({next_dims.x - dims.z})"
+                    c = f"+({dims.x})>({next_dims.x - next_offset})"
                 elif a == 'RotZcwX':
                     c = f"-({next_offset})"
                 elif a == 'RotZcwY':
                     c = f"?({next_offset})"
                 elif a == 'RotZccwY':
-                    c = f"!({dims.y})>({next_dims.y - dims.z})"
+                    c = f"!({dims.y})>({dims.z -  - next_offset})"
                 elif a == 'RotXcwY':
                     c = f"?({next_offset})"
                 elif a == 'RotXccwY':
@@ -132,13 +141,13 @@ class HLtoMLTranslator:
                 elif a == 'RotXccwZ':
                     c = f"+({dims.x})>({next_dims.x - dims.z})"
                 elif a == 'RotYcwX':
-                    c = f"?({next_offset})"
+                    c = f"+({dims.x})"
                 elif a == 'RotYccwX':
-                    c = f"-({next_offset})"
+                    c = f'-({next_offset})!({dims.x - next_offset})'
                 elif a == 'RotYcwZ':
-                    c = f"?({next_offset})"
+                    c = f'>({next_offset})'
                 elif a == 'RotYccwZ':
-                    c = f"!({dims.y})>({next_dims.y - dims.z})"
+                    c = f"!({dims.z - next_offset})<({last_dims.z})"
                 new_axiom += ''.join([c, a])
 
             # Parent's stack manipulation
@@ -150,9 +159,52 @@ class HLtoMLTranslator:
 
         return new_axiom
 
+    def _add_intersections(self, axiom: str) -> str:
+        brackets = []
+        for i, c in enumerate(axiom):
+            if c == '[':
+                # find first closing bracket
+                idx_c = axiom.index(']', i)
+                # update closing bracket position in case of nested brackets
+                ni_o = axiom.find('[', i + 1)
+                if ni_o != -1:
+                    while axiom.index('[', ni_o) < idx_c:
+                        idx_c = axiom.index(']', idx_c + 1)
+                        ni_o = axiom.find('[', ni_o + 1)
+                # add to list of brackets
+                brackets.append((i, idx_c))
+        to_add = {}
+        # add intersection types
+        for i, b in enumerate(brackets):
+            # get rotation
+            rot = axiom[axiom.find('Rot', b[0], b[1]) +
+                        3:axiom.find('corridor', b[0], b[1])]
+            # check for neighboring rotations
+            has_neighbours = False
+            for t0, t1 in brackets[i:]:
+                if b[1] == t0 - 1:
+                    has_neighbours = True
+                    to_add[t1] = [rot]
+                    break
+            if not has_neighbours:
+                if b[1] not in to_add:
+                    to_add[b[1]] = [rot]
+                else:
+                    to_add[b[1]].append(rot)
+        # add to the axiom
+        offset = 0
+        for i in sorted(list(to_add.keys())):
+            rot = ''.join(sorted(to_add[i]))
+            s = f'{rot}intersection!(15)'
+            axiom = axiom[:i + 1 + offset] + s + axiom[i + 1 + offset:]
+            offset += len(s)
+        return axiom
+
     def transform(self, axiom: str) -> str:
         atoms_list = self._axiom_as_list(axiom)
-        return self._to_midlvl(atoms_list)
+        new_axiom = self._to_midlvl(atoms_list)
+        new_axiom = self._add_intersections(new_axiom)
+        return new_axiom
 
 
 class LLParser(LParser):
@@ -160,7 +212,7 @@ class LLParser(LParser):
     def expand(self, axiom: str) -> str:
         i = 0
         while i < len(axiom):
-            for k in self.rules.lhs_alphabet:
+            for k in reversed(list(self.rules.lhs_alphabet)):
                 if axiom[i:].startswith(k):
                     rhs = self.rules.get_rhs(lhs=k)
                     axiom = axiom[:i] + rhs + axiom[i + len(k):]
@@ -171,6 +223,7 @@ class LLParser(LParser):
 
 
 class TreeNode:
+
     def __init__(self,
                  name: str,
                  param: Optional[int] = None,
@@ -183,26 +236,31 @@ class TreeNode:
     def __str__(self) -> str:
         s = self.name
         s += f'({self.param})' if self.param else ''
-        s += ''.join([f'[{c}]' if c.name.startswith('Rot') else str(c) for c in self.childs])
+        s += ''.join([
+            f'[{c}]' if c.name.startswith('Rot') else str(c)
+            for c in self.childs
+        ])
         return s
 
     def __repr__(self) -> str:
         return f'{self.name}({self.param if self.param else ""}):{len(self.childs)}'
 
-    def __eq__(self,
-               other: 'TreeNode') -> bool:
+    def __eq__(self, other: 'TreeNode') -> bool:
         return str(self) == str(other)
 
     def pick_random_subnode(self,
                             p: float,
                             has_n: bool = False) -> Optional['TreeNode']:
         r = random() > p
-        if (r and not has_n and self.param is None) or (r and has_n and self.param is not None):
+        if (r and not has_n and self.param is None) or (r and has_n and
+                                                        self.param is not None):
             return self
         else:
             if self.childs:
-                return self.childs[randint(0, len(self.childs) - 1)].pick_random_subnode(p=p,
-                                                                                         has_n=has_n)
+                return self.childs[randint(0,
+                                           len(self.childs) -
+                                           1)].pick_random_subnode(p=p,
+                                                                   has_n=has_n)
             else:
                 return None
 
@@ -214,12 +272,10 @@ class TreeNode:
             return n
 
 
-def axiom_to_tree(axiom: str,
-                  translator: HLtoMLTranslator) -> TreeNode:
+def axiom_to_tree(axiom: str, translator: HLtoMLTranslator) -> TreeNode:
     list_axiom = translator._axiom_as_list(axiom)
 
-    nodes = [TreeNode(name=list_axiom[0]['atom'],
-                      param=list_axiom[0]['n'])]
+    nodes = [TreeNode(name=list_axiom[0]['atom'], param=list_axiom[0]['n'])]
     parents = []
 
     for i, axiom in enumerate(list_axiom[1:]):
@@ -234,6 +290,6 @@ def axiom_to_tree(axiom: str,
         elif axiom['atom'] == ']':
             p = parents.pop(-1)
             i = nodes.index(p)
-            nodes = nodes[:i+1]
+            nodes = nodes[:i + 1]
 
     return nodes[0]

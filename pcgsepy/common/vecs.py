@@ -312,7 +312,7 @@ def orientation_from_vec(vec: Vec) -> Orientation:
     """
     if vec.x == 0:
         if vec.y == 0:
-            if vec.z == 1:
+            if vec.z == -1:
                 return Orientation.FORWARD
             else:
                 return Orientation.BACKWARD
