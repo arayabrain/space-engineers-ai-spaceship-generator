@@ -108,7 +108,7 @@ class HLtoMLTranslator:
                 if (i == len(atoms_list) - 1 and a.startswith('corridor')) or (
                         i + 1 < len(atoms_list) and
                         atoms_list[i + 1]['atom'] == ']'):
-                    new_axiom += 'corridorwall!(15)'
+                    new_axiom += 'corridorwall!(10)'
             # Position stack manipulation
             elif a == '[' or a == ']':
                 new_axiom += a
@@ -195,7 +195,7 @@ class HLtoMLTranslator:
         offset = 0
         for i in sorted(list(to_add.keys())):
             rot = ''.join(sorted(to_add[i]))
-            s = f'{rot}intersection!(15)'
+            s = f'{rot}intersection!(25)'
             axiom = axiom[:i + 1 + offset] + s + axiom[i + 1 + offset:]
             offset += len(s)
         return axiom
