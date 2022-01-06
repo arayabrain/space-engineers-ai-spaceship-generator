@@ -1,9 +1,18 @@
-# SPACESHIP
-# Starting condition
-begin 1 cockpitcorridor(X)
-# Corridors
-corridor(x)] 0.5 corridor(x)thruster]
-corridor(x)] 0.5 corridor(x)wheels]
-corridor(x) 0.2 corridor(X)corridor(X)
-corridor(x) 0.4 corridor(x)[RotZccwXcorridor(X)]
-corridor(x) 0.4 corridor(x)[RotZccwYcorridor(X)]
+# -- CARGO SHIP HIGH LEVEL RULES
+#  - head
+head 1 cockpit
+#  - tail
+tail 1 thrusters
+#  - body
+body 1 corridorsimple(X)
+#    extension
+corridorsimple(x) 0.37 corridorsimple(Y)corridorsimple(X)
+#    introduce special blocks
+corridorsimple(x) 0.11 corridorsimple(Y)corridorreactors(X)
+corridorsimple(x) 0.11 corridorsimple(Y)corridorcargo(X)
+corridorsimple(x) 0.11 corridorsimple(Y)corridorgyros(X)
+#    rotate
+corridorsimple(x) 0.075 corridorsimple(Y)[RotYcwXcorridorsimple(X)]
+corridorsimple(x) 0.075 corridorsimple(Y)[RotYccwXcorridorsimple(X)]
+corridorsimple(x) 0.075 corridorsimple(Y)[RotYcwZcorridorsimple(X)]
+corridorsimple(x) 0.075 corridorsimple(Y)[RotYccwZcorridorsimple(X)]

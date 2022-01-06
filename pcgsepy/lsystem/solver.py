@@ -100,6 +100,7 @@ class LSolver:
 
         return all_axioms
 
-    def add_constraint(self,
-                       c: ConstraintHandler) -> None:
-        self.constraints.append(c)
+    def set_constraints(self,
+                        cs: List[ConstraintHandler]) -> None:
+        # self.constraints.append(c)
+        self.constraints = cs

@@ -36,16 +36,17 @@ class HLParser(LParser):
                         offset += len(params)
                         n = int(params.replace('(', '').replace(')', ''))
                         lhs += '(x)'
-                        if i + offset < len(axiom) and axiom[i + offset] == ']':
-                            lhs += ']'
-                            offset += 1
+                        # if i + offset < len(axiom) and axiom[i + offset] == ']':
+                        #     lhs += ']'
+                        #     offset += 1
                     rhs = self.rules.get_rhs(lhs=lhs)
-                    if n is not None or '(X)' in rhs or '(Y)' in rhs:
+                    if '(X)' in rhs or '(Y)' in rhs:
                         # update rhs to include parameters
                         rhs = rhs.replace('(x)', f'({n})')
                         rhs_n = np.random.randint(PL_LOW, PL_HIGH)
                         rhs = rhs.replace('(X)', f'({rhs_n})')
-                        rhs = rhs.replace('(Y)', f'({min(1, n - rhs_n)})')
+                        if n is not None:
+                            rhs = rhs.replace('(Y)', f'({max(1, n - rhs_n)})')
                     axiom = axiom[:i] + rhs + axiom[i + offset:]
                     i += len(rhs) - 1
                     break
@@ -105,9 +106,8 @@ class HLtoMLTranslator:
                 new = [f"{a}!({dims.y})" for _ in range(n)]
                 new_axiom += ''.join(new)
                 # Add closing wall
-                if (i == len(atoms_list) - 1 and a.startswith('corridor')) or (
-                        i + 1 < len(atoms_list) and
-                        atoms_list[i + 1]['atom'] == ']'):
+                if i + 1 < len(atoms_list) and a.startswith(
+                        'corridor') and atoms_list[i + 1]['atom'] == ']':
                     new_axiom += 'corridorwall!(10)'
             # Position stack manipulation
             elif a == '[' or a == ']':
@@ -141,9 +141,9 @@ class HLtoMLTranslator:
                 elif a == 'RotXccwZ':
                     c = f"+({dims.x})>({next_dims.x - dims.z})"
                 elif a == 'RotYcwX':
-                    c = f"+({dims.x})"
+                    c = f"-({next_offset})"
                 elif a == 'RotYccwX':
-                    c = f'-({next_offset})!({dims.x - next_offset})'
+                    c = f'+({dims.x})!({dims.x - next_offset})'
                 elif a == 'RotYcwZ':
                     c = f'>({next_offset})'
                 elif a == 'RotYccwZ':
@@ -167,10 +167,9 @@ class HLtoMLTranslator:
                 idx_c = axiom.index(']', i)
                 # update closing bracket position in case of nested brackets
                 ni_o = axiom.find('[', i + 1)
-                if ni_o != -1:
-                    while axiom.index('[', ni_o) < idx_c:
-                        idx_c = axiom.index(']', idx_c + 1)
-                        ni_o = axiom.find('[', ni_o + 1)
+                while ni_o != -1 and axiom.find('[', ni_o) < idx_c:
+                    idx_c = axiom.index(']', idx_c + 1)
+                    ni_o = axiom.find('[', ni_o + 1)
                 # add to list of brackets
                 brackets.append((i, idx_c))
         to_add = {}
@@ -184,7 +183,11 @@ class HLtoMLTranslator:
             for t0, t1 in brackets[i:]:
                 if b[1] == t0 - 1:
                     has_neighbours = True
-                    to_add[t1] = [rot]
+                    if b[1] not in to_add.keys():
+                        to_add[t1] = [rot]
+                    else:
+                        to_add[t1] = [*to_add[b[1]], rot]
+                        to_add.pop(b[1])
                     break
             if not has_neighbours:
                 if b[1] not in to_add:
