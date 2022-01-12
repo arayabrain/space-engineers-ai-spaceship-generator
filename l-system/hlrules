@@ -8,9 +8,11 @@ body 1 corridorsimple(X)
 #    extension
 corridorsimple(x) 0.25 corridorsimple(Y)corridorsimple(X)
 #    introduce special blocks
-corridorsimple(x) 0.08 corridorsimple(Y)corridorreactors(X)
-corridorsimple(x) 0.08 corridorsimple(Y)corridorcargo(X)
-corridorsimple(x) 0.09 corridorsimple(Y)corridorgyros(X)
+corridorsimple(x) 0.05 corridorsimple(Y)corridorreactors(X)
+corridorsimple(x) 0.15 corridorsimple(Y)corridorcargo(X)
+corridorsimple(x) 0.05 corridorsimple(Y)corridorgyros(X)
+corridorsimple(x)] 0.15 corridorsimple(Y)thrusters(1)]
+corridorsimple(x)] 0.85 corridorsimple(x)]
 #    rotate
 corridorsimple(x) 0.125 corridorsimple(Y)[RotYcwXcorridorsimple(X)]
 corridorsimple(x) 0.125 corridorsimple(Y)[RotYccwXcorridorsimple(X)]

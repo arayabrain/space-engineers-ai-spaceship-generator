@@ -36,11 +36,11 @@ class HLParser(LParser):
                         offset += len(params)
                         n = int(params.replace('(', '').replace(')', ''))
                         lhs += '(x)'
-                        # if i + offset < len(axiom) and axiom[i + offset] == ']':
-                        #     lhs += ']'
-                        #     offset += 1
+                        if i + offset < len(axiom) and axiom[i + offset] == ']':
+                            lhs += ']'
+                            offset += 1
                     rhs = self.rules.get_rhs(lhs=lhs)
-                    if '(X)' in rhs or '(Y)' in rhs:
+                    if '(x)' in rhs or '(X)' in rhs or '(Y)' in rhs:
                         # update rhs to include parameters
                         rhs = rhs.replace('(x)', f'({n})')
                         rhs_n = np.random.randint(PL_LOW, PL_HIGH)

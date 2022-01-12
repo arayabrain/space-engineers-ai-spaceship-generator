@@ -348,9 +348,7 @@ def place_structure(structure: Structure,
     first_block = None
     for block in all_blocks:
         if first_block:
-            if block.position.x <= first_block.position.x and
-            block.position.y <= first_block.position.y and
-            block.position.z <= first_block.position.z:
+            if block.position.x <= first_block.position.x and block.position.y <= first_block.position.y and block.position.z <= first_block.position.z:
                 first_block = block
         else:
             first_block = block

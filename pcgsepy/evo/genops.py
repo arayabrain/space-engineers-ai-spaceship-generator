@@ -1,14 +1,16 @@
 import math
-from random import random, randint
-from typing import List
+from random import random, randint, choices, sample
+from typing import List, Tuple
 
 from pcgsepy.lsystem.parser import axiom_to_tree, HLtoMLTranslator
 from pcgsepy.config import CROSSOVER_P, MUTATION_INITIAL_P, MUTATION_DECAY
 from pcgsepy.config import MUTATION_HIGH, MUTATION_LOW
+from pcgsepy.config import PL_LOW, PL_HIGH
 
 
 def roulette_wheel_selection(axioms: List[str],
-                             fitnesses: List[float]) -> str:
+                             fitnesses: List[float],
+                             minimize: bool = False) -> str:
     """
     Apply roulette-wheel (fitness proportional) selection with fixed point
     trick.
@@ -19,16 +21,22 @@ def roulette_wheel_selection(axioms: List[str],
         The list of axioms from which select from.
     fitnesses : List[float]
         The list of fitness values associated to each axiom
+    minimize : bool
+        Flag to determine whether to pick least-fit or fittest axioms
 
     Returns
     -------
     str
         The selected axiom.
     """
-    s = sum(fitnesses)
+    if not minimize:
+        fs = fitnesses
+    else:
+        fs = [1 / f for f in fitnesses]
+    s = sum(fs)
     r = s * random()
     p = 0.
-    for i, f in enumerate(fitnesses):
+    for i, f in enumerate(fs):
         p += f
         if p >= r:
             return axioms[i]
@@ -36,7 +44,6 @@ def roulette_wheel_selection(axioms: List[str],
 
 
 def mutate(axiom: str,
-           translator: HLtoMLTranslator,
            n_iteration: int) -> str:
     """
     Apply mutation to the parameters of the axiom.
@@ -45,8 +52,6 @@ def mutate(axiom: str,
     ----------
     axiom : str
         The axiom to mutate.
-    translator : HLtoMLTranslator
-        The `HLtoMLTranslator` used to convert the axiom to a `TreeNode`.
     n_iteration : int
         The current iteration number (used to compute decayed mutation
         probability).
@@ -56,28 +61,25 @@ def mutate(axiom: str,
     str
         The mutate axiom.
     """
-    r = axiom_to_tree(axiom=axiom, translator=translator)
-    n = r.n_mutable_childs()
+    idxs = get_atom_indexes(axiom=axiom,
+                            atom='corridor')  # TODO: Perhaps read from config instead
+    n = len(idxs)
     p = max(MUTATION_INITIAL_P / math.exp(n_iteration * MUTATION_DECAY), 0)
     to_mutate = int(p * n)
 
-    for_mutation = []
-    while len(for_mutation) < to_mutate:
-        node = r.pick_random_subnode(has_n=True, p=p)
-        if node is not None and node not in for_mutation:
-            for_mutation.append(node)
+    for_mutation = sample(population=idxs, k=to_mutate)
 
-    for node in for_mutation:
-        new_param = node.param + randint(MUTATION_LOW, MUTATION_HIGH + 1)
-        node.param = new_param if new_param > 0 else 1
+    for idx in for_mutation:
+        curr_param = int(axiom[axiom.find('(', idx[0]) + 1:idx[1]])
+        new_param = max(PL_LOW, min(curr_param + randint(MUTATION_LOW, MUTATION_HIGH + 1), PL_HIGH))
+        axiom = axiom[:axiom.find('(', idx[0]) + 1] + str(new_param) + axiom[idx[1]:]
 
-    return str(r)
+    return axiom
 
 
 def crossover(a1: str,
               a2: str,
-              n_childs: int,
-              translator: HLtoMLTranslator) -> List[str]:
+              n_childs: int) -> List[str]:
     """
     Apply crossover between two axioms.
     Note: may never terminate if `n_childs` is greater than the maximum number
@@ -91,35 +93,67 @@ def crossover(a1: str,
         The second axiom.
     n_childs : int
         The number of offsprings to produce (suggested: 2).
-    translator : HLtoMLTranslator
-        The `HLtoMLTranslator` used to convert the axiom to a `TreeNode`.
 
     Returns
     -------
     List[str]
         A list containing the new offspring axioms.
     """
-    a1 = axiom_to_tree(axiom=a1, translator=translator)
-    a2 = axiom_to_tree(axiom=a2, translator=translator)
+    idxs1 = get_matching_brackets(axiom=a1)
+    idxs2 = get_matching_brackets(axiom=a2)
+    # if crossover can't be applied, use atoms
+    if not idxs1:
+        idxs1 = get_atom_indexes(axiom=a1,
+                                 atom='corridor')  # TODO: Perhaps read from config instead
+    if not idxs2:
+        idxs2 = get_atom_indexes(axiom=a2,
+                                 atom='corridor')  # TODO: Perhaps read from config instead
+    ws1 = [CROSSOVER_P for _ in range(len(idxs1))]
+    ws2 = [CROSSOVER_P for _ in range(len(idxs2))]
     childs = []
     while len(childs) < n_childs:
-        s1 = str(a1)
-        s2 = str(a2)
+        s1 = a1[:]
+        s2 = a2[:]
 
-        b1, b2 = None, None
-        while b1 is None or b2 is None:
-            if b1:
-                b2 = a2.pick_random_subnode(p=CROSSOVER_P)
-            elif b2:
-                b1 = a1.pick_random_subnode(p=CROSSOVER_P)
-            else:
-                b1 = a1.pick_random_subnode(p=CROSSOVER_P)
-                b2 = a2.pick_random_subnode(p=CROSSOVER_P)
+        idx1 = choices(population=idxs1, weights=ws1, k=1)[0]
+        b1 = a1[idx1[0]:idx1[1] + 1]
 
-        s1 = s1.replace(str(b1), str(b2), 1)
-        s2 = s2.replace(str(b2), str(b1), 1)
+        idx2 = choices(population=idxs2, weights=ws2, k=1)[0]
+        b2 = a2[idx2[0]:idx2[1] + 1]
+
+        s1 = s1[:idx1[0]] + s1[idx1[0]:].replace(b1, b2, 1)
+        s2 = s2[:idx2[0]] + s2[idx2[0]:].replace(b2, b1, 1)
 
         childs.append(s1)
         childs.append(s2)
 
     return childs[:n_childs]
+
+
+# TODO: These methods should be moved elsewhere since they're geric enough
+def get_matching_brackets(axiom: str) -> List[Tuple[int, int]]:
+    brackets = []
+    for i, c in enumerate(axiom):
+        if c == '[':
+            # find first closing bracket
+            idx_c = axiom.index(']', i)
+            # update closing bracket position in case of nested brackets
+            ni_o = axiom.find('[', i + 1)
+            while ni_o != -1 and axiom.find('[', ni_o) < idx_c:
+                idx_c = axiom.index(']', idx_c + 1)
+                ni_o = axiom.find('[', ni_o + 1)
+            # add to list of brackets
+            brackets.append((i, idx_c))
+    return brackets
+
+
+# TODO: These methods should be moved elsewhere since they're geric enough
+def get_atom_indexes(axiom: str,
+                     atom: str) -> List[Tuple[int, int]]:
+    indexes = []
+    for i, _ in enumerate(axiom):
+        if axiom[i:].startswith(atom):
+            cb = axiom.find(')', i + len(atom))
+            indexes.append((i, cb))
+            i = cb
+    return indexes

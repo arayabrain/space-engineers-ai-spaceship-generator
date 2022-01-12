@@ -127,6 +127,12 @@ class LSystem:
                 m.add_ll_constraint(c)
                 self.all_ll_constraints.add(c)
 
+    def hl_to_ll(self,
+                 axiom: str) -> str:
+        return self.ll_solver.solve(axiom=self.hl_solver.translator.transform(axiom=axiom),
+                                    iterations=1,
+                                    check_sat=False)[0]
+
     def process_module(self,
                        module: LSystemModule,
                        starting_axiom: str,
