@@ -82,9 +82,7 @@ class Structure:
     Similar to `GridBlocks` in Space Engineers' API.
     """
 
-    def __init__(self,
-                 origin: Vec,
-                 orientation_forward: Vec,
+    def __init__(self, origin: Vec, orientation_forward: Vec,
                  orientation_up: Vec) -> None:
         """
         Create a Structure object.
@@ -130,8 +128,9 @@ class Structure:
             May raise an `IntersectionException`.
         """
         i, j, k = grid_position
-        block.position = Vec.v3f(i * self._VALUE, j * self._VALUE,
-                                 k * self._VALUE)
+        # block.position = Vec.v3f(i * self._VALUE, j * self._VALUE,
+        #                          k * self._VALUE)
+        block.position = Vec.v3i(i, j, k)
         if exit_on_duplicates and (i, j, k) in self._blocks.keys():
             raise IntersectionException
         self._blocks[(i, j, k)] = block
@@ -184,10 +183,12 @@ class Structure:
         updated_blocks = {}
         for x, y, z in self._blocks.keys():
             block = self._blocks[(x, y, z)]
+            # block.position = self.origin_coords.sum(
+            #     Vec.v3i(x=(x - min_x) * self._VALUE,
+            #             y=(y - min_y) * self._VALUE,
+            #             z=(z - min_z) * self._VALUE))
             block.position = self.origin_coords.sum(
-                Vec.v3i(x=(x - min_x) * self._VALUE,
-                        y=(y - min_y) * self._VALUE,
-                        z=(z - min_z) * self._VALUE))
+                Vec.v3i(x=x - min_x, y=y - min_y, z=z - min_z))
             updated_blocks[(x - min_x, y - min_y, z - min_z)] = block
         self._blocks = updated_blocks
 
@@ -243,10 +244,7 @@ class Structure:
             structure[i:i + r, j:j + r, k:k + r] = v + 1
         return structure
 
-    def show(self,
-             title: str,
-             title_len: int = 90,
-             save: bool = False) -> None:
+    def show(self, title: str, title_len: int = 90, save: bool = False) -> None:
         """
         Plot the structure.
 
@@ -289,8 +287,7 @@ class Structure:
 
 
 def place_blocks(blocks: List[Block],
-                 sequential: False,
-                 grid_id: Optional[str] = None) -> None:
+                 sequential: False) -> None:
     """
     Place the blocks in-game.
 
@@ -301,22 +298,17 @@ def place_blocks(blocks: List[Block],
     sequential : bool
         Flag to either make the `Admin.Blocks.PlaceAt` call for each block or
         for the entire list.
-    grid_id : Optional[str]
-        The grid id. If set, the command `Admins.Blocks.PlaceInGrid` is used
-        instead.
     """
     # prepare jsons
-    method = 'Admins.Blocks.PlaceInGrid' if grid_id else 'Admin.Blocks.PlaceAt'
-    params = {"gridID": grid_id} if grid_id else {}
     jsons = [
         generate_json(
-            method=method,
-            params=dict(params, **{
+            method='Admin.Blocks.PlaceAt',
+            params={
                 "blockDefinitionId": block_definitions[block.block_type],
                 "position": block.position.as_dict(),
                 "orientationForward": block.orientation_forward.as_dict(),
                 "orientationUp": block.orientation_up.as_dict()
-            })) for block in blocks
+                }) for block in blocks
     ]
     # place blocks
     if not sequential:
@@ -324,3 +316,72 @@ def place_blocks(blocks: List[Block],
     else:
         for j in jsons:
             call_api(jsons=j)
+
+
+def place_structure(structure: Structure,
+                    position: Vec,
+                    orientation_forward: Vec = Orientation.FORWARD.value,
+                    orientation_up: Vec = Orientation.UP.value) -> None:
+    """
+    Place the structure in-game.
+
+    Parameters
+    ----------
+    structure : Structure
+        The structure to place.
+    position : Vec
+        The minimum position of the structure to place at.
+    orientation_forward : Vec
+        The Forward orientation, as vector.
+    orientation_up : Vec
+        The Up orientation, as vector.
+    """
+    # ensure grid positionment
+    structure.update(
+        origin=Vec.v3f(0., 0., 0.),
+        orientation_forward=orientation_forward,
+        orientation_up=orientation_up,
+    )
+    structure.sanify()
+    all_blocks = structure.get_all_blocks()
+    # get lowest-index block in structure
+    first_block = None
+    for block in all_blocks:
+        if first_block:
+            if block.position.x <= first_block.position.x and
+            block.position.y <= first_block.position.y and
+            block.position.z <= first_block.position.z:
+                first_block = block
+        else:
+            first_block = block
+    # remove first block from list
+    all_blocks.remove(first_block)
+    # update first block's position
+    first_block.position = position
+    # place first block
+    call_api(jsons=[
+        generate_json(
+            method='Admin.Blocks.PlaceAt',
+            params={
+                "blockDefinitionId": block_definitions[first_block.block_type],
+                "position": first_block.position.as_dict(),
+                "orientationForward": first_block.orientation_forward.as_dict(),
+                "orientationUp": first_block.orientation_up.as_dict()
+            })
+    ])
+    # get placed block's grid
+    observation = call_api(
+        jsons=[generate_json(method='Observer.ObserveBlocks', params={})])
+    grid_id = observation[0]["result"]["Grids"][0]["Id"]
+    # place all other blocks in the grid
+    call_api(jsons=[
+        generate_json(
+            method='Admins.Blocks.PlaceInGrid',
+            params={
+                "blockDefinitionId": block_definitions[block.block_type],
+                "gridID": grid_id,
+                "minPosition": block.position.as_dict(),
+                "orientationForward": block.orientation_forward.as_dict(),
+                "orientationUp": block.orientation_up.as_dict()
+            }) for block in all_blocks
+    ])
