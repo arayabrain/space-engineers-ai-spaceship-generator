@@ -29,3 +29,12 @@ class ConstraintHandler:
 
     def __repr__(self) -> str:
         return f'Constraint {self.name} ({self.level.name}) at {self.when.name}'
+    
+    def __str__(self) -> str:
+        return self.__repr__()
+    
+    def __eq__(self, other):
+        return str(self) == str(other)
+    
+    def __hash__(self):
+        return hash((self.name, self.level.value, self.when.value, str(self.extra_args)))
