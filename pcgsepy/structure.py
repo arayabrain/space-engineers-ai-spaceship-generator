@@ -13,11 +13,16 @@ if not os.path.exists('./block_definitions.json'):
     # poll API for block definition ids
     jsons = [generate_json(method="Definitions.BlockDefinitions")]
     res = call_api(jsons=jsons)[0]
-    # transform to map of type:id
-    block_definitions = {
-        v['Type']: v
-        for v in [entry['DefinitionId'] for entry in res['result']]
-    }
+    block_definitions = {}
+    for v in res['result']:
+        block_definitions['_'.join([v['DefinitionId']['Id'],
+                                    v['DefinitionId']['Type']])] = {
+            'cube_size': v['CubeSize'],
+            'size': v['Size'],
+            'mass': v['Mass'],
+            'definition_id': {'Id': v['DefinitionId']['Id'],
+                              'Type': v['DefinitionId']['Type']}
+        }
     with open('./block_definitions.json', 'w') as f:
         json.dump(block_definitions, f)
 else:
@@ -25,7 +30,9 @@ else:
         block_definitions = json.load(f)
 
 # Sizes of blocks in grid spaces
-_blocks_sizes = {'s': 1, 'n': 2, 'l': 5}
+_blocks_sizes = {'Small': 1, 'Normal': 2, 'Large': 5}
+
+grid_to_coords = 0.5
 
 
 class Block:
@@ -58,9 +65,12 @@ class Block:
         self.orientation_forward = orientation_forward.value
         self.orientation_up = orientation_up.value
         self.position = Vec.v3f(0., 0., 0.)
-        self._type = 's' if self.block_type.startswith('Small') else (
-            'l' if self.block_type.startswith('Large') else 'n')
-        self.size = _blocks_sizes[self._type]
+        # self._type = 's' if self.block_type.startswith('Small') else (
+        #     'l' if self.block_type.startswith('Large') else 'n')
+        # self.size = _blocks_sizes[self._type]
+        self.cube_size = block_definitions[self.block_type]['cube_size']
+        self.size = Vec.from_json(block_definitions[self.block_type]['size'])
+        self.mass = float(block_definitions[self.block_type]['mass'])
 
     def __str__(self) -> str:
         return f'{self.block_type} at {self.position}; OF {self.orientation_forward}; OU {self.orientation_up}'
@@ -101,7 +111,7 @@ class Structure:
         Structure
             The finalized structure.
         """
-        self._VALUE = 0.5
+        # self._VALUE = 0.5
         self.origin_coords = origin
         self.orientation_forward = orientation_forward
         self.orientation_up = orientation_up
@@ -213,7 +223,8 @@ class Structure:
         # update all blocks accordingly
         self.sanify()
 
-    def get_all_blocks(self) -> List[Block]:
+    def get_all_blocks(self,
+                       to_place: bool = True) -> List[Block]:
         """
         Get all the blocks in the structure.
 
@@ -222,7 +233,13 @@ class Structure:
         List[Block]
             The list of all blocks.
         """
-        return list(self._blocks.values())
+        all_blocks = list(self._blocks.values())
+        if to_place:
+            for block in all_blocks:
+                block.position = Vec.v3f(x=grid_to_coords * block.position.x,
+                                         y=grid_to_coords * block.position.y,
+                                         z=grid_to_coords * block.position.z)
+        return all_blocks
 
     def as_array(self) -> np.ndarray:
         """
@@ -240,8 +257,11 @@ class Structure:
         for i, j, k in self._blocks.keys():
             block = self._blocks[(i, j, k)]
             r = block.size
+            r = Vec.v3f(x=r.x * _blocks_sizes[block.cube_size],
+                        y=r.y * _blocks_sizes[block.cube_size],
+                        z=r.z * _blocks_sizes[block.cube_size])
             v = self.ks.index(block.block_type)
-            structure[i:i + r, j:j + r, k:k + r] = v + 1
+            structure[i:i + r.x, j:j + r.y, k:k + r.z] = v + 1
         return structure
 
     def show(self, title: str, title_len: int = 90, save: bool = False) -> None:
@@ -265,7 +285,7 @@ class Structure:
         scatter = ax.scatter(x, y, z, c=cs, cmap='jet', linewidth=0.1)
         legend = scatter.legend_elements()
         for i, v in zip(range(len(legend[1])),
-                        np.unique(structure[np.nonzero(structure)])):
+                        np.unique(structure[arr])):
             legend[1][i] = self.ks[v - 1]
         ax.legend(*legend,
                   bbox_to_anchor=(1.2, 1),
@@ -304,7 +324,7 @@ def place_blocks(blocks: List[Block],
         generate_json(
             method='Admin.Blocks.PlaceAt',
             params={
-                "blockDefinitionId": block_definitions[block.block_type],
+                "blockDefinitionId": block_definitions[block.block_type]['definition_id'],
                 "position": block.position.as_dict(),
                 "orientationForward": block.orientation_forward.as_dict(),
                 "orientationUp": block.orientation_up.as_dict()
