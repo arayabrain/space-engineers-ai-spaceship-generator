@@ -45,10 +45,18 @@ def box_filling_fitness(axiom: str, extra_args: Dict[str, Any]) -> float:
                      orientation_up=orientation_up)
 
     # filled boxed volume as percentage
-    ps, _, _ = np.nonzero(structure.as_array()[:int(BBOX_X), :int(BBOX_Y), :int(BBOX_Z)])
-    actual_v = len(ps)
-    ideal_v = BBOX_X * BBOX_Y * BBOX_Z
-    filled_v = actual_v / ideal_v
-    f = 1 - abs(1 - filled_v)
+    # ps, _, _ = np.nonzero(structure.as_array()[:int(BBOX_X), :int(BBOX_Y), :int(BBOX_Z)])
+    # actual_v = len(ps)
+    # ideal_v = BBOX_X * BBOX_Y * BBOX_Z
+    # filled_v = actual_v / ideal_v
+    # f = 1 - abs(1 - filled_v)
 
-    return 100*f
+    f = 0
+    for block in structure.get_all_blocks():
+        if block.position.x <= BBOX_X and block.position.y <= BBOX_Y and block.position.z <= BBOX_Z:
+            f += 1
+        else:
+            f -= 1
+
+    # return 100*f
+    return f

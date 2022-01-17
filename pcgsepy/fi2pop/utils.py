@@ -72,11 +72,14 @@ def create_new_pool(population: List[str],
     return pool
 
 
-def reduce_population(population: List[str], fitnesses: List[str],
-                      to: int) -> Tuple[List[str], List[str]]:
-    f_ordered_idxs = [
-        i for _, i in sorted(zip(fitnesses, range(len(fitnesses))))
-    ][-to:]
+def reduce_population(population: List[str],
+                      fitnesses: List[str],
+                      to: int,
+                      minimize: bool = False) -> Tuple[List[str], List[str]]:
+    order_on = sorted(zip(fitnesses, range(len(fitnesses))))
+    if minimize:
+        order_on = reversed(order_on)
+    f_ordered_idxs = [i for _, i in order_on][-to:]
     red_pop, red_f = [], []
     for i in f_ordered_idxs:
         red_pop.append(population[i])

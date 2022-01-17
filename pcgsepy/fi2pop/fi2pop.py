@@ -105,10 +105,11 @@ class FI2PopSolver:
                 i_pool.extend(i_pop)
                 i_pool_fitnesses.extend(i_fitnesses)
                 # reduce the infeasible pool if > pops_size
-                if len(i_pool) > POP_SIZE:  # TODO: Order by 1/f or just in reverse order!
+                if len(i_pool) > POP_SIZE:
                     i_pool, i_pool_fitnesses = reduce_population(population=i_pool,
                                                                  fitnesses=i_pool_fitnesses,
-                                                                 to=POP_SIZE)
+                                                                 to=POP_SIZE,
+                                                                 minimize=True)
                 # set the infeasible pool as the infeasible population
                 i_pop[:] = i_pool[:]
                 i_fitnesses[:] = i_pool_fitnesses[:]
