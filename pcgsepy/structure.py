@@ -77,7 +77,12 @@ class Block:
 
     def __repr__(self) -> str:
         return f'{self.block_type} at {self.position}; OF {self.orientation_forward}; OU {self.orientation_up}'
-
+    
+    @property
+    def volume(self) -> float:
+        s = self.size
+        m = _blocks_sizes[self.cube_size]
+        return s.x * s.y * s.z * m * m * m
 
 class IntersectionException(Exception):
     """

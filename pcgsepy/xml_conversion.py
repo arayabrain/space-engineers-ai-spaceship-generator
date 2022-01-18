@@ -64,7 +64,7 @@ def convert_xml_to_structure(root_node: ET.Element,
                         for p in block_node:
                             if p.tag == 'SubtypeName':
                                 block_type = '_'.join([block_node.attrib['{http://www.w3.org/2001/XMLSchema-instance}type'],
-                                                       p.text])
+                                                       p.text if p.text else ''])
                             elif p.tag == 'Min':
                                 position = (grid_size * int(p.attrib['x']),
                                             grid_size * int(p.attrib['y']),
