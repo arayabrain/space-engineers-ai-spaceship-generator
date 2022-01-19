@@ -291,7 +291,7 @@ class Structure:
         legend = scatter.legend_elements()
         for i, v in zip(range(len(legend[1])),
                         np.unique(structure[arr])):
-            legend[1][i] = self.ks[v - 1]
+            legend[1][i] = self.ks[v - 1].split('_')[-1]
         ax.legend(*legend,
                   bbox_to_anchor=(1.2, 1),
                   loc="upper left",
@@ -307,7 +307,7 @@ class Structure:
                                                                  3] + '...'
         plt.title(plot_title)
         if save:
-            plt.savefig(f'{title}.png', transparent=True)
+            plt.savefig('content_plot.png', transparent=True)
         plt.show()
 
 

@@ -1,0 +1,6 @@
+Axiom: cockpitcorridorsimple(1)corridorgyros(3)[RotYcwXcorridorsimple(1)thrusters(1)]corridorsimple(1)corridorcargo(3)corridorreactors(2)[RotYcwXcorridorsimple(1)[RotYcwXcorridorsimple(4)][RotYcwZcorridorsimple(1)]thrusters(1)]thrusters
+Volume: 311500.0
+Functional blocks / total blocks = 0.07
+Filled volume / total volume = 0.18
+Largest axis / Medium axis = 4.62
+Largest axis / Medium axis = 6.17

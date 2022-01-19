@@ -40,8 +40,8 @@ def intersection_constraint(axiom: str, extra_args: Dict[str, Any]) -> bool:
         for i, j, k in structure._blocks.keys():
             block = structure._blocks[(i, j, k)]
             r = block.size
-            if np.sum(matrix[i:i + r, j:j + r, k:k + r]) == 0:
-                matrix[i:i + r, j:j + r, k:k + r] = 1
+            if np.sum(matrix[i:i + r.x, j:j + r.y, k:k + r.z]) == 0:
+                matrix[i:i + r.x, j:j + r.y, k:k + r.z] = 1
             else:
                 return False
     except IntersectionException:
@@ -92,7 +92,7 @@ def axis_constraint(axiom: str, extra_args: Dict[str, Any]) -> bool:
     volume = structure.as_array().shape
     largest_axis, medium_axis, smallest_axis = reversed(sorted(list(volume)))
     mame = largest_axis / medium_axis
-    mami = largest_axis / smalles_axis    
+    mami = largest_axis / smallest_axis
     sat = True
     sat &= MAME_MEAN - MAME_STD <= mame <= MAME_MEAN + MAME_STD
     sat &= MAMI_MEAN - MAMI_STD <= mami <= MAMI_MEAN + MAMI_STD
