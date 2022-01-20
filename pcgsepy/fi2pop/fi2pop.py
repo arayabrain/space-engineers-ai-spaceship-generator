@@ -5,6 +5,7 @@ from tqdm.notebook import trange
 from ..config import POP_SIZE, N_GENS, N_ITERATIONS, N_RETRIES
 from ..lsystem.lsystem import LSystem
 from .utils import create_new_pool, reduce_population, subdivide_axioms
+from ..lsystem.constraints import ConstraintLevel
 
 
 class FI2PopSolver:
@@ -17,6 +18,10 @@ class FI2PopSolver:
         self.itop = []
         self.fmean = []
         self.imean = []
+        # number of total soft constraints
+        self.nsc = [c for c in self.lsystem.all_hl_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
+        self.nsc = [c for c in self.lsystem.all_ll_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
+        self.nsc = len(self.nsc)
 
     def _compute_fitness(self,
                          axiom: str,
@@ -46,8 +51,7 @@ class FI2PopSolver:
                                                       'alphabet': self.lsystem.ll_solver.atoms_alphabet
                                                       }
                                                  )
-                            - axioms_sats[axiom]['n_constraints_v']
-                        )
+                            + (self.nsc - axioms_sats[axiom]['n_constraints_v']))
                     elif not axioms_sats[axiom]['feasible'] and len(infeasible_pop) < pops_size and axiom not in feasible_pop:
                         infeasible_pop.append(axiom)
                         i_fitnesses.append(axioms_sats[axiom]['n_constraints_v'])
@@ -97,7 +101,7 @@ class FI2PopSolver:
                                                                           'alphabet': self.lsystem.ll_solver.atoms_alphabet
                                                                           }
                                                                       )
-                                                - axioms_sats[axiom]['n_constraints_v'])
+                                                + (self.nsc - axioms_sats[axiom]['n_constraints_v']))
                     else:
                         i_pool.append(axiom)
                         i_pool_fitnesses.append(axioms_sats[axiom]['n_constraints_v'])
@@ -131,7 +135,7 @@ class FI2PopSolver:
                                                                           'alphabet': self.lsystem.ll_solver.atoms_alphabet
                                                                           }
                                                                       )
-                                                - axioms_sats[axiom]['n_constraints_v'])
+                                                + (self.nsc - axioms_sats[axiom]['n_constraints_v']))
                     else:
                         i_pool.append(axiom)
                         i_pool_fitnesses.append(axioms_sats[axiom]['n_constraints_v'])
@@ -159,8 +163,11 @@ class FI2PopSolver:
     def plot_trackings(self,
                        title: str) -> None:
         for t, m, pop in zip((self.ftop, self.itop), (self.fmean, self.imean), ('Feasible', 'Infeasible')):
-            plt.plot(range(len(t)), t, label=f'Top {pop}')
-            plt.plot(range(len(m)), m, label=f'Mean {pop}')
+            plt.plot(range(len(t)), t, label=f'Top {pop}', c='#4CD7D0', lw=2)
+            plt.plot(range(len(m)), m, label=f'Mean {pop}', c='#4C5270', lw=2)
             plt.legend()
             plt.title(f'{title} for {pop} population')
+            plt.ylabel('Fitness')
+            plt.xlabel('Generations')
+            plt.savefig(f'lsystem-fi2pop-{pop[0].lower()}-fitnesses.png', transparent=True)
             plt.show()

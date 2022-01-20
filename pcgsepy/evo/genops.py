@@ -2,7 +2,6 @@ import math
 from random import random, randint, choices, sample
 from typing import List, Tuple
 
-from pcgsepy.lsystem.parser import axiom_to_tree, HLtoMLTranslator
 from pcgsepy.config import CROSSOVER_P, MUTATION_INITIAL_P, MUTATION_DECAY
 from pcgsepy.config import MUTATION_HIGH, MUTATION_LOW
 from pcgsepy.config import PL_LOW, PL_HIGH
@@ -126,7 +125,6 @@ def crossover(a1: str,
 
         childs.append(s1)
         childs.append(s2)
-
     return childs[:n_childs]
 
 

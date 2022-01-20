@@ -5,7 +5,6 @@ from .actions import *
 from .constraints import ConstraintHandler, ConstraintTime, ConstraintLevel
 from .parser import HLParser, HLtoMLTranslator, LParser, LLParser
 from ..structure import *
-from ..common.vecs import orientation_from_str
 
 
 class LSolver:
@@ -52,9 +51,11 @@ class LSolver:
                     if c.needs_ll and self.translator:
                         ml_axiom = self.translator.transform(axiom=axiom)
                         ml_axiom = LLParser(rules=self.ll_rules).expand(axiom=ml_axiom)
+                        # print(f'Checking {c}...')
                         s = c.constraint(axiom=ml_axiom,
                                          extra_args=c.extra_args)
                     else:
+                        # print(f'Checking {c}...')
                         s = c.constraint(axiom=axiom,
                                          extra_args=c.extra_args)
                     logging.getLogger('base-logger').debug(msg=f'\t{c}:\t{s}')

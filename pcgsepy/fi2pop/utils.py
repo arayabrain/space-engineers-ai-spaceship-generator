@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Tuple
 
-from ..config import N_ITERATIONS, POP_SIZE, N_RETRIES
+from ..config import POP_SIZE
 from ..evo.genops import crossover, mutate, roulette_wheel_selection
 from ..lsystem.constraints import ConstraintLevel, ConstraintTime
 from ..lsystem.lsystem import LSystem

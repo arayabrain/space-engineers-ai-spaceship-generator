@@ -197,7 +197,7 @@ class HLtoMLTranslator:
         # add to the axiom
         offset = 0
         for i in sorted(list(to_add.keys())):
-            rot = ''.join(sorted(to_add[i]))
+            rot = ''.join(sorted(list(set(to_add[i]))))
             s = f'{rot}intersection!(25)'
             axiom = axiom[:i + 1 + offset] + s + axiom[i + 1 + offset:]
             offset += len(s)
