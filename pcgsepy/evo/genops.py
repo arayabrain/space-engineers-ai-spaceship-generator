@@ -6,6 +6,9 @@ from pcgsepy.config import CROSSOVER_P, MUTATION_INITIAL_P, MUTATION_DECAY
 from pcgsepy.config import MUTATION_HIGH, MUTATION_LOW
 from pcgsepy.config import PL_LOW, PL_HIGH
 
+import numpy as np
+from pcgsepy.lsystem.rules import StochasticRules
+
 
 def roulette_wheel_selection(axioms: List[str],
                              fitnesses: List[float],
@@ -42,6 +45,48 @@ def roulette_wheel_selection(axioms: List[str],
     raise Exception('Unable to find axiom')
 
 
+class SimplifiedExpander:
+    def __init__(self):
+        self.rules: StochasticRules = None
+
+    def initialize(self,
+                   rules: StochasticRules):
+        self.rules = rules
+
+    def get_rhs(self,
+                axiom: str,
+                idx: int) -> str:
+        assert self.rules is not None, 'SimplifiedExpander has not been initialized'
+        for k in self.rules.lhs_alphabet:
+            if axiom[idx:].startswith(k):
+                offset = len(k)
+                lhs = k
+                n = None
+                # check if there are parameters
+                if idx + offset < len(axiom) and axiom[idx + offset] == '(':
+                    params = axiom[idx +
+                                   offset:axiom.index(')', idx + offset + 1) +
+                                   1]
+                    offset += len(params)
+                    n = int(params.replace('(', '').replace(')', ''))
+                    lhs += '(x)'
+                    if idx + offset < len(axiom) and axiom[idx + offset] == ']':
+                        lhs += ']'
+                        offset += 1
+                rhs = self.rules.get_rhs(lhs=lhs)
+                if '(x)' in rhs or '(X)' in rhs or '(Y)' in rhs:
+                    # update rhs to include parameters
+                    rhs = rhs.replace('(x)', f'({n})')
+                    rhs_n = np.random.randint(PL_LOW, PL_HIGH)
+                    rhs = rhs.replace('(X)', f'({rhs_n})')
+                    if n is not None:
+                        rhs = rhs.replace('(Y)', f'({max(1, n - rhs_n)})')
+                return rhs, offset
+
+
+expander = SimplifiedExpander()
+
+
 def mutate(axiom: str,
            n_iteration: int) -> str:
     """
@@ -61,18 +106,28 @@ def mutate(axiom: str,
         The mutate axiom.
     """
     idxs = get_atom_indexes(axiom=axiom,
-                            atom='corridor')  # TODO: Perhaps read from config instead
+                            atom='corridorsimple')  # TODO: Perhaps read from config instead
     n = len(idxs)
     p = max(MUTATION_INITIAL_P / math.exp(n_iteration * MUTATION_DECAY), 0)
     to_mutate = int(p * n)
 
+#     for_mutation = sample(population=idxs, k=to_mutate)
+
+#     for idx in for_mutation:
+#         curr_param = int(axiom[axiom.find('(', idx[0]) + 1:idx[1]])
+#         new_param = max(PL_LOW, min(curr_param + randint(MUTATION_LOW, MUTATION_HIGH + 1), PL_HIGH))
+#         axiom = axiom[:axiom.find('(', idx[0]) + 1] + str(new_param) + axiom[idx[1]:]
+#     return axiom
     for_mutation = sample(population=idxs, k=to_mutate)
+    for_mutation = sorted(for_mutation,
+                          key=lambda x: x[0],
+                          reverse=True)
 
     for idx in for_mutation:
-        curr_param = int(axiom[axiom.find('(', idx[0]) + 1:idx[1]])
-        new_param = max(PL_LOW, min(curr_param + randint(MUTATION_LOW, MUTATION_HIGH + 1), PL_HIGH))
-        axiom = axiom[:axiom.find('(', idx[0]) + 1] + str(new_param) + axiom[idx[1]:]
-
+        rhs, offset = expander.get_rhs(axiom=axiom,
+                               idx=idx[0])
+        d = offset - (idx[1] + 1 - idx[0])
+        axiom = axiom[:idx[0]] + rhs + axiom[idx[1] + 1 + d:]
     return axiom
 
 
