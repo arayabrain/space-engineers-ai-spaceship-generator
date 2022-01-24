@@ -282,16 +282,30 @@ class Structure:
         save : bool
             Flag to salve the plot as picture (default: False).
         """
+        def clean(a: str) -> str:
+            for d in [
+                'MyObjectBuilder_CubeBlock_',
+                'MyObjectBuilder_Gyro_',
+                'MyObjectBuilder_Reactor_',
+                'MyObjectBuilder_CargoContainer_',
+                'MyObjectBuilder_Cockpit_',
+                'MyObjectBuilder_Thrust_',
+                'MyObjectBuilder_InteriorLight_',
+                'MyObjectBuilder_CubeBlock_',
+            ]:
+                a = a.replace(d, '')
+            return a
+
         structure = self.as_array()
         ax = plt.axes(projection='3d')
         arr = np.nonzero(structure)
         x, y, z = arr
         cs = [structure[i, j, k] for i, j, k in zip(x, y, z)]
         scatter = ax.scatter(x, y, z, c=cs, cmap='jet', linewidth=0.1)
-        legend = scatter.legend_elements()
+        legend = scatter.legend_elements(num=len(np.unique(structure[arr])) - 1)
         for i, v in zip(range(len(legend[1])),
                         np.unique(structure[arr])):
-            legend[1][i] = self.ks[v - 1].split('_')[-1]
+            legend[1][i] = clean(self.ks[v - 1])
         ax.legend(*legend,
                   bbox_to_anchor=(1.2, 1),
                   loc="upper left",
