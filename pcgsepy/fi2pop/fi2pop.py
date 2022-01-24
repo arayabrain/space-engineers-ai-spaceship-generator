@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 from typing import Any, Callable, Dict, List, Tuple
 from tqdm.notebook import trange
 
@@ -18,6 +19,9 @@ class FI2PopSolver:
         self.itop = []
         self.fmean = []
         self.imean = []
+
+        self.ffs, self.ifs = [], []
+
         # number of total soft constraints
         self.nsc = [c for c in self.lsystem.all_hl_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
         self.nsc = [c for c in self.lsystem.all_ll_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
@@ -68,6 +72,8 @@ class FI2PopSolver:
         self.fmean.append(sum(f_fitnesses) / len(f_fitnesses))
         self.itop.append(min(i_fitnesses))
         self.imean.append(sum(i_fitnesses) / len(i_fitnesses))
+        self.ffs.append([self.ftop[-1][0], self.fmean[-1][0]])
+        self.ifs.append([self.itop[-1], self.imean[-1]])
         print(f'Created Feasible population of size {len(f_pop)}: t:{self.ftop[-1]};m:{self.fmean[-1]}')
         print(f'Created Infeasible population of size {len(i_pop)}: t:{self.itop[-1]};m:{self.imean[-1]}')
         return f_pop, i_pop, f_fitnesses, i_fitnesses
@@ -152,6 +158,8 @@ class FI2PopSolver:
                 self.fmean.append(sum(f_fitnesses) / len(f_fitnesses))
                 self.itop.append(min(i_fitnesses))
                 self.imean.append(sum(i_fitnesses) / len(i_fitnesses))
+                self.ffs.append([self.ftop[-1][0], self.fmean[-1][0]])
+                self.ifs.append([self.itop[-1], self.imean[-1]])
                 gens.set_postfix(ordered_dict={'top-f': self.ftop[-1],
                                                'mean-f': self.fmean[-1],
                                                'top-i': self.itop[-1],

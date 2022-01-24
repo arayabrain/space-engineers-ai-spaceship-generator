@@ -50,3 +50,6 @@ FUTO_MEAN = config['FITNESS'].getfloat('futo_mean')
 FUTO_STD = config['FITNESS'].getfloat('futo_std')
 TOVO_MEAN = config['FITNESS'].getfloat('tovo_mean')
 TOVO_STD = config['FITNESS'].getfloat('tovo_std')
+
+N_RUNS = config['EXPERIMENT'].getint('n_runs')
+EXP_NAME = config['EXPERIMENT'].get('exp_name')
