@@ -4,5 +4,4 @@ tileset/*
 estimators/*
 spaceships/*
 *.npz
-*.log
 *-checkpoint*
