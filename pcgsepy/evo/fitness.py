@@ -51,9 +51,9 @@ def bounding_box_fitness(axiom: str, extra_args: Dict[str, Any]) -> float:
                      orientation_up=orientation_up)
 
     x, y, z = structure.as_array().shape
-    f = (BBOX_X - abs(BBOX_X - x)) / BBOX_X
-    f *= (BBOX_Y - abs(BBOX_Y - y)) / BBOX_Y
-    f *= (BBOX_Z - abs(BBOX_Z - z)) / BBOX_Z
+    f = np.clip((BBOX_X - abs(BBOX_X - x)) / BBOX_X, 0, 1)
+    f += np.clip((BBOX_Y - abs(BBOX_Y - y)) / BBOX_Y, 0, 1)
+    f += np.clip((BBOX_Z - abs(BBOX_Z - z)) / BBOX_Z, 0, 1)
     return f / 3
 
 

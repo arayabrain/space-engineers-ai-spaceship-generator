@@ -307,6 +307,7 @@ class Structure:
         arr = np.nonzero(structure)
         x, y, z = arr
         cs = [structure[i, j, k] for i, j, k in zip(x, y, z)]
+        ax.set_box_aspect((np.ptp(x), np.ptp(y), np.ptp(z)))
         scatter = ax.scatter(x, y, z, c=cs, cmap='jet', linewidth=0.1)
         legend = scatter.legend_elements(num=len(np.unique(structure[arr])) - 1)
         for i, v in zip(range(len(legend[1])),
@@ -316,18 +317,19 @@ class Structure:
                   bbox_to_anchor=(1.2, 1),
                   loc="upper left",
                   title="Block types")
-        axis_limit = max(structure.shape)
-        ax.set_xlim3d(0, axis_limit)
-        ax.set_ylim3d(0, axis_limit)
-        ax.set_zlim3d(0, axis_limit)
-        ax.set_xlabel("$\\vec{x}$")
-        ax.set_ylabel("$\\vec{y}$")
-        ax.set_zlabel("$\\vec{z}$")
-        plot_title = title if len(title) <= title_len else title[:title_len -
-                                                                 3] + '...'
-        plt.title(plot_title)
+        # axis_limit = max(structure.shape)
+        # ax.set_xlim3d(0, axis_limit)
+        # ax.set_ylim3d(0, axis_limit)
+        # ax.set_zlim3d(0, axis_limit)
+        # ax.set_xlabel("$\\vec{x}$")
+        # ax.set_ylabel("$\\vec{y}$")
+        # ax.set_zlabel("$\\vec{z}$")
+        # plot_title = title if len(title) <= title_len else title[:title_len -
+        #                                                          3] + '...'
+        # plt.title(plot_title)
+        plt.autoscale(enable=True, axis='x', tight=True)
         if save:
-            plt.savefig('content_plot.png', transparent=True)
+            plt.savefig('content_plot.png', transparent=True, bbox_inches='tight')
         plt.show()
 
 
