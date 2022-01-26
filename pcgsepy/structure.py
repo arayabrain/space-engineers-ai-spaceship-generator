@@ -123,6 +123,7 @@ class Structure:
         # keeps track of blocks info
         self._blocks: Dict[Tuple(int, int, int), Block] = {}
         self.ks = list(block_definitions.keys())
+        self.grid_size = 5
 
     def add_block(self,
                   block: Block,
@@ -160,7 +161,7 @@ class Structure:
         Tuple[int, int, int]
             The XYZ minimum dimensions
         """
-        min_x, min_y, min_z = 0, 0, 0
+        min_x, min_y, min_z = self._max_dims
         for x, y, z in self._blocks.keys():
             if x < min_x:
                 min_x = x
@@ -244,6 +245,11 @@ class Structure:
                 block.position = Vec.v3f(x=grid_to_coords * block.position.x,
                                          y=grid_to_coords * block.position.y,
                                          z=grid_to_coords * block.position.z)
+        else:
+            for block in all_blocks:
+                block.position = Vec.v3i(x=int(block.position.x / self.grid_size),
+                                         y=int(block.position.y / self.grid_size),
+                                         z=int(block.position.z / self.grid_size))
         return all_blocks
 
     def as_array(self) -> np.ndarray:
@@ -382,7 +388,7 @@ def place_structure(structure: Structure,
         orientation_up=orientation_up,
     )
     structure.sanify()
-    all_blocks = structure.get_all_blocks()
+    all_blocks = structure.get_all_blocks(to_place=False)
     # get lowest-index block in structure
     first_block = None
     for block in all_blocks:
@@ -400,7 +406,7 @@ def place_structure(structure: Structure,
         generate_json(
             method='Admin.Blocks.PlaceAt',
             params={
-                "blockDefinitionId": block_definitions[first_block.block_type],
+                "blockDefinitionId": block_definitions[first_block.block_type]['definition_id'],
                 "position": first_block.position.as_dict(),
                 "orientationForward": first_block.orientation_forward.as_dict(),
                 "orientationUp": first_block.orientation_up.as_dict()
@@ -415,7 +421,7 @@ def place_structure(structure: Structure,
         generate_json(
             method='Admins.Blocks.PlaceInGrid',
             params={
-                "blockDefinitionId": block_definitions[block.block_type],
+                "blockDefinitionId": block_definitions[block.block_type]['definition_id'],
                 "gridID": grid_id,
                 "minPosition": block.position.as_dict(),
                 "orientationForward": block.orientation_forward.as_dict(),

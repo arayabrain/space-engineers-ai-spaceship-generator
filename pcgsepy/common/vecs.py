@@ -105,7 +105,9 @@ class Vec:
         Vec
             The vector.
         """
-        return cls(x, y, z)
+        return cls(int(x),
+                   int(y),
+                   int(z))
 
     @classmethod
     def v3f(cls,
