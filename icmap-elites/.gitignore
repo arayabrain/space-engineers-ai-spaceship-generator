@@ -1,0 +1,7 @@
+.ipynb_checkpoints/*
+tileset/*
+*.json
+estimators/*
+spaceships/*
+*.npz
+*-checkpoint*
