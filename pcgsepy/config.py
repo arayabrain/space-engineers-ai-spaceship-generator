@@ -51,5 +51,8 @@ FUTO_STD = config['FITNESS'].getfloat('futo_std')
 TOVO_MEAN = config['FITNESS'].getfloat('tovo_mean')
 TOVO_STD = config['FITNESS'].getfloat('tovo_std')
 
+BIN_POP_SIZE = config['MAPELITES'].getint('bin_population')
+CS_MAX_AGE = config['MAPELITES'].getint('max_age')
+
 N_RUNS = config['EXPERIMENT'].getint('n_runs')
 EXP_NAME = config['EXPERIMENT'].get('exp_name')
