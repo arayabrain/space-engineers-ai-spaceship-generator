@@ -42,6 +42,7 @@ class MAPElites:
         self.lsystem = lsystem
         self.feasible_fitnesses = feasible_fitnesses
         self.limits = behavior_limits
+        self._initial_n_bins = n_bins
         self.bin_qnt = n_bins
         self.bin_sizes = (self.limits[0] / self.bin_qnt[0],
                           self.limits[1] / self.bin_qnt[1])
@@ -196,8 +197,7 @@ class MAPElites:
         self._update_bins(lcs=infeasible_pop)
         # ensure it can start
         if len(self._valid_bins()) == 0:
-            self.generate_initial_populations(lsystem=self.lsystem,
-                                              pops_size=pops_size,
+            self.generate_initial_populations(pops_size=pops_size,
                                               n_retries=n_retries)
 
     def _increase_resolution(self):
@@ -208,14 +208,12 @@ class MAPElites:
                 all_cs.extend(self.bins[i, j]._feasible)
                 all_cs.extend(self.bins[i, j]._infeasible)
         # double resolution of bins
-        self.bins = np.empty(shape=(self.bins.shape[0] * 2,
-                                    self.bins.shape[1] * 2),
-                             dtype=object)
         self.bin_qnt = (self.bin_qnt[0] * 2, self.bin_qnt[1] * 2)
         self.bin_sizes = (self.limits[0] / self.bin_qnt[0],
                           self.limits[1] / self.bin_qnt[1])
-        for i in range(self.bins.shape[0]):
-            for j in range(self.bins.shape[1]):
+        self.bins = np.empty(shape=self.bin_qnt, dtype=object)
+        for i in range(self.bin_qnt[0]):
+            for j in range(self.bin_qnt[1]):
                 self.bins[i, j] = MAPBin(bin_idx=(i, j),
                                          bin_size=self.bin_sizes)
         # assign solutions to bins
@@ -302,6 +300,52 @@ class MAPElites:
         self._update_bins(lcs=generated)
         self._check_res_trigger()
 
+    def _interactive_step(self,
+                          bin_idx: Tuple[int, int],
+                          n_gen: int = 0):
+        self._age_bins()
+        chosen_bin = self.bins[bin_idx[0], bin_idx[1]]
+        assert chosen_bin in self._valid_bins(), f'Bin at {bin_idx} is not a valid bin.'
+        f_pop = chosen_bin._feasible
+        i_pop = chosen_bin._infeasible
+        generated = []
+        for pop, minimize in zip([f_pop, i_pop], [False, True]):
+            strings = [cs.string for cs in pop]
+            fitnesses = [cs.c_fitness for cs in pop]
+            new_pool = create_new_pool(
+                population=strings,
+                fitnesses=fitnesses,
+                generation=n_gen,
+                translator=self.lsystem.hl_solver.translator,
+                n_individuals=BIN_POP_SIZE,
+                minimize=minimize)
+            axioms_sats = subdivide_axioms(hl_axioms=new_pool,
+                                           lsystem=self.lsystem)
+            for axiom in axioms_sats.keys():
+                cs = CandidateSolution(string=axiom)
+                if axioms_sats[axiom]['feasible']:
+                    cs.is_feasible = True
+                    cs.c_fitness = self.compute_fitness(
+                        axiom=self.lsystem.hl_to_ll(axiom=axiom),
+                        extra_args={
+                            'alphabet':
+                                self.lsystem.ll_solver.atoms_alphabet
+                        }) + (0.5 - axioms_sats[axiom]['n_constraints_v'])
+                else:
+                    cs.c_fitness = axioms_sats[axiom]['n_constraints_v']
+                cs.set_content(
+                    get_structure(
+                        axiom=self.lsystem.hl_to_ll(axiom=axiom),
+                        extra_args={
+                            'alphabet':
+                                self.lsystem.ll_solver.atoms_alphabet
+                        }))
+                self._set_behavior_descriptors(cs=cs)
+                cs.age = CS_MAX_AGE
+                generated.append(cs)
+        self._update_bins(lcs=generated)
+        self._check_res_trigger()
+
     def interactive_mode(self, n_steps: int = 10):
         for n in range(n_steps):
             print(f'### STEP {n+1}/{n_steps} ###')
@@ -321,43 +365,18 @@ class MAPElites:
                     chosen_bin = selected
                 else:
                     print('Chosen bin is not amongst valid bins.')
+            self._interactive_step(bin_idx=chosen_bin.bin_idx,
+                                   n_gen=n)
 
-            f_pop = chosen_bin._feasible
-            i_pop = chosen_bin._infeasible
-            generated = []
-            for pop, minimize in zip([f_pop, i_pop], [False, True]):
-                strings = [cs.string for cs in pop]
-                fitnesses = [cs.c_fitness for cs in pop]
-                new_pool = create_new_pool(
-                    population=strings,
-                    fitnesses=fitnesses,
-                    generation=n,
-                    translator=self.lsystem.hl_solver.translator,
-                    n_individuals=2 * BIN_POP_SIZE,
-                    minimize=minimize)
-                axioms_sats = subdivide_axioms(hl_axioms=new_pool,
-                                               lsystem=self.lsystem)
-                for axiom in axioms_sats.keys():
-                    cs = CandidateSolution(string=axiom)
-                    if axioms_sats[axiom]['feasible']:
-                        cs.is_feasible = True
-                        cs.c_fitness = self.compute_fitness(
-                            axiom=self.lsystem.hl_to_ll(axiom=axiom),
-                            extra_args={
-                                'alphabet':
-                                    self.lsystem.ll_solver.atoms_alphabet
-                            }) + (0.5 - axioms_sats[axiom]['n_constraints_v'])
-                    else:
-                        cs.c_fitness = axioms_sats[axiom]['n_constraints_v']
-                    cs.set_content(
-                        get_structure(
-                            axiom=self.lsystem.hl_to_ll(axiom=axiom),
-                            extra_args={
-                                'alphabet':
-                                    self.lsystem.ll_solver.atoms_alphabet
-                            }))
-                    self._set_behavior_descriptors(cs=cs)
-                    cs.age = CS_MAX_AGE
-                    generated.append(cs)
-            self._update_bins(lcs=generated)
-            self._check_res_trigger()
+    def reset(self):
+        self.bin_qnt = self._initial_n_bins
+        self.bin_sizes = (self.limits[0] / self.bin_qnt[0],
+                          self.limits[1] / self.bin_qnt[1])
+
+        self.bins = np.empty(shape=self.bin_qnt, dtype=object)
+        for i in range(self.bin_qnt[0]):
+            for j in range(self.bin_qnt[1]):
+                self.bins[i, j] = MAPBin(bin_idx=(i, j),
+                                         bin_size=self.bin_sizes)
+
+        self.generate_initial_populations()
