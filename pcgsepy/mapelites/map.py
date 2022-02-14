@@ -5,6 +5,7 @@ import numpy as np
 import random
 
 from .bin import MAPBin
+from .behaviors import BehaviorCharacterization
 from ..common.vecs import Orientation, Vec
 from ..config import BIN_POP_SIZE, CS_MAX_AGE, N_ITERATIONS
 from ..fi2pop.utils import subdivide_axioms, create_new_pool
@@ -37,11 +38,14 @@ class MAPElites:
     def __init__(self,
                  lsystem: LSystem,
                  feasible_fitnesses: List[callable],
-                 behavior_limits: Tuple[int, int] = (20, 20),
+                 # behavior_limits: Tuple[int, int] = (20, 20),
+                 behavior_descriptors: Tuple[BehaviorCharacterization, BehaviorCharacterization],
                  n_bins: Tuple[int, int] = (8, 8)):
         self.lsystem = lsystem
         self.feasible_fitnesses = feasible_fitnesses
-        self.limits = behavior_limits
+        self.b_descs = behavior_descriptors
+        self.limits = (self.b_descs[0].bounds[1] if self.b_descs[0].bounds is not None else 20,
+                       self.b_descs[1].bounds[1] if self.b_descs[1].bounds is not None else 20)
         self._initial_n_bins = n_bins
         self.bin_qnt = n_bins
         self.bin_sizes = (self.limits[0] / self.bin_qnt[0],
@@ -132,12 +136,14 @@ class MAPElites:
         plt.show()
 
     def _set_behavior_descriptors(self, cs: CandidateSolution):
-        volume = cs.content.as_array().shape
-        largest_axis, medium_axis, smallest_axis = reversed(sorted(
-            list(volume)))
-        mame = largest_axis / medium_axis
-        mami = largest_axis / smallest_axis
-        cs.b_descs = (mame, mami)
+        b0 = self.b_descs[0](cs)
+        b1 = self.b_descs[1](cs)
+        # volume = cs.content.as_array().shape
+        # largest_axis, medium_axis, smallest_axis = reversed(sorted(
+        #     list(volume)))
+        # mame = largest_axis / medium_axis
+        # mami = largest_axis / smallest_axis
+        cs.b_descs = (b0, b1)
 
     def compute_fitness(self, axiom: str, extra_args: Dict[str, Any]) -> float:
         return sum([f(axiom, extra_args) for f in self.feasible_fitnesses])
@@ -380,3 +386,18 @@ class MAPElites:
                                          bin_size=self.bin_sizes)
 
         self.generate_initial_populations()
+
+    def get_elitist(self,
+                    bin_idx: Tuple[int, int],
+                    pop: str):
+        i, j = bin_idx
+        chosen_bin = self.bins[i, j]
+        return chosen_bin.get_elitist(population=pop)
+
+    def non_empty(self,
+                  bin_idx: Tuple[int, int],
+                  pop: str):
+        i, j = bin_idx
+        chosen_bin = self.bins[i, j]
+        pop = chosen_bin._feasible if pop == 'feasible' else chosen_bin._infeasible
+        return len(pop) > 0

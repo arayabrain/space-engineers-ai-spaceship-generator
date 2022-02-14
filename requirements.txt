@@ -4,3 +4,7 @@ bs4
 scipy
 steamctl
 tqdm
+pandas
+dash
+dash-html-components
+dash-core-components

@@ -77,12 +77,13 @@ class Block:
 
     def __repr__(self) -> str:
         return f'{self.block_type} at {self.position}; OF {self.orientation_forward}; OU {self.orientation_up}'
-    
+
     @property
     def volume(self) -> float:
         s = self.size
         m = _blocks_sizes[self.cube_size]
         return s.x * s.y * s.z * m * m * m
+
 
 class IntersectionException(Exception):
     """
@@ -275,6 +276,21 @@ class Structure:
             structure[i:i + r.x, j:j + r.y, k:k + r.z] = v + 1
         return structure
 
+    def _clean_label(self,
+                     a: str) -> str:
+        for d in [
+            'MyObjectBuilder_CubeBlock_',
+            'MyObjectBuilder_Gyro_',
+            'MyObjectBuilder_Reactor_',
+            'MyObjectBuilder_CargoContainer_',
+            'MyObjectBuilder_Cockpit_',
+            'MyObjectBuilder_Thrust_',
+            'MyObjectBuilder_InteriorLight_',
+            'MyObjectBuilder_CubeBlock_',
+        ]:
+            a = a.replace(d, '')
+        return a
+
     def show(self, title: str, title_len: int = 90, save: bool = False) -> None:
         """
         Plot the structure.
@@ -288,19 +304,6 @@ class Structure:
         save : bool
             Flag to salve the plot as picture (default: False).
         """
-        def clean(a: str) -> str:
-            for d in [
-                'MyObjectBuilder_CubeBlock_',
-                'MyObjectBuilder_Gyro_',
-                'MyObjectBuilder_Reactor_',
-                'MyObjectBuilder_CargoContainer_',
-                'MyObjectBuilder_Cockpit_',
-                'MyObjectBuilder_Thrust_',
-                'MyObjectBuilder_InteriorLight_',
-                'MyObjectBuilder_CubeBlock_',
-            ]:
-                a = a.replace(d, '')
-            return a
 
         structure = self.as_array()
         ax = plt.axes(projection='3d')
@@ -312,7 +315,7 @@ class Structure:
         legend = scatter.legend_elements(num=len(np.unique(structure[arr])) - 1)
         for i, v in zip(range(len(legend[1])),
                         np.unique(structure[arr])):
-            legend[1][i] = clean(self.ks[v - 1])
+            legend[1][i] = self._clean_label(self.ks[v - 1])
         ax.legend(*legend,
                   bbox_to_anchor=(1.2, 1),
                   loc="upper left",
