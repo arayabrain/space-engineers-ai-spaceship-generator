@@ -56,6 +56,7 @@ class MAPElites:
             for j in range(self.bin_qnt[1]):
                 self.bins[i, j] = MAPBin(bin_idx=(i, j),
                                          bin_size=self.bin_sizes)
+        self.enforce_qnt = True
 
     def show_fitness(self,
                      show_mean: bool = True,
@@ -138,11 +139,6 @@ class MAPElites:
     def _set_behavior_descriptors(self, cs: CandidateSolution):
         b0 = self.b_descs[0](cs)
         b1 = self.b_descs[1](cs)
-        # volume = cs.content.as_array().shape
-        # largest_axis, medium_axis, smallest_axis = reversed(sorted(
-        #     list(volume)))
-        # mame = largest_axis / medium_axis
-        # mami = largest_axis / smallest_axis
         cs.b_descs = (b0, b1)
 
     def compute_fitness(self, axiom: str, extra_args: Dict[str, Any]) -> float:
@@ -307,13 +303,16 @@ class MAPElites:
         self._check_res_trigger()
 
     def _interactive_step(self,
-                          bin_idx: Tuple[int, int],
+                          bin_idxs: List[Tuple[int, int]],
                           n_gen: int = 0):
         self._age_bins()
-        chosen_bin = self.bins[bin_idx[0], bin_idx[1]]
-        assert chosen_bin in self._valid_bins(), f'Bin at {bin_idx} is not a valid bin.'
-        f_pop = chosen_bin._feasible
-        i_pop = chosen_bin._infeasible
+        chosen_bins = [self.bins[bin_idx[0], bin_idx[1]] for bin_idx in bin_idxs]
+        f_pop, i_pop = [], []
+        for chosen_bin in chosen_bins:
+            if self.enforce_qnt:
+                assert chosen_bin in self._valid_bins(), f'Bin at {chosen_bin.bin_idx} is not a valid bin.'
+            f_pop += chosen_bin._feasible
+            i_pop += chosen_bin._infeasible
         generated = []
         for pop, minimize in zip([f_pop, i_pop], [False, True]):
             strings = [cs.string for cs in pop]
@@ -323,7 +322,7 @@ class MAPElites:
                 fitnesses=fitnesses,
                 generation=n_gen,
                 translator=self.lsystem.hl_solver.translator,
-                n_individuals=BIN_POP_SIZE,
+                n_individuals=max(len(f_pop), len(i_pop)),
                 minimize=minimize)
             axioms_sats = subdivide_axioms(hl_axioms=new_pool,
                                            lsystem=self.lsystem)
@@ -371,7 +370,7 @@ class MAPElites:
                     chosen_bin = selected
                 else:
                     print('Chosen bin is not amongst valid bins.')
-            self._interactive_step(bin_idx=chosen_bin.bin_idx,
+            self._interactive_step(bin_idx=[chosen_bin.bin_idx],
                                    n_gen=n)
 
     def reset(self):
