@@ -224,7 +224,10 @@ class MAPElites:
     def _update_bins(self, lcs: List[CandidateSolution]):
         for cs in lcs:
             b0, b1 = cs.b_descs
-            i, j = int(b0 // self.bin_sizes[0]), int(b1 // self.bin_sizes[1])
+            # i, j = int(b0 // self.bin_sizes[0]), int(b1 // self.bin_sizes[1])
+            i = np.digitize([b0], np.arange(self.b_descs[0].bounds[0], self.b_descs[0].bounds[1], self.bin_sizes[0]), right=True)[0] - 1
+            j = np.digitize([b1], np.arange(self.b_descs[1].bounds[0], self.b_descs[1].bounds[1], self.bin_sizes[1]), right=True)[0] - 1
+            # print(b0, b1, '->', i, j)
             self.bins[i, j].insert_cs(cs)
             self.bins[i, j].remove_old()
 
