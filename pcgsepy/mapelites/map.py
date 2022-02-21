@@ -387,12 +387,12 @@ class MAPElites:
 
         self.generate_initial_populations()
 
-    def get_elitist(self,
-                    bin_idx: Tuple[int, int],
-                    pop: str):
+    def get_elite(self,
+                  bin_idx: Tuple[int, int],
+                  pop: str):
         i, j = bin_idx
         chosen_bin = self.bins[i, j]
-        return chosen_bin.get_elitist(population=pop)
+        return chosen_bin.get_elite(population=pop)
 
     def non_empty(self,
                   bin_idx: Tuple[int, int],

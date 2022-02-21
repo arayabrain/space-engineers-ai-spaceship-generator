@@ -68,8 +68,8 @@ class MAPBin:
         else:
             raise NotImplementedError(f'Unrecognized metric {metric}')
 
-    def get_elitist(self,
-                    population: str = 'feasible'):
+    def get_elite(self,
+                  population: str = 'feasible'):
         pop = self._feasible if population == 'feasible' else self._infeasible
         get_max = True if population == 'feasible' else False
         return sorted(pop, key=lambda x: x.c_fitness, reverse=get_max)[0]

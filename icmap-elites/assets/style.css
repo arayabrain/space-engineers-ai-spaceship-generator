@@ -55,12 +55,12 @@
 .heatmap-div {
     display: inline-block;
     vertical-align: top;
-    width: 50%
+    width: 30%
 }
 .content-div {
     display: inline-block;
     vertical-align: top;
-    width: 50%
+    width: 70%
 }
 .properties-text {
 }
@@ -112,7 +112,7 @@
     touch-action: manipulation;
 }
 .button:hover {
-    box-shadow: #121212 0 0 0 3px, transparent 0 0 0 0;
+    box-shadow: #121212 0 0 0 1px, transparent 0 0 0 0;
 }
 
 /* Dropdown */
