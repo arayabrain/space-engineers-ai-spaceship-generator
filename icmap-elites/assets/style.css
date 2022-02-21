@@ -43,13 +43,13 @@
     float: left;
     margin-top: auto;
     display: inline-block;
-    vertical-align: top;
+    vertical-align: middle;
     width: 15%
 }
 .plots {
     margin-top: auto;
     display: inline-block;
-    vertical-align: top;
+    vertical-align: middle;
     width: 70%;
 }
 .heatmap-div {

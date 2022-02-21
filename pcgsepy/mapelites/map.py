@@ -1,5 +1,5 @@
 from tqdm.notebook import trange
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 import random
@@ -374,7 +374,8 @@ class MAPElites:
             self._interactive_step(bin_idx=[chosen_bin.bin_idx],
                                    n_gen=n)
 
-    def reset(self):
+    def reset(self,
+              lcs: Optional[List[CandidateSolution]] = None):
         self.bin_qnt = self._initial_n_bins
         self.bin_sizes = (self.limits[0] / self.bin_qnt[0],
                           self.limits[1] / self.bin_qnt[1])
@@ -384,8 +385,11 @@ class MAPElites:
             for j in range(self.bin_qnt[1]):
                 self.bins[i, j] = MAPBin(bin_idx=(i, j),
                                          bin_size=self.bin_sizes)
-
-        self.generate_initial_populations()
+        if lcs:
+            self._update_bins(lcs=lcs)
+            self._check_res_trigger()
+        else:
+            self.generate_initial_populations()
 
     def get_elite(self,
                   bin_idx: Tuple[int, int],
@@ -401,3 +405,17 @@ class MAPElites:
         chosen_bin = self.bins[i, j]
         pop = chosen_bin._feasible if pop == 'feasible' else chosen_bin._infeasible
         return len(pop) > 0
+
+    def update_behavior_descriptors(self,
+                                    bs: Tuple[BehaviorCharacterization]):
+        self.b_descs = bs
+        self.limits = (self.b_descs[0].bounds[1] if self.b_descs[0].bounds is not None else 20,
+                       self.b_descs[1].bounds[1] if self.b_descs[1].bounds is not None else 20)
+        lcs = []
+        for i in range(self.bins.shape[0]):
+            for j in range(self.bins.shape[1]):
+                lcs.extend(self.bins[i, j]._feasible)
+                lcs.extend(self.bins[i, j]._infeasible)
+        for cs in lcs:
+            self._set_behavior_descriptors(cs=cs)
+        self.reset(lcs=lcs)
