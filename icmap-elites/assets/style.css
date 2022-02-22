@@ -43,36 +43,39 @@
     float: left;
     margin-top: auto;
     display: inline-block;
-    vertical-align: middle;
-    width: 15%
+    vertical-align: top;
+    width: 25%;
+    background-color: rgba(128, 245, 128, 0.3);
 }
 .plots {
     margin-top: auto;
     display: inline-block;
     vertical-align: middle;
-    width: 70%;
+    width: 100%;
+    background-color: rgba(225, 225, 225, 0.3);
 }
 .heatmap-div {
     display: inline-block;
     vertical-align: top;
-    width: 30%
+    width: 30%;
 }
 .content-div {
     display: inline-block;
     vertical-align: top;
-    width: 70%
+    width: 70%;
 }
 .properties-text {
 }
 .button-div {
     margin: auto;
-    text-align: center
+    text-align: center;
 }
 .experiment-controls-div {
     display: inline-block;
     float: right;
     vertical-align: top;
-    width: 15%
+    width: 25%;
+    background-color: rgba(128, 128, 245, 0.3);
 }
 .body-div {
     display: inline-block;
