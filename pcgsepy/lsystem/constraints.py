@@ -1,6 +1,8 @@
 from enum import Enum, auto
 from typing import Any, Callable, Dict
 
+from .solution import CandidateSolution
+
 
 class ConstraintLevel(Enum):
     SOFT_CONSTRAINT = auto()
@@ -13,11 +15,12 @@ class ConstraintTime(Enum):
 
 
 class ConstraintHandler:
+
     def __init__(self,
                  name: str,
                  level: ConstraintLevel,
                  when: ConstraintTime,
-                 f: Callable[[str, Dict[str, Any]], bool],
+                 f: Callable[[CandidateSolution, Dict[str, Any]], bool],
                  extra_args: Dict[str, Any],
                  needs_ll: bool = False):
         self.name = name
@@ -29,12 +32,13 @@ class ConstraintHandler:
 
     def __repr__(self) -> str:
         return f'Constraint {self.name} ({self.level.name}) at {self.when.name}'
-    
+
     def __str__(self) -> str:
         return self.__repr__()
-    
+
     def __eq__(self, other):
         return str(self) == str(other)
-    
+
     def __hash__(self):
-        return hash((self.name, self.level.value, self.when.value, str(self.extra_args)))
+        return hash((self.name, self.level.value, self.when.value,
+                     str(self.extra_args)))

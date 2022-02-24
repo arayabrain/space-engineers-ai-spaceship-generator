@@ -5,18 +5,21 @@ from ..structure import Structure, IntersectionException
 from ..common.vecs import Vec, Orientation
 from .structure_maker import LLStructureMaker
 from ..config import MAME_MEAN, MAME_STD, MAMI_MEAN, MAMI_STD
+from .solution import CandidateSolution
 
 
-def components_constraint(axiom: str, extra_args: Dict[str, Any]) -> bool:
+def components_constraint(cs: CandidateSolution,
+                          extra_args: Dict[str, Any]) -> bool:
     req_tiles = extra_args['req_tiles']
 
     components_ok = True
     for c in req_tiles:
-        components_ok &= c in axiom
+        components_ok &= c in cs.string
     return components_ok
 
 
-def intersection_constraint(axiom: str, extra_args: Dict[str, Any]) -> bool:
+def intersection_constraint(cs: CandidateSolution,
+                            extra_args: Dict[str, Any]) -> bool:
     base_position, orientation_forward, orientation_up = Vec.v3i(
         0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
     structure = Structure(origin=base_position,
@@ -26,13 +29,14 @@ def intersection_constraint(axiom: str, extra_args: Dict[str, Any]) -> bool:
         structure = LLStructureMaker(atoms_alphabet=extra_args['alphabet'],
                                      position=base_position).fill_structure(
                                          structure=structure,
-                                         axiom=axiom,
+                                         string=cs.ll_string,
                                          additional_args={
                                              'intersection_checking': True
                                          })
         structure.update(origin=base_position,
                          orientation_forward=orientation_forward,
                          orientation_up=orientation_up)
+        cs.set_content(content=structure)
         # check block intersecting after placement
         max_x, max_y, max_z = structure._max_dims
         matrix = np.zeros(shape=(max_x + 5, max_y + 5, max_z + 5),
@@ -49,23 +53,26 @@ def intersection_constraint(axiom: str, extra_args: Dict[str, Any]) -> bool:
     return True
 
 
-def symmetry_constraint(axiom: str, extra_args: Dict[str, Any]) -> bool:
+def symmetry_constraint(cs: CandidateSolution,
+                        extra_args: Dict[str, Any]) -> bool:
     # get low-level structure representation
-    base_position, orientation_forward, orientation_up = Vec.v3i(
-        0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
-    structure = Structure(origin=base_position,
-                          orientation_forward=orientation_forward,
-                          orientation_up=orientation_up)
-    structure = LLStructureMaker(atoms_alphabet=extra_args['alphabet'],
-                                 position=base_position).fill_structure(
-                                     structure=structure,
-                                     axiom=axiom,
-                                     additional_args={})
-    structure.update(origin=base_position,
-                     orientation_forward=orientation_forward,
-                     orientation_up=orientation_up)
+    if cs._content is None:
+        base_position, orientation_forward, orientation_up = Vec.v3i(
+            0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
+        structure = Structure(origin=base_position,
+                              orientation_forward=orientation_forward,
+                              orientation_up=orientation_up)
+        structure = LLStructureMaker(atoms_alphabet=extra_args['alphabet'],
+                                     position=base_position).fill_structure(
+                                         structure=structure,
+                                         string=cs.ll_string,
+                                         additional_args={})
+        structure.update(origin=base_position,
+                         orientation_forward=orientation_forward,
+                         orientation_up=orientation_up)
+        cs.set_content(content=structure)
 
-    structure = structure.as_array()
+    structure = cs.content.as_array()
 
     is_symmetric = False
     for dim in range(3):
@@ -73,23 +80,26 @@ def symmetry_constraint(axiom: str, extra_args: Dict[str, Any]) -> bool:
     return is_symmetric
 
 
-def axis_constraint(axiom: str, extra_args: Dict[str, Any]) -> bool:
+def axis_constraint(cs: CandidateSolution,
+                    extra_args: Dict[str, Any]) -> bool:
     # get low-level structure representation
-    base_position, orientation_forward, orientation_up = Vec.v3i(
-        0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
-    structure = Structure(origin=base_position,
-                          orientation_forward=orientation_forward,
-                          orientation_up=orientation_up)
-    structure = LLStructureMaker(atoms_alphabet=extra_args['alphabet'],
-                                 position=base_position).fill_structure(
-                                     structure=structure,
-                                     axiom=axiom,
-                                     additional_args={})
-    structure.update(origin=base_position,
-                     orientation_forward=orientation_forward,
-                     orientation_up=orientation_up)
+    if cs._content is None:
+        base_position, orientation_forward, orientation_up = Vec.v3i(
+            0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
+        structure = Structure(origin=base_position,
+                              orientation_forward=orientation_forward,
+                              orientation_up=orientation_up)
+        structure = LLStructureMaker(atoms_alphabet=extra_args['alphabet'],
+                                     position=base_position).fill_structure(
+                                         structure=structure,
+                                         string=cs.ll_string,
+                                         additional_args={})
+        structure.update(origin=base_position,
+                         orientation_forward=orientation_forward,
+                         orientation_up=orientation_up)
+        cs.set_content(content=structure)
 
-    volume = structure.as_array().shape
+    volume = cs.content.as_array().shape
     largest_axis, medium_axis, smallest_axis = reversed(sorted(list(volume)))
     mame = largest_axis / medium_axis
     mami = largest_axis / smallest_axis
@@ -99,7 +109,7 @@ def axis_constraint(axiom: str, extra_args: Dict[str, Any]) -> bool:
     return sat
 
 
-# def wheels_plane_constraint(axiom: str, extra_args: Dict[str, Any]) -> bool:
+# def wheels_plane_constraint(string: str, extra_args: Dict[str, Any]) -> bool:
 #     # get low-level blocks (cockpit and wheels)
 #     base_position, orientation_forward, orientation_up = Vec.v3i(
 #         0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
@@ -109,7 +119,7 @@ def axis_constraint(axiom: str, extra_args: Dict[str, Any]) -> bool:
 #     blocks = LLStructureMaker(atoms_alphabet=extra_args['alphabet'],
 #                               position=base_position).fill_structure(
 #                                   structure=structure,
-#                                   axiom=axiom,
+#                                   string=string,
 #                                   additional_args={}).get_all_blocks()
 #     cockpit = None
 #     wheels = []

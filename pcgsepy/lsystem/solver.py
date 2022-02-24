@@ -1,13 +1,13 @@
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
-from .actions import *
 from .constraints import ConstraintHandler, ConstraintTime, ConstraintLevel
 from .parser import HLParser, HLtoMLTranslator, LParser, LLParser
-from ..structure import *
+from .solution import CandidateSolution
 
 
 class LSolver:
+
     def __init__(self,
                  parser: LParser,
                  atoms_alphabet: Dict[str, Any],
@@ -19,89 +19,88 @@ class LSolver:
         self.inner_loops_end = 5
         self.translator = None
         if isinstance(self.parser, HLParser):
-            self.translator = HLtoMLTranslator(alphabet=self.atoms_alphabet,
-                                               tiles_dims=extra_args['tiles_dimensions'],
-                                               tiles_block_offset=extra_args['tiles_block_offset'])
+            self.translator = HLtoMLTranslator(
+                alphabet=self.atoms_alphabet,
+                tiles_dims=extra_args['tiles_dimensions'],
+                tiles_block_offset=extra_args['tiles_block_offset'])
             self.ll_rules = extra_args['ll_rules']
 
     def _forward_expansion(self,
-                           axiom: str,
+                           cs: CandidateSolution,
                            n: int,
-                           dc_check: bool = False) -> None:
+                           dc_check: bool = False) -> Optional[CandidateSolution]:
         for i in range(n):
-            axiom = self.parser.expand(axiom=axiom)
+            logging.getLogger('base-logger').debug(msg=f'Expanding string {cs.string}')
+            cs.string = self.parser.expand(string=cs.string)
         if dc_check and len([c for c in self.constraints if c.when == ConstraintTime.DURING]) > 0:
-            logging.getLogger('base-logger').debug(msg=f'Expanding axiom {axiom}')
-            if not self._check_constraints(axiom=axiom,
+            if not self._check_constraints(cs=cs,
                                            when=ConstraintTime.DURING)[ConstraintLevel.HARD_CONSTRAINT]:
-                axiom = None  # do not continue expansion if it breaks hard constraints during expansion
-        return axiom
+                cs = None  # do not continue expansion if it breaks hard constraints during expansion
+        return cs
 
     def _check_constraints(self,
-                           axiom: str,
+                           cs: CandidateSolution,
                            when: ConstraintTime,
                            keep_track: bool = False) -> Dict[ConstraintLevel, bool]:
         sat = {
-            ConstraintLevel.SOFT_CONSTRAINT: True if not keep_track else [True, 0],
-            ConstraintLevel.HARD_CONSTRAINT: True if not keep_track else [True, 0],
+            ConstraintLevel.SOFT_CONSTRAINT:
+                True if not keep_track else [True, 0],
+            ConstraintLevel.HARD_CONSTRAINT:
+                True if not keep_track else [True, 0],
         }
-        for l in sat.keys():
+        for lev in sat.keys():
             for c in self.constraints:
-                if c.when == when and c.level == l:
+                if c.when == when and c.level == lev:
                     if c.needs_ll and self.translator:
-                        ml_axiom = self.translator.transform(axiom=axiom)
-                        ml_axiom = LLParser(rules=self.ll_rules).expand(axiom=ml_axiom)
-                        # print(f'Checking {c}...')
-                        s = c.constraint(axiom=ml_axiom,
-                                         extra_args=c.extra_args)
-                    else:
-                        # print(f'Checking {c}...')
-                        s = c.constraint(axiom=axiom,
-                                         extra_args=c.extra_args)
+                        cs.ll_string = self.translator.transform(string=cs.string)
+                        cs.ll_string = LLParser(rules=self.ll_rules).expand(string=cs.ll_string)
+                    s = c.constraint(cs=cs,
+                                        extra_args=c.extra_args)
                     logging.getLogger('base-logger').debug(msg=f'\t{c}:\t{s}')
                     if keep_track:
-                        sat[l][0] &= s
-                        sat[l][1] += (1 if l == ConstraintLevel.HARD_CONSTRAINT else 0.5) if not s else 0
+                        sat[lev][0] &= s
+                        sat[lev][1] += (
+                            1 if lev == ConstraintLevel.HARD_CONSTRAINT else
+                            0.5) if not s else 0
                     else:
-                        sat[l] &= s
+                        sat[lev] &= s
         return sat
 
     def solve(self,
-              axiom: str,
+              string: str,
               iterations: int,
-              axioms_per_iteration: int = 1,
-              check_sat: bool = True) -> List[str]:
-        all_axioms = [axiom[:]]
+              strings_per_iteration: int = 1,
+              check_sat: bool = True) -> List[CandidateSolution]:
+        all_solutions = [CandidateSolution(string=string)]
         # forward expansion + DURING constraints check
         for i in range(iterations):
-            logging.getLogger('base-logger').info(f'Expansion n.{i+1}/{iterations}; current number of axioms: {len(all_axioms)}')
-            new_all_axioms = []
-            for axiom in all_axioms:
-                for _ in range(axioms_per_iteration):
-                    new_axiom = axiom[:]
-                    new_axiom = self._forward_expansion(axiom=new_axiom,
-                                                        n=1,
-                                                        dc_check=i > 0 and check_sat)
-                    if new_axiom is not None:
-                        new_all_axioms.append(new_axiom)
-            all_axioms = new_all_axioms
-            all_axioms = list(set(all_axioms))  # remove duplicates
+            logging.getLogger('base-logger').info(f'Expansion n.{i+1}/{iterations}; current number of strings: {len(all_solutions)}')
+            new_all_solutions = []
+            for cs in all_solutions:
+                for _ in range(strings_per_iteration):
+                    new_cs = CandidateSolution(string=cs.string[:])
+                    new_cs = self._forward_expansion(cs=new_cs,
+                                                     n=1,
+                                                     dc_check=i > 0 and check_sat)
+                    if new_cs is not None:
+                        new_all_solutions.append(new_cs)
+            all_solutions = new_all_solutions
+            all_solutions = list(set(all_solutions))  # remove duplicates
 
         # END constraints check + possible backtracking
         if check_sat and len([c for c in self.constraints if c.when == ConstraintTime.END]) > 0:
             to_rem = []
-            for axiom in all_axioms:
-                logging.getLogger('base-logger').debug(f'Finalizing axiom {axiom}')
-                if not self._check_constraints(axiom=axiom,
+            for cs in all_solutions:
+                logging.getLogger('base-logger').debug(f'Finalizing string {cs.string}')
+                if not self._check_constraints(cs=cs,
                                                when=ConstraintTime.END)[ConstraintLevel.HARD_CONSTRAINT]:
-                    to_rem.append(axiom)
-            # remaining axioms are SAT
+                    to_rem.append(cs)
+            # remaining strings are SAT
             for a in to_rem:
-                all_axioms.remove(a)
+                all_solutions.remove(a)
 
-        return all_axioms
+        return all_solutions
 
     def set_constraints(self,
                         cs: List[ConstraintHandler]) -> None:
-        # self.constraints.append(c)
         self.constraints = cs

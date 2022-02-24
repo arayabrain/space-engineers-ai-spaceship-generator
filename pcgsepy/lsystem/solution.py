@@ -5,7 +5,9 @@ from ..structure import Structure
 
 class CandidateSolution:
 
-    def __init__(self, string: str, content: Optional[Structure] = None):
+    def __init__(self,
+                 string: str,
+                 content: Optional[Structure] = None):
         self.string = string
         self._content = content
 
@@ -13,6 +15,9 @@ class CandidateSolution:
         self.b_descs = (0., 0.)
         self.is_feasible = False
         self.age = 0
+        
+        self.ll_string = ''
+        self.hls_mod = {}
 
     def __str__(self) -> str:
         return self.string
@@ -20,7 +25,8 @@ class CandidateSolution:
     def __repr__(self) -> str:
         return str(self)[:50] + f'; fitness: {self.c_fitness}; is_feasible: {self.is_feasible}'
 
-    def __eq__(self, other: 'CandidateSolution') -> bool:
+    def __eq__(self,
+               other: 'CandidateSolution') -> bool:
         if isinstance(other, CandidateSolution):
             return self.string == other.string
         return False
@@ -28,7 +34,8 @@ class CandidateSolution:
     def __hash__(self):
         return hash(self.string)
 
-    def set_content(self, content: Structure):
+    def set_content(self,
+                    content: Structure):
         if self._content:
             raise Exception('Structure already exists for this CandidateSolution.')
         else:

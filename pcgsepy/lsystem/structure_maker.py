@@ -53,7 +53,7 @@ class StructureMaker(ABC):
     @abstractmethod
     def fill_structure(self,
                        structure: Structure,
-                       axiom: str,
+                       string: str,
                        additional_args: Dict[str, Any] = {}) -> None:
         pass
 
@@ -80,23 +80,23 @@ class LLStructureMaker(StructureMaker):
 
     def fill_structure(self,
                        structure: Structure,
-                       axiom: str,
+                       string: str,
                        additional_args: Dict[str, Any] = {}) -> Structure:
         self.additional_args = additional_args
         self.structure = structure
         intersection_checking = additional_args.get('intersection_checking',
                                                     False)
         i = 0
-        while i < len(axiom):
+        while i < len(string):
             offset = 0
             for a in reversed(self.atoms_alphabet.keys()):
-                if axiom.startswith(a, i):
+                if string.startswith(a, i):
                     offset += len(a)
                     # check for atom's parameters
                     parameters = []
-                    if i + offset < len(axiom) and axiom[i + offset] == '(':
-                        params = axiom[i +
-                                       offset:axiom.index(')', i + offset + 1) +
+                    if i + offset < len(string) and string[i + offset] == '(':
+                        params = string[i +
+                                       offset:string.index(')', i + offset + 1) +
                                        1]
                         offset += len(params)
                         parameters = params.replace('(',
@@ -107,7 +107,7 @@ class LLStructureMaker(StructureMaker):
                     self._calls[action]({
                         'action_args': args,
                         'parameters': parameters,
-                        'axiom': a,
+                        'string': a,
                         'intersection_checking': intersection_checking
                     })
                     break
