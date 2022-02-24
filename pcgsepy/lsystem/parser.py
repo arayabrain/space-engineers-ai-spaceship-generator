@@ -209,7 +209,8 @@ class HLtoMLTranslator:
             offset += len(s)
         return string
 
-    def transform(self, string: str) -> str:
+    def transform(self,
+                  string: str) -> str:
         atoms_list = self._string_as_list(string)
         try:
             new_string = self._to_midlvl(atoms_list)

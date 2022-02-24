@@ -13,11 +13,12 @@ class CandidateSolution:
 
         self.c_fitness = 0.
         self.b_descs = (0., 0.)
-        self.is_feasible = False
+        self.is_feasible = True
         self.age = 0
         
         self.ll_string = ''
         self.hls_mod = {}
+        self.ncv = 0  # number of constraints violated
 
     def __str__(self) -> str:
         return self.string

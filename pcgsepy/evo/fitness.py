@@ -1,13 +1,13 @@
 from typing import Any, Dict
-from scipy.stats import norm
 import numpy as np
 import pickle
 
 from pcgsepy.common.vecs import Orientation, Vec
-from pcgsepy.config import USE_BBOX, BBOX_X, BBOX_Y, BBOX_Z
-from pcgsepy.config import TOVO_MEAN, TOVO_STD, FUTO_MEAN, FUTO_STD
+from pcgsepy.config import BBOX_X, BBOX_Y, BBOX_Z
+from pcgsepy.lsystem.solution import CandidateSolution
 from pcgsepy.lsystem.structure_maker import LLStructureMaker
 from pcgsepy.structure import Structure
+from pcgsepy.lsystem.solution import CandidateSolution
 
 
 # load pickled estimators
@@ -30,83 +30,86 @@ x = np.linspace(0, 10, int(10 / 0.005))
 mami_max = np.max(mami_es.evaluate(x))
 
 
-def bounding_box_fitness(axiom: str, extra_args: Dict[str, Any]) -> float:
+def bounding_box_fitness(cs: CandidateSolution,
+                         extra_args: Dict[str, Any]) -> float:
     """
     Measure how close the structure fits in the bounding box.
     Penalizes in both ways.
     Normalized in [0,1].
     """
-    base_position, orientation_forward, orientation_up = Vec.v3i(
-        0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
-    structure = Structure(origin=base_position,
-                          orientation_forward=orientation_forward,
-                          orientation_up=orientation_up)
-    structure = LLStructureMaker(atoms_alphabet=extra_args['alphabet'],
-                                 position=base_position).fill_structure(
-                                     structure=structure,
-                                     axiom=axiom,
-                                     additional_args={})
-    structure.update(origin=base_position,
-                     orientation_forward=orientation_forward,
-                     orientation_up=orientation_up)
-
-    x, y, z = structure.as_array().shape
+    if cs._content is None:
+        base_position, orientation_forward, orientation_up = Vec.v3i(0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
+        structure = Structure(origin=base_position,
+                              orientation_forward=orientation_forward,
+                              orientation_up=orientation_up)
+        structure = LLStructureMaker(atoms_alphabet=extra_args['alphabet'],
+                                     position=base_position).fill_structure(structure=structure,
+                                                                            string=cs.ll_string,
+                                                                            additional_args={})
+        structure.update(origin=base_position,
+                         orientation_forward=orientation_forward,
+                         orientation_up=orientation_up)
+        cs.set_content(content=structure)
+    
+    x, y, z = cs.content.as_array().shape
     f = np.clip((BBOX_X - abs(BBOX_X - x)) / BBOX_X, 0, 1)
     f += np.clip((BBOX_Y - abs(BBOX_Y - y)) / BBOX_Y, 0, 1)
     f += np.clip((BBOX_Z - abs(BBOX_Z - z)) / BBOX_Z, 0, 1)
     return f / 3
 
 
-def box_filling_fitness(axiom: str, extra_args: Dict[str, Any]) -> float:
+def box_filling_fitness(cs: CandidateSolution,
+                        extra_args: Dict[str, Any]) -> float:
     """
     Measures how much of the total volume is filled with blocks.
     Uses TOVO_MEAN and TOVO_STD.
     Normalized in [0,1]
     """
-    base_position, orientation_forward, orientation_up = Vec.v3i(
-        0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
-    structure = Structure(origin=base_position,
-                          orientation_forward=orientation_forward,
-                          orientation_up=orientation_up)
-    structure = LLStructureMaker(atoms_alphabet=extra_args['alphabet'],
-                                 position=base_position).fill_structure(
-                                     structure=structure,
-                                     axiom=axiom,
-                                     additional_args={})
-    structure.update(origin=base_position,
-                     orientation_forward=orientation_forward,
-                     orientation_up=orientation_up)
+    if cs._content is None:
+        base_position, orientation_forward, orientation_up = Vec.v3i(0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
+        structure = Structure(origin=base_position,
+                              orientation_forward=orientation_forward,
+                              orientation_up=orientation_up)
+        structure = LLStructureMaker(atoms_alphabet=extra_args['alphabet'],
+                                     position=base_position).fill_structure(structure=structure,
+                                                                            string=cs.ll_string,
+                                                                            additional_args={})
+        structure.update(origin=base_position,
+                         orientation_forward=orientation_forward,
+                         orientation_up=orientation_up)
+        cs.set_content(content=structure)
 
-    to = sum([b.volume for b in structure.get_all_blocks(to_place=False)])
-    vo = structure.as_array().shape
+    to = sum([b.volume for b in cs.content._blocks.values()])
+    vo = cs.content.as_array().shape
     vo = vo[0] * vo[1] * vo[2]
     tovo = to / vo
     # return norm(tovo, TOVO_MEAN, TOVO_STD)
     return tovo_es.evaluate(tovo) / tovo_max
 
 
-def func_blocks_fitness(axiom: str, extra_args: Dict[str, Any]) -> float:
+def func_blocks_fitness(cs: CandidateSolution,
+                        extra_args: Dict[str, Any]) -> float:
     """
     Measures how much of the total blocks is functional blocks.
     Uses FUTO_MEAN and FUTO_STD.
     Normalized in [0,1]
     """
-    base_position, orientation_forward, orientation_up = Vec.v3i(
-        0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
-    structure = Structure(origin=base_position,
-                          orientation_forward=orientation_forward,
-                          orientation_up=orientation_up)
-    structure = LLStructureMaker(atoms_alphabet=extra_args['alphabet'],
-                                 position=base_position).fill_structure(
-                                     structure=structure,
-                                     axiom=axiom,
-                                     additional_args={})
-    structure.update(origin=base_position,
-                     orientation_forward=orientation_forward,
-                     orientation_up=orientation_up)
+    if cs._content is None:
+        base_position, orientation_forward, orientation_up = Vec.v3i(0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
+        structure = Structure(origin=base_position,
+                              orientation_forward=orientation_forward,
+                              orientation_up=orientation_up)
+        structure = LLStructureMaker(atoms_alphabet=extra_args['alphabet'],
+                                     position=base_position).fill_structure(structure=structure,
+                                                                            string=cs.ll_string,
+                                                                            additional_args={})
+        structure.update(origin=base_position,
+                         orientation_forward=orientation_forward,
+                         orientation_up=orientation_up)
+        cs.set_content(content=structure)
 
     fu, to = 0., 0.
-    for b in structure.get_all_blocks(to_place=False):
+    for b in cs.content._blocks.values():
         if not b.block_type.startswith('MyObjectBuilder_CubeBlock_'):
             fu += b.volume
         to += b.volume
@@ -115,27 +118,28 @@ def func_blocks_fitness(axiom: str, extra_args: Dict[str, Any]) -> float:
     return futo_es.evaluate(futo) / futo_max
 
 
-def axis_fitness(axiom: str, extra_args: Dict[str, Any]) -> float:
+def axis_fitness(cs: CandidateSolution,
+                 extra_args: Dict[str, Any]) -> float:
     """
     Measures how much of the total blocks is functional blocks.
     Uses FUTO_MEAN and FUTO_STD.
     Normalized in [0,2]
     """
-    base_position, orientation_forward, orientation_up = Vec.v3i(
-        0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
-    structure = Structure(origin=base_position,
-                          orientation_forward=orientation_forward,
-                          orientation_up=orientation_up)
-    structure = LLStructureMaker(atoms_alphabet=extra_args['alphabet'],
-                                 position=base_position).fill_structure(
-                                     structure=structure,
-                                     axiom=axiom,
-                                     additional_args={})
-    structure.update(origin=base_position,
-                     orientation_forward=orientation_forward,
-                     orientation_up=orientation_up)
+    if cs._content is None:
+        base_position, orientation_forward, orientation_up = Vec.v3i(0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
+        structure = Structure(origin=base_position,
+                              orientation_forward=orientation_forward,
+                              orientation_up=orientation_up)
+        structure = LLStructureMaker(atoms_alphabet=extra_args['alphabet'],
+                                     position=base_position).fill_structure(structure=structure,
+                                                                            string=cs.ll_string,
+                                                                            additional_args={})
+        structure.update(origin=base_position,
+                         orientation_forward=orientation_forward,
+                         orientation_up=orientation_up)
+        cs.set_content(content=structure)
 
-    volume = structure.as_array().shape
+    volume = cs.content.as_array().shape
     largest_axis, medium_axis, smallest_axis = reversed(sorted(list(volume)))
     mame = largest_axis / medium_axis
     mami = largest_axis / smallest_axis

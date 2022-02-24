@@ -129,7 +129,7 @@ class LSystem:
 
     def hl_to_ll(self,
                  cs: CandidateSolution) -> CandidateSolution:
-        return self.ll_solver.solve(string=self.hl_solver.translator.transform(cs=cs.string),
+        return self.ll_solver.solve(string=self.hl_solver.translator.transform(string=cs.string),
                                     iterations=1,
                                     check_sat=False)[0]
 
@@ -156,7 +156,8 @@ class LSystem:
         merged = ''.join(cs.string for cs in lcs)
         m_cs = CandidateSolution(string=merged)
         for i, cs in enumerate(lcs):
-            m_cs.hls_mod[self.modules[i].name] = cs.string
+            m_cs.hls_mod[self.modules[i].name] = {'string': cs.string,
+                                                  'mutable': True}
         return m_cs
 
     def _produce_strings_combinations(self,
