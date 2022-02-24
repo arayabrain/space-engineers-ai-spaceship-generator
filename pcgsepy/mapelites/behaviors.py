@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Tuple
 import numpy as np
 
 from ..common.vecs import Vec
@@ -9,7 +9,7 @@ class BehaviorCharacterization:
     def __init__(self,
                  name: str,
                  func: callable,
-                 bounds: Optional[str] = None):
+                 bounds: Tuple[float, float]):
         self.name = name
         self.bounds = bounds
         self.f = func
@@ -21,22 +21,19 @@ class BehaviorCharacterization:
 
 def mame(cs: CandidateSolution) -> float:
     volume = cs.content.as_array().shape
-    largest_axis, medium_axis, smallest_axis = reversed(sorted(
-        list(volume)))
+    largest_axis, medium_axis, _ = reversed(sorted(list(volume)))
     return largest_axis / medium_axis
 
 
 def mami(cs: CandidateSolution) -> float:
     volume = cs.content.as_array().shape
-    largest_axis, medium_axis, smallest_axis = reversed(sorted(
-        list(volume)))
+    largest_axis, _, smallest_axis = reversed(sorted(list(volume)))
     return largest_axis / smallest_axis
 
 
 def avg_ma(cs: CandidateSolution) -> float:
     volume = cs.content.as_array().shape
-    largest_axis, medium_axis, smallest_axis = reversed(sorted(
-        list(volume)))
+    largest_axis, medium_axis, smallest_axis = reversed(sorted(list(volume)))
     return ((largest_axis / medium_axis) + (largest_axis / smallest_axis)) / 2
 
 

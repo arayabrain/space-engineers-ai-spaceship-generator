@@ -1,0 +1,41 @@
+
+
+cockpitcorridorsimple(1)[RotYcwXcorridorsimple(1)corridorsimple(1)corridorsimple(1)[RotYcwZcorridorsimple(2)][RotYccwZcorridorsimple(2)]corridorreactors(1)thrusters(1)]corridorcargo(2)corridorreactors(1)corridorgyros(1)thrusters
+Volume: 224250.0
+BBox: (150, 195, 105) (0.725)
+Functional blocks / total blocks = 0.07023411371237458 ([0.03955197])
+Filled volume / total volume = 0.07301587301587302 ([0.59190998])
+Largest axis / Medium axis = 1.3 ([0.99989186])
+Largest axis / Medium axis = 1.8571428571428572 ([0.98961752])
+
+cockpitcorridorsimple(1)[RotYcwZcorridorsimple(1)][RotYccwZcorridorsimple(1)][RotYccwXcorridorsimple(1)[RotYcwZcorridorsimple(2)][RotYccwZcorridorsimple(1)thrusters(1)]corridorgyros(1)corridorcargo(1)thrusters(1)]corridorgyros(1)corridorsimple(1)corridorreactors(1)[RotYcwZcorridorsimple(1)thrusters(1)][RotYccwXcorridorsimple(1)[RotYccwZcorridorsimple(1)][RotYccwXcorridorsimple(2)]corridorcargo(2)thrusters(1)]thrusters
+Volume: 330250.0
+BBox: (140, 185, 95) (0.7194444444444444)
+Functional blocks / total blocks = 0.0753217259651779 ([0.04633046])
+Filled volume / total volume = 0.1342206868522658 ([0.90501633])
+Largest axis / Medium axis = 1.3214285714285714 ([0.99733377])
+Largest axis / Medium axis = 1.9473684210526316 ([0.99980383])
+
+cockpitcorridorsimple(1)[RotYccwXcorridorsimple(1)][RotYcwZcorridorsimple(1)[RotYcwXcorridorsimple(2)]corridorcargo(2)corridorgyros(1)thrusters(1)]corridorreactors(2)corridorcargo(1)[RotYccwXcorridorsimple(1)][RotYcwZcorridorsimple(1)[RotYcwZcorridorsimple(1)[RotYccwXcorridorsimple(2)]corridorsimple(1)[RotYccwXcorridorsimple(1)][RotYccwZcorridorsimple(2)][RotYcwXcorridorsimple(2)]thrusters(1)]corridorcargo(2)corridorgyros(1)thrusters(1)]thrusters
+Volume: 429750.0
+BBox: (105, 200, 175) (0.9277777777777777)
+Functional blocks / total blocks = 0.07097149505526469 ([0.04047122])
+Filled volume / total volume = 0.11693877551020408 ([0.83450865])
+Largest axis / Medium axis = 1.1428571428571428 ([0.91052406])
+Largest axis / Medium axis = 1.9047619047619047 ([0.99696481])
+
+cockpitcorridorsimple(1)[RotYccwZcorridorsimple(1)][RotYcwZcorridorsimple(2)][RotYccwXcorridorsimple(1)[RotYcwXcorridorsimple(1)corridorcargo(1)[RotYcwZcorridorsimple(1)thrusters(1)]corridorgyros(1)thrusters(1)]corridorcargo(1)thrusters(1)]corridorcargo(1)corridorgyros(1)corridorreactors(1)thrusters
+Volume: 257250.0
+BBox: (105, 170, 90) (0.7999999999999999)
+Functional blocks / total blocks = 0.08066083576287658 ([0.05461808])
+Filled volume / total volume = 0.16013071895424835 ([0.97364387])
+Largest axis / Medium axis = 1.619047619047619 ([0.7496319])
+Largest axis / Medium axis = 1.8888888888888888 ([0.99501573])
+
+cockpitcorridorsimple(1)[RotYcwZcorridorsimple(2)][RotYcwXcorridorsimple(2)]corridorsimple(1)corridorcargo(1)[RotYcwZcorridorsimple(1)[RotYcwZcorridorsimple(1)]corridorsimple(1)[RotYccwZcorridorsimple(2)][RotYcwXcorridorsimple(1)]corridorsimple(1)corridorsimple(2)thrusters(1)]corridorreactors(2)[RotYcwZcorridorsimple(1)[RotYcwXcorridorsimple(1)corridorsimple(1)corridorreactors(1)thrusters(1)]corridorcargo(1)corridorgyros(2)thrusters(1)]thrusters
+Volume: 413250.0
+BBox: (110, 240, 185) (0.8222222222222223)
+Functional blocks / total blocks = 0.05928614640048397 ([0.02821802])
+Filled volume / total volume = 0.08461302211302212 ([0.66152816])
+Largest axis / Medium axis = 1.2972972972972974 ([0.99997856])
+Largest axis / Medium axis = 2.1818181818181817 ([0.96404967])
