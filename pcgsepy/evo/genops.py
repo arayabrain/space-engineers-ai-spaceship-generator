@@ -1,4 +1,5 @@
 import math
+from itertools import accumulate
 from random import random, randint, choices, sample
 from typing import List, Tuple
 
@@ -9,6 +10,10 @@ from pcgsepy.config import PL_LOW, PL_HIGH
 import numpy as np
 from pcgsepy.lsystem.rules import StochasticRules
 from pcgsepy.lsystem.solution import CandidateSolution
+
+
+class EvoException(Exception):
+    pass
 
 
 def roulette_wheel_selection(pop: List[CandidateSolution],
@@ -34,7 +39,7 @@ def roulette_wheel_selection(pop: List[CandidateSolution],
         p += f
         if p >= r:
             return pop[i]
-    raise Exception('Unable to find valid solution')
+    raise EvoException('Unable to find valid solution')
 
 
 class SimplifiedExpander:
@@ -88,19 +93,31 @@ def mutate(cs: CandidateSolution,
     """
     idxs = get_atom_indexes(string=cs.string,
                             atom='corridorsimple')  # TODO: Perhaps read from config instead
+    idxs = remove_immutable_idxs(cs=cs,
+                                 idxs=idxs)
     n = len(idxs)
-    p = max(MUTATION_INITIAL_P / math.exp(n_iteration * MUTATION_DECAY), 0)
-    to_mutate = int(p * n)
-    for_mutation = sample(population=idxs, k=to_mutate)
-    for_mutation = sorted(for_mutation,
-                          key=lambda x: x[0],
-                          reverse=True)
+    if n > 0:
+        p = max(MUTATION_INITIAL_P / math.exp(n_iteration * MUTATION_DECAY), 0)
+        to_mutate = int(p * n)
+        for_mutation = sample(population=idxs, k=to_mutate)
+        for_mutation = sorted(for_mutation,
+                            key=lambda x: x[0],
+                            reverse=True)
 
-    for idx in for_mutation:
-        rhs, offset = expander.get_rhs(string=cs.string,
-                                       idx=idx[0])
-        d = offset - (idx[1] + 1 - idx[0])
-        cs.string = cs.string[:idx[0]] + rhs + cs.string[idx[1] + 1 + d:]
+        for idx in for_mutation:
+            rhs, offset = expander.get_rhs(string=cs.string,
+                                        idx=idx[0])
+            d = offset - (idx[1] + 1 - idx[0])
+            cs.string = cs.string[:idx[0]] + rhs + cs.string[idx[1] + 1 + d:]
+        # Update hls_mod 'string' values
+        mod_intervals = list(accumulate([len(cs.hls_mod[k]['string']) for k in cs.hls_mod.keys()]))
+        prev = 0
+        for interval, k in zip(mod_intervals, cs.hls_mod.keys()):
+            cs.hls_mod[k]['string'] = cs.string[prev:interval]
+            prev += interval
+    else:
+        raise EvoException(f'No mutation could be applied to {cs.string}.')
+        
 
 
 def crossover(a1: CandidateSolution,
@@ -127,24 +144,41 @@ def crossover(a1: CandidateSolution,
     if not idxs2:
         idxs2 = get_atom_indexes(string=a2.string,
                                  atom='corridor')  # TODO: Perhaps read from config instead
+    idxs1 = remove_immutable_idxs(cs=a1,
+                                  idxs=idxs1)
+    idxs2 = remove_immutable_idxs(cs=a2,
+                                  idxs=idxs2)
     ws1 = [CROSSOVER_P for _ in range(len(idxs1))]
     ws2 = [CROSSOVER_P for _ in range(len(idxs2))]
     childs = []
-    while len(childs) < n_childs:
-        s1 = a1.string[:]
-        s2 = a2.string[:]
+    if len(idxs1) > 0 and len(idxs2) > 0:
+        while len(childs) < n_childs:
+            s1 = a1.string[:]
+            s2 = a2.string[:]
 
-        idx1 = choices(population=idxs1, weights=ws1, k=1)[0]
-        b1 = a1.string[idx1[0]:idx1[1] + 1]
+            idx1 = choices(population=idxs1, weights=ws1, k=1)[0]
+            b1 = a1.string[idx1[0]:idx1[1] + 1]
 
-        idx2 = choices(population=idxs2, weights=ws2, k=1)[0]
-        b2 = a2.string[idx2[0]:idx2[1] + 1]
+            idx2 = choices(population=idxs2, weights=ws2, k=1)[0]
+            b2 = a2.string[idx2[0]:idx2[1] + 1]
 
-        s1 = s1[:idx1[0]] + s1[idx1[0]:].replace(b1, b2, 1)
-        s2 = s2[:idx2[0]] + s2[idx2[0]:].replace(b2, b1, 1)
+            s1 = s1[:idx1[0]] + s1[idx1[0]:].replace(b1, b2, 1)
+            s2 = s2[:idx2[0]] + s2[idx2[0]:].replace(b2, b1, 1)
 
-        childs.append(CandidateSolution(string=s1))
-        childs.append(CandidateSolution(string=s2))
+            for s in [s1, s2]:
+                o = CandidateSolution(string=s1)
+                # Update hls_mod
+                mod_intervals = list(accumulate([len(a1.hls_mod[k]['string']) for k in a1.hls_mod.keys()]))
+                prev = 0
+                for interval, k in zip(mod_intervals, a1.hls_mod.keys()):
+                    o.hls_mod[k] = {
+                        'string': o.string[prev:interval],
+                        'mutable': a1.hls_mod[k]['mutable']
+                        }
+                    prev += interval
+                childs.append(o)
+    else:
+        raise EvoException(f'No cross-over could be applied ({a1.string} w/ {a2.string}).')
     return childs[:n_childs]
 
 
@@ -175,3 +209,24 @@ def get_atom_indexes(string: str,
             indexes.append((i, cb))
             i = cb
     return indexes
+
+def remove_immutable_idxs(cs: CandidateSolution,
+                          idxs: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
+    """Remove indexes of an immutable part of the string.
+
+    Args:
+        cs (CandidateSolution): The solution
+        idxs (List[Tuple[int, int]]): The initial list of indexes
+
+    Returns:
+        List[Tuple[int, int]]: The filtered list of indexes
+    """
+    valid = []
+    mod_intervals = list(accumulate([len(cs.hls_mod[k]['string']) for k in cs.hls_mod.keys()]))
+    for idx in idxs:
+        for i, interval in enumerate(mod_intervals):
+            if idx[0] < interval and (i == len(mod_intervals) - 1 or idx[0] < mod_intervals[i + 1]):
+                if cs.hls_mod[list(cs.hls_mod.keys())[i]]['mutable']:
+                    valid.append(idx)
+                break
+    return valid

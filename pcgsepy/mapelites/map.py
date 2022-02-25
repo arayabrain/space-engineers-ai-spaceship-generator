@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 
+from pcgsepy.evo.genops import EvoException
+
 from .bin import MAPBin
 from .behaviors import BehaviorCharacterization
 from ..common.vecs import Orientation, Vec
@@ -180,11 +182,12 @@ class MAPElites:
             self.bins[i, j].insert_cs(cs)
             self.bins[i, j].remove_old()
 
-    def _age_bins(self):
+    def _age_bins(self,
+                  diff: int = -1):
         for i in range(self.bins.shape[0]):
             for j in range(self.bins.shape[1]):
                 cbin = self.bins[i, j]
-                cbin.age_up()
+                cbin.age(diff=diff)
 
     def _valid_bins(self):
         valid_bins = []
@@ -216,28 +219,31 @@ class MAPElites:
               gen: int) -> List[CandidateSolution]:
         generated = []
         for pop, minimize in zip(populations, minimizes):
-            new_pool = create_new_pool(population=pop,
-                                       generation=gen,
-                                       n_individuals=2 * BIN_POP_SIZE,
-                                       minimize=minimize)
-            subdivide_solutions(lcs=new_pool,
-                                lsystem=self.lsystem)
-            for cs in new_pool:
-                if cs.is_feasible:
-                    cs.c_fitness = self.compute_fitness(cs=cs,
-                                                        extra_args={
-                                                            'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                                            }) + (0.5 - cs.ncv)
-                else:
-                    cs.c_fitness = cs.ncv
-                if cs._content is None:
-                    cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
-                                                 extra_args={
-                                                     'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                                     }))
-                self._set_behavior_descriptors(cs=cs)
-                cs.age = CS_MAX_AGE
-                generated.append(cs)
+            try:
+                new_pool = create_new_pool(population=pop,
+                                        generation=gen,
+                                        n_individuals=2 * BIN_POP_SIZE,
+                                        minimize=minimize)
+                subdivide_solutions(lcs=new_pool,
+                                    lsystem=self.lsystem)
+                for cs in new_pool:
+                    if cs.is_feasible:
+                        cs.c_fitness = self.compute_fitness(cs=cs,
+                                                            extra_args={
+                                                                'alphabet': self.lsystem.ll_solver.atoms_alphabet
+                                                                }) + (0.5 - cs.ncv)
+                    else:
+                        cs.c_fitness = cs.ncv
+                    if cs._content is None:
+                        cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
+                                                    extra_args={
+                                                        'alphabet': self.lsystem.ll_solver.atoms_alphabet
+                                                        }))
+                    self._set_behavior_descriptors(cs=cs)
+                    cs.age = CS_MAX_AGE
+                    generated.append(cs)
+            except EvoException:
+                pass
         return generated
         
     def rand_step(self,
@@ -251,8 +257,11 @@ class MAPElites:
         generated = self._step(populations=[f_pop, i_pop],
                                minimizes=[False, True],
                                gen=gen)
-        self._update_bins(lcs=generated)
-        self._check_res_trigger()
+        if generated:
+            self._update_bins(lcs=generated)
+            self._check_res_trigger()
+        else:
+            self._age_bins(diff=1)
 
     def _interactive_step(self,
                           bin_idxs: List[Tuple[int, int]],
@@ -268,18 +277,18 @@ class MAPElites:
         generated = self._step(populations=[f_pop, i_pop],
                                minimizes=[False, True],
                                gen=gen)
-        self._update_bins(lcs=generated)
-        self._check_res_trigger()
+        if generated:
+            self._update_bins(lcs=generated)
+            self._check_res_trigger()
+        else:
+            self._age_bins(diff=1)
 
-    def interactive_mode(self, n_steps: int = 10):
+    def interactive_mode(self,
+                         n_steps: int = 10):
         for n in range(n_steps):
             print(f'### STEP {n+1}/{n_steps} ###')
-            self.show_age(show_mean=True, population='feasible')
-            self.show_age(show_mean=True, population='infeasible')
-
             valid_bins = self._valid_bins()
-            list_valid_bins = '\n-' + '\n-'.join(
-                [str(x.bin_idx) for x in valid_bins])
+            list_valid_bins = '\n-' + '\n-'.join([str(x.bin_idx) for x in valid_bins])
             print(f'Valid bins are: {list_valid_bins}')
             chosen_bin = None
             while chosen_bin is None:
@@ -290,8 +299,8 @@ class MAPElites:
                     chosen_bin = selected
                 else:
                     print('Chosen bin is not amongst valid bins.')
-            self._interactive_step(bin_idx=[chosen_bin.bin_idx],
-                                   n_gen=n)
+            self._interactive_step(bin_idxs=[chosen_bin.bin_idx],
+                                   gen=n)
 
     def reset(self,
               lcs: Optional[List[CandidateSolution]] = None):
@@ -338,3 +347,13 @@ class MAPElites:
         for cs in lcs:
             self._set_behavior_descriptors(cs=cs)
         self.reset(lcs=lcs)
+
+    def toggle_module_mutability(self,
+                                 module: str):
+        # toggle module's mutability in the solution
+        for i in range(self.bins.shape[0]):
+            for j in range(self.bins.shape[1]):
+                self.bins[i, j].toggle_module_mutability(module=module)
+        # toggle module's mutability within the L-system
+        ms = [x.name for x in self.lsystem.modules]
+        self.lsystem.modules[ms.index(module)].active = not self.lsystem.modules[ms.index(module)].active

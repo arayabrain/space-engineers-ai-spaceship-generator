@@ -40,10 +40,11 @@ class MAPBin:
                 self._infeasible = self._reduce_pop(self._infeasible,
                                                     maximize=False)
 
-    def age_up(self):
+    def age(self,
+            diff: int = -1):
         for pop in [self._feasible, self._infeasible]:
             for cs in pop:
-                cs.age -= 1
+                cs.age += diff
 
     def remove_old(self):
         to_rem_f = [x for x in self._feasible if x.age <= 0]
@@ -73,3 +74,9 @@ class MAPBin:
         pop = self._feasible if population == 'feasible' else self._infeasible
         get_max = True if population == 'feasible' else False
         return sorted(pop, key=lambda x: x.c_fitness, reverse=get_max)[0]
+
+    def toggle_module_mutability(self,
+                                 module: str):
+        for pop in [self._feasible, self._infeasible]:
+            for cs in pop:
+                cs.hls_mod[module]['mutable'] = not cs.hls_mod[module]['mutable']

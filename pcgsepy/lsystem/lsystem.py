@@ -20,6 +20,7 @@ class LSystemModule:
         self.llsolver = ll_solver
         self.check_sat = True
         self.name = name
+        self.active = True
         self.hl_constraints = []
         self.ll_constraints = []
 
