@@ -36,8 +36,14 @@ class StochasticRules:
     def validate(self):
         for lhs in self._rules.keys():
             p = sum(self._rules[lhs][1])
-            assert np.isclose(
-                p, 1.), f'Probability must sum to 1: found {p} for `{lhs}`.'
+            assert np.isclose(p, 1.), f'Probability must sum to 1: found {p} for `{lhs}`.'
+    
+    def __str__(self) -> str:
+        s = []
+        for k in self._rules.keys():
+            for o, p in zip(*self._rules[k]):
+                s.append(f'{k} {p} {o}')
+        return '\n'.join(s)
 
 
 class RuleMaker:

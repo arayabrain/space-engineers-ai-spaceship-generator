@@ -40,7 +40,7 @@
 .generic-description { 
 }
 .graph-controls-div {
-    float: left;
+    /* float: left; */
     margin-top: auto;
     display: inline-block;
     vertical-align: top;
@@ -72,7 +72,7 @@
 }
 .experiment-controls-div {
     display: inline-block;
-    float: right;
+    /* float: right; */
     vertical-align: top;
     width: 25%;
     background-color: rgba(128, 128, 245, 0.3);
@@ -177,3 +177,8 @@
 .radio > label:hover {
     box-shadow: #121212 0 0 0 1px, transparent 0 0 0 0;
 }
+
+.checkboxes {
+    color: #121212;
+    padding: 5px auto;
+} 
