@@ -48,14 +48,17 @@ class MAPElites:
                        self.b_descs[1].bounds[1] if self.b_descs[1].bounds is not None else 20)
         self._initial_n_bins = n_bins
         self.bin_qnt = n_bins
-        self.bin_sizes = (self.limits[0] / self.bin_qnt[0],
-                          self.limits[1] / self.bin_qnt[1])
+        self.bin_sizes = [
+            [self.limits[0] / self.bin_qnt[0]] * n_bins[0],
+            [self.limits[1] / self.bin_qnt[1]] * n_bins[1]
+        ]
 
         self.bins = np.empty(shape=self.bin_qnt, dtype=object)
         for i in range(self.bin_qnt[0]):
             for j in range(self.bin_qnt[1]):
                 self.bins[i, j] = MAPBin(bin_idx=(i, j),
-                                         bin_size=self.bin_sizes)
+                                         bin_size=(self.bin_sizes[0][i],
+                                                   self.bin_sizes[1][j]))
         self.enforce_qnt = True
 
     def show_metric(self,
@@ -89,9 +92,11 @@ class MAPElites:
                    vmin=0,
                    vmax=vmaxs[metric][population])
         plt.xticks(np.arange(self.bin_qnt[0]),
-                   np.arange(0, self.limits[0], self.bin_sizes[0]))
+                   np.cumsum(self.bin_sizes[0]) + self.limits[0])
+                #    np.arange(0, self.limits[0], self.bin_sizes[0]))
         plt.yticks(np.arange(self.bin_qnt[1]),
-                   np.arange(0, self.limits[1], self.bin_sizes[1]))
+                   np.cumsum(self.bin_sizes[1]) + self.limits[1])
+                #    np.arange(0, self.limits[1], self.bin_sizes[1]))
         plt.xlabel(self.b_descs[0].name)
         plt.ylabel(self.b_descs[1].name)
         plt.title(f'CMAP-Elites {"Avg." if show_mean else ""}{metric} ({population})')
@@ -163,22 +168,57 @@ class MAPElites:
                 all_cs.extend(self.bins[i, j]._infeasible)
         # double resolution of bins
         self.bin_qnt = (self.bin_qnt[0] * 2, self.bin_qnt[1] * 2)
-        self.bin_sizes = (self.limits[0] / self.bin_qnt[0],
-                          self.limits[1] / self.bin_qnt[1])
+        self.bin_sizes = [
+            [self.limits[0] / self.bin_qnt[0]] * self.bin_qnt[0],
+            [self.limits[1] / self.bin_qnt[1]] * self.bin_qnt[1]
+        ]
         self.bins = np.empty(shape=self.bin_qnt, dtype=object)
         for i in range(self.bin_qnt[0]):
             for j in range(self.bin_qnt[1]):
                 self.bins[i, j] = MAPBin(bin_idx=(i, j),
-                                         bin_size=self.bin_sizes)
+                                         bin_size=(self.bin_sizes[0][i],
+                                                   self.bin_sizes[1][j]))
         # assign solutions to bins
         self._update_bins(lcs=all_cs)
+    
+    def subdivide_range(self,
+                        bin_idx: Tuple[int, int]) -> None:
+        # TODO: Improve computation complexity (only update solutions in same row/col)
+        # get all solutions
+        all_cs = []
+        for i in range(self.bins.shape[0]):
+            for j in range(self.bins.shape[1]):
+                all_cs.extend(self.bins[i, j]._feasible)
+                all_cs.extend(self.bins[i, j]._infeasible)
+
+        i, j = bin_idx
+        # update bin sizes
+        v_i, v_j = self.bin_sizes[0][i], self.bin_sizes[1][j]
+        self.bin_sizes[0][i] = v_i / 2
+        self.bin_sizes[1][j] = v_j / 2
+        self.bin_sizes[0].insert(i + 1, v_i / 2)
+        self.bin_sizes[1].insert(j + 1, v_j / 2)
+        
+        self.bin_qnt = (self.bin_qnt[0] + 1, self.bin_qnt[1] + 1)
+        self.bins = np.empty(shape=self.bin_qnt, dtype=object)
+        for i in range(self.bin_qnt[0]):
+            for j in range(self.bin_qnt[1]):
+                self.bins[i, j] = MAPBin(bin_idx=(i, j),
+                                         bin_size=(self.bin_sizes[0][i],
+                                                   self.bin_sizes[1][j]))
+        
+        # assign solutions to bins
+        self._update_bins(lcs=all_cs)
+        
 
     def _update_bins(self,
                      lcs: List[CandidateSolution]):
         for cs in lcs:
             b0, b1 = cs.b_descs
-            i = np.digitize([b0], np.arange(self.b_descs[0].bounds[0], self.b_descs[0].bounds[1], self.bin_sizes[0]), right=False)[0] - 1
-            j = np.digitize([b1], np.arange(self.b_descs[1].bounds[0], self.b_descs[1].bounds[1], self.bin_sizes[1]), right=False)[0] - 1
+            # i = np.digitize([b0], np.arange(self.b_descs[0].bounds[0], self.b_descs[0].bounds[1], self.bin_sizes[0]), right=False)[0] - 1
+            # j = np.digitize([b1], np.arange(self.b_descs[1].bounds[0], self.b_descs[1].bounds[1], self.bin_sizes[1]), right=False)[0] - 1
+            i = np.digitize([b0], np.cumsum([0] + self.bin_sizes[0][:-1]) + self.b_descs[0].bounds[0], right=False)[0] - 1
+            j = np.digitize([b1], np.cumsum([0] + self.bin_sizes[1][:-1]) + self.b_descs[1].bounds[0], right=False)[0] - 1
             self.bins[i, j].insert_cs(cs)
             self.bins[i, j].remove_old()
 
@@ -305,14 +345,17 @@ class MAPElites:
     def reset(self,
               lcs: Optional[List[CandidateSolution]] = None):
         self.bin_qnt = self._initial_n_bins
-        self.bin_sizes = (self.limits[0] / self.bin_qnt[0],
-                          self.limits[1] / self.bin_qnt[1])
+        self.bin_sizes = [
+            [self.limits[0] / self.bin_qnt[0]] * self._initial_n_bins[0],
+            [self.limits[1] / self.bin_qnt[1]] * self._initial_n_bins[1]
+        ]
 
         self.bins = np.empty(shape=self.bin_qnt, dtype=object)
         for i in range(self.bin_qnt[0]):
             for j in range(self.bin_qnt[1]):
                 self.bins[i, j] = MAPBin(bin_idx=(i, j),
-                                         bin_size=self.bin_sizes)
+                                         bin_size=(self.bin_sizes[0][i],
+                                                   self.bin_sizes[1][j]))
         if lcs:
             self._update_bins(lcs=lcs)
             self._check_res_trigger()
