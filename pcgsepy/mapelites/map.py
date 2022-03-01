@@ -183,30 +183,38 @@ class MAPElites:
     
     def subdivide_range(self,
                         bin_idx: Tuple[int, int]) -> None:
-        # TODO: Improve computation complexity (only update solutions in same row/col)
-        # get all solutions
-        all_cs = []
-        for i in range(self.bins.shape[0]):
-            for j in range(self.bins.shape[1]):
-                all_cs.extend(self.bins[i, j]._feasible)
-                all_cs.extend(self.bins[i, j]._infeasible)
-
         i, j = bin_idx
+        # get solutions in same row&col
+        all_cs = []
+        for m in range(self.bins.shape[0]):
+            for n in range(self.bins.shape[1]):
+                if m == i or n == j:
+                    all_cs.extend(self.bins[m, n]._feasible)
+                    all_cs.extend(self.bins[m, n]._infeasible)
         # update bin sizes
         v_i, v_j = self.bin_sizes[0][i], self.bin_sizes[1][j]
         self.bin_sizes[0][i] = v_i / 2
         self.bin_sizes[1][j] = v_j / 2
         self.bin_sizes[0].insert(i + 1, v_i / 2)
         self.bin_sizes[1].insert(j + 1, v_j / 2)
-        
+        # update bin quantity
         self.bin_qnt = (self.bin_qnt[0] + 1, self.bin_qnt[1] + 1)
-        self.bins = np.empty(shape=self.bin_qnt, dtype=object)
-        for i in range(self.bin_qnt[0]):
-            for j in range(self.bin_qnt[1]):
-                self.bins[i, j] = MAPBin(bin_idx=(i, j),
-                                         bin_size=(self.bin_sizes[0][i],
-                                                   self.bin_sizes[1][j]))
-        
+        # create new bin map
+        new_bins = np.empty(shape=self.bin_qnt, dtype=object)
+        # copy over unaffected bins
+        new_bins[:i, :j] = self.bins[:i, :j]
+        new_bins[:i, (j+2):] = self.bins[:i, (j+1):]
+        new_bins[(i+2):, :j] = self.bins[(i+1):, :j]
+        new_bins[(i+2):, (j+2):] = self.bins[(i+1):, (j+1):]
+        # populate newly created bins
+        for m in range(new_bins.shape[0]):
+            for n in range(new_bins.shape[1]):
+                if m == i or m == i + 1 or n == j or n == j + 1:
+                    new_bins[m, n] = MAPBin(bin_idx=(m, n),
+                                            bin_size=(self.bin_sizes[0][m],
+                                                      self.bin_sizes[1][n]))
+        # assign new bin map
+        self.bins = new_bins
         # assign solutions to bins
         self._update_bins(lcs=all_cs)
         
@@ -215,8 +223,6 @@ class MAPElites:
                      lcs: List[CandidateSolution]):
         for cs in lcs:
             b0, b1 = cs.b_descs
-            # i = np.digitize([b0], np.arange(self.b_descs[0].bounds[0], self.b_descs[0].bounds[1], self.bin_sizes[0]), right=False)[0] - 1
-            # j = np.digitize([b1], np.arange(self.b_descs[1].bounds[0], self.b_descs[1].bounds[1], self.bin_sizes[1]), right=False)[0] - 1
             i = np.digitize([b0], np.cumsum([0] + self.bin_sizes[0][:-1]) + self.b_descs[0].bounds[0], right=False)[0] - 1
             j = np.digitize([b1], np.cumsum([0] + self.bin_sizes[1][:-1]) + self.b_descs[1].bounds[0], right=False)[0] - 1
             self.bins[i, j].insert_cs(cs)
