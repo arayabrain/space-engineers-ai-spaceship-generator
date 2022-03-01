@@ -4,8 +4,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 
-from pcgsepy.evo.genops import EvoException
-
 from .bin import MAPBin
 from .behaviors import BehaviorCharacterization
 from ..common.vecs import Orientation, Vec
@@ -15,6 +13,8 @@ from ..lsystem.lsystem import LSystem
 from ..lsystem.solution import CandidateSolution
 from ..lsystem.structure_maker import LLStructureMaker
 from ..structure import Structure
+from ..evo.fitness import Fitness
+from ..evo.genops import EvoException
 
 
 # TEMPORARY, CandidateSolution content should be set earlier
@@ -38,7 +38,7 @@ class MAPElites:
 
     def __init__(self,
                  lsystem: LSystem,
-                 feasible_fitnesses: List[callable],
+                 feasible_fitnesses: List[Fitness],
                  behavior_descriptors: Tuple[BehaviorCharacterization, BehaviorCharacterization],
                  n_bins: Tuple[int, int] = (8, 8)):
         self.lsystem = lsystem
@@ -159,27 +159,6 @@ class MAPElites:
         #     self.generate_initial_populations(pops_size=pops_size,
         #                                       n_retries=n_retries)
 
-    def _increase_resolution(self):
-        # get all solutions
-        all_cs = []
-        for i in range(self.bins.shape[0]):
-            for j in range(self.bins.shape[1]):
-                all_cs.extend(self.bins[i, j]._feasible)
-                all_cs.extend(self.bins[i, j]._infeasible)
-        # double resolution of bins
-        self.bin_qnt = (self.bin_qnt[0] * 2, self.bin_qnt[1] * 2)
-        self.bin_sizes = [
-            [self.limits[0] / self.bin_qnt[0]] * self.bin_qnt[0],
-            [self.limits[1] / self.bin_qnt[1]] * self.bin_qnt[1]
-        ]
-        self.bins = np.empty(shape=self.bin_qnt, dtype=object)
-        for i in range(self.bin_qnt[0]):
-            for j in range(self.bin_qnt[1]):
-                self.bins[i, j] = MAPBin(bin_idx=(i, j),
-                                         bin_size=(self.bin_sizes[0][i],
-                                                   self.bin_sizes[1][j]))
-        # assign solutions to bins
-        self._update_bins(lcs=all_cs)
     
     def subdivide_range(self,
                         bin_idx: Tuple[int, int]) -> None:
@@ -249,15 +228,15 @@ class MAPElites:
         Trigger a resolution increase if at least 1 bin has reached full
         population capacity for both feasible and infeasible populations.
         """
-        to_increase_res = False
+        to_increase_res = []
         for i in range(self.bins.shape[0]):
             for j in range(self.bins.shape[1]):
                 cbin = self.bins[i, j]
                 if len(cbin._feasible) >= BIN_POP_SIZE and len(cbin._infeasible) >= BIN_POP_SIZE:
-                    to_increase_res = True
-                    break
+                    to_increase_res.append((i, j))
         if to_increase_res:
-            self._increase_resolution()
+            for bin_idx in to_increase_res:
+                self.subdivide_range(bin_idx=bin_idx)
 
     def _step(self,
               populations: List[List[CandidateSolution]],
@@ -406,3 +385,18 @@ class MAPElites:
         # toggle module's mutability within the L-system
         ms = [x.name for x in self.lsystem.modules]
         self.lsystem.modules[ms.index(module)].active = not self.lsystem.modules[ms.index(module)].active
+
+    def update_fitness_weights(self,
+                               weights: List[float]) -> None:
+        assert len(weights) == len(self.feasible_fitnesses), f'Wrong number of weights ({len(weights)}) for fitnesses ({len(self.feasible_fitnesses)}) passed.'
+        # update weights
+        for w, f in zip(weights, self.feasible_fitnesses):
+            f.weight = w
+        # update solutions fitnesses
+        for i in range(self.bins.shape[0]):
+            for j in range(self.bins.shape[1]):
+                for cs in self.bins[i, j]._feasible:
+                    cs.c_fitness = self.compute_fitness(cs=cs,
+                                                        extra_args={
+                                                                'alphabet': self.lsystem.ll_solver.atoms_alphabet
+                                                                }) + (0.5 - cs.ncv)

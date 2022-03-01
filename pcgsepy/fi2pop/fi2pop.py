@@ -8,11 +8,12 @@ from ..config import POP_SIZE, N_GENS, N_ITERATIONS, N_RETRIES
 from ..lsystem.lsystem import LSystem
 from .utils import create_new_pool, reduce_population, subdivide_solutions
 from ..lsystem.constraints import ConstraintLevel
+from ..evo.fitness import Fitness
 
 
 class FI2PopSolver:
     def __init__(self,
-                 feasible_fitnesses: List[Callable[[CandidateSolution, Dict[str, Any]], float]],
+                 feasible_fitnesses: List[Fitness],
                  lsystem: LSystem):
         self.feasible_fitnesses = feasible_fitnesses
         self.lsystem = lsystem

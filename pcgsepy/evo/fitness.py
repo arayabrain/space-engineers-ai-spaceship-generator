@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Callable, Dict, Tuple
 import numpy as np
 import pickle
 
@@ -8,6 +8,30 @@ from pcgsepy.lsystem.solution import CandidateSolution
 from pcgsepy.lsystem.structure_maker import LLStructureMaker
 from pcgsepy.structure import Structure
 from pcgsepy.lsystem.solution import CandidateSolution
+
+
+class Fitness:
+    def __init__(self,
+                 name: str,
+                 f: Callable[[CandidateSolution, Dict[str, Any]], float],
+                 bounds: Tuple[int, int],
+                 weight: float = 1.0) -> None:
+        self.name = name
+        self.f = f
+        self.bounds = bounds
+        self.weight = weight
+    
+    def __repr__(self) -> str:
+        return f'Fitness {self.name} (in {self.bounds})'
+
+    def __str__(self) -> str:
+        return self.__repr__()
+    
+    def __call__(self,
+                 cs: CandidateSolution,
+                 extra_args: Dict[str, Any]) -> float:
+        return self.weight * self.f(cs=cs,
+                                    extra_args=extra_args)
 
 
 # load pickled estimators
