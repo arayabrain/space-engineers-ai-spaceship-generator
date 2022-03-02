@@ -40,7 +40,6 @@
 .generic-description { 
 }
 .graph-controls-div {
-    /* float: left; */
     margin-top: auto;
     display: inline-block;
     vertical-align: top;
@@ -51,19 +50,28 @@
     margin-top: auto;
     display: inline-block;
     vertical-align: middle;
-    width: 100%;
+    width: 80%;
     background-color: rgba(225, 225, 225, 0.3);
 }
 .heatmap-div {
     display: inline-block;
     vertical-align: top;
-    width: 30%;
+    width: 25%;
+    background-color: rgba(128, 245, 128, 0.3);
 }
 .content-div {
     display: inline-block;
     vertical-align: top;
-    width: 70%;
+    width: 75%;
 }
+
+.properties-div {
+    width: 20%;
+    display: inline-block;
+    vertical-align: top;
+    background-color: rgba(225, 225, 225, 0.3)
+}
+
 .properties-text {
 }
 .button-div {
@@ -72,7 +80,6 @@
 }
 .experiment-controls-div {
     display: inline-block;
-    /* float: right; */
     vertical-align: top;
     width: 25%;
     background-color: rgba(128, 128, 245, 0.3);
@@ -182,3 +189,33 @@
     color: #121212;
     padding: 5px auto;
 } 
+
+.rc-slider {
+    height: 6px;
+    padding: 1px 0;
+    border-radius: 2px;
+}
+
+.rc-slider > .rc-slider-rail {
+    background-color: #EEEEEE;
+    height: 4px;
+    border-radius: 2px;
+}
+
+.rc-slider > .rc-slider-track {
+    height: 4px;
+    border-radius: 2px;
+    background-color: #121212;
+}
+
+.rc-slider > .rc-slider-handle {
+    width: 6px;
+    height: 6px;
+    cursor: pointer;
+    margin-top: -2px;
+    cursor: grab;
+    border-radius: 50%;
+    border: solid 2px #121212;
+    background-color: #EEEEEE;
+    touch-action: pan-x;
+}

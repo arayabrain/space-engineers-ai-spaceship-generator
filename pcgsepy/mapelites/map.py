@@ -93,10 +93,8 @@ class MAPElites:
                    vmax=vmaxs[metric][population])
         plt.xticks(np.arange(self.bin_qnt[0]),
                    np.cumsum(self.bin_sizes[0]) + self.limits[0])
-                #    np.arange(0, self.limits[0], self.bin_sizes[0]))
         plt.yticks(np.arange(self.bin_qnt[1]),
                    np.cumsum(self.bin_sizes[1]) + self.limits[1])
-                #    np.arange(0, self.limits[1], self.bin_sizes[1]))
         plt.xlabel(self.b_descs[0].name)
         plt.ylabel(self.b_descs[1].name)
         plt.title(f'CMAP-Elites {"Avg." if show_mean else ""}{metric} ({population})')

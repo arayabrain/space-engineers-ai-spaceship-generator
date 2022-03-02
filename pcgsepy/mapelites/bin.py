@@ -13,10 +13,7 @@ class MAPBin:
         self.bin_size = bin_size
 
     def __str__(self) -> str:
-        vmin = (self.bin_idx[0] * self.bin_size[0],
-                self.bin_idx[1] * self.bin_size[1])
-        vmax = (vmin[0] + self.bin_size[0], vmin[1] + self.bin_size[1])
-        return f'Bin {vmin}-{vmax} w/ {len(self._feasible)}f and {len(self._infeasible)}i cs'
+        return f'Bin {self.bin_idx}, {self.bin_size} w/ {len(self._feasible)}f and {len(self._infeasible)}i cs'
 
     def __repr__(self) -> str:
         return str(self)
