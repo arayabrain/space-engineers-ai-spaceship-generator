@@ -275,6 +275,25 @@ class Structure:
             v = self.ks.index(block.block_type)
             structure[i:i + r.x, j:j + r.y, k:k + r.z] = v + 1
         return structure
+    
+    def as_grid_array(self) -> np.ndarray:
+        """Convert the structure to the grid-sized array.
+
+        Returns:
+            np.ndarray: The grid-sized array.
+        """
+        dims = self._max_dims
+        dims = (int(dims[0] / self.grid_size) + 1,
+                int(dims[1] / self.grid_size) + 1,
+                int(dims[2] / self.grid_size) + 1)
+        arr = np.zeros(shape=dims,
+                       dtype=np.uint32)
+        for coords, block in self._blocks.items():
+            idx = (int(coords[0] / self.grid_size),
+                int(coords[1] / self.grid_size),
+                int(coords[2] / self.grid_size))
+            arr[idx] = self.ks.index(block.block_type) + 1
+        return arr
 
     def _clean_label(self,
                      a: str) -> str:
