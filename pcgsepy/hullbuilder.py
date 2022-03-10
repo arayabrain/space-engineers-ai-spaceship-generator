@@ -89,7 +89,27 @@ class HullBuilder:
             #fbru
             4263952: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerInv', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
             #fbld
-            4211728: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerInv', 'of': Orientation.FORWARD, 'ou': Orientation.UP}
+            4211728: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerInv', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
+            #fblrd
+            4215824: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
+            #fblru
+            4280336: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
+            #dlrb
+            21520: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
+            #dlrf
+            4215808: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
+            #ulrb
+            86032: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
+            #ulrf
+            4280320: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
+            #ludb
+            82960: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
+            #ludf
+            4277248: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
+            #rudb
+            70672: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
+            #rudf
+            4264960: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP}
         }
     
     def _get_convex_hull(self,
@@ -109,7 +129,7 @@ class HullBuilder:
         out_idx = np.nonzero(deln.find_simplex(idx) + 1)
         out_arr = np.zeros(arr.shape)
         out_arr[out_idx] = self.BASE_BLOCK_VALUE
-        out_arr[np.nonzero(arr)] = arr[np.nonzero(arr)]
+        # out_arr[np.nonzero(arr)] = arr[np.nonzero(arr)]
         return out_arr
         
     def _adj_to_spaceship(self,
@@ -200,7 +220,21 @@ class HullBuilder:
                     v = v << 1
                     v |= neighbourhood[i, j, k]
         return v
-                
+
+    def _tag_internal_air_blocks(self,
+                                 arr: np.ndarray):
+        air_blocks = np.zeros(shape=arr.shape)
+        for i in range(arr.shape[0]):
+            for j in range(arr.shape[1]):
+                for k in range(arr.shape[2]):
+                    if sum(arr[0:i, j, k]) != 0 and \
+                        sum(arr[i:arr.shape[0], j, k]) != 0 and \
+                        sum(arr[i, 0:j, k]) != 0 and \
+                        sum(arr[i, j:arr.shape[1], k]) != 0 and \
+                        sum(arr[i, j, 0:k]) != 0 and \
+                        sum(arr[i, j, k:arr.shape[2]]) != 0:
+                            air_blocks[i, j, k] = self.BASE_BLOCK_VALUE
+        return air_blocks
     
     def add_external_hull(self,
                           structure: Structure) -> None:
@@ -211,9 +245,12 @@ class HullBuilder:
             structure (Structure): The spaceship.
         """
         arr = structure.as_grid_array()
+        air = self._tag_internal_air_blocks(arr=arr)
         hull = self._get_convex_hull(arr=arr)
+        hull[np.nonzero(air)] = 0
+        hull[np.nonzero(arr)] = 0
         
-        hull = hull - arr
+        
         if self.apply_erosion:
             if self.erosion_type == 'grey':
                 hull = grey_erosion(input=hull,
@@ -248,7 +285,6 @@ class HullBuilder:
                             neighbourhood = self._get_neighbourhood(idx=(i, j, k),
                                                                     arr=hull)
                             bit_n = self._get_bit_neighbourhood(neighbourhood=neighbourhood)
-                            # print(i, j, k, neighbourhood, bit_n)
                             # add the correct block to the structure
                             if bit_n in self.smoothing_blocks.keys():
                                 smoothed_idxs.append((i, j, k))
@@ -258,7 +294,6 @@ class HullBuilder:
                                                 orientation_forward=self.smoothing_blocks[bit_n]['of'],
                                                 orientation_up=self.smoothing_blocks[bit_n]['ou'])
             # and set to 0 the value in the hull
-            print(len(smoothed_idxs))
             for (i, j, k) in smoothed_idxs:
                 hull[i, j, k] = 0
             
