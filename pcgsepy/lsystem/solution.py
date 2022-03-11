@@ -19,6 +19,8 @@ class CandidateSolution:
         self.ll_string = ''
         self.hls_mod = {}  # keys: 'string', 'mutable'
         self.ncv = 0  # number of constraints violated
+        
+        self.parents = []
 
     def __str__(self) -> str:
         return self.string

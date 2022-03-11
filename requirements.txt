@@ -8,3 +8,5 @@ pandas
 dash
 dash-html-components
 dash-core-components
+torch
+sklearn
