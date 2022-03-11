@@ -5,10 +5,12 @@ import numpy as np
 import random
 import torch as th
 
+from pcgsepy.hullbuilder import HullBuilder
+
 from .bin import MAPBin
 from .behaviors import BehaviorCharacterization
 from ..common.vecs import Orientation, Vec
-from ..config import BIN_POP_SIZE, CS_MAX_AGE, N_ITERATIONS, N_RETRIES, POP_SIZE
+from ..config import BIN_POP_SIZE, CS_MAX_AGE, MAX_DIMS_RED, N_DIM_RED, N_ITERATIONS, N_RETRIES, POP_SIZE
 from ..fi2pop.utils import DimensionalityReducer, MLPEstimator, prepare_dataset, subdivide_solutions, create_new_pool, train_estimator
 from ..lsystem.lsystem import LSystem
 from ..lsystem.solution import CandidateSolution
@@ -61,10 +63,12 @@ class MAPElites:
                                          bin_size=(self.bin_sizes[0][i],
                                                    self.bin_sizes[1][j]))
         self.enforce_qnt = True
-        
-        self.reducer = DimensionalityReducer(n_components=10,
-                                             max_dims=50000)
-        self.estimator = MLPEstimator(10, 1)
+        self.hull_builder = HullBuilder(erosion_type='bin',
+                                        apply_erosion=True,
+                                        apply_smoothing=False)
+        self.reducer = DimensionalityReducer(n_components=N_DIM_RED,
+                                             max_dims=MAX_DIMS_RED)
+        self.estimator = MLPEstimator(N_DIM_RED, 1)
         self.buffer = {
             'structures': [],
             'xs': [],
@@ -159,6 +163,7 @@ class MAPElites:
                                                      extra_args={
                                                          'alphabet': self.lsystem.ll_solver.atoms_alphabet
                                                          }))
+                    self.hull_builder.add_external_hull(structure=cs._content)
                     self._set_behavior_descriptors(cs=cs)
                     cs.age = CS_MAX_AGE
                 iterations.set_postfix(ordered_dict={
@@ -269,34 +274,36 @@ class MAPElites:
                                            minimize=False)
                 subdivide_solutions(lcs=new_pool,
                                     lsystem=self.lsystem)
-                
-                
-                
-                f_pop = [x for x in new_pool if x.is_feasible]
-                i_pop = [x for x in new_pool if not x.is_feasible]
-                
-                for cs in i_pop:
+                # ensure content is set
+                for cs in new_pool:
                     if cs._content is None:
                         cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
                                                      extra_args={
                                                          'alphabet': self.lsystem.ll_solver.atoms_alphabet
                                                          }))
-                
-                # Update buffer
+                    # add hull
+                    self.hull_builder.add_external_hull(structure=cs._content)
+                # subdivide for estimator/pca stuff
+                f_pop = [x for x in new_pool if x.is_feasible]
+                i_pop = [x for x in new_pool if not x.is_feasible]
+                # Update buffer (structures)
                 self._update_buffer(xs=[],
                                     ys=[],
                                     structures=[cs._content for cs in i_pop])
                 # Fit PCA
                 self.reducer.fit(self.buffer['structures'])
+                # Prepare dataset for estimator
                 xs, ys = prepare_dataset(f_pop=f_pop,
                                          reducer=self.reducer)
                 self._update_buffer(xs=xs,
                                     ys=ys,
                                     structures=[])
+                # If possible, train estimator
                 if len(self.buffer['xs']) > 0:
                     train_estimator(self.estimator,
                                     xs=self.buffer['xs'],
                                     ys=self.buffer['ys'])
+                # Reassign previous infeasible fitnesses
                 for i in range(self.bins.shape[0]):
                     for j in range(self.bins.shape[1]):
                         for cs in self.bins[i, j]._infeasible:
@@ -304,27 +311,14 @@ class MAPElites:
                                                  extra_args={
                                                      'alphabet': self.lsystem.ll_solver.atoms_alphabet
                                                      })
-                
-                
+                # assign fitness
                 for cs in new_pool:
-                    # ensure content is set
-                    if cs._content is None:
-                        cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
-                                                    extra_args={
-                                                        'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                                        }))
-                    # assign fitness
+                    cs.c_fitness = self.compute_fitness(cs=cs,
+                                                        extra_args={
+                                                            'alphabet': self.lsystem.ll_solver.atoms_alphabet
+                                                            })
                     if cs.is_feasible:
-                        cs.c_fitness = self.compute_fitness(cs=cs,
-                                                            extra_args={
-                                                                'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                                                }) + (0.5 - cs.ncv)
-                    else:
-                        # cs.c_fitness = cs.ncv
-                        cs.c_fitness = self.compute_fitness(cs=cs,
-                                                            extra_args={
-                                                                'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                                                })
+                        cs.c_fitness += (0.5 - cs.ncv)
                     # assign behavior descriptors
                     self._set_behavior_descriptors(cs=cs)
                     # set age
@@ -403,6 +397,16 @@ class MAPElites:
                 self.bins[i, j] = MAPBin(bin_idx=(i, j),
                                          bin_size=(self.bin_sizes[0][i],
                                                    self.bin_sizes[1][j]))
+        
+        self.reducer = DimensionalityReducer(n_components=10,
+                                             max_dims=50000)
+        self.estimator = MLPEstimator(10, 1)
+        self.buffer = {
+            'structures': [],
+            'xs': [],
+            'ys': []
+            }
+        
         if lcs:
             self._update_bins(lcs=lcs)
             self._check_res_trigger()

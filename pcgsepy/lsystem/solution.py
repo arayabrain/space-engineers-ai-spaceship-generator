@@ -10,16 +10,13 @@ class CandidateSolution:
                  content: Optional[Structure] = None):
         self.string = string
         self._content = content
-
         self.c_fitness = 0.
         self.b_descs = (0., 0.)
         self.is_feasible = True
         self.age = 0
-        
         self.ll_string = ''
         self.hls_mod = {}  # keys: 'string', 'mutable'
         self.ncv = 0  # number of constraints violated
-        
         self.parents = []
 
     def __str__(self) -> str:

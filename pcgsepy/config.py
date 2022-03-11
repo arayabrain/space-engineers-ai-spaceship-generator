@@ -53,6 +53,8 @@ TOVO_STD = config['FITNESS'].getfloat('tovo_std')
 
 BIN_POP_SIZE = config['MAPELITES'].getint('bin_population')
 CS_MAX_AGE = config['MAPELITES'].getint('max_age')
+N_DIM_RED = config['MAPELITES'].getint('n_dimensions_reduced')
+MAX_DIMS_RED = config['MAPELITES'].getint('max_possible_dimensions')
 
 N_RUNS = config['EXPERIMENT'].getint('n_runs')
 EXP_NAME = config['EXPERIMENT'].get('exp_name')
