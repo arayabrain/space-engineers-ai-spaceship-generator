@@ -1,13 +1,13 @@
-from typing import Any, Callable, Dict, Tuple
-import numpy as np
 import pickle
+from typing import Any, Callable, Dict, Tuple
 
-from pcgsepy.common.vecs import Orientation, Vec
-from pcgsepy.config import BBOX_X, BBOX_Y, BBOX_Z
-from pcgsepy.lsystem.solution import CandidateSolution
-from pcgsepy.lsystem.structure_maker import LLStructureMaker
-from pcgsepy.structure import Structure
-from pcgsepy.lsystem.solution import CandidateSolution
+import numpy as np
+
+from ..common.vecs import Orientation, Vec
+from ..config import BBOX_X, BBOX_Y, BBOX_Z
+from ..lsystem.solution import CandidateSolution
+from ..lsystem.structure_maker import LLStructureMaker
+from ..structure import Structure
 
 
 class Fitness:
@@ -20,18 +20,18 @@ class Fitness:
         self.f = f
         self.bounds = bounds
         self.weight = weight
-    
+
     def __repr__(self) -> str:
         return f'Fitness {self.name} (in {self.bounds})'
 
     def __str__(self) -> str:
         return self.__repr__()
-    
+
     def __call__(self,
                  cs: CandidateSolution,
                  extra_args: Dict[str, Any]) -> float:
-        return self.weight * self.f(cs=cs,
-                                    extra_args=extra_args)
+        return self.f(cs=cs,
+                      extra_args=extra_args)
 
 
 # load pickled estimators
@@ -45,13 +45,13 @@ with open('./estimators/mami.pkl', 'rb') as f:
     mami_es = pickle.load(f)
 # Compute max values for estimators to normalize fitnesses
 x = np.linspace(0, 0.5, int(0.5 / 0.005))
-futo_max = np.max(futo_es.evaluate(x))
+futo_max = float(np.max(futo_es.evaluate(x)))
 x = np.linspace(0, 1, int(1 / 0.005))
-tovo_max = np.max(tovo_es.evaluate(x))
+tovo_max = float(np.max(tovo_es.evaluate(x)))
 x = np.linspace(0, 6, int(6 / 0.005))
-mame_max = np.max(mame_es.evaluate(x))
+mame_max = float(np.max(mame_es.evaluate(x)))
 x = np.linspace(0, 10, int(10 / 0.005))
-mami_max = np.max(mami_es.evaluate(x))
+mami_max = float(np.max(mami_es.evaluate(x)))
 
 
 def bounding_box_fitness(cs: CandidateSolution,
@@ -62,7 +62,8 @@ def bounding_box_fitness(cs: CandidateSolution,
     Normalized in [0,1].
     """
     if cs._content is None:
-        base_position, orientation_forward, orientation_up = Vec.v3i(0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
+        base_position, orientation_forward, orientation_up = Vec.v3i(
+            0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
         structure = Structure(origin=base_position,
                               orientation_forward=orientation_forward,
                               orientation_up=orientation_up)
@@ -74,12 +75,12 @@ def bounding_box_fitness(cs: CandidateSolution,
                          orientation_forward=orientation_forward,
                          orientation_up=orientation_up)
         cs.set_content(content=structure)
-    
+
     x, y, z = cs.content.as_array().shape
     f = np.clip((BBOX_X - abs(BBOX_X - x)) / BBOX_X, 0, 1)
     f += np.clip((BBOX_Y - abs(BBOX_Y - y)) / BBOX_Y, 0, 1)
     f += np.clip((BBOX_Z - abs(BBOX_Z - z)) / BBOX_Z, 0, 1)
-    return f / 3
+    return f[0] / 3
 
 
 def box_filling_fitness(cs: CandidateSolution,
@@ -90,7 +91,8 @@ def box_filling_fitness(cs: CandidateSolution,
     Normalized in [0,1]
     """
     if cs._content is None:
-        base_position, orientation_forward, orientation_up = Vec.v3i(0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
+        base_position, orientation_forward, orientation_up = Vec.v3i(
+            0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
         structure = Structure(origin=base_position,
                               orientation_forward=orientation_forward,
                               orientation_up=orientation_up)
@@ -107,8 +109,7 @@ def box_filling_fitness(cs: CandidateSolution,
     vo = cs.content.as_array().shape
     vo = vo[0] * vo[1] * vo[2]
     tovo = to / vo
-    # return norm(tovo, TOVO_MEAN, TOVO_STD)
-    return tovo_es.evaluate(tovo) / tovo_max
+    return tovo_es.evaluate(tovo)[0] / tovo_max
 
 
 def func_blocks_fitness(cs: CandidateSolution,
@@ -119,7 +120,8 @@ def func_blocks_fitness(cs: CandidateSolution,
     Normalized in [0,1]
     """
     if cs._content is None:
-        base_position, orientation_forward, orientation_up = Vec.v3i(0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
+        base_position, orientation_forward, orientation_up = Vec.v3i(
+            0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
         structure = Structure(origin=base_position,
                               orientation_forward=orientation_forward,
                               orientation_up=orientation_up)
@@ -138,8 +140,7 @@ def func_blocks_fitness(cs: CandidateSolution,
             fu += b.volume
         to += b.volume
     futo = fu / to
-    # return norm(futo, FUTO_MEAN, FUTO_STD)
-    return futo_es.evaluate(futo) / futo_max
+    return futo_es.evaluate(futo)[0] / futo_max
 
 
 def axis_fitness(cs: CandidateSolution,
@@ -150,7 +151,8 @@ def axis_fitness(cs: CandidateSolution,
     Normalized in [0,2]
     """
     if cs._content is None:
-        base_position, orientation_forward, orientation_up = Vec.v3i(0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
+        base_position, orientation_forward, orientation_up = Vec.v3i(
+            0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
         structure = Structure(origin=base_position,
                               orientation_forward=orientation_forward,
                               orientation_up=orientation_up)
@@ -167,4 +169,4 @@ def axis_fitness(cs: CandidateSolution,
     largest_axis, medium_axis, smallest_axis = reversed(sorted(list(volume)))
     mame = largest_axis / medium_axis
     mami = largest_axis / smallest_axis
-    return (mame_es.evaluate(mame) / mame_max) + (mami_es.evaluate(mami) / mami_max)
+    return (mame_es.evaluate(mame)[0] / mame_max) + (mami_es.evaluate(mami)[0] / mami_max)

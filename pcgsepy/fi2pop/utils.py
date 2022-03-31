@@ -1,23 +1,24 @@
 from typing import Any, Dict, List, Tuple
+
 import numpy as np
-from sklearn.preprocessing import StandardScaler
 import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.decomposition import PCA, KernelPCA, SparsePCA
-
-from pcgsepy.lsystem.solution import CandidateSolution
-from pcgsepy.structure import Structure
+from sklearn.preprocessing import StandardScaler
 
 from ..config import POP_SIZE
-from ..evo.genops import crossover, mutate, roulette_wheel_selection
+from ..evo.genops import EvoException, crossover, mutate, roulette_wheel_selection
 from ..lsystem.constraints import ConstraintLevel, ConstraintTime
 from ..lsystem.lsystem import LSystem
 from ..lsystem.parser import HLtoMLTranslator, LLParser
+from ..lsystem.solution import CandidateSolution
+from ..structure import Structure
 
 
 def subdivide_solutions(lcs: List[CandidateSolution],
-                        lsystem: LSystem) -> None:
+                        lsystem: LSystem,
+                        ) -> None:
     """Assign feasibility flag to the solutions.
 
     Args:
@@ -31,12 +32,13 @@ def subdivide_solutions(lcs: List[CandidateSolution],
             sat = lsystem.hl_solver._check_constraints(cs=cs,
                                                        when=t,
                                                        keep_track=True)
-            cs.is_feasible = sat[ConstraintLevel.HARD_CONSTRAINT][0]
+            cs.is_feasible &= sat[ConstraintLevel.HARD_CONSTRAINT][0]
             cs.ncv += sat[ConstraintLevel.HARD_CONSTRAINT][1]
-            cs.ncv += sat[ConstraintLevel.SOFT_CONSTRAINT][1]
+            cs.ncv += sat[ConstraintLevel.SOFT_CONSTRAINT][1]            
         if cs.is_feasible:
-            ml_string = lsystem.hl_solver.translator.transform(string=cs.string)
-            cs.ll_string = LLParser(rules=lsystem.hl_solver.ll_rules).expand(string=ml_string)
+            if cs.ll_string == '':
+                ml_string = lsystem.hl_solver.translator.transform(string=cs.string)
+                cs.ll_string = LLParser(rules=lsystem.hl_solver.ll_rules).expand(string=ml_string)
             for t in [ConstraintTime.DURING, ConstraintTime.END]:
                 sat = lsystem.ll_solver._check_constraints(cs=cs,
                                                            when=t,
@@ -58,6 +60,9 @@ def create_new_pool(population: List[CandidateSolution],
         n_individuals (int, optional): The number of individuals in the pool. Defaults to POP_SIZE.
         minimize (bool, optional): Whether to minimize or maximize the fitness. Defaults to False.
 
+    Raises:
+        EvoException: If same parent is picked twice for crossover.
+
     Returns:
         List[CandidateSolution]: The pool of new solutions.
     """
@@ -66,18 +71,26 @@ def create_new_pool(population: List[CandidateSolution],
         # fitness-proportionate selection
         p1 = roulette_wheel_selection(pop=population,
                                       minimize=minimize)
-        p2 = roulette_wheel_selection(pop=population,
+        
+        new_pop = []
+        new_pop[:] = population[:]
+        new_pop.remove(p1)
+        
+        p2 = roulette_wheel_selection(pop=new_pop,
                                       minimize=minimize)
-        # crossover
-        o1, o2 = crossover(a1=p1, a2=p2, n_childs=2)
-        # set parents
-        o1.parents = [p1, p2]
-        o2.parents = [p1, p2]
-        for o in [o1, o2]:
-            # mutation
-            mutate(cs=o, n_iteration=generation)
-            if o not in pool:
-                pool.append(o)
+        if p1 != p2:
+            # crossover
+            o1, o2 = crossover(a1=p1, a2=p2, n_childs=2)
+            # set parents
+            o1.parents = [p1, p2]
+            o2.parents = [p1, p2]
+            for o in [o1, o2]:
+                # mutation
+                mutate(cs=o, n_iteration=generation)
+                if o not in pool:
+                    pool.append(o)
+        else:
+            raise EvoException('Picked same parents, this should never happen.')
     return pool
 
 
@@ -94,10 +107,9 @@ def reduce_population(population: List[CandidateSolution],
     Returns:
         List[CandidateSolution]: The ordered and culled population.
     """
-    # population.sort(key=lambda x: x.c_fitness if x.is_feasible else x.ncv,
-    population.sort(key=lambda x: x.c_fitness,  # Infeas. fitness is set as well here now (incompatible w/ standard FI2Pop)
-                    reverse=minimize)
-    return population[-to:]
+    population.sort(key=lambda x: x.c_fitness,
+                    reverse=not minimize)
+    return population[:to]
 
 
 class MLPEstimator(nn.Module):
@@ -114,17 +126,17 @@ class MLPEstimator(nn.Module):
         self.l1 = nn.Linear(xshape, xshape*2)
         self.l2 = nn.Linear(xshape*2, int(xshape*2 / 3))
         self.l3 = nn.Linear(int(xshape*2 / 3), yshape)
-        
+
         self.optimizer = th.optim.Adam(self.parameters())
         self.criterion = nn.MSELoss()
         self.is_trained = False
-    
+
     def forward(self, x):
         out = F.elu(self.l1(x))
         out = F.elu(self.l2(out))
         out = F.elu(self.l3(out))
         return th.clamp(out, 1e-5, 1)
-    
+
     def save(self,
              fname: str):
         """Save the current model to file.
@@ -138,7 +150,7 @@ class MLPEstimator(nn.Module):
                 'optimizer': self.optimizer.state_dict(),
                 'is_trained': self.is_trained
             }, f)
-    
+
     def load(self,
              fname: str):
         """Load the parameters for the model from file.
@@ -151,7 +163,6 @@ class MLPEstimator(nn.Module):
             self.load_state_dict(prev['model_params'])
             self.optimizer.load_state_dict(prev['optimizer'])
             self.is_trained = prev['is_trained']
-            
 
 
 def train_estimator(estimator: MLPEstimator,
@@ -173,7 +184,7 @@ def train_estimator(estimator: MLPEstimator,
         estimator.optimizer.zero_grad()
         out = estimator(xs)
         loss = estimator.criterion(out, ys)
-        losses.append(loss.item())        
+        losses.append(loss.item())
         loss.backward()
         estimator.optimizer.step()
     estimator.is_trained = True
@@ -193,7 +204,7 @@ class DimensionalityReducer:
                        svd_solver='full')  # TODO: Test with KernelPCA and SparsePCA as well
         self.scaler = StandardScaler()
         self.max_dims = max_dims
-        
+
     def fit(self,
             xs: List[Structure]):
         """Fit the DimensionalityReducer to the data.
@@ -207,12 +218,14 @@ class DimensionalityReducer:
             arr = arr / np.linalg.norm(arr)
             arrs.append(arr.flatten())
         s = max(self.max_dims, max([x.shape[0] for x in arrs]))
+        self.max_dims = s
         to_fit = np.zeros(shape=(len(arrs), s))
         for i, x in enumerate(arrs):
-            to_fit[i,:min(s, x.shape[0])] = x[:min(s, x.shape[0])]
+            to_fit[i, :min(s, x.shape[0])] = x[:min(s, x.shape[0])]
         self.scaler.fit(to_fit)
+        to_fit = self.scaler.transform(to_fit)
         self.pca = self.pca.fit(to_fit)
-    
+
     def reduce_dims(self,
                     s: Structure) -> List[float]:
         """Reduce the dimensions of the Structure.
@@ -226,10 +239,10 @@ class DimensionalityReducer:
         arr = s.as_grid_array()
         arr = arr / np.linalg.norm(arr)
         arr = arr.flatten()
-        s = max(self.max_dims, arr.shape[0])
-        x = np.zeros(shape=(1, s))
-        x[0, :min(s, arr.shape[0])] = arr[:min(s, arr.shape[0])]
-        return self.pca.transform(x)
+        x = np.zeros(shape=(1, self.max_dims))
+        x[0, :min(self.max_dims, arr.shape[0])] = arr[:min(self.max_dims, arr.shape[0])]
+        x = self.scaler.transform(x)
+        return self.pca.transform(x).tolist()
 
 
 def prepare_dataset(f_pop: List[CandidateSolution],

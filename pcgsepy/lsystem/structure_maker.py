@@ -61,8 +61,7 @@ class StructureMaker(ABC):
 class LLStructureMaker(StructureMaker):
 
     def _place(self, action_args: Any) -> None:
-        orientation_forward, orientation_up = action_args['parameters'][
-            0], action_args['parameters'][1]
+        orientation_forward, orientation_up = action_args['parameters'][0], action_args['parameters'][1]
         orientation_forward = orientation_from_str[orientation_forward]
         orientation_up = orientation_from_str[orientation_up]
         if self.rotations:
@@ -84,12 +83,11 @@ class LLStructureMaker(StructureMaker):
                        additional_args: Dict[str, Any] = {}) -> Structure:
         self.additional_args = additional_args
         self.structure = structure
-        intersection_checking = additional_args.get('intersection_checking',
-                                                    False)
+        intersection_checking = additional_args.get('intersection_checking', False)
         i = 0
         while i < len(string):
             offset = 0
-            for a in reversed(self.atoms_alphabet.keys()):
+            for a in self.atoms_alphabet.keys():
                 if string.startswith(a, i):
                     offset += len(a)
                     # check for atom's parameters
@@ -99,11 +97,8 @@ class LLStructureMaker(StructureMaker):
                                        offset:string.index(')', i + offset + 1) +
                                        1]
                         offset += len(params)
-                        parameters = params.replace('(',
-                                                    '').replace(')',
-                                                                '').split(',')
-                    action, args = self.atoms_alphabet[a][
-                        'action'], self.atoms_alphabet[a]['args']
+                        parameters = params.replace('(','').replace(')','').split(',')
+                    action, args = self.atoms_alphabet[a]['action'], self.atoms_alphabet[a]['args']
                     self._calls[action]({
                         'action_args': args,
                         'parameters': parameters,

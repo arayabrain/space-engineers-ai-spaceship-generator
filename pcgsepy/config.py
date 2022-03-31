@@ -23,10 +23,6 @@ N_ITERATIONS = config['L-SYSTEM'].getint('n_iterations')
 # number of axioms generated at each expansion step
 N_SPE = config['L-SYSTEM'].getint('n_axioms_generated')
 
-# lower bound for mutation
-MUTATION_LOW = config['GENOPS'].getint('mutations_lower_bound')
-# upper bound for mutation
-MUTATION_HIGH = config['GENOPS'].getint('mutations_upper_bound')
 # initial mutation probability
 MUTATION_INITIAL_P = config['GENOPS'].getfloat('mutations_initial_p')
 # mutation decay
@@ -34,27 +30,34 @@ MUTATION_DECAY = config['GENOPS'].getfloat('mutations_decay')
 # crossover probability
 CROSSOVER_P = config['GENOPS'].getfloat('crossover_p')
 
+# population size
 POP_SIZE = config['FI2POP'].getint('population_size')
+# number of initialization retries
 N_RETRIES = config['FI2POP'].getint('n_initial_retries')
+# number of generations
 N_GENS = config['FI2POP'].getint('n_generations')
 
+# use or don't use the bounding box fitness
 USE_BBOX = config['FITNESS'].get('use_bounding_box')
 if USE_BBOX:
     bbox = config['FITNESS'].get('bounding_box').split(',')
+    # bounding box upper limits
     BBOX_X, BBOX_Y, BBOX_Z = float(bbox[0]), float(bbox[1]), float(bbox[2])
 MAME_MEAN = config['FITNESS'].getfloat('mame_mean')
 MAME_STD = config['FITNESS'].getfloat('mame_std')
 MAMI_MEAN = config['FITNESS'].getfloat('mami_mean')
 MAMI_STD = config['FITNESS'].getfloat('mami_std')
-FUTO_MEAN = config['FITNESS'].getfloat('futo_mean')
-FUTO_STD = config['FITNESS'].getfloat('futo_std')
-TOVO_MEAN = config['FITNESS'].getfloat('tovo_mean')
-TOVO_STD = config['FITNESS'].getfloat('tovo_std')
 
+# number of solutions per bin
 BIN_POP_SIZE = config['MAPELITES'].getint('bin_population')
+# maximum age of solutions
 CS_MAX_AGE = config['MAPELITES'].getint('max_age')
+# PCA dimensions
 N_DIM_RED = config['MAPELITES'].getint('n_dimensions_reduced')
+# maximum number of dimensions PCA can analyze
 MAX_DIMS_RED = config['MAPELITES'].getint('max_possible_dimensions')
 
+# number of experiments to run
 N_RUNS = config['EXPERIMENT'].getint('n_runs')
+# name of the current experiment
 EXP_NAME = config['EXPERIMENT'].get('exp_name')

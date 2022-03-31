@@ -1,15 +1,15 @@
-from enum import Enum, auto
+from enum import IntEnum, auto
 from typing import Any, Callable, Dict
 
 from .solution import CandidateSolution
 
 
-class ConstraintLevel(Enum):
+class ConstraintLevel(IntEnum):
     SOFT_CONSTRAINT = auto()
     HARD_CONSTRAINT = auto()
 
 
-class ConstraintTime(Enum):
+class ConstraintTime(IntEnum):
     DURING = auto()
     END = auto()
 

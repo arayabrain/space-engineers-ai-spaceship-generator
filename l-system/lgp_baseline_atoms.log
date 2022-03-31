@@ -1,0 +1,39 @@
+corridorgyros(1)[RotYcwXthrusters(2)corridorreactors(1)cockpit(1)]corridorcargo(1)
+Volume: 109000.0
+BBox: (110, 85, 45) (0.5416666666666666)
+Functional blocks / total blocks = 0.09059633027522936 ([0.07384138])
+Filled volume / total volume = 0.2590612002376708 ([0.92725207])
+Largest axis / Medium axis = 1.2941176470588236 ([1.00001143])
+Largest axis / Medium axis = 2.4444444444444446 ([0.87505609])
+
+corridorgyros(1)[RotYccwXcorridorreactors(1)thrusters(1)thrusters(2)thrusters(1)]corridorcargo(1)cockpit(1)
+Volume: 132750.0
+BBox: (125, 100, 45) (0.5166666666666667)
+Functional blocks / total blocks = 0.10451977401129943 ([0.11178706])
+Filled volume / total volume = 0.236 ([0.9650244])
+Largest axis / Medium axis = 1.25 ([0.99251633])
+Largest axis / Medium axis = 2.7777777777777777 ([0.78187159])
+
+cockpit(1)[RotYccwXcorridorreactors(1)thrusters(1)[RotYccwXcorridorcargo(1)thrusters(1)]]thrusters(1)corridorgyros(1)cockpit(1)
+Volume: 137625.0
+BBox: (105, 130, 45) (0.6333333333333334)
+Functional blocks / total blocks = 0.08900999091734786 ([0.07039602])
+Filled volume / total volume = 0.22405372405372406 ([0.98015508])
+Largest axis / Medium axis = 1.2380952380952381 ([0.9878837])
+Largest axis / Medium axis = 2.888888888888889 ([0.75640913])
+
+cockpit(1)corridorcargo(1)[RotYcwXcorridorgyros(1)corridorreactors(1)thrusters(1)]corridorsimple(1)thrusters(1)
+Volume: 115000.0
+BBox: (115, 95, 45) (0.5416666666666666)
+Functional blocks / total blocks = 0.08586956521739131 ([0.06401793])
+Filled volume / total volume = 0.23391812865497075 ([0.96789932])
+Largest axis / Medium axis = 1.2105263157894737 ([0.9728125])
+Largest axis / Medium axis = 2.5555555555555554 ([0.83943493])
+
+cockpit(1)corridorcargo(1)[RotYcwXcorridorgyros(1)thrusters(1)corridorreactors(1)cockpit(1)]thrusters(1)cockpit(1)
+Volume: 124750.0
+BBox: (130, 95, 45) (0.49166666666666664)
+Functional blocks / total blocks = 0.08517034068136273 ([0.06267374])
+Filled volume / total volume = 0.2244714349977508 ([0.97968441])
+Largest axis / Medium axis = 1.368421052631579 ([0.98086788])
+Largest axis / Medium axis = 2.888888888888889 ([0.75640913])

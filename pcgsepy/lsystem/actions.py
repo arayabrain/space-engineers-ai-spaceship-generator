@@ -2,7 +2,7 @@ from enum import Enum
 import numpy as np
 
 
-class AtomAction(Enum):
+class AtomAction(str, Enum):
     """
     Enumerator for actions defined for an axiom's atom.
     """
@@ -13,7 +13,7 @@ class AtomAction(Enum):
     ROTATE = 'rotate'
 
 
-class Rotations(Enum):
+class Rotations(str, Enum):
     """
     Enumerator for all possible rotations.
     Format: 'Axis cw/ccw OtherAxis'.

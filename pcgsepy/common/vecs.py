@@ -1,6 +1,7 @@
-import numpy as np
 from enum import Enum
 from typing import Any, Dict, Union
+
+import numpy as np
 
 
 class Vec:
@@ -273,6 +274,28 @@ class Vec:
                        y=self.y + other.y)
         else:
             raise Exception(f'Trying to sum mixed-dimension vectors: {self} + {other}')
+    
+    def dot(self,
+            other: "Vec") -> "Vec":
+        if self.z is not None and other.z is not None:
+            return Vec(x=self.x * other.x,
+                       y=self.y * other.y,
+                       z=self.z * other.z)
+        elif self.z is None and other.z is None:
+            return Vec(x=self.x * other.x,
+                       y=self.y * other.y)
+        else:
+            raise Exception(f'Trying to sum mixed-dimension vectors: {self} + {other}')
+    
+    def scale(self,
+              v: float) -> "Vec":
+        if self.z is not None:
+            return Vec(x=self.x * v,
+                       y=self.y * v,
+                       z=self.z * v)
+        else:
+            return Vec(x=self.x * v,
+                       y=self.y * v)
 
 
 class Orientation(Enum):

@@ -1,12 +1,13 @@
 import json
-import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
-import numpy as np
 import os
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
-from .common.vecs import Orientation, Vec
+import matplotlib.pyplot as plt
+import numpy as np
+from mpl_toolkits import mplot3d
+
 from .common.api_call import call_api, generate_json
+from .common.vecs import Orientation, Vec
 
 # block_definitions as a module-level variable
 if not os.path.exists('./block_definitions.json'):
@@ -65,9 +66,6 @@ class Block:
         self.orientation_forward = orientation_forward.value
         self.orientation_up = orientation_up.value
         self.position = Vec.v3f(0., 0., 0.)
-        # self._type = 's' if self.block_type.startswith('Small') else (
-        #     'l' if self.block_type.startswith('Large') else 'n')
-        # self.size = _blocks_sizes[self._type]
         self.cube_size = block_definitions[self.block_type]['cube_size']
         self.size = Vec.from_json(block_definitions[self.block_type]['size'])
         self.mass = float(block_definitions[self.block_type]['mass'])
@@ -145,8 +143,6 @@ class Structure:
             May raise an `IntersectionException`.
         """
         i, j, k = grid_position
-        # block.position = Vec.v3f(i * self._VALUE, j * self._VALUE,
-        #                          k * self._VALUE)
         block.position = Vec.v3i(i, j, k)
         if exit_on_duplicates and (i, j, k) in self._blocks.keys():
             raise IntersectionException
@@ -200,10 +196,6 @@ class Structure:
         updated_blocks = {}
         for x, y, z in self._blocks.keys():
             block = self._blocks[(x, y, z)]
-            # block.position = self.origin_coords.sum(
-            #     Vec.v3i(x=(x - min_x) * self._VALUE,
-            #             y=(y - min_y) * self._VALUE,
-            #             z=(z - min_z) * self._VALUE))
             block.position = self.origin_coords.sum(
                 Vec.v3i(x=x - min_x, y=y - min_y, z=z - min_z))
             updated_blocks[(x - min_x, y - min_y, z - min_z)] = block
@@ -264,7 +256,7 @@ class Structure:
             The 3D NumPy array.
         """
         max_x, max_y, max_z = self._max_dims
-        structure = np.zeros(shape=(max_x + 5, max_y + 5, max_z + 5),
+        structure = np.zeros(shape=(max_x + self.grid_size, max_y + self.grid_size, max_z + self.grid_size),
                              dtype=np.uint32)
         for i, j, k in self._blocks.keys():
             block = self._blocks[(i, j, k)]
@@ -275,7 +267,7 @@ class Structure:
             v = self.ks.index(block.block_type)
             structure[i:i + r.x, j:j + r.y, k:k + r.z] = v + 1
         return structure
-    
+
     def as_grid_array(self) -> np.ndarray:
         """Convert the structure to the grid-sized array.
 
@@ -290,13 +282,21 @@ class Structure:
                        dtype=np.uint32)
         for coords, block in self._blocks.items():
             idx = (int(coords[0] / self.grid_size),
-                int(coords[1] / self.grid_size),
-                int(coords[2] / self.grid_size))
+                   int(coords[1] / self.grid_size),
+                   int(coords[2] / self.grid_size))
             arr[idx] = self.ks.index(block.block_type) + 1
         return arr
 
     def _clean_label(self,
                      a: str) -> str:
+        """Remove prefix block type from label.
+
+        Args:
+            a (str): The label.
+
+        Returns:
+            str: The label without prefix.
+        """
         for d in [
             'MyObjectBuilder_CubeBlock_',
             'MyObjectBuilder_Gyro_',
@@ -323,7 +323,6 @@ class Structure:
         save : bool
             Flag to salve the plot as picture (default: False).
         """
-
         structure = self.as_array()
         ax = plt.axes(projection='3d')
         arr = np.nonzero(structure)
@@ -331,7 +330,8 @@ class Structure:
         cs = [structure[i, j, k] for i, j, k in zip(x, y, z)]
         ax.set_box_aspect((np.ptp(x), np.ptp(y), np.ptp(z)))
         scatter = ax.scatter(x, y, z, c=cs, cmap='jet', linewidth=0.1)
-        legend = scatter.legend_elements(num=len(np.unique(structure[arr])) - 1)
+        legend = scatter.legend_elements(
+            num=len(np.unique(structure[arr])) - 1)
         for i, v in zip(range(len(legend[1])),
                         np.unique(structure[arr])):
             legend[1][i] = self._clean_label(self.ks[v - 1])
@@ -339,19 +339,22 @@ class Structure:
                   bbox_to_anchor=(1.2, 1),
                   loc="upper left",
                   title="Block types")
-        # axis_limit = max(structure.shape)
-        # ax.set_xlim3d(0, axis_limit)
-        # ax.set_ylim3d(0, axis_limit)
-        # ax.set_zlim3d(0, axis_limit)
-        # ax.set_xlabel("$\\vec{x}$")
-        # ax.set_ylabel("$\\vec{y}$")
-        # ax.set_zlabel("$\\vec{z}$")
-        # plot_title = title if len(title) <= title_len else title[:title_len -
-        #                                                          3] + '...'
-        # plt.title(plot_title)
-        plt.autoscale(enable=True, axis='x', tight=True)
+        axis_limit = max(structure.shape)
+        ax.set_xlim3d(0, axis_limit)
+        ax.set_ylim3d(0, axis_limit)
+        ax.set_zlim3d(0, axis_limit)
+        ax.set_xlabel("$\\vec{x}$")
+        ax.set_ylabel("$\\vec{y}$")
+        ax.set_zlabel("$\\vec{z}$")
+        plot_title = title if len(title) <= title_len else title[:title_len - 3] + '...'
+        plt.title(plot_title)
+        plt.autoscale(enable=True,
+                      axis='x',
+                      tight=True)
         if save:
-            plt.savefig('content_plot.png', transparent=True, bbox_inches='tight')
+            plt.savefig('content_plot.png',
+                        transparent=True,
+                        bbox_inches='tight')
         plt.show()
 
 
@@ -377,7 +380,7 @@ def place_blocks(blocks: List[Block],
                 "position": block.position.as_dict(),
                 "orientationForward": block.orientation_forward.as_dict(),
                 "orientationUp": block.orientation_up.as_dict()
-                }) for block in blocks
+            }) for block in blocks
     ]
     # place blocks
     if not sequential:

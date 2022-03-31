@@ -11,7 +11,6 @@ from .solution import CandidateSolution
 def components_constraint(cs: CandidateSolution,
                           extra_args: Dict[str, Any]) -> bool:
     req_tiles = extra_args['req_tiles']
-
     components_ok = True
     for c in req_tiles:
         components_ok &= c in cs.string

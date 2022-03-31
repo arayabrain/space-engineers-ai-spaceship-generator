@@ -10,6 +10,7 @@ class CandidateSolution:
                  content: Optional[Structure] = None):
         self.string = string
         self._content = content
+        self.fitness = []
         self.c_fitness = 0.
         self.b_descs = (0., 0.)
         self.is_feasible = True
@@ -23,7 +24,7 @@ class CandidateSolution:
         return self.string
 
     def __repr__(self) -> str:
-        return str(self)[:50] + f'; fitness: {self.c_fitness}; is_feasible: {self.is_feasible}'
+        return str(self) + f'; fitness: {self.c_fitness}; is_feasible: {self.is_feasible}'
 
     def __eq__(self,
                other: 'CandidateSolution') -> bool:

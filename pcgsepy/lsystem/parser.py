@@ -3,6 +3,8 @@ import numpy as np
 from random import random, randint
 from typing import Any, Dict, List, Optional
 
+from pcgsepy.lsystem.actions import Rotations
+
 from ..config import PL_LOW, PL_HIGH
 from .rules import StochasticRules
 
@@ -160,7 +162,7 @@ class HLtoMLTranslator:
                 if a != ']' and atoms_list[i + 1]['atom'] == '[':
                     last_parents.append(a)
                 if a == ']' and atoms_list[i + 1].get('n', None) is not None:
-                    last_parents.pop(-1)
+                    last_parents.pop(-1)                
 
         return new_string
 
@@ -182,8 +184,10 @@ class HLtoMLTranslator:
         # add intersection types
         for i, b in enumerate(brackets):
             # get rotation
-            rot = string[string.find('Rot', b[0], b[1]) + 3:
-                         string.find('corridor', b[0], b[1])]
+            for r in [x.value for x in Rotations]:
+                if string.find(r, b[0], b[1]) != -1:
+                    rot = r
+                    break
             # check for neighboring rotations
             has_neighbours = False
             for t0, t1 in brackets[i:]:
@@ -214,9 +218,10 @@ class HLtoMLTranslator:
         atoms_list = self._string_as_list(string)
         try:
             new_string = self._to_midlvl(atoms_list)
-        except Exception:
-            print(atoms_list)
-        new_string = self._add_intersections(new_string)
+            new_string = self._add_intersections(new_string)
+        except Exception as e:
+            print(string)
+            raise e
         return new_string
 
 
