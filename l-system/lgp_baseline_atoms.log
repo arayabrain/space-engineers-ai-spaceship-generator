@@ -1,5 +1,3 @@
-corridorcargo(1)cockpit(1)[RotYcwXthrusters(1)corridorgyros(1)cockpit(1)]corridorreactors(1)
-
 cockpit(1)thrusters(1)[RotYccwXcorridorreactors(1)corridorgyros(1)thrusters(1)]thrusters(1)corridorcargo(1)
 box_filling_fitness: 0.9827077278720088
 func_blocks_fitness: 0.12726559537129845
