@@ -143,7 +143,7 @@ def func_blocks_fitness(cs: CandidateSolution,
     return futo_es.evaluate(futo)[0] / futo_max
 
 
-def axis_fitness(cs: CandidateSolution,
+def mame_fitness(cs: CandidateSolution,
                  extra_args: Dict[str, Any]) -> float:
     """
     Measures how much of the total blocks is functional blocks.
@@ -168,5 +168,32 @@ def axis_fitness(cs: CandidateSolution,
     volume = cs.content.as_array().shape
     largest_axis, medium_axis, smallest_axis = reversed(sorted(list(volume)))
     mame = largest_axis / medium_axis
+    return mame_es.evaluate(mame)[0] / mame_max
+
+
+def mami_fitness(cs: CandidateSolution,
+                 extra_args: Dict[str, Any]) -> float:
+    """
+    Measures how much of the total blocks is functional blocks.
+    Uses FUTO_MEAN and FUTO_STD.
+    Normalized in [0,2]
+    """
+    if cs._content is None:
+        base_position, orientation_forward, orientation_up = Vec.v3i(
+            0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
+        structure = Structure(origin=base_position,
+                              orientation_forward=orientation_forward,
+                              orientation_up=orientation_up)
+        structure = LLStructureMaker(atoms_alphabet=extra_args['alphabet'],
+                                     position=base_position).fill_structure(structure=structure,
+                                                                            string=cs.ll_string,
+                                                                            additional_args={})
+        structure.update(origin=base_position,
+                         orientation_forward=orientation_forward,
+                         orientation_up=orientation_up)
+        cs.set_content(content=structure)
+
+    volume = cs.content.as_array().shape
+    largest_axis, medium_axis, smallest_axis = reversed(sorted(list(volume)))
     mami = largest_axis / smallest_axis
-    return (mame_es.evaluate(mame)[0] / mame_max) + (mami_es.evaluate(mami)[0] / mami_max)
+    return mami_es.evaluate(mami)[0] / mami_max

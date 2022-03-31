@@ -59,7 +59,7 @@ class LGPSolver:
         # number of total soft constraints
         self.nsc = [c for c in self.lsystem.all_hl_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
         self.nsc = [c for c in self.lsystem.all_ll_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
-        self.nsc = len(self.nsc)
+        self.nsc = len(self.nsc) * 0.5
 
     def reset(self):
         self.ftop = []
