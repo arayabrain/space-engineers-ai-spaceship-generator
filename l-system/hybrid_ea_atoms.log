@@ -1,29 +1,29 @@
-cockpitcorridorsimple(1)[RotYcwZcorridorsimple(1)][RotYccwXcorridorsimple(1)[RotYcwZcorridorsimple(1)][RotYccwZcorridorsimple(1)thrusters(1)]corridorgyros(1)corridorreactors(2)thrusters(1)]corridorsimple(1)[RotYccwZcorridorsimple(1)][RotYcwZcorridorsimple(2)]corridorsimple(1)corridorcargo(1)[RotYccwZcorridorsimple(1)][RotYccwXcorridorsimple(1)corridorsimple(1)[RotYccwXcorridorsimple(1)[RotYcwZcorridorsimple(2)][RotYcwXcorridorsimple(1)]thrusters(1)][RotYcwZcorridorsimple(1)]corridorgyros(1)corridorreactors(2)thrusters(1)]thrusters
-box_filling_fitness: 0.8305730853297213
-func_blocks_fitness: 0.034271966198362674
-mame_fitness: 0.9654580419189099
-mami_fitness: 0.9846990783566704
+cockpitcorridorsimple(1)corridorreactors(2)[RotYccwZcorridorsimple(1)][RotYccwXcorridorsimple(1)corridorsimple(1)[RotYcwXcorridorsimple(2)][RotYccwZcorridorsimple(1)][RotYccwXcorridorsimple(1)corridorsimple(1)[RotYcwXcorridorsimple(1)corridorsimple(1)thrusters(1)][RotYccwZcorridorsimple(2)]corridorgyros(1)thrusters(1)]corridorgyros(1)thrusters(1)]corridorcargo(1)thrusters
+box_filling_fitness: 0.9655517179779616
+func_blocks_fitness: 0.03931839290512979
+mame_fitness: 0.9904348162067349
+mami_fitness: 0.9623871549462587
 
-cockpitcorridorsimple(1)corridorcargo(1)[RotYccwZcorridorsimple(1)thrusters(1)][RotYccwXcorridorsimple(1)[RotYccwXcorridorsimple(2)][RotYccwZcorridorsimple(1)[RotYcwXcorridorsimple(1)][RotYccwXcorridorsimple(1)thrusters(1)]thrusters(1)][RotYcwXcorridorsimple(1)corridorcargo(2)thrusters(1)]corridorcargo(1)corridorgyros(1)thrusters(1)]corridorreactors(2)thrusters
-box_filling_fitness: 0.8918592533412045
-func_blocks_fitness: 0.09121597734413403
-mame_fitness: 0.9925163312289281
-mami_fitness: 0.9997176971210178
+cockpitcorridorsimple(1)corridorgyros(1)[RotYcwXcorridorsimple(1)[RotYcwXcorridorsimple(2)][RotYcwZcorridorsimple(2)][RotYccwZcorridorsimple(2)]corridorsimple(1)[RotYcwXcorridorsimple(1)][RotYccwXcorridorsimple(2)]corridorcargo(2)thrusters(1)]corridorreactors(2)[RotYcwXcorridorsimple(1)[RotYccwZcorridorsimple(2)][RotYcwZcorridorsimple(2)]corridorsimple(1)[RotYccwZcorridorsimple(2)][RotYcwZcorridorsimple(2)]corridorcargo(2)thrusters(1)]thrusters
+box_filling_fitness: 0.7861388959820936
+func_blocks_fitness: 0.03507365084374805
+mame_fitness: 0.9866296284909978
+mami_fitness: 0.9987557168292556
 
-cockpitcorridorsimple(1)corridorsimple(1)[RotYcwXcorridorsimple(1)[RotYccwZcorridorsimple(1)][RotYcwZcorridorsimple(1)]corridorgyros(2)thrusters(1)]corridorcargo(1)corridorreactors(2)[RotYcwXcorridorsimple(1)corridorsimple(1)corridorcargo(1)[RotYcwXcorridorsimple(2)]corridorgyros(2)thrusters(1)]thrusters
-box_filling_fitness: 0.7581455339443868
-func_blocks_fitness: 0.04003792497857302
-mame_fitness: 0.896823877369844
-mami_fitness: 0.7615485788318068
+cockpitcorridorsimple(1)corridorreactors(1)[RotYcwXcorridorsimple(1)[RotYcwXcorridorsimple(1)corridorgyros(1)thrusters(1)][RotYccwZcorridorsimple(1)]corridorsimple(1)[RotYcwXcorridorsimple(2)][RotYccwZcorridorsimple(1)][RotYccwXcorridorsimple(1)thrusters(1)]corridorgyros(1)thrusters(1)]corridorcargo(2)[RotYcwXcorridorsimple(1)[RotYcwXcorridorsimple(1)][RotYcwZcorridorsimple(2)][RotYccwZcorridorsimple(1)]corridorsimple(1)[RotYcwZcorridorsimple(2)]corridorgyros(1)thrusters(1)]thrusters
+box_filling_fitness: 0.9303086169398133
+func_blocks_fitness: 0.03836882385343125
+mame_fitness: 0.9605163659429694
+mami_fitness: 0.992712628617368
 
-cockpitcorridorsimple(1)corridorreactors(1)[RotYccwXcorridorsimple(1)corridorcargo(1)[RotYcwZcorridorsimple(1)corridorcargo(1)[RotYcwZcorridorsimple(2)][RotYccwXcorridorsimple(1)corridorcargo(1)[RotYcwZcorridorsimple(1)[RotYcwZcorridorsimple(2)]thrusters(1)]thrusters(1)]thrusters(1)]thrusters(1)]corridorcargo(1)corridorgyros(1)[RotYcwZcorridorsimple(1)[RotYcwZcorridorsimple(2)]corridorsimple(1)corridorcargo(1)[RotYcwZcorridorsimple(1)[RotYccwXcorridorsimple(1)]corridorreactors(2)thrusters(1)]thrusters(1)][RotYccwXcorridorsimple(1)]thrusters
-box_filling_fitness: 0.911443992460051
-func_blocks_fitness: 0.05193414122285372
-mame_fitness: 0.9971041564779684
-mami_fitness: 0.9999151202188156
+cockpitcorridorsimple(1)corridorcargo(1)[RotYccwZcorridorsimple(1)[RotYccwZcorridorsimple(1)]corridorsimple(1)[RotYccwZcorridorsimple(1)][RotYcwXcorridorsimple(1)][RotYcwZcorridorsimple(2)][RotYccwXcorridorsimple(1)corridorcargo(1)corridorreactors(2)thrusters(1)]thrusters(1)]corridorsimple(1)[RotYcwXcorridorsimple(1)[RotYccwZcorridorsimple(1)][RotYcwXcorridorsimple(2)]thrusters(1)][RotYccwXcorridorsimple(1)corridorcargo(1)corridorreactors(2)thrusters(1)]corridorreactors(1)corridorsimple(1)[RotYcwXcorridorsimple(2)][RotYccwXcorridorsimple(1)corridorreactors(2)thrusters(1)]corridorgyros(1)corridorcargo(1)thrusters
+box_filling_fitness: 0.5443798050998953
+func_blocks_fitness: 0.04725687548976162
+mame_fitness: 0.9991386471176361
+mami_fitness: 0.9999973277374279
 
-cockpitcorridorsimple(1)corridorgyros(1)corridorreactors(1)[RotYcwXcorridorsimple(1)corridorsimple(1)[RotYcwZcorridorsimple(1)][RotYccwZcorridorsimple(1)][RotYcwXcorridorsimple(1)corridorreactors(1)corridorcargo(1)thrusters(1)]corridorsimple(1)[RotYcwXcorridorsimple(2)]thrusters(1)]corridorcargo(1)thrusters
-box_filling_fitness: 0.9178047514541025
-func_blocks_fitness: 0.04700650907817897
-mame_fitness: 0.9953430268747088
-mami_fitness: 0.9370913362574562
+cockpitcorridorsimple(1)[RotYcwZcorridorsimple(2)][RotYccwXcorridorsimple(1)corridorcargo(1)corridorreactors(1)thrusters(1)]corridorgyros(1)corridorcargo(1)[RotYcwZcorridorsimple(1)thrusters(1)][RotYccwXcorridorsimple(1)[RotYccwXcorridorsimple(1)corridorcargo(1)thrusters(1)][RotYcwZcorridorsimple(1)]corridorreactors(1)thrusters(1)]thrusters
+box_filling_fitness: 0.9991538278370121
+func_blocks_fitness: 0.07307795087110353
+mame_fitness: 0.9999854561938708
+mami_fitness: 0.9909555298906021
