@@ -1,4 +1,5 @@
 from typing import Tuple
+
 import numpy as np
 
 from ..common.vecs import Vec
@@ -10,6 +11,13 @@ class BehaviorCharacterization:
                  name: str,
                  func: callable,
                  bounds: Tuple[float, float]):
+        """Create a behavior characterization object.
+
+        Args:
+            name (str): The name.
+            func (callable): The function to compute.
+            bounds (Tuple[float, float]): The upper and lower bounds.
+        """
         self.name = name
         self.bounds = bounds
         self.f = func
@@ -20,24 +28,56 @@ class BehaviorCharacterization:
 
 
 def mame(cs: CandidateSolution) -> float:
-    volume = cs.content.as_array().shape
+    """Major axis over Medium axis.
+
+    Args:
+        cs (CandidateSolution): The solution.
+
+    Returns:
+        float: The value of this behavior characterization.
+    """
+    volume = cs.content.as_grid_array().shape
     largest_axis, medium_axis, _ = reversed(sorted(list(volume)))
     return largest_axis / medium_axis
 
 
 def mami(cs: CandidateSolution) -> float:
-    volume = cs.content.as_array().shape
+    """Major axis over Minimum axis.
+
+    Args:
+        cs (CandidateSolution): The solution.
+
+    Returns:
+        float: The value of this behavior characterization.
+    """
+    volume = cs.content.as_grid_array().shape
     largest_axis, _, smallest_axis = reversed(sorted(list(volume)))
     return largest_axis / smallest_axis
 
 
 def avg_ma(cs: CandidateSolution) -> float:
-    volume = cs.content.as_array().shape
+    """The average axis proportions.
+
+    Args:
+        cs (CandidateSolution): The solution.
+
+    Returns:
+        float: The value of this behavior characterization.
+    """
+    volume = cs.content.as_grid_array().shape
     largest_axis, medium_axis, smallest_axis = reversed(sorted(list(volume)))
     return ((largest_axis / medium_axis) + (largest_axis / smallest_axis)) / 2
 
-
+# TODO: This function should be optimized if possible.
 def symmetry(cs: CandidateSolution):
+    """Symmetry of the solution, expressed in `[0,1]`.
+
+    Args:
+        cs (CandidateSolution): The solution.
+
+    Returns:
+        _type_: The value of this behavior characterization.
+    """
     structure = cs.content
     blocks = structure._blocks.values()
     bts, bps = [], []
@@ -60,7 +100,7 @@ def symmetry(cs: CandidateSolution):
     for i, pos in enumerate(bps):
         # error along x
         if pos.x != 0:
-            mirr = pos.sum(Vec.v3i(x=2*(-pos.x),
+            mirr = pos.sum(Vec.v3i(x=2 * (-pos.x),
                                    y=0,
                                    z=0))
             try:
