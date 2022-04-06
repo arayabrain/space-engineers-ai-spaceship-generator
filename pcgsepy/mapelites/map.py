@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch as th
 from tqdm.notebook import trange
+from pcgsepy.lsystem.constraints import ConstraintLevel
+from pcgsepy.mapelites.buffer import Buffer, EmptyBufferException
 
 from pcgsepy.mapelites.emitters import Emitter, RandomEmitter
 
@@ -47,6 +49,8 @@ class MAPElites:
     def __init__(self,
                  lsystem: LSystem,
                  feasible_fitnesses: List[Fitness],
+                 estimator,
+                 buffer: Buffer,
                  behavior_descriptors: Tuple[BehaviorCharacterization, BehaviorCharacterization],
                  n_bins: Tuple[int, int] = (8, 8),
                  emitter: Emitter = RandomEmitter()):
@@ -59,6 +63,10 @@ class MAPElites:
             n_bins (Tuple[int, int], optional): The number of X and Y bins. Defaults to (8, 8).
         """
         self.lsystem = lsystem
+        # number of total soft constraints
+        self.nsc = [c for c in self.lsystem.all_hl_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
+        self.nsc = [c for c in self.lsystem.all_ll_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
+        self.nsc = len(self.nsc) * 0.5
         self.feasible_fitnesses = feasible_fitnesses
         self.b_descs = behavior_descriptors
         self.emitter = emitter
@@ -81,14 +89,10 @@ class MAPElites:
         self.hull_builder = HullBuilder(erosion_type='bin',
                                         apply_erosion=True,
                                         apply_smoothing=False)
-        self.reducer = DimensionalityReducer(n_components=N_DIM_RED,
-                                             max_dims=MAX_DIMS_RED)
-        self.estimator = MLPEstimator(N_DIM_RED, 1)
-        self.buffer = {
-            'structures': [],
-            'xs': [],
-            'ys': []
-        }
+        
+        # self.estimator = MLPEstimator(N_DIM_RED, 1)
+        self.estimator = estimator
+        self.buffer = buffer
 
     def show_metric(self,
                     metric: str,
@@ -168,6 +172,7 @@ class MAPElites:
         if cs.is_feasible:
             return sum([self.feasible_fitnesses[i].weight * cs.fitness[i] for i in range(len(cs.fitness))])
         else:
+            # TODO: This only works with MLPEstimator!
             if self.estimator.is_trained:
                 with th.no_grad():
                     x = self.reducer.reduce_dims(cs._content)
@@ -189,30 +194,37 @@ class MAPElites:
         with trange(n_retries, desc='Initialization ') as iterations:
             for i in iterations:
                 solutions = self.lsystem.apply_rules(starting_strings=['head', 'body', 'tail'],
-                                                     iterations=[
-                                                         1, N_ITERATIONS, 1],
+                                                     iterations=[1, N_ITERATIONS, 1],
                                                      create_structures=False,
                                                      make_graph=False)
                 subdivide_solutions(lcs=solutions,
                                     lsystem=self.lsystem)
                 for cs in solutions:
                     if cs.is_feasible and len(feasible_pop) < pops_size and cs not in feasible_pop:
+                        self.hull_builder.add_external_hull(structure=cs._content)
                         cs.c_fitness = self.compute_fitness(cs=cs,
                                                             extra_args={
                                                                 'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                                            }) + (0.5 - cs.ncv)
+                                                            }) + (self.nsc - cs.ncv)
                         feasible_pop.append(cs)
+                        if cs._content is None:
+                            cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
+                                                        extra_args={
+                                                            'alphabet': self.lsystem.ll_solver.atoms_alphabet
+                            }))
+                        self._set_behavior_descriptors(cs=cs)
+                        cs.age = CS_MAX_AGE
                     elif not cs.is_feasible and len(infeasible_pop) < pops_size and cs not in feasible_pop:
+                        self.hull_builder.add_external_hull(structure=cs._content)
                         cs.c_fitness = np.clip(np.abs(np.random.normal(loc=0, scale=1)), 0, 1)
                         infeasible_pop.append(cs)
-                    if cs._content is None:
-                        cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
-                                                     extra_args={
-                                                         'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                        }))
-                    self.hull_builder.add_external_hull(structure=cs._content)
-                    self._set_behavior_descriptors(cs=cs)
-                    cs.age = CS_MAX_AGE
+                        if cs._content is None:
+                            cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
+                                                        extra_args={
+                                                            'alphabet': self.lsystem.ll_solver.atoms_alphabet
+                            }))
+                        self._set_behavior_descriptors(cs=cs)
+                        cs.age = CS_MAX_AGE
                 iterations.set_postfix(ordered_dict={
                     'fpop-size': f'{len(feasible_pop)}/{pops_size}',
                     'ipop-size': f'{len(infeasible_pop)}/{pops_size}'
@@ -226,11 +238,6 @@ class MAPElites:
         # if len(self._valid_bins()) == 0:
         #     self.generate_initial_populations(pops_size=pops_size,
         #                                       n_retries=n_retries)
-
-        # Initialize buffer
-        self.buffer['structures'] = [x._content for x in infeasible_pop]
-        # Fit PCA
-        self.reducer.fit(self.buffer['structures'])
 
     def subdivide_range(self,
                         bin_idx: Tuple[int, int]) -> None:
@@ -368,31 +375,29 @@ class MAPElites:
                 # subdivide for estimator/pca stuff
                 f_pop = [x for x in new_pool if x.is_feasible]
                 i_pop = [x for x in new_pool if not x.is_feasible]
-                # Update buffer (structures)
-                self._update_buffer(xs=[],
-                                    ys=[],
-                                    structures=[cs._content for cs in i_pop])
-                # Fit PCA
-                self.reducer.fit(self.buffer['structures'])
+                # TODO: This step is only valid if we use MLPEstimator!
                 # Prepare dataset for estimator
                 xs, ys = prepare_dataset(f_pop=f_pop,
                                          reducer=self.reducer)
-                self._update_buffer(xs=xs,
-                                    ys=ys,
-                                    structures=[])
+                for x, y in zip(xs, ys):
+                    self.buffer.insert(x=x,
+                                       y=y)
                 # If possible, train estimator
-                if len(self.buffer['xs']) > 0:
+                try:
+                    xs, ys = self.buffer.get()
                     train_estimator(self.estimator,
-                                    xs=self.buffer['xs'],
-                                    ys=self.buffer['ys'])
-                # Reassign previous infeasible fitnesses
-                for i in range(self.bins.shape[0]):
-                    for j in range(self.bins.shape[1]):
-                        for cs in self.bins[i, j]._infeasible:
-                            self.compute_fitness(cs=cs,
-                                                 extra_args={
-                                                     'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                                 })
+                                    xs=xs,
+                                    ys=ys)
+                    # Reassign previous infeasible fitnesses
+                    for i in range(self.bins.shape[0]):
+                        for j in range(self.bins.shape[1]):
+                            for cs in self.bins[i, j]._infeasible:
+                                self.compute_fitness(cs=cs,
+                                                    extra_args={
+                                                        'alphabet': self.lsystem.ll_solver.atoms_alphabet
+                                                    })
+                except EmptyBufferException:
+                    pass
                 # assign fitness
                 for cs in new_pool:
                     cs.c_fitness = self.compute_fitness(cs=cs,
@@ -400,7 +405,7 @@ class MAPElites:
                                                             'alphabet': self.lsystem.ll_solver.atoms_alphabet
                                                         })
                     if cs.is_feasible:
-                        cs.c_fitness += (0.5 - cs.ncv)
+                        cs.c_fitness += (self.nsc - cs.ncv)
                     # assign behavior descriptors
                     self._set_behavior_descriptors(cs=cs)
                     # set age
@@ -501,14 +506,8 @@ class MAPElites:
                                          bin_size=(self.bin_sizes[0][i],
                                                    self.bin_sizes[1][j]))
 
-        self.reducer = DimensionalityReducer(n_components=10,
-                                             max_dims=50000)
         self.estimator = MLPEstimator(10, 1)
-        self.buffer = {
-            'structures': [],
-            'xs': [],
-            'ys': []
-        }
+        self.buffer = Buffer(merge_method=self.buffer._merge)
 
         if lcs:
             self._update_bins(lcs=lcs)
@@ -599,30 +598,30 @@ class MAPElites:
             for j in range(self.bins.shape[1]):
                 for cs in self.bins[i, j]._feasible:
                     cs.c_fitness = sum([self.feasible_fitnesses[i].weight * cs.fitness[i] for i in range(len(cs.fitness))])
-                    cs.c_fitness += (0.5 - cs.ncv)
+                    cs.c_fitness += (self.nsc - cs.ncv)
                     
 
-    def _update_buffer(self,
-                       xs: List[List[float]],
-                       ys: List[float],
-                       structures: List[Structure]) -> None:
-        """Update the buffer of data points and structures.
+    # def _update_buffer(self,
+    #                    xs: List[List[float]],
+    #                    ys: List[float],
+    #                    structures: List[Structure]) -> None:
+    #     """Update the buffer of data points and structures.
 
-        Args:
-            xs (List[List[float]]): The list of X data points (low-dimensional representation of structures).
-            ys (List[float]): The list of Y data points (average offsprings' fitness).
-            structures (List[Structure]): The list of structures.
-        """
-        for x, y in zip(xs, ys):
-            if x in self.buffer['xs']:
-                i = self.buffer['xs'].index(x)
-                curr_y = self.buffer['ys'][i]
-                self.buffer['ys'][i] = (y + curr_y) / 2
-            else:
-                self.buffer['xs'].append(x)
-                self.buffer['ys'].append(y)
-        for s in structures:
-            self.buffer['structures'].append(s)
+    #     Args:
+    #         xs (List[List[float]]): The list of X data points (low-dimensional representation of structures).
+    #         ys (List[float]): The list of Y data points (average offsprings' fitness).
+    #         structures (List[Structure]): The list of structures.
+    #     """
+    #     for x, y in zip(xs, ys):
+    #         if x in self.buffer['xs']:
+    #             i = self.buffer['xs'].index(x)
+    #             curr_y = self.buffer['ys'][i]
+    #             self.buffer['ys'][i] = (y + curr_y) / 2
+    #         else:
+    #             self.buffer['xs'].append(x)
+    #             self.buffer['ys'].append(y)
+    #     for s in structures:
+    #         self.buffer['structures'].append(s)
 
     def shadow_steps(self,
                      gen: int = 0,
