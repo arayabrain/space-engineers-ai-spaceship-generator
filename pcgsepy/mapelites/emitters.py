@@ -46,7 +46,13 @@ class RandomEmitter(Emitter):
         Returns:
             MAPBin: The randomly picked bin.
         """
-        return np.random.choice(bins)[0]
+        fcs, ics = 0, 0
+        selected = []
+        while fcs < 2 and ics < 2:
+            selected.append(bins.pop(np.random.choice(np.arange(len(bins)))))
+            fcs += len(selected[-1]._feasible)
+            ics += len(selected[-1]._infeasible)
+        return selected
 
 
 class OptimisingEmitter(Emitter):
@@ -57,7 +63,7 @@ class OptimisingEmitter(Emitter):
         self.name = 'optimising-emitter'
     
     def pick_bin(self,
-                 bins: List[MAPBin]) -> MAPBin:
+                 bins: List[MAPBin]) -> List[MAPBin]:
         """Select the bin whose elite content has the highest feasible fitness.
 
         Args:
@@ -66,10 +72,11 @@ class OptimisingEmitter(Emitter):
         Returns:
             MAPBin: The selected bin.
         """
-        best_i, best_f = 0, 0
-        for i, map_bin in enumerate(bins):
-            f = map_bin.get_elite().c_fitness
-            if f > best_f:
-                i = best_i
-                best_f = f
-        return bins[i]
+        sorted_bins = sorted(bins, key=lambda x: x.get_elite().c_fitness, reverse=True)
+        fcs, ics = 0, 0
+        selected = []
+        while fcs < 2 and ics < 2:
+            selected.append(sorted_bins.pop(0))
+            fcs += len(selected[-1]._feasible)
+            ics += len(selected[-1]._infeasible)
+        return selected

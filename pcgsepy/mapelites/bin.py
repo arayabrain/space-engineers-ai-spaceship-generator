@@ -119,7 +119,7 @@ class MAPBin:
             CandidateSolution: The elite solution.
         """
         pop = self._feasible if population == 'feasible' else self._infeasible
-        get_max = True if population == 'feasible' else False
+        get_max = True #if population == 'feasible' else False
         return sorted(pop, key=lambda x: x.c_fitness, reverse=get_max)[0]
 
     def toggle_module_mutability(self,

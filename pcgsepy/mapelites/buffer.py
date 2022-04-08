@@ -1,4 +1,4 @@
-from typing import Any, Tuple
+from typing import Any, Callable, Tuple
 
 import numpy as np
 
@@ -16,28 +16,35 @@ def min_merge(x1, x2):
 
 class Buffer:
     def __init__(self,
-                 merge_method: callable[[Any, Any], Any] = mean_merge) -> None:
+                 merge_method: Callable[[Any, Any], Any] = mean_merge) -> None:
         self._xs = []
         self._ys = []
         self._merge = merge_method
         
     def contains(self,
-                 x: Any) -> bool:
-        return x in self._xs
+                 x: Any) -> int:
+        for i, _x in enumerate(self._xs):
+            if np.array_equal(x, _x):
+                return i
+        return -1
     
     def insert(self,
                x: Any,
                y: Any) -> None:
-        if self.contains(x):
-            i = self._xs.index(x)
+        i = self.contains(x)
+        if i > -1:
             y0 = self._ys[i]
             self._ys[i] = self._merge(y0, y)
         else:
-            self._xs.append(x)
+            self._xs.append(np.asarray(x))
             self._ys.append(y)
     
     def get(self) -> Tuple[np.ndarray, np.ndarray]:
         if len(self._xs) > 0:
-            return np.asarray(self._xs), np.asarray(self._ys)
+            xs = np.empty((len(self._xs), len(self._xs[0])))
+            for i, X in enumerate(self._xs):
+                xs[i, :] = X
+            ys = np.asarray(self._ys)
+            return xs, ys
         else:
             raise EmptyBufferException('Buffer is empty!')

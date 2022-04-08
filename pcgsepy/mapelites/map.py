@@ -1,10 +1,13 @@
 import random
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
+from itsdangerous import NoneAlgorithm
 
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.exceptions import NotFittedError
 import torch as th
 from tqdm.notebook import trange
+from sklearn.gaussian_process import GaussianProcessRegressor
 from pcgsepy.lsystem.constraints import ConstraintLevel
 from pcgsepy.mapelites.buffer import Buffer, EmptyBufferException
 
@@ -49,7 +52,7 @@ class MAPElites:
     def __init__(self,
                  lsystem: LSystem,
                  feasible_fitnesses: List[Fitness],
-                 estimator,
+                 estimator: Union[MLPEstimator, GaussianProcessRegressor],
                  buffer: Buffer,
                  behavior_descriptors: Tuple[BehaviorCharacterization, BehaviorCharacterization],
                  n_bins: Tuple[int, int] = (8, 8),
@@ -97,7 +100,8 @@ class MAPElites:
     def show_metric(self,
                     metric: str,
                     show_mean: bool = True,
-                    population: str = 'feasible') -> None:
+                    population: str = 'feasible',
+                    save_as: str = '') -> None:
         """Show the bin metric.
 
         Args:
@@ -132,16 +136,18 @@ class MAPElites:
                    vmin=0,
                    vmax=vmaxs[metric][population])
         plt.xticks(np.arange(self.bin_qnt[0]),
-                   np.cumsum(self.bin_sizes[0]) + self.limits[0])
+                   np.cumsum(self.bin_sizes[0]) + self.b_descs[0].bounds[0])
         plt.yticks(np.arange(self.bin_qnt[1]),
-                   np.cumsum(self.bin_sizes[1]) + self.limits[1])
+                   np.cumsum(self.bin_sizes[1]) + self.b_descs[1].bounds[0])
         plt.xlabel(self.b_descs[0].name)
         plt.ylabel(self.b_descs[1].name)
-        plt.title(
-            f'CMAP-Elites {"Avg." if show_mean else ""}{metric} ({population})')
+        plt.title(f'CMAP-Elites {"Avg." if show_mean else ""}{metric} ({population})')
         cbar = plt.colorbar()
         cbar.set_label(f'{"mean" if show_mean else "max"} {metric}',
                        rotation=270)
+        if save_as != '':
+            title_part = metric + ('-avg-' if show_mean else '-top-') + population
+            plt.savefig(f'results/{save_as}-{title_part}.png', transparent=True, bbox_inches='tight')
         plt.show()
 
     def _set_behavior_descriptors(self,
@@ -172,11 +178,20 @@ class MAPElites:
         if cs.is_feasible:
             return sum([self.feasible_fitnesses[i].weight * cs.fitness[i] for i in range(len(cs.fitness))])
         else:
-            # TODO: This only works with MLPEstimator!
-            if self.estimator.is_trained:
-                with th.no_grad():
-                    x = self.reducer.reduce_dims(cs._content)
-                    return self.estimator(th.tensor(x).float()).numpy()[0][0]
+            if isinstance(self.estimator, MLPEstimator):
+                if self.estimator.is_trained:
+                    with th.no_grad():
+                        return self.estimator(th.tensor(cs.fitness).float()).numpy()[0]
+                else:
+                    return np.clip(np.abs(np.random.normal(loc=0, scale=1)), 0, 1)
+            elif isinstance(self.estimator, GaussianProcessRegressor):
+                try:
+                    y_mean = self.estimator.predict(np.asarray(cs.fitness).reshape(1, -1))[0]
+                    if y_mean < 0:
+                        y_mean = np.max(y_mean, 0)
+                    return y_mean
+                except NotFittedError:
+                    return np.clip(np.abs(np.random.normal(loc=0, scale=1)), 0, 1)
             else:
                 return np.clip(np.abs(np.random.normal(loc=0, scale=1)), 0, 1)
 
@@ -200,31 +215,28 @@ class MAPElites:
                 subdivide_solutions(lcs=solutions,
                                     lsystem=self.lsystem)
                 for cs in solutions:
+                    if cs._content is None:
+                            cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
+                                                        extra_args={
+                                                            'alphabet': self.lsystem.ll_solver.atoms_alphabet
+                            }))
                     if cs.is_feasible and len(feasible_pop) < pops_size and cs not in feasible_pop:
+                        
                         self.hull_builder.add_external_hull(structure=cs._content)
                         cs.c_fitness = self.compute_fitness(cs=cs,
                                                             extra_args={
                                                                 'alphabet': self.lsystem.ll_solver.atoms_alphabet
                                                             }) + (self.nsc - cs.ncv)
-                        feasible_pop.append(cs)
-                        if cs._content is None:
-                            cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
-                                                        extra_args={
-                                                            'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                            }))
                         self._set_behavior_descriptors(cs=cs)
                         cs.age = CS_MAX_AGE
+                        feasible_pop.append(cs)
                     elif not cs.is_feasible and len(infeasible_pop) < pops_size and cs not in feasible_pop:
                         self.hull_builder.add_external_hull(structure=cs._content)
-                        cs.c_fitness = np.clip(np.abs(np.random.normal(loc=0, scale=1)), 0, 1)
-                        infeasible_pop.append(cs)
-                        if cs._content is None:
-                            cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
-                                                        extra_args={
-                                                            'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                            }))
+                        cs.fitness = np.clip(np.abs(np.random.normal(loc=0, scale=1, size=len(self.feasible_fitnesses))), 0, 1)
+                        cs.c_fitness = np.sum(cs.fitness)
                         self._set_behavior_descriptors(cs=cs)
                         cs.age = CS_MAX_AGE
+                        infeasible_pop.append(cs)
                 iterations.set_postfix(ordered_dict={
                     'fpop-size': f'{len(feasible_pop)}/{pops_size}',
                     'ipop-size': f'{len(infeasible_pop)}/{pops_size}'
@@ -372,34 +384,7 @@ class MAPElites:
                                                          }))
                     # add hull
                     self.hull_builder.add_external_hull(structure=cs._content)
-                # subdivide for estimator/pca stuff
-                f_pop = [x for x in new_pool if x.is_feasible]
-                i_pop = [x for x in new_pool if not x.is_feasible]
-                # TODO: This step is only valid if we use MLPEstimator!
-                # Prepare dataset for estimator
-                xs, ys = prepare_dataset(f_pop=f_pop,
-                                         reducer=self.reducer)
-                for x, y in zip(xs, ys):
-                    self.buffer.insert(x=x,
-                                       y=y)
-                # If possible, train estimator
-                try:
-                    xs, ys = self.buffer.get()
-                    train_estimator(self.estimator,
-                                    xs=xs,
-                                    ys=ys)
-                    # Reassign previous infeasible fitnesses
-                    for i in range(self.bins.shape[0]):
-                        for j in range(self.bins.shape[1]):
-                            for cs in self.bins[i, j]._infeasible:
-                                self.compute_fitness(cs=cs,
-                                                    extra_args={
-                                                        'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                                    })
-                except EmptyBufferException:
-                    pass
-                # assign fitness
-                for cs in new_pool:
+                     # assign fitness
                     cs.c_fitness = self.compute_fitness(cs=cs,
                                                         extra_args={
                                                             'alphabet': self.lsystem.ll_solver.atoms_alphabet
@@ -410,8 +395,34 @@ class MAPElites:
                     self._set_behavior_descriptors(cs=cs)
                     # set age
                     cs.age = CS_MAX_AGE
-
                     generated.append(cs)
+                
+                # subdivide for estimator/pca stuff
+                f_pop = [x for x in new_pool if x.is_feasible]
+                # Prepare dataset for estimator
+                xs, ys = prepare_dataset(f_pop=f_pop)
+                for x, y in zip(xs, ys):
+                    self.buffer.insert(x=x,
+                                       y=y)
+                # If possible, train estimator
+                try:
+                    xs, ys = self.buffer.get()
+                    if isinstance(self.estimator, MLPEstimator):
+                        train_estimator(self.estimator,
+                                        xs=xs,
+                                        ys=ys)
+                    elif isinstance(self.estimator, GaussianProcessRegressor):
+                        self.estimator.fit(xs, ys)
+                    # Reassign previous infeasible fitnesses
+                    for i in range(self.bins.shape[0]):
+                        for j in range(self.bins.shape[1]):
+                            for cs in self.bins[i, j]._infeasible:
+                                cs.c_fitness = self.compute_fitness(cs=cs,
+                                                                    extra_args={
+                                                                        'alphabet': self.lsystem.ll_solver.atoms_alphabet
+                                                                        })
+                except EmptyBufferException:
+                    pass
             except EvoException:
                 pass
         return generated
@@ -506,7 +517,14 @@ class MAPElites:
                                          bin_size=(self.bin_sizes[0][i],
                                                    self.bin_sizes[1][j]))
 
-        self.estimator = MLPEstimator(10, 1)
+        if isinstance(self.estimator, MLPEstimator):
+            self.estimator = MLPEstimator(xshape=self.estimator.xshape,
+                                          yshape=self.estimator.yshape)
+        elif isinstance(self.estimator, GaussianProcessRegressor):
+            self.estimator = GaussianProcessRegressor(kernel=self.estimator.kernel,
+                                                      alpha=self.estimator.alpha,
+                                                      optimizer=self.estimator.optimizer,
+                                                      random_state=self.estimator.random_state)
         self.buffer = Buffer(merge_method=self.buffer._merge)
 
         if lcs:
@@ -654,3 +672,59 @@ class MAPElites:
             if generated:
                 self._update_bins(lcs=generated)
                 self._check_res_trigger()
+
+    def emitter_step(self,
+                     gen: int = 0) -> None:
+        """Apply a step according to the emitter.
+
+        Args:
+            gen (int, optional): The current generation number. Defaults to 0.
+        """
+        all_bins = self.bins.flatten().tolist()
+        selected_bins = self.emitter.pick_bin(bins=[b for b in all_bins if len(b._feasible) > 0])
+        fpop, ipop = [], []
+        for selected_bin in selected_bins:
+            fpop.extend(selected_bin._feasible)
+            ipop.extend(selected_bin._infeasible)
+        generated = self._step(populations=[fpop, ipop],
+                               gen=gen)
+        if generated:
+            self._update_bins(lcs=generated)
+            self._check_res_trigger()
+    
+    def get_coverage(self,
+                     pop: str) -> Tuple[int, int]:
+        """Get the grid coverage.
+
+        Args:
+            pop (str): The population.
+
+        Returns:
+            Tuple[int, int]: The number of non-empty bins and the total number of bins.
+        """
+        c, t = 0, 0
+        for i in range(self.bins.shape[0]):
+            for j in range(self.bins.shape[1]):
+                if self.non_empty(bin_idx=(i, j),
+                                  pop=pop):
+                    c += 1
+                t += 1
+        return c, t
+    
+    def get_fitness_metrics(self,
+                            pop: str) -> Tuple[int, int]:
+        """Get the fitness metrics of a population.
+
+        Args:
+            pop (str): The population.
+
+        Returns:
+            Tuple[int, int]: The top and mean fitness.
+        """
+        fs = []
+        for i in range(self.bins.shape[0]):
+            for j in range(self.bins.shape[1]):
+                p = self.bins[i, j]._feasible if pop == 'feasible' else self.bins[i, j]._infeasible
+                for cs in p:
+                    fs.append(cs.c_fitness)
+        return np.max(fs), np.average(fs)

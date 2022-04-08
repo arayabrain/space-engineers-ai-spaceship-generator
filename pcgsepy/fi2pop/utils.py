@@ -123,6 +123,8 @@ class MLPEstimator(nn.Module):
             yshape (int): The number of dimensions in output.
         """
         super(MLPEstimator, self).__init__()
+        self.xshape = xshape,
+        self.yshape = yshape
         self.l1 = nn.Linear(xshape, xshape*2)
         self.l2 = nn.Linear(xshape*2, int(xshape*2 / 3))
         self.l3 = nn.Linear(int(xshape*2 / 3), yshape)
@@ -245,13 +247,11 @@ class DimensionalityReducer:
         return self.pca.transform(x).tolist()
 
 
-def prepare_dataset(f_pop: List[CandidateSolution],
-                    reducer: DimensionalityReducer) -> Tuple[List[List[float]]]:
-    """Prepare the dataset for the MLPEstimator.
+def prepare_dataset(f_pop: List[CandidateSolution]) -> Tuple[List[List[float]]]:
+    """Prepare the dataset for the estimator.
 
     Args:
         f_pop (List[CandidateSolution]): The Feasible population.
-        reducer (DimensionalityReducer): The DimensionalityReducer object.
 
     Returns:
         Tuple[List[List[float]]]: Inputs and labels to use during training.
@@ -261,11 +261,7 @@ def prepare_dataset(f_pop: List[CandidateSolution],
         y = cs.c_fitness
         for parent in cs.parents:
             if not parent.is_feasible:
-                x = reducer.reduce_dims(parent._content).tolist()
-                if x in xs:
-                    curr_y = ys[xs.index(x)]
-                    ys[xs.index(x)] = (y + curr_y) / 2
-                else:
-                    xs.append(x)
-                    ys.append(y)
+                x = parent.fitness
+                xs.append(x)
+                ys.append(y)
     return xs, ys
