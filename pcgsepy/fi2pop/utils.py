@@ -170,7 +170,7 @@ class MLPEstimator(nn.Module):
 def train_estimator(estimator: MLPEstimator,
                     xs: List[List[float]],
                     ys: List[List[float]],
-                    n_epochs: int = 5):
+                    n_epochs: int = 20):
     """Train the MLP estimator.
 
     Args:

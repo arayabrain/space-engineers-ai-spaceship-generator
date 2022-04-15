@@ -56,6 +56,10 @@ CS_MAX_AGE = config['MAPELITES'].getint('max_age')
 N_DIM_RED = config['MAPELITES'].getint('n_dimensions_reduced')
 # maximum number of dimensions PCA can analyze
 MAX_DIMS_RED = config['MAPELITES'].getint('max_possible_dimensions')
+# minimum fitness assignable
+EPSILON_F = config['MAPELITES'].getfloat('epsilon_fitness')
+# interval for realigning infeasible fitnesses
+ALIGNMENT_INTERVAL = config['MAPELITES'].getint('alignment_interval')
 
 # number of experiments to run
 N_RUNS = config['EXPERIMENT'].getint('n_runs')
