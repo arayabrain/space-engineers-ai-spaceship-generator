@@ -180,11 +180,14 @@ class MAPElites:
         if cs.is_feasible:
             return sum([self.feasible_fitnesses[i].weight * cs.fitness[i] for i in range(len(cs.fitness))])
         else:
-            if self.estimator.is_trained:
-                with th.no_grad():
-                    return self.estimator(th.tensor(cs.fitness).float()).numpy()[0]
+            if self.estimator is not None:
+                if self.estimator.is_trained:
+                    with th.no_grad():
+                        return self.estimator(th.tensor(cs.fitness).float()).numpy()[0]
+                else:
+                    return EPSILON_F
             else:
-                return EPSILON_F
+                return cs.ncv
 
     def generate_initial_populations(self,
                                      pops_size: int = POP_SIZE,
@@ -212,8 +215,8 @@ class MAPElites:
                                                             'alphabet': self.lsystem.ll_solver.atoms_alphabet
                             }))
                     if cs.is_feasible and len(feasible_pop) < pops_size and cs not in feasible_pop:
-                        
-                        self.hull_builder.add_external_hull(structure=cs._content)
+                        if self.hull_builder is not None:
+                            self.hull_builder.add_external_hull(structure=cs._content)
                         cs.c_fitness = self.compute_fitness(cs=cs,
                                                             extra_args={
                                                                 'alphabet': self.lsystem.ll_solver.atoms_alphabet
@@ -222,9 +225,12 @@ class MAPElites:
                         cs.age = CS_MAX_AGE
                         feasible_pop.append(cs)
                     elif not cs.is_feasible and len(infeasible_pop) < pops_size and cs not in feasible_pop:
-                        self.hull_builder.add_external_hull(structure=cs._content)
-                        cs.fitness = np.clip(np.abs(np.random.normal(loc=0, scale=1, size=len(self.feasible_fitnesses))), 0, 1)
-                        cs.c_fitness = np.sum(cs.fitness)
+                        if self.hull_builder is not None:
+                            self.hull_builder.add_external_hull(structure=cs._content)
+                        cs.c_fitness = self.compute_fitness(cs=cs,
+                                                            extra_args={
+                                                                'alphabet': self.lsystem.ll_solver.atoms_alphabet
+                                                            })
                         self._set_behavior_descriptors(cs=cs)
                         cs.age = CS_MAX_AGE
                         infeasible_pop.append(cs)
@@ -359,63 +365,66 @@ class MAPElites:
         """
         generated = []
         for pop in populations:
-            try:
-                new_pool = create_new_pool(population=pop,
-                                           generation=gen,
-                                           n_individuals=2 * BIN_POP_SIZE,
-                                           minimize=False)
-                subdivide_solutions(lcs=new_pool,
-                                    lsystem=self.lsystem)
-                # ensure content is set
-                for cs in new_pool:
-                    if cs._content is None:
-                        cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
-                                                     extra_args={
-                                                         'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                                         }))
-                    # add hull
-                    self.hull_builder.add_external_hull(structure=cs._content)
-                     # assign fitness
-                    cs.c_fitness = self.compute_fitness(cs=cs,
+            if len(pop) > 0:
+                try:
+                    minimize = False if pop[0].is_feasible else False if self.estimator is not None else True
+                    new_pool = create_new_pool(population=pop,
+                                            generation=gen,
+                                            n_individuals=len(pop),
+                                            minimize=minimize)
+                    subdivide_solutions(lcs=new_pool,
+                                        lsystem=self.lsystem)
+                    # ensure content is set
+                    for cs in new_pool:
+                        if cs._content is None:
+                            cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
                                                         extra_args={
                                                             'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                                        })
-                    if cs.is_feasible:
-                        cs.c_fitness += (self.nsc - cs.ncv)
-                    # assign behavior descriptors
-                    self._set_behavior_descriptors(cs=cs)
-                    # set age
-                    cs.age = CS_MAX_AGE
-                    generated.append(cs)
-                
-                if self.estimator is not None:
-                    # subdivide for estimator/
-                    f_pop = [x for x in new_pool if x.is_feasible]
-                    # Prepare dataset for estimator
-                    xs, ys = prepare_dataset(f_pop=f_pop)
-                    for x, y in zip(xs, ys):
-                        self.buffer.insert(x=x,
-                                           y=y / self.max_f_fitness)
-                    # If possible, train estimator
-                    try:
-                        xs, ys = self.buffer.get()
-                        train_estimator(self.estimator,
-                                        xs=xs,
-                                        ys=ys)
-                    except EmptyBufferException:
-                        pass
-                    if self.estimator.is_trained and gen % ALIGNMENT_INTERVAL == 0:
-                        # Reassign previous infeasible fitnesses
-                        for i in range(self.bins.shape[0]):
-                            for j in range(self.bins.shape[1]):
-                                for cs in self.bins[i, j]._infeasible:
-                                    if cs.age > ALIGNMENT_INTERVAL:
-                                        cs.c_fitness = self.compute_fitness(cs=cs,
-                                                                            extra_args={
-                                                                                'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                                                                })
-            except EvoException:
-                pass
+                                                            }))
+                        # add hull
+                        if self.hull_builder is not None:
+                            self.hull_builder.add_external_hull(structure=cs._content)
+                        # assign fitness
+                        cs.c_fitness = self.compute_fitness(cs=cs,
+                                                            extra_args={
+                                                                'alphabet': self.lsystem.ll_solver.atoms_alphabet
+                                                            })
+                        if cs.is_feasible:
+                            cs.c_fitness += (self.nsc - cs.ncv)
+                        # assign behavior descriptors
+                        self._set_behavior_descriptors(cs=cs)
+                        # set age
+                        cs.age = CS_MAX_AGE
+                        generated.append(cs)
+                    
+                    if self.estimator is not None:
+                        # subdivide for estimator/
+                        f_pop = [x for x in new_pool if x.is_feasible]
+                        # Prepare dataset for estimator
+                        xs, ys = prepare_dataset(f_pop=f_pop)
+                        for x, y in zip(xs, ys):
+                            self.buffer.insert(x=x,
+                                            y=y / self.max_f_fitness)
+                        # If possible, train estimator
+                        try:
+                            xs, ys = self.buffer.get()
+                            train_estimator(self.estimator,
+                                            xs=xs,
+                                            ys=ys)
+                        except EmptyBufferException:
+                            pass
+                        if self.estimator.is_trained and gen % ALIGNMENT_INTERVAL == 0:
+                            # Reassign previous infeasible fitnesses
+                            for i in range(self.bins.shape[0]):
+                                for j in range(self.bins.shape[1]):
+                                    for cs in self.bins[i, j]._infeasible:
+                                        if cs.age > ALIGNMENT_INTERVAL:
+                                            cs.c_fitness = self.compute_fitness(cs=cs,
+                                                                                extra_args={
+                                                                                    'alphabet': self.lsystem.ll_solver.atoms_alphabet
+                                                                                    })
+                except EvoException:
+                    pass
         return generated
 
     def rand_step(self,
@@ -508,14 +517,9 @@ class MAPElites:
                                          bin_size=(self.bin_sizes[0][i],
                                                    self.bin_sizes[1][j]))
 
-        if isinstance(self.estimator, MLPEstimator):
+        if self.estimator is not None:
             self.estimator = MLPEstimator(xshape=self.estimator.xshape,
                                           yshape=self.estimator.yshape)
-        elif isinstance(self.estimator, GaussianProcessRegressor):
-            self.estimator = GaussianProcessRegressor(kernel=self.estimator.kernel,
-                                                      alpha=self.estimator.alpha,
-                                                      optimizer=self.estimator.optimizer,
-                                                      random_state=self.estimator.random_state)
         self.buffer = Buffer(merge_method=self.buffer._merge)
 
         if lcs:
@@ -672,7 +676,7 @@ class MAPElites:
             gen (int, optional): The current generation number. Defaults to 0.
         """
         all_bins = self.bins.flatten().tolist()
-        selected_bins = self.emitter.pick_bin(bins=[b for b in all_bins if len(b._feasible) > 0])
+        selected_bins = self.emitter.pick_bin(bins=[b for b in all_bins if len(b._feasible) > 0 or len(b._infeasible) > 0])
         fpop, ipop = [], []
         for selected_bin in selected_bins:
             fpop.extend(selected_bin._feasible)
@@ -718,4 +722,7 @@ class MAPElites:
                 p = self.bins[i, j]._feasible if pop == 'feasible' else self.bins[i, j]._infeasible
                 for cs in p:
                     fs.append(cs.c_fitness)
-        return np.max(fs), np.average(fs)
+        top = np.max(fs)
+        if pop == 'infeasible' and self.estimator is None:
+            top = np.min(fs)
+        return top, np.average(fs)

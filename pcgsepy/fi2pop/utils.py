@@ -123,7 +123,7 @@ class MLPEstimator(nn.Module):
             yshape (int): The number of dimensions in output.
         """
         super(MLPEstimator, self).__init__()
-        self.xshape = xshape,
+        self.xshape = xshape
         self.yshape = yshape
         self.l1 = nn.Linear(xshape, xshape*2)
         self.l2 = nn.Linear(xshape*2, int(xshape*2 / 3))
