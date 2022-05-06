@@ -10,6 +10,7 @@ class CandidateSolution:
                  content: Optional[Structure] = None):
         self.string = string
         self._content = content
+        self.representation = []
         self.fitness = []
         self.c_fitness = 0.
         self.b_descs = (0., 0.)
@@ -19,6 +20,8 @@ class CandidateSolution:
         self.hls_mod = {}  # keys: 'string', 'mutable'
         self.ncv = 0  # number of constraints violated
         self.parents = []
+        self.n_offspring = 0
+        self.n_feas_offspring = 0
 
     def __str__(self) -> str:
         return self.string

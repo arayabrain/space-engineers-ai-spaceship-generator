@@ -28,6 +28,10 @@ class MAPBin:
     def __repr__(self) -> str:
         return str(self)
 
+    def non_empty(self,
+                  pop: str) -> bool:
+        return len(self._feasible if pop == 'feasible' else self._infeasible) > 0
+    
     def _reduce_pop(self,
                     pop: List[CandidateSolution]) -> List[CandidateSolution]:
         """Cull the population within this bin.

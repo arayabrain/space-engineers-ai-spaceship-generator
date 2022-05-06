@@ -1,24 +1,26 @@
 import random
-from typing import Any, Dict, List, Optional, Tuple, Union
-from itsdangerous import NoneAlgorithm
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.exceptions import NotFittedError
 import torch as th
-from tqdm.notebook import trange
 from pcgsepy.lsystem.constraints import ConstraintLevel
+from pcgsepy.mapelites.bandit import EpsilonGreedyAgent
 from pcgsepy.mapelites.buffer import Buffer, EmptyBufferException
-
-from pcgsepy.mapelites.emitters import Emitter, RandomEmitter
+from pcgsepy.mapelites.emitters import (Emitter, RandomEmitter,
+                                        get_emitter_by_str)
+from pcgsepy.nn.estimators import QuantileEstimator
+from tqdm.notebook import trange
+from typing_extensions import Self
 
 from ..common.vecs import Orientation, Vec
-from ..config import (ALIGNMENT_INTERVAL, BIN_POP_SIZE, CS_MAX_AGE, EPSILON_F, MAX_DIMS_RED, N_DIM_RED,
+from ..config import (ALIGNMENT_INTERVAL, BIN_POP_SIZE, CS_MAX_AGE, EPSILON_F,
                       N_ITERATIONS, N_RETRIES, POP_SIZE)
-from ..evo.fitness import Fitness
+from ..evo.fitness import (Fitness, box_filling_fitness, func_blocks_fitness,
+                           mame_fitness, mami_fitness)
 from ..evo.genops import EvoException
-from ..fi2pop.utils import (DimensionalityReducer, MLPEstimator,
-                            create_new_pool, prepare_dataset,
+from ..fi2pop.utils import (GaussianEstimator,
+                            MLPEstimator, create_new_pool, prepare_dataset,
                             subdivide_solutions, train_estimator)
 from ..hullbuilder import HullBuilder
 from ..lsystem.lsystem import LSystem
@@ -45,6 +47,31 @@ def get_structure(string: str,
                      orientation_up=orientation_up)
     return structure
 
+def coverage_reward(mapelites: 'MAPElites') -> float:
+    tot_coverage, inc_coverage = mapelites.bins.shape[0] * mapelites.bins.shape[1], 0.
+    for map_bin in mapelites.bins.flatten().tolist():
+        is_new_bin = False
+        if len(map_bin._feasible) > 0:
+            for cs in map_bin._feasible:
+                if cs.age != CS_MAX_AGE:
+                    is_new_bin = False
+        inc_coverage += 1 if is_new_bin else 0
+    return inc_coverage / tot_coverage
+
+
+def fitness_reward(mapelites: 'MAPElites') -> float:
+    prev_best, current_best = 0, 0
+    for map_bin in mapelites.bins.flatten().tolist():
+        if len(map_bin._feasible) > 0:
+            for cs in map_bin._feasible:
+                if cs.age == CS_MAX_AGE:
+                    if cs.c_fitness > prev_best:
+                        current_best = cs.c_fitness
+                elif cs.age != CS_MAX_AGE:
+                    if cs.c_fitness > prev_best:
+                        prev_best = cs.c_fitness
+    fit_diff = current_best - prev_best
+    return fit_diff / prev_best
 
 class MAPElites:
 
@@ -54,8 +81,10 @@ class MAPElites:
                  buffer: Buffer,
                  behavior_descriptors: Tuple[BehaviorCharacterization, BehaviorCharacterization],
                  n_bins: Tuple[int, int] = (8, 8),
-                 estimator: Optional[MLPEstimator] = None,
-                 emitter: Emitter = RandomEmitter()):
+                 estimator: Optional[Union[GaussianEstimator, MLPEstimator, QuantileEstimator]] = None,
+                 emitter: Optional[Emitter] = RandomEmitter(),
+                 agent: Optional[EpsilonGreedyAgent] = None,
+                 agent_rewards: Optional[List[Callable[[Self], float]]] = []):
         """Create a MAP-Elites object.
 
         Args:
@@ -72,6 +101,8 @@ class MAPElites:
         self.feasible_fitnesses = feasible_fitnesses
         self.b_descs = behavior_descriptors
         self.emitter = emitter
+        self.agent = agent
+        self.agent_rewards = agent_rewards
         self.limits = (self.b_descs[0].bounds[1] if self.b_descs[0].bounds is not None else 20,
                        self.b_descs[1].bounds[1] if self.b_descs[1].bounds is not None else 20)
         self._initial_n_bins = n_bins
@@ -97,6 +128,14 @@ class MAPElites:
         
         self.max_f_fitness = sum([f.bounds[1] for f in self.feasible_fitnesses])
         self.max_i_fitness = len(self.lsystem.all_hl_constraints) if not self.estimator else 1
+        self.infeas_fitness_idx = 1  # 0: min, 1: median, 2: max
+        
+        self.allow_res_increase = True
+        self.allow_aging = True
+        
+        assert self.agent is not None or self.emitter is not None, 'MAP-Elites requires either an agent or an emitter!'
+        if self.agent is not None and not self.agent_rewards:
+            raise AssertionError(f'You selected an agent but no reward functions have been provided!')
 
     def show_metric(self,
                     metric: str,
@@ -175,17 +214,36 @@ class MAPElites:
             float: The fitness value.
         """
         if cs.fitness == []:
-            fs = [f(cs, extra_args) for f in self.feasible_fitnesses]
-            cs.fitness = fs
+            if cs.is_feasible:
+                cs.fitness = [f(cs, extra_args) for f in self.feasible_fitnesses]
+            else:
+                cs.representation = [f(cs, extra_args) for f in [Fitness(name='BoxFilling', f=box_filling_fitness, bounds=(0, 1)),
+                                                                 Fitness(name='FuncionalBlocks', f=func_blocks_fitness, bounds=(0, 1)),
+                                                                 Fitness(name='MajorMediumProportions', f=mame_fitness, bounds=(0, 1)),
+                                                                 Fitness(name='MajorMinimumProportions', f=mami_fitness, bounds=(0, 1))]]
         if cs.is_feasible:
             return sum([self.feasible_fitnesses[i].weight * cs.fitness[i] for i in range(len(cs.fitness))])
         else:
             if self.estimator is not None:
-                if self.estimator.is_trained:
-                    with th.no_grad():
-                        return self.estimator(th.tensor(cs.fitness).float()).numpy()[0]
+                if isinstance(self.estimator, GaussianEstimator):
+                    return self.estimator.predict(x=np.asarray(cs.fitness))
+                elif isinstance(self.estimator, MLPEstimator):
+                    if self.estimator.is_trained:
+                        with th.no_grad():
+                            return self.estimator(th.tensor(cs.representation).float()).numpy()[0]
+                    else:
+                        return EPSILON_F
+                elif isinstance(self.estimator, QuantileEstimator):
+                    if self.estimator.is_trained:
+                        with th.no_grad():
+                            # set fitness to (3,) array (min, median, max)
+                            cs.fitness = self.estimator(th.tensor(cs.representation).float().unsqueeze(0)).numpy()[0]
+                            return cs.fitness[self.infeas_fitness_idx]  # set c_itness to median by default
+                    else:
+                        cs.fitness = [EPSILON_F, EPSILON_F, EPSILON_F]
+                        return cs.fitness[self.infeas_fitness_idx]
                 else:
-                    return EPSILON_F
+                    raise NotImplementedError(f'Unrecognized estimator type: {type(self.estimator)}.')
             else:
                 return cs.ncv
 
@@ -243,10 +301,6 @@ class MAPElites:
                     break
         self._update_bins(lcs=feasible_pop)
         self._update_bins(lcs=infeasible_pop)
-        # ensure it can start
-        # if len(self._valid_bins()) == 0:
-        #     self.generate_initial_populations(pops_size=pops_size,
-        #                                       n_retries=n_retries)
 
     def subdivide_range(self,
                         bin_idx: Tuple[int, int]) -> None:
@@ -316,10 +370,11 @@ class MAPElites:
         Args:
             diff (int, optional): The quantity to age for. Defaults to -1.
         """
-        for i in range(self.bins.shape[0]):
-            for j in range(self.bins.shape[1]):
-                cbin = self.bins[i, j]
-                cbin.age(diff=diff)
+        if self.allow_aging:
+            for i in range(self.bins.shape[0]):
+                for j in range(self.bins.shape[1]):
+                    cbin = self.bins[i, j]
+                    cbin.age(diff=diff)
 
     def _valid_bins(self) -> List[MAPBin]:
         """Get all the valid bins.
@@ -341,15 +396,16 @@ class MAPElites:
         Trigger a resolution increase if at least 1 bin has reached full
         population capacity for both Feasible and Infeasible populations.
         """
-        to_increase_res = []
-        for i in range(self.bins.shape[0]):
-            for j in range(self.bins.shape[1]):
-                cbin = self.bins[i, j]
-                if len(cbin._feasible) >= BIN_POP_SIZE and len(cbin._infeasible) >= BIN_POP_SIZE:
-                    to_increase_res.append((i, j))
-        if to_increase_res:
-            for bin_idx in to_increase_res:
-                self.subdivide_range(bin_idx=bin_idx)
+        if self.allow_res_increase:
+            to_increase_res = []
+            for i in range(self.bins.shape[0]):
+                for j in range(self.bins.shape[1]):
+                    cbin = self.bins[i, j]
+                    if len(cbin._feasible) >= BIN_POP_SIZE and len(cbin._infeasible) >= BIN_POP_SIZE:
+                        to_increase_res.append((i, j))
+            if to_increase_res:
+                for bin_idx in to_increase_res:
+                    self.subdivide_range(bin_idx=bin_idx)
 
     def _step(self,
               populations: List[List[CandidateSolution]],
@@ -404,13 +460,19 @@ class MAPElites:
                         xs, ys = prepare_dataset(f_pop=f_pop)
                         for x, y in zip(xs, ys):
                             self.buffer.insert(x=x,
-                                            y=y / self.max_f_fitness)
+                                               y=y / self.max_f_fitness)
                         # If possible, train estimator
                         try:
                             xs, ys = self.buffer.get()
-                            train_estimator(self.estimator,
-                                            xs=xs,
-                                            ys=ys)
+                            if isinstance(self.estimator, GaussianEstimator):
+                                self.estimator.fit(x=xs,
+                                                   y=ys)
+                            elif isinstance(self.estimator, MLPEstimator) or isinstance(self.estimator, QuantileEstimator):
+                                train_estimator(self.estimator,
+                                                xs=xs,
+                                                ys=ys)
+                            else:
+                                raise NotImplementedError(f'Unrecognized estimator type {type(self.estimator)}.')
                         except EmptyBufferException:
                             pass
                         if self.estimator.is_trained and gen % ALIGNMENT_INTERVAL == 0:
@@ -518,11 +580,15 @@ class MAPElites:
                                                    self.bin_sizes[1][j]))
 
         if self.estimator is not None:
-            self.estimator = MLPEstimator(xshape=self.estimator.xshape,
-                                          yshape=self.estimator.yshape)
+            if isinstance(self.estimator, MLPEstimator):
+                self.estimator = MLPEstimator(xshape=self.estimator.xshape,
+                                            yshape=self.estimator.yshape)
+            elif isinstance(self.estimator, QuantileEstimator):
+                self.estimator = QuantileEstimator(xshape=self.estimator.xshape,
+                                                   yshape=self.estimator.yshape)
         self.buffer = Buffer(merge_method=self.buffer._merge)
 
-        if lcs:
+        if lcs is not None:
             self._update_bins(lcs=lcs)
             self._check_res_trigger()
         else:
@@ -543,23 +609,6 @@ class MAPElites:
         i, j = bin_idx
         chosen_bin = self.bins[i, j]
         return chosen_bin.get_elite(population=pop)
-
-    def non_empty(self,
-                  bin_idx: Tuple[int, int],
-                  pop: str) -> bool:
-        """Check if the selected bin is not empty for the population.
-
-        Args:
-            bin_idx (Tuple[int, int]): The bin index.
-            pop (str): The population.
-
-        Returns:
-            bool: Whether the bin's population has at least a solution.
-        """
-        i, j = bin_idx
-        chosen_bin = self.bins[i, j]
-        pop = chosen_bin._feasible if pop == 'feasible' else chosen_bin._infeasible
-        return len(pop) > 0
 
     def update_behavior_descriptors(self,
                                     bs: Tuple[BehaviorCharacterization]) -> None:
@@ -613,29 +662,6 @@ class MAPElites:
                     cs.c_fitness = sum([self.feasible_fitnesses[i].weight * cs.fitness[i] for i in range(len(cs.fitness))])
                     cs.c_fitness += (self.nsc - cs.ncv)
                     
-
-    # def _update_buffer(self,
-    #                    xs: List[List[float]],
-    #                    ys: List[float],
-    #                    structures: List[Structure]) -> None:
-    #     """Update the buffer of data points and structures.
-
-    #     Args:
-    #         xs (List[List[float]]): The list of X data points (low-dimensional representation of structures).
-    #         ys (List[float]): The list of Y data points (average offsprings' fitness).
-    #         structures (List[Structure]): The list of structures.
-    #     """
-    #     for x, y in zip(xs, ys):
-    #         if x in self.buffer['xs']:
-    #             i = self.buffer['xs'].index(x)
-    #             curr_y = self.buffer['ys'][i]
-    #             self.buffer['ys'][i] = (y + curr_y) / 2
-    #         else:
-    #             self.buffer['xs'].append(x)
-    #             self.buffer['ys'].append(y)
-    #     for s in structures:
-    #         self.buffer['structures'].append(s)
-
     def shadow_steps(self,
                      gen: int = 0,
                      n_steps: int = 5) -> None:
@@ -668,6 +694,9 @@ class MAPElites:
                 self._update_bins(lcs=generated)
                 self._check_res_trigger()
 
+    def compute_bandit_reward(self) -> float:
+        return sum([f(self) for f in self.agent_rewards])
+    
     def emitter_step(self,
                      gen: int = 0) -> None:
         """Apply a step according to the emitter.
@@ -676,16 +705,53 @@ class MAPElites:
             gen (int, optional): The current generation number. Defaults to 0.
         """
         all_bins = self.bins.flatten().tolist()
-        selected_bins = self.emitter.pick_bin(bins=[b for b in all_bins if len(b._feasible) > 0 or len(b._infeasible) > 0])
+        emitter, bandit = None, None
+        if self.emitter is not None:
+            emitter = self.emitter
+        elif self.agent is not None:
+            # get bandit
+            bandit = self.agent.choose_bandit()
+            emitter_str, method_str = bandit.action.split(';')
+            # set emitter
+            emitter = get_emitter_by_str(emitter=emitter_str)
+            # set merge method
+            if method_str == 'max':
+                self.infeas_fitness_idx = 0
+            elif method_str == 'median':
+                self.infeas_fitness_idx = 1
+            elif method_str == 'min':
+                self.infeas_fitness_idx = 2
+            else:
+                raise NotImplementedError(f'Unrecognized merge method from bandit action: {method_str}')
+            # update existing solution's fitness
+            for i in range(self.bins.shape[0]):
+                for j in range(self.bins.shape[1]):
+                    for cs in self.bins[i, j]._infeasible:
+                        cs.c_fitness = cs.fitness[self.infeas_fitness_idx]
+        else:
+            raise NotImplementedError('MAP-Elites requires either a fixed emitter or a MultiArmed Bandit Agent, but neither were provided.')
+        selected_bins = emitter.pick_bin(bins=[b for b in all_bins if len(b._feasible) > 0 or len(b._infeasible) > 0])
         fpop, ipop = [], []
-        for selected_bin in selected_bins:
-            fpop.extend(selected_bin._feasible)
-            ipop.extend(selected_bin._infeasible)
+        if isinstance(selected_bins[0], MAPBin):
+            for selected_bin in selected_bins:
+                fpop.extend(selected_bin._feasible)
+                ipop.extend(selected_bin._infeasible)
+        elif isinstance(selected_bins[0], list):
+            for selected_bin in selected_bins[0]:
+                fpop.extend(selected_bin._feasible)
+            for selected_bin in selected_bins[1]:
+                ipop.extend(selected_bin._infeasible)
+        else:
+            raise NotImplementedError(f'Unrecognized emitter output: {selected_bins}.')
         generated = self._step(populations=[fpop, ipop],
                                gen=gen)
         if generated:
             self._update_bins(lcs=generated)
             self._check_res_trigger()
+        if bandit is not None:
+            r = self.compute_bandit_reward()
+            self.agent.reward_bandit(bandit=bandit,
+                                     reward=r)
     
     def get_coverage(self,
                      pop: str) -> Tuple[int, int]:
@@ -700,8 +766,7 @@ class MAPElites:
         c, t = 0, 0
         for i in range(self.bins.shape[0]):
             for j in range(self.bins.shape[1]):
-                if self.non_empty(bin_idx=(i, j),
-                                  pop=pop):
+                if self.bins[i, j].non_empty(pop=pop):
                     c += 1
                 t += 1
         return c, t
@@ -726,3 +791,12 @@ class MAPElites:
         if pop == 'infeasible' and self.estimator is None:
             top = np.min(fs)
         return top, np.average(fs)
+
+    def get_random_elite(self,
+                         pop: str) -> CandidateSolution:
+        nonempty = []
+        for i in range(self.bins.shape[0]):
+            for j in range(self.bins.shape[1]):
+                if self.bins[i, j].non_empty(pop=pop):
+                    nonempty.append(self.bins[i, j])
+        return np.random.choice(nonempty).get_elite(population=pop)

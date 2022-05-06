@@ -1,13 +1,14 @@
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
+from sklearn.gaussian_process import GaussianProcessRegressor
 import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.decomposition import PCA, KernelPCA, SparsePCA
 from sklearn.preprocessing import StandardScaler
 
-from ..config import POP_SIZE
+from ..config import EPSILON_F, POP_SIZE, RESCALE_INFEAS_FITNESS
 from ..evo.genops import EvoException, crossover, mutate, roulette_wheel_selection
 from ..lsystem.constraints import ConstraintLevel, ConstraintTime
 from ..lsystem.lsystem import LSystem
@@ -189,7 +190,47 @@ def train_estimator(estimator: MLPEstimator,
         losses.append(loss.item())
         loss.backward()
         estimator.optimizer.step()
+    
+    with open('estimators_perf.log', 'a') as f:
+        f.write(f'{type(estimator).__name__} train losses: {losses}\n')
+    
     estimator.is_trained = True
+
+
+class GaussianEstimator:
+    def __init__(self,
+                 bound: str,
+                 kernel: Any,
+                 max_f: float,
+                 min_f: float = 0,
+                 alpha: float = 1e-10,
+                 normalize_y: bool = False) -> None:
+        self.bound = bound
+        self.max_f = max_f
+        self.min_f = min_f
+        self.gpr = GaussianProcessRegressor(kernel=kernel,
+                                            alpha=alpha,
+                                            normalize_y=normalize_y)
+        self.is_trained = False
+    
+    def fit(self,
+            X: np.ndarray,
+            y: np.ndarray) -> None:
+        self.gpr.fit(X, y)
+        self.is_trained = True
+    
+    def predict(self,
+                x: np.ndarray) -> float:
+        if len(x.shape) == 1:
+            x = x.reshape(1, -1)
+        y_mean, y_std = self.gpr.predict(x, return_std=True)
+        if self.bound == 'upper':
+            f = (y_mean[0] + y_std[0]) / self.max_f
+        elif self.bound == 'lower':
+            f = max(y_mean[0] - y_std[0], self.min_f)
+        else:
+            raise NotImplementedError(f'Unrecognized bound ({self.bound}) encountered in GaussianEstimator.')
+        return f
 
 
 class DimensionalityReducer:
@@ -261,7 +302,8 @@ def prepare_dataset(f_pop: List[CandidateSolution]) -> Tuple[List[List[float]]]:
         y = cs.c_fitness
         for parent in cs.parents:
             if not parent.is_feasible:
-                x = parent.fitness
+                x = parent.representation
+                parent.n_feas_offspring += 1
                 xs.append(x)
-                ys.append(y)
+                ys.append(y if not RESCALE_INFEAS_FITNESS else y * (EPSILON_F + (parent.n_feas_offspring / parent.n_offspring)))
     return xs, ys

@@ -60,6 +60,8 @@ MAX_DIMS_RED = config['MAPELITES'].getint('max_possible_dimensions')
 EPSILON_F = config['MAPELITES'].getfloat('epsilon_fitness')
 # interval for realigning infeasible fitnesses
 ALIGNMENT_INTERVAL = config['MAPELITES'].getint('alignment_interval')
+# rescale infeasible fitness with reporduction probability 
+RESCALE_INFEAS_FITNESS = config['MAPELITES'].getboolean('rescale_infeas_fitness')
 
 # number of experiments to run
 N_RUNS = config['EXPERIMENT'].getint('n_runs')
