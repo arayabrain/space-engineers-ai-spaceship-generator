@@ -7,7 +7,7 @@ import torch as th
 from pcgsepy.lsystem.constraints import ConstraintLevel
 from pcgsepy.mapelites.bandit import EpsilonGreedyAgent
 from pcgsepy.mapelites.buffer import Buffer, EmptyBufferException
-from pcgsepy.mapelites.emitters import (Emitter, RandomEmitter,
+from pcgsepy.mapelites.emitters import (Emitter, HumanPrefMatrixEmitter, RandomEmitter,
                                         get_emitter_by_str)
 from pcgsepy.nn.estimators import QuantileEstimator
 from tqdm.notebook import trange
@@ -132,7 +132,7 @@ class MAPElites:
         
         self.allow_res_increase = True
         self.allow_aging = True
-        
+                
         assert self.agent is not None or self.emitter is not None, 'MAP-Elites requires either an agent or an emitter!'
         if self.agent is not None and not self.agent_rewards:
             raise AssertionError(f'You selected an agent but no reward functions have been provided!')
@@ -301,6 +301,8 @@ class MAPElites:
                     break
         self._update_bins(lcs=feasible_pop)
         self._update_bins(lcs=infeasible_pop)
+        if type(self.emitter) is HumanPrefMatrixEmitter:
+            self.emitter.build_pref_matrix(bins=self.bins)
 
     def subdivide_range(self,
                         bin_idx: Tuple[int, int]) -> None:
@@ -328,6 +330,7 @@ class MAPElites:
         self.bin_qnt = (self.bin_qnt[0] + 1, self.bin_qnt[1] + 1)
         # create new bin map
         new_bins = np.empty(shape=self.bin_qnt, dtype=object)
+        # TODO: is this actually necessary? Can't we just recreate all bins?
         # copy over unaffected bins
         new_bins[:i, :j] = self.bins[:i, :j]
         new_bins[:i, (j+2):] = self.bins[:i, (j+1):]
@@ -344,6 +347,8 @@ class MAPElites:
         self.bins = new_bins
         # assign solutions to bins
         self._update_bins(lcs=all_cs)
+        if type(self.emitter) is HumanPrefMatrixEmitter:
+            self.emitter.increase_preferences_res(idx=bin_idx) 
 
     def _update_bins(self,
                      lcs: List[CandidateSolution]) -> None:
@@ -352,13 +357,15 @@ class MAPElites:
         Args:
             lcs (List[CandidateSolution]): The list of new solutions.
         """
+        bc0 = np.cumsum([0] + self.bin_sizes[0][:-1]) + self.b_descs[0].bounds[0]
+        bc1 = np.cumsum([0] + self.bin_sizes[1][:-1]) + self.b_descs[1].bounds[0]
         for cs in lcs:
             b0, b1 = cs.b_descs
             i = np.digitize(x=[b0],
-                            bins=np.cumsum([0] + self.bin_sizes[0][:-1]) + self.b_descs[0].bounds[0],
+                            bins=bc0,
                             right=False)[0] - 1
             j = np.digitize(x=[b1],
-                            bins=np.cumsum([0] + self.bin_sizes[1][:-1]) + self.b_descs[1].bounds[0],
+                            bins=bc1,
                             right=False)[0] - 1
             self.bins[i, j].insert_cs(cs)
             self.bins[i, j].remove_old()
@@ -532,6 +539,9 @@ class MAPElites:
         if generated:
             self._update_bins(lcs=generated)
             self._check_res_trigger()
+            if type(self.emitter) is HumanPrefMatrixEmitter:
+                self.emitter.update_preferences(idxs=bin_idxs,
+                                                bins=self.bins)
         else:
             self._age_bins(diff=1)
 
@@ -661,38 +671,6 @@ class MAPElites:
                 for cs in self.bins[i, j]._feasible:
                     cs.c_fitness = sum([self.feasible_fitnesses[i].weight * cs.fitness[i] for i in range(len(cs.fitness))])
                     cs.c_fitness += (self.nsc - cs.ncv)
-                    
-    def shadow_steps(self,
-                     gen: int = 0,
-                     n_steps: int = 5) -> None:
-        """Apply some hidden steps.
-
-        Args:
-            gen (int, optional): The current number of generations. Defaults to 0.
-            n_steps (int, optional): The number of hidden steps to apply. Defaults to 5.
-        """
-        for n in range(n_steps):
-            # find best feas and infeas populations
-            feas, infeas = [0, None], [0, None]
-            for i in range(self.bins.shape[0]):
-                for j in range(self.bins.shape[1]):
-                    mf = self.bins[i, j].get_metric(metric='fitness',
-                                                    use_mean=True,
-                                                    population='feasible')
-                    mi = self.bins[i, j].get_metric(metric='fitness',
-                                                    use_mean=True,
-                                                    population='infeasible')
-                    if mf > feas[0]:
-                        feas = [mf, self.bins[i, j]]
-                    if mi > infeas[0]:
-                        infeas = [mi, self.bins[i, j]]
-            f_pop = feas[1]._feasible
-            i_pop = infeas[1]._infeasible
-            generated = self._step(populations=[f_pop, i_pop],
-                                   gen=gen)
-            if generated:
-                self._update_bins(lcs=generated)
-                self._check_res_trigger()
 
     def compute_bandit_reward(self) -> float:
         return sum([f(self) for f in self.agent_rewards])
@@ -704,7 +682,6 @@ class MAPElites:
         Args:
             gen (int, optional): The current generation number. Defaults to 0.
         """
-        all_bins = self.bins.flatten().tolist()
         emitter, bandit = None, None
         if self.emitter is not None:
             emitter = self.emitter
@@ -730,7 +707,7 @@ class MAPElites:
                         cs.c_fitness = cs.fitness[self.infeas_fitness_idx]
         else:
             raise NotImplementedError('MAP-Elites requires either a fixed emitter or a MultiArmed Bandit Agent, but neither were provided.')
-        selected_bins = emitter.pick_bin(bins=[b for b in all_bins if len(b._feasible) > 0 or len(b._infeasible) > 0])
+        selected_bins = emitter.pick_bin(bins=self.bins)
         fpop, ipop = [], []
         if isinstance(selected_bins[0], MAPBin):
             for selected_bin in selected_bins:
