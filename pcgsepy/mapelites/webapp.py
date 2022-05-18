@@ -19,6 +19,9 @@ from ..config import BIN_POP_SIZE, CS_MAX_AGE
 from ..mapelites.map import MAPElites
 
 
+# https://towardsdatascience.com/long-callbacks-in-dash-web-apps-72fd8de25937
+
+
 class DashLoggerHandler(logging.StreamHandler):
     def __init__(self):
         logging.StreamHandler.__init__(self)
@@ -108,8 +111,8 @@ app = dash.Dash(__name__,
                 update_title=None)
 
 
-def set_app_layout(mapelites: MAPElites):
-    behavior_descriptors_names = [b.name for b in mapelites.b_descs]
+def set_app_layout(mapelites: MAPElites,
+                   behavior_descriptors_names):
 
     app.layout = html.Div(children=[
         # HEADER
