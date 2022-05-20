@@ -39,23 +39,17 @@ class Buffer:
             self._xs.append(np.asarray(x))
             self._ys.append(y)
     
-    def get(self,
-            quantile_ys: bool = False) -> Tuple[np.ndarray, np.ndarray]:
+    def get(self) -> Tuple[np.ndarray, np.ndarray]:
         if len(self._xs) > 0:
             xs = np.empty((len(self._xs), len(self._xs[0])))
             for i, X in enumerate(self._xs):
                 xs[i, :] = X
             ys = np.asarray(self._ys)
-            # if quantile_ys:
-            #     y_mean, y_std = self.get_y_metrics()
-            #     ys = (ys - y_mean) / y_std
             return xs, ys
         else:
             raise EmptyBufferException('Buffer is empty!')
     
-    def get_y_metrics(self) -> Tuple[float, float]:
-        ys = np.asarray(self._ys)
-        y_mean = np.mean(ys)
-        y_std = np.std(ys)
-        return y_mean, y_std
+    def clear(self) -> None:
+        self._xs = []
+        self._ys = []
         

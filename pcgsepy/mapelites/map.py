@@ -301,8 +301,8 @@ class MAPElites:
                     break
         self._update_bins(lcs=feasible_pop)
         self._update_bins(lcs=infeasible_pop)
-        if type(self.emitter) is HumanPrefMatrixEmitter:
-            self.emitter.build_pref_matrix(bins=self.bins)
+        if self.emitter is not None and self.emitter.requires_init:
+            self.emitter.init_emitter(bins=self.bins)
 
     def subdivide_range(self,
                         bin_idx: Tuple[int, int]) -> None:
@@ -330,7 +330,6 @@ class MAPElites:
         self.bin_qnt = (self.bin_qnt[0] + 1, self.bin_qnt[1] + 1)
         # create new bin map
         new_bins = np.empty(shape=self.bin_qnt, dtype=object)
-        # TODO: is this actually necessary? Can't we just recreate all bins?
         # copy over unaffected bins
         new_bins[:i, :j] = self.bins[:i, :j]
         new_bins[:i, (j+2):] = self.bins[:i, (j+1):]
@@ -348,7 +347,7 @@ class MAPElites:
         # assign solutions to bins
         self._update_bins(lcs=all_cs)
         if type(self.emitter) is HumanPrefMatrixEmitter:
-            self.emitter.increase_preferences_res(idx=bin_idx) 
+            self.emitter._increase_preferences_res(idx=bin_idx) 
 
     def _update_bins(self,
                      lcs: List[CandidateSolution]) -> None:
@@ -544,6 +543,9 @@ class MAPElites:
                                                 bins=self.bins)
         else:
             self._age_bins(diff=1)
+        if self.emitter is not None and self.emitter.requires_pre:
+            self.emitter.pre_step(bins=self.bins,
+                                  selected_idxs=bin_idxs)
 
     def interactive_mode(self,
                          n_steps: int = 10) -> None:
@@ -596,8 +598,11 @@ class MAPElites:
             elif isinstance(self.estimator, QuantileEstimator):
                 self.estimator = QuantileEstimator(xshape=self.estimator.xshape,
                                                    yshape=self.estimator.yshape)
-        self.buffer = Buffer(merge_method=self.buffer._merge)
+        self.buffer.clear()
 
+        if self.emitter is not None:
+            self.emitter.reset()
+        
         if lcs is not None:
             self._update_bins(lcs=lcs)
             self._check_res_trigger()
@@ -686,25 +691,28 @@ class MAPElites:
         if self.emitter is not None:
             emitter = self.emitter
         elif self.agent is not None:
-            # get bandit
-            bandit = self.agent.choose_bandit()
-            emitter_str, method_str = bandit.action.split(';')
-            # set emitter
-            emitter = get_emitter_by_str(emitter=emitter_str)
-            # set merge method
-            if method_str == 'max':
-                self.infeas_fitness_idx = 0
-            elif method_str == 'median':
-                self.infeas_fitness_idx = 1
-            elif method_str == 'min':
-                self.infeas_fitness_idx = 2
-            else:
-                raise NotImplementedError(f'Unrecognized merge method from bandit action: {method_str}')
-            # update existing solution's fitness
-            for i in range(self.bins.shape[0]):
-                for j in range(self.bins.shape[1]):
-                    for cs in self.bins[i, j]._infeasible:
-                        cs.c_fitness = cs.fitness[self.infeas_fitness_idx]
+            if type(self.agent) is EpsilonGreedyAgent:
+                # get bandit
+                bandit = self.agent.choose_bandit()
+                emitter_str, method_str = bandit.action.split(';')
+                # set emitter
+                emitter = get_emitter_by_str(emitter=emitter_str)
+                # set merge method
+                if method_str == 'max':
+                    self.infeas_fitness_idx = 0
+                elif method_str == 'median':
+                    self.infeas_fitness_idx = 1
+                elif method_str == 'min':
+                    self.infeas_fitness_idx = 2
+                else:
+                    raise NotImplementedError(f'Unrecognized merge method from bandit action: {method_str}')
+                # update existing solution's fitness
+                for i in range(self.bins.shape[0]):
+                    for j in range(self.bins.shape[1]):
+                        for cs in self.bins[i, j]._infeasible:
+                            cs.c_fitness = cs.fitness[self.infeas_fitness_idx]
+            elif type(self.agent) is ContextualBandit:
+                pass
         else:
             raise NotImplementedError('MAP-Elites requires either a fixed emitter or a MultiArmed Bandit Agent, but neither were provided.')
         selected_bins = emitter.pick_bin(bins=self.bins)
@@ -725,6 +733,8 @@ class MAPElites:
         if generated:
             self._update_bins(lcs=generated)
             self._check_res_trigger()
+        if self.emitter is not None and self.emitter.requires_post:
+            self.emitter.post_step(bins=self.bins)
         if bandit is not None:
             r = self.compute_bandit_reward()
             self.agent.reward_bandit(bandit=bandit,

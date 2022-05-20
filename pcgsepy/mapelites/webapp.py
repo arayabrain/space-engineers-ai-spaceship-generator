@@ -525,10 +525,7 @@ def _apply_step(mapelites: MAPElites,
             logging.getLogger('dash-msgs').debug(msg=f'Completed step {gen_counter + 1}; running 5 additional emitter steps if available...')
             for _ in range(5):
                 mapelites.emitter_step(gen=gen_counter)
-            logging.getLogger('dash-msgs').debug(msg=f'Completed emitter step(s); running post functions if required...')
-            if mapelites.emitter is not None and mapelites.emitter.requires_post:
-                mapelites.emitter.post_step()
-            logging.getLogger('dash-msgs').debug(msg='All functions completed.')
+            logging.getLogger('dash-msgs').debug(msg=f'Emitter step(s) completed.')
             return True
         else:
             logging.getLogger('dash-msgs').error(msg='Step not applied: invalid bin(s) selected.')
@@ -775,4 +772,4 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
     else:
         logging.getLogger('dash-msgs').error(msg=f'Unrecognized event trigger: {event_trig}. No operations have been applied!')
 
-    return curr_heatmap, curr_content, f'Valid bins are: {_get_valid_bins(mapelites=mapelites)}', f'Current generation: {gen_counter}', json.dumps(gen_counter), json_dumps(mapelites), str(mapelites.lsystem.hl_solver.parser.rules), f'Selected bin(s): {_switch(selected_bins)}', json.dumps([[int(x[0]), int(x[1])] for x in selected_bins]), cs_string, f'Spaceship size: {cs_size}', f'Number of blocks: {cs_n_blocks}' 
+    return curr_heatmap, curr_content, f'Valid bins are: {_get_valid_bins(mapelites=mapelites)}', f'Current generation: {gen_counter}', json.dumps(gen_counter), json_dumps(mapelites), str(mapelites.lsystem.hl_solver.parser.rules), f'Selected bin(s): {selected_bins}', json.dumps([[int(x[0]), int(x[1])] for x in selected_bins]), cs_string, f'Spaceship size: {cs_size}', f'Number of blocks: {cs_n_blocks}' 
