@@ -4,10 +4,12 @@ from typing import Dict, List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.typing as npt
 from mpl_toolkits import mplot3d
 
-from .common.api_call import call_api, generate_json
-from .common.vecs import Orientation, Vec
+from .common.api_call import (GameMode, call_api, generate_json,
+                              get_base_values, toggle_gamemode)
+from .common.vecs import Orientation, Vec, get_rotation_matrix, rotate
 
 # block_definitions as a module-level variable
 if not os.path.exists('./block_definitions.json'):
@@ -323,7 +325,8 @@ class Structure:
         save : bool
             Flag to salve the plot as picture (default: False).
         """
-        structure = self.as_array()
+        # structure = self.as_array()
+        structure = self.as_grid_array()
         ax = plt.axes(projection='3d')
         arr = np.nonzero(structure)
         x, y, z = arr
@@ -390,6 +393,43 @@ def place_blocks(blocks: List[Block],
             call_api(jsons=j)
 
 
+def rotate_and_normalize_block(rotation_matrix: np.ndarray,
+                               normalizing_block: Block,
+                               block: Block,
+                               to_int: bool = True) -> Tuple[Vec, Vec, Vec]:
+    of = rotate(rotation_matrix=rotation_matrix,
+                vector=block.orientation_forward)
+    ou = rotate(rotation_matrix=rotation_matrix,
+                vector=block.orientation_up)
+    
+    pos = block.position.sum(normalizing_block.position.scale(-1))
+    pos = rotate(rotation_matrix=rotation_matrix,
+                vector=pos)
+    
+    return (of.to_veci(), ou.to_veci(), pos.to_veci()) if to_int else (of, ou, pos)
+
+
+def try_place_block(block: Block,
+                    rotation_matrix: npt.NDArray,
+                    normalizing_block: Block,
+                    grid_id: str) -> bool:
+    of, ou, pos = rotate_and_normalize_block(rotation_matrix=rotation_matrix,
+                                            normalizing_block=normalizing_block,
+                                            block=block,
+                                            to_int=True)    
+    res = call_api(jsons=[
+        generate_json(method='Admin.Blocks.PlaceInGrid',
+                    params={
+                        "blockDefinitionId": block_definitions[block.block_type]['definition_id'],
+                        "gridId": grid_id,
+                        "minPosition": pos.as_dict(),
+                        "orientationForward": of.as_dict(),
+                        "orientationUp": ou.as_dict()
+                    })
+    ])
+    return res[0].get('error', None) is None
+
+
 def place_structure(structure: Structure,
                     position: Vec,
                     orientation_forward: Vec = Orientation.FORWARD.value,
@@ -408,50 +448,81 @@ def place_structure(structure: Structure,
     orientation_up : Vec
         The Up orientation, as vector.
     """
-    # ensure grid positionment
+    # ensure structure position and orientation
     structure.update(
         origin=Vec.v3f(0., 0., 0.),
         orientation_forward=orientation_forward,
         orientation_up=orientation_up,
     )
     structure.sanify()
-    all_blocks = structure.get_all_blocks(to_place=False)
+    to_place = structure.get_all_blocks(to_place=False)
+    # toggle gamemode to place faster
+    toggle_gamemode(GameMode.PLACING)
     # get lowest-index block in structure
     first_block = None
-    for block in all_blocks:
+    for block in to_place:
         if first_block:
             if block.position.x <= first_block.position.x and block.position.y <= first_block.position.y and block.position.z <= first_block.position.z:
                 first_block = block
         else:
             first_block = block
     # remove first block from list
-    all_blocks.remove(first_block)
-    # update first block's position
-    first_block.position = position
+    to_place.remove(first_block)
     # place first block
     call_api(jsons=[
         generate_json(
             method='Admin.Blocks.PlaceAt',
             params={
                 "blockDefinitionId": block_definitions[first_block.block_type]['definition_id'],
-                "position": first_block.position.as_dict(),
+                "position": position.as_dict(),
                 "orientationForward": first_block.orientation_forward.as_dict(),
                 "orientationUp": first_block.orientation_up.as_dict()
             })
     ])
     # get placed block's grid
-    observation = call_api(
-        jsons=[generate_json(method='Observer.ObserveBlocks', params={})])
+    observation = call_api(jsons=[generate_json(method='Observer.ObserveBlocks', params={})])
     grid_id = observation[0]["result"]["Grids"][0]["Id"]
-    # place all other blocks in the grid
-    call_api(jsons=[
-        generate_json(
-            method='Admins.Blocks.PlaceInGrid',
-            params={
-                "blockDefinitionId": block_definitions[block.block_type]['definition_id'],
-                "gridID": grid_id,
-                "minPosition": block.position.as_dict(),
-                "orientationForward": block.orientation_forward.as_dict(),
-                "orientationUp": block.orientation_up.as_dict()
-            }) for block in all_blocks
-    ])
+    grid_orientation_forward = Vec.from_json(observation[0]["result"]["Grids"][0]["OrientationForward"])
+    grid_orientation_up = Vec.from_json(observation[0]["result"]["Grids"][0]["OrientationUp"])
+    rotation_matrix = get_rotation_matrix(forward=grid_orientation_forward,
+                                        up=grid_orientation_up)
+    # reorder blocks
+    occupied_space = [first_block.position]
+    ordered_blocks = []
+    while to_place:
+        to_rem = []
+        for block in to_place:
+            if (block.position.sum(Vec.v3i(-1, 0, 0)) in occupied_space or
+                block.position.sum(Vec.v3i(0, -1, 0)) in occupied_space or
+                block.position.sum(Vec.v3i(0, 0, -1)) in occupied_space or
+                block.position.sum(Vec.v3i(1, 0, 0)) in occupied_space or
+                block.position.sum(Vec.v3i(0, 1, 0)) in occupied_space or
+                block.position.sum(Vec.v3i(0, 0, 1)) in occupied_space):
+                to_rem.append(block)
+                occupied_space.append(block.position)
+                ordered_blocks.append(block)
+        for r in to_rem:
+            to_place.remove(r)
+    # attempt placement sequentially
+    errored_out = []
+    for block in ordered_blocks:
+        # always try to place blocks that we failed to place previously
+        to_rem = []
+        for b in errored_out:
+            res = try_place_block(block=b,
+                                rotation_matrix=rotation_matrix,
+                                normalizing_block=first_block,
+                                grid_id=grid_id)
+            if res:
+                to_rem.append(b)
+        for b in to_rem:
+            errored_out.remove(b)
+        # try and place current block
+        res = try_place_block(block=block,
+                            rotation_matrix=rotation_matrix,
+                            normalizing_block=first_block,
+                            grid_id=grid_id)
+        if not res:
+            errored_out.append(block)
+    # toggle back gamemode
+    toggle_gamemode(GameMode.EVALUATING)

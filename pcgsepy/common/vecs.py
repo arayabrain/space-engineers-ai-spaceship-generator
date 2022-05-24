@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Dict, Union
+from typing import Any, Dict, Tuple, Union
 
 import numpy as np
 
@@ -110,6 +110,15 @@ class Vec:
                    int(y),
                    int(z))
 
+    def to_veci(self) -> 'Vec':
+        if self.z is not None:
+            return Vec.v3i(x=self.x,
+                           y=self.y,
+                           z=self.z)
+        else:
+            return Vec.v2i(x=self.x,
+                           y=self.y)
+    
     @classmethod
     def v3f(cls,
             x: float,
@@ -285,7 +294,7 @@ class Vec:
             return Vec(x=self.x * other.x,
                        y=self.y * other.y)
         else:
-            raise Exception(f'Trying to sum mixed-dimension vectors: {self} + {other}')
+            raise Exception(f'Trying to multiply mixed-dimension vectors: {self} + {other}')
     
     def scale(self,
               v: float) -> "Vec":
@@ -353,17 +362,17 @@ def orientation_from_vec(vec: Vec) -> Orientation:
 
 character_camera_dist = Vec.v3f(0., 1.6369286, 0.)
 
-# def get_rotation_matrix(forward: Vec,
-#                         up: Vec) -> np.ndarray:
-#     f = forward.as_array()
-#     u = up.as_array()
-#     z = f / np.sqrt(np.dot(f, f))
-#     y = u / np.sqrt(np.dot(u, u))
-#     x = np.cross(z, y)
-#     return np.column_stack((x, y, -z))
+def get_rotation_matrix(forward: Vec,
+                        up: Vec) -> np.ndarray:
+    f = forward.as_array()
+    u = up.as_array()
+    z = f / np.sqrt(np.dot(f, f))
+    y = u / np.sqrt(np.dot(u, u))
+    x = np.cross(z, y)
+    return np.column_stack((x, y, -z))
 
-# def rotate(rotation_matrix: np.ndarray,
-#            vector: Vec) -> Vec:
-#     v = vector.as_array()
-#     v = np.dot(rotation_matrix, v)
-#     return Vec.from_np(v)
+def rotate(rotation_matrix: np.ndarray,
+           vector: Vec) -> Vec:
+    v = vector.as_array()
+    v = np.dot(rotation_matrix, v)
+    return Vec.from_np(v)
