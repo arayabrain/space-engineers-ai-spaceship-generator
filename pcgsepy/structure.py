@@ -8,7 +8,7 @@ import numpy.typing as npt
 from mpl_toolkits import mplot3d
 
 from .common.api_call import (GameMode, call_api, generate_json,
-                              get_base_values, toggle_gamemode)
+                              get_base_values, get_batch_ranges, toggle_gamemode)
 from .common.vecs import Orientation, Vec, get_rotation_matrix, rotate
 
 # block_definitions as a module-level variable
@@ -430,10 +430,15 @@ def try_place_block(block: Block,
     return res[0].get('error', None) is None
 
 
+class PlacementException(Exception):
+    pass
+
+
 def place_structure(structure: Structure,
                     position: Vec,
                     orientation_forward: Vec = Orientation.FORWARD.value,
-                    orientation_up: Vec = Orientation.UP.value) -> None:
+                    orientation_up: Vec = Orientation.UP.value,
+                    batchify: bool = True) -> None:
     """
     Place the structure in-game.
 
@@ -486,6 +491,9 @@ def place_structure(structure: Structure,
     grid_orientation_up = Vec.from_json(observation[0]["result"]["Grids"][0]["OrientationUp"])
     rotation_matrix = get_rotation_matrix(forward=grid_orientation_forward,
                                         up=grid_orientation_up)
+    
+    # TODO: Move character away so that the spaceship can be built entirely
+    
     # reorder blocks
     occupied_space = [first_block.position]
     ordered_blocks = []
@@ -503,26 +511,64 @@ def place_structure(structure: Structure,
                 ordered_blocks.append(block)
         for r in to_rem:
             to_place.remove(r)
-    # attempt placement sequentially
-    errored_out = []
-    for block in ordered_blocks:
-        # always try to place blocks that we failed to place previously
-        to_rem = []
-        for b in errored_out:
-            res = try_place_block(block=b,
+    if batchify:
+        # attempt placement in batches
+        batch_size = 64
+        jsons = []
+        for n, block in enumerate(ordered_blocks):
+            of, ou, pos = rotate_and_normalize_block(rotation_matrix=rotation_matrix,
+                                                    normalizing_block=first_block,
+                                                    block=block,
+                                                    to_int=True)
+            jsons.append(generate_json(method='Admin.Blocks.PlaceInGrid',
+                                       params={
+                                           "blockDefinitionId": block_definitions[block.block_type]['definition_id'],
+                                           "gridId": grid_id,
+                                           "minPosition": pos.as_dict(),
+                                           "orientationForward": of.as_dict(),
+                                           "orientationUp": ou.as_dict()},
+                                       request_id=n))
+        n_requests = 0
+        while jsons:
+            to_rem = []
+            for (idx_from, idx_to) in get_batch_ranges(batch_size=batch_size,
+                                                       length=len(jsons)):
+                res_list = call_api(jsons=jsons[idx_from:idx_to])
+                for res in res_list:
+                    if res.get('error', None) is None:
+                        to_rem.append(res)
+            for res in to_rem:
+                for i, req in enumerate(jsons):
+                    if req['id'] == res['id']:
+                        jsons.pop(i)
+                        break
+            if len(jsons) == n_requests:
+                raise PlacementException(f'Error during spaceship placement: missing {len(jsons)} blocks to place.')
+            else:
+                n_requests = len(jsons)
+    else:
+        # attempt placement sequentially
+        errored_out = []
+        for block in ordered_blocks:
+            # always try to place blocks that we failed to place previously
+            to_rem = []
+            for b in errored_out:
+                res = try_place_block(block=b,
+                                    rotation_matrix=rotation_matrix,
+                                    normalizing_block=first_block,
+                                    grid_id=grid_id)
+                if res:
+                    to_rem.append(b)
+            for b in to_rem:
+                errored_out.remove(b)
+            # try and place current block
+            res = try_place_block(block=block,
                                 rotation_matrix=rotation_matrix,
                                 normalizing_block=first_block,
                                 grid_id=grid_id)
-            if res:
-                to_rem.append(b)
-        for b in to_rem:
-            errored_out.remove(b)
-        # try and place current block
-        res = try_place_block(block=block,
-                            rotation_matrix=rotation_matrix,
-                            normalizing_block=first_block,
-                            grid_id=grid_id)
-        if not res:
-            errored_out.append(block)
+            if not res:
+                errored_out.append(block)
+        if len(errored_out) != 0:
+            raise PlacementException(f'Error during spaceship placement: missing {len(errored_out)} blocks to place.')
     # toggle back gamemode
     toggle_gamemode(GameMode.EVALUATING)

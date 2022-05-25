@@ -5,6 +5,9 @@ import time
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
+from zmq import Socket
+from .jsonrpc import TransportTcpIp
+
 from ..config import HOST, PORT
 from .vecs import Vec
 
@@ -18,7 +21,8 @@ class GameMode(Enum):
 
 
 def generate_json(method: str,
-                  params: Optional[List[Any]] = None) -> Dict[str, Any]:
+                  params: Optional[List[Any]] = None,
+                  request_id: int = random.getrandbits(32)) -> Dict[str, Any]:
     """
     Create the JSONRPC-compatible JSON data.
 
@@ -38,7 +42,7 @@ def generate_json(method: str,
         "jsonrpc": "2.0",
         "method": method,
         "params": params if params else [],
-        "id": random.getrandbits(32)
+        "id": request_id
     }
 
 
@@ -141,19 +145,42 @@ def call_api(host: str = HOST,
     List[Dict[str, Any]]
         The data returned from the Space Engineer's API.
     """
-    # open socket for communication
-    s = socket.socket(family=socket.AF_INET,
-                      type=socket.SOCK_STREAM)
-    s.connect((host, port))
-    # send methods as compacted JSON bytearray
-    s.sendall(compactify_jsons(jsons=jsons).encode('utf-8'))
-    # get response
-    res = recv_with_timeout(s)
-    # close socket
-    s.close()
-    # due to TCP streming packets, it's possible some JSON-RPC responses are
-    # the same; workaround: identify unique JSON-RPC responses by unique id
-    return [json.loads(x) for x in list(set(res.strip().split('\r\n')))]
+    # # open socket for communication
+    # s = socket.socket(family=socket.AF_INET,
+    #                   type=socket.SOCK_STREAM)
+    # s.connect((host, port))
+    # # send methods as compacted JSON bytearray
+    # s.sendall(compactify_jsons(jsons=jsons).encode('utf-8'))
+    # # get response
+    # res = recv_with_timeout(s)
+    # # close socket
+    # s.close()
+    # # due to TCP streming packets, it's possible some JSON-RPC responses are
+    # # the same; workaround: identify unique JSON-RPC responses by unique id
+    # print(res)
+    # return [json.loads(x) for x in list(set(res.strip().split('\r\n')))]
+    s = TransportTcpIp(addr=(host, port), timeout=2)
+    res = s.sendrecv(string=compactify_jsons(jsons=jsons).encode('utf-8'))
+    res = res.decode(encoding='utf-8').strip().split('\r\n')
+    valid = []
+    for r in res:
+        r = validate_json_str(s=r)
+        if r != '':
+            valid.append(r)
+    valid = list(set(valid))
+    return [json.loads(x) for x in valid if x.startswith('{"jsonrpc"')]
+
+
+def validate_json_str(s: str) -> str:
+    n = 0
+    for i, c in enumerate(s):
+        if c == '{':
+            n += 1
+        elif c == '}':
+            n -= 1
+        if n == 0:
+            return s[:i+1]
+    return ''
 
 
 def get_base_values() -> Tuple[Vec, Vec, Vec]:
@@ -184,3 +211,23 @@ def toggle_gamemode(mode: GameMode) -> None:
     """
     call_api(jsons=[generate_json(method="Admin.SetFrameLimitEnabled",
                                   params=[mode.value])])
+
+
+def get_batch_ranges(batch_size: int,
+                     length: int,
+                     drop_last: bool = False) -> List[Tuple[int, int]]:
+    """Get the index ranges for batch iterations of an iterable object.
+
+    Args:
+        batch_size (int): The size of the batch.
+        length (int): The length of the iterable.
+        drop_last (bool, optional): Whether to drop the last batch if `< batch_size`. Defaults to False.
+
+    Returns:
+        List[Tuple[int, int]]: The index ranges for batch iterations.
+    """
+    ranges = []
+    for batch_n in range(0, (length // batch_size) + (0 if (length % batch_size == 0 or drop_last) else 1)):
+        offset = batch_size if (length > (batch_n + 1) * batch_size) else batch_size - ((batch_n + 1) * batch_size - length)
+        ranges.append((batch_n * batch_size, batch_n * batch_size + offset))
+    return ranges
