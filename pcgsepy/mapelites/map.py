@@ -7,14 +7,14 @@ import torch as th
 from pcgsepy.lsystem.constraints import ConstraintLevel
 from pcgsepy.mapelites.bandit import EpsilonGreedyAgent
 from pcgsepy.mapelites.buffer import Buffer, EmptyBufferException
-from pcgsepy.mapelites.emitters import (Emitter, HumanPrefMatrixEmitter, RandomEmitter,
+from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, Emitter, HumanPrefMatrixEmitter, RandomEmitter,
                                         get_emitter_by_str)
 from pcgsepy.nn.estimators import QuantileEstimator
 from tqdm.notebook import trange
 from typing_extensions import Self
 
 from ..common.vecs import Orientation, Vec
-from ..config import (ALIGNMENT_INTERVAL, BIN_POP_SIZE, CS_MAX_AGE, EPSILON_F,
+from ..config import (ALIGNMENT_INTERVAL, BIN_POP_SIZE, CS_MAX_AGE, EPSILON_F, MAX_X_SIZE, MAX_Y_SIZE, MAX_Z_SIZE,
                       N_ITERATIONS, N_RETRIES, POP_SIZE)
 from ..evo.fitness import (Fitness, box_filling_fitness, func_blocks_fitness,
                            mame_fitness, mami_fitness)
@@ -57,7 +57,6 @@ def coverage_reward(mapelites: 'MAPElites') -> float:
                     is_new_bin = False
         inc_coverage += 1 if is_new_bin else 0
     return inc_coverage / tot_coverage
-
 
 def fitness_reward(mapelites: 'MAPElites') -> float:
     prev_best, current_best = 0, 0
@@ -216,6 +215,11 @@ class MAPElites:
         if cs.fitness == []:
             if cs.is_feasible:
                 cs.fitness = [f(cs, extra_args) for f in self.feasible_fitnesses]
+                cs.representation = cs.fitness[:]
+                x, y, z = cs.content._max_dims
+                cs.representation.extend([x / MAX_X_SIZE,
+                                          y / MAX_Y_SIZE,
+                                          z / MAX_Z_SIZE])
             else:
                 cs.representation = [f(cs, extra_args) for f in [Fitness(name='BoxFilling', f=box_filling_fitness, bounds=(0, 1)),
                                                                  Fitness(name='FuncionalBlocks', f=func_blocks_fitness, bounds=(0, 1)),
@@ -538,9 +542,6 @@ class MAPElites:
         if generated:
             self._update_bins(lcs=generated)
             self._check_res_trigger()
-            if type(self.emitter) is HumanPrefMatrixEmitter:
-                self.emitter.update_preferences(idxs=bin_idxs,
-                                                bins=self.bins)
         else:
             self._age_bins(diff=1)
         if self.emitter is not None and self.emitter.requires_pre:
@@ -711,7 +712,7 @@ class MAPElites:
                     for j in range(self.bins.shape[1]):
                         for cs in self.bins[i, j]._infeasible:
                             cs.c_fitness = cs.fitness[self.infeas_fitness_idx]
-            elif type(self.agent) is ContextualBandit:
+            elif type(self.agent) is ContextualBanditEmitter:
                 pass
         else:
             raise NotImplementedError('MAP-Elites requires either a fixed emitter or a MultiArmed Bandit Agent, but neither were provided.')

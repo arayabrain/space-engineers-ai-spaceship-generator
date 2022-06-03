@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Tuple
+import warnings
 
 import numpy as np
 import numpy.typing as npt
@@ -19,6 +20,7 @@ class Emitter(ABC):
         self.requires_init = False
         self.requires_pre = False
         self.requires_post = False
+        self.diversity_weight = 0.
     
     @abstractmethod
     def pick_bin(self,
@@ -113,6 +115,7 @@ class OptimisingEmitter(Emitter):
     def reset(self) -> None:
         pass
 
+
 class OptimisingEmitterV2(Emitter):
     def __init__(self) -> None:
         """The optimising emitter.
@@ -156,6 +159,33 @@ def get_emitter_by_str(emitter: str) -> Emitter:
         return OptimisingEmitterV2()
     else:
         raise NotImplementedError(f'Unrecognized emitter from string: {emitter}')
+
+
+def diversity_builder(bins: 'np.ndarray[MAPBin]',
+                      n_features: int) -> npt.NDArray[np.float32]:
+    
+    def _distance(a: np.ndarray,
+                  b: np.ndarray) -> np.ndarray:
+        return np.linalg.norm(a - b)
+    
+    representations = np.zeros(shape=(bins.shape[0], bins.shape[1], n_features))
+    for i in range(bins.shape[0]):
+        for j in range(bins.shape[1]):
+            if bins[i, j].non_empty(pop='feasible'):
+                representations[i, j, :] = np.asarray(bins[i, j].get_elite(population='feasible').representation)
+    representations[representations == 0] = np.nan
+    mean_representation = np.nanmean(representations, axis=(0, 1))
+    div = np.zeros(shape=bins.shape)
+    with warnings.catch_warnings():
+        warnings.filterwarnings(action="ignore", message='Mean of empty slice', category=RuntimeWarning)
+        warnings.filterwarnings(action="ignore", message='All-NaN slice encountered', category=RuntimeWarning)
+        for i in range(div.shape[0]):
+            for j in range(div.shape[1]):
+                div[i, j] = np.nanmean(_distance(representations[i, j],
+                                                mean_representation))
+        div = div / np.nanmax(div, axis=1)
+        div[np.isnan(div)] = 0
+    return div
     
 
 class HumanPrefMatrixEmitter(Emitter):
@@ -184,7 +214,9 @@ class HumanPrefMatrixEmitter(Emitter):
                      bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
         fcs, ics = 0, 0
         selected_bins = []
-        idxs = np.argwhere(self._prefs > 0)
+        div_matrix = diversity_builder(bins=bins, n_features=7)
+        choose_from = self._prefs * (1 - self.diversity_weight) + div_matrix * self.diversity_weight
+        idxs = np.argwhere(choose_from > 0)
         np.random.shuffle(idxs)
         while fcs < 2 or ics < 2:
             self._last_selected.append(idxs[0, :])
@@ -199,7 +231,9 @@ class HumanPrefMatrixEmitter(Emitter):
                           bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
         fcs, ics = 0, 0
         selected_bins = []
-        idxs = np.transpose(np.unravel_index(np.flip(np.argsort(self._prefs, axis=None)), self._prefs.shape))
+        div_matrix = diversity_builder(bins=bins, n_features=7)
+        choose_from = self._prefs * (1 - self.diversity_weight) + div_matrix * self.diversity_weight
+        idxs = np.transpose(np.unravel_index(np.flip(np.argsort(choose_from, axis=None)), self._prefs.shape))
         while fcs < 2 or ics < 2:
             self._last_selected.append(idxs[0, :])
             idxs = idxs[1:, :]
@@ -287,7 +321,6 @@ class HumanPrefMatrixEmitter(Emitter):
         self._tot_actions = 0
         
 
-
 class ContextualBanditEmitter(Emitter):
     def __init__(self,
                  epsilon: float = 0.2,
@@ -312,35 +345,37 @@ class ContextualBanditEmitter(Emitter):
     
     def _extract_bin_context(self,
                              b: MAPBin) -> npt.NDArray[np.float32]:
-        # TODO: Currently context is just feas. elite fitness metrics, but can be different
-        return b.get_elite(population='feasible').fitness
+        return np.asarray(b.get_elite(population='feasible').representation)
     
     def _extract_context(self,
                          bins: 'np.ndarray[MAPBin]') -> npt.NDArray[np.float32]:
         bins = bins.flatten()
         context = np.zeros((bins.shape[0], self._n_features_context), dtype=np.float32)
         for i in range(bins.shape[0]):
-            context[i, :] = self._extract_bin_context(bins[i])
+            if bins[i].non_empty(pop='feasible'):
+                context[i, :] = self._extract_bin_context(bins[i])
         return context
 
     def _predict(self,
-                 context: npt.NDArray[np.float32]) -> Tuple[int, int]:
-        return np.flip(np.argsort(self._estimator.predict(X=context), axis=None))
+                 bins: 'np.ndarray[MAPBin]') -> Tuple[int, int]:
+        context = self._extract_context(bins=bins)
+        choose_from = self._estimator.predict(X=context) * (1 - self.diversity_weight) + diversity_builder(bins=bins, n_features=self._n_features_context) * self.diversity_weight
+        return np.flip(np.argsort(choose_from, axis=None))
     
     def pre_step(self, **kwargs) -> None:
-        bins = kwargs['bins']
-        idxs = kwargs['selected_idxs']
+        bins: 'np.ndarray[MAPBin]' = kwargs['bins']
+        idxs: List[Tuple[int, int]] = kwargs['selected_idxs']
         for i in range(bins.shape[0]):
             for j in range(bins.shape[1]):
-                self._buffer.insert(x=self._extract_bin_context(bins[i, j]),
-                                    y=1. if (i, j) in idxs else 0.)
+                if bins[i, j].non_empty(pop='feasible'):
+                    self._buffer.insert(x=self._extract_bin_context(bins[i, j]),
+                                        y=1. if (i, j) in idxs else 0.)
         self._fit()
         
     def pick_bin(self,
                  bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
         assert self._fitted, f'{self.name} requires fitting and has not been fit yet!'
-        context = self._extract_context(bins=bins)
-        sorted_bins = np.transpose(np.unravel_index(self._predict(context=context), bins.shape))
+        sorted_bins = np.transpose(np.unravel_index(self._predict(bins=bins), bins.shape))
         p = np.random.uniform(low=0, high=1, size=1) < self._epsilon
         self._epsilon -= self._epsilon * self._decay
         if p:

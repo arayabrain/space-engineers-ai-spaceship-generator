@@ -136,3 +136,12 @@ class MAPBin:
         for pop in [self._feasible, self._infeasible]:
             for cs in pop:
                 cs.hls_mod[module]['mutable'] = not cs.hls_mod[module]['mutable']
+
+    def len(self,
+            pop: str) -> int:
+        if pop == 'feasible':
+            return len(self._feasible)
+        elif pop == 'infeasible':
+            return len(self._infeasible)
+        else:
+            raise NotImplementedError(f'Unrecognized population {pop}')

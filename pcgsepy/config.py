@@ -47,6 +47,9 @@ MAME_MEAN = config['FITNESS'].getfloat('mame_mean')
 MAME_STD = config['FITNESS'].getfloat('mame_std')
 MAMI_MEAN = config['FITNESS'].getfloat('mami_mean')
 MAMI_STD = config['FITNESS'].getfloat('mami_std')
+MAX_X_SIZE = config['MAPELITES'].getint('max_x_size')
+MAX_Y_SIZE = config['MAPELITES'].getint('max_y_size')
+MAX_Z_SIZE = config['MAPELITES'].getint('max_z_size')
 
 # number of solutions per bin
 BIN_POP_SIZE = config['MAPELITES'].getint('bin_population')

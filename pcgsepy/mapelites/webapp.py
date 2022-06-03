@@ -22,21 +22,30 @@ from ..mapelites.map import MAPElites
 # https://towardsdatascience.com/long-callbacks-in-dash-web-apps-72fd8de25937
 
 
-class DashLoggerHandler(logging.StreamHandler):
-    def __init__(self):
-        logging.StreamHandler.__init__(self)
+# class DashLoggerHandler(logging.StreamHandler):
+#     def __init__(self):
+#         logging.StreamHandler.__init__(self)
+#         self.queue = []
+
+#     def emit(self, record):
+#         t = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+#         msg = self.format(record)
+#         self.queue.append(f'[{t}]\t{msg}')
+
+# logger = logging.getLogger('dash-msgs')
+# logger.setLevel(logging.DEBUG)
+# dashLoggerHandler = DashLoggerHandler()
+# logger.addHandler(dashLoggerHandler)
+
+
+class CustomLogger:
+    def __init__(self) -> None:
         self.queue = []
-
-    def emit(self, record):
+    
+    def log(self,
+            msg: str) -> None:
         t = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        msg = self.format(record)
         self.queue.append(f'[{t}]\t{msg}')
-
-
-logger = logging.getLogger('dash-msgs')
-logger.setLevel(logging.DEBUG)
-dashLoggerHandler = DashLoggerHandler()
-logger.addHandler(dashLoggerHandler)
 
 
 hm_callback_props = {}
@@ -366,6 +375,7 @@ def set_app_layout(mapelites: MAPElites,
         # client-side storage
         dcc.Store(id='gen-counter'),
         dcc.Store(id='selected-bins'),
+        dcc.Store(id='logger', data=json_dumps(obj=CustomLogger())),
         dcc.Store(id='mapelites', data=json_dumps(obj=mapelites))
     ])
 
@@ -511,72 +521,78 @@ def _get_elite_content(mapelites: MAPElites,
 
 def _apply_step(mapelites: MAPElites,
                 selected_bins: List[Tuple[int, int]],
-                gen_counter: int) -> bool:
+                gen_counter: int,
+                logger: CustomLogger) -> bool:
     if len(selected_bins) > 0:
         valid = True
         if mapelites.enforce_qnt:
-            valid_bins = [x.bin_idx for x in mapelites._valid_bins()]
+            valid_bins = [list(x.bin_idx) for x in mapelites._valid_bins()]
             for bin_idx in selected_bins:
                 valid &= bin_idx in valid_bins
         if valid:
-            logging.getLogger('dash-msgs').debug(msg=f'Started step {gen_counter}...')
+            logger.log(msg=f'Started step {gen_counter}...')
             mapelites._interactive_step(bin_idxs=selected_bins,
                                         gen=gen_counter)
-            logging.getLogger('dash-msgs').debug(msg=f'Completed step {gen_counter + 1}; running 5 additional emitter steps if available...')
-            for _ in range(5):
+            logger.log(msg=f'Completed step {gen_counter + 1}; running 5 additional emitter steps if available...')
+            for _ in range(0):
                 mapelites.emitter_step(gen=gen_counter)
-            logging.getLogger('dash-msgs').debug(msg=f'Emitter step(s) completed.')
+            logger.log(msg=f'Emitter step(s) completed.')
             return True
         else:
-            logging.getLogger('dash-msgs').error(msg='Step not applied: invalid bin(s) selected.')
+            logger.log(msg='Step not applied: invalid bin(s) selected.')
             return False
 
 
-def _apply_reset(mapelites: MAPElites) -> bool:
-    logging.getLogger('dash-msgs').debug(msg='Started resetting all bins (this may take a while)...')
+def _apply_reset(mapelites: MAPElites,
+                 logger: CustomLogger) -> bool:
+    logger.log(msg='Started resetting all bins (this may take a while)...')
     mapelites.reset()
-    logging.getLogger('dash-msgs').debug(msg='Reset completed.')
+    logger.log(msg='Reset completed.')
     return True
 
 
-def _apply_bc_change(mapelites: MAPElites) -> bool:
-    logging.getLogger('dash-msgs').debug(msg=f'Updating feature descriptors to ({b0}, {b1})...')
+def _apply_bc_change(mapelites: MAPElites,
+                     logger: CustomLogger) -> bool:
+    logger.log(msg=f'Updating feature descriptors to ({b0}, {b1})...')
     b0 = mapelites.b_descs[[b.name for b in mapelites.b_descs].index(b0)]
     b1 = mapelites.b_descs[[b.name for b in mapelites.b_descs].index(b1)]
     mapelites.update_behavior_descriptors((b0, b1))
-    logging.getLogger('dash-msgs').debug(msg='Feature descriptors update completed.')
+    logger.log(msg='Feature descriptors update completed.')
     return True
 
 
 def _apply_bin_subdivision(mapelites: MAPElites,
-                           selected_bins: List[Tuple[int, int]]) -> bool:
+                           selected_bins: List[Tuple[int, int]],
+                           logger: CustomLogger) -> bool:
     bin_idxs = [(x[1], x[0]) for x in selected_bins]
     for bin_idx in bin_idxs:
         mapelites.subdivide_range(bin_idx=bin_idx)
-    logging.getLogger('dash-msgs').debug(msg=f'Subdivided bin(s): {selected_bins}.')
+    logger.log(msg=f'Subdivided bin(s): {selected_bins}.')
     return True
 
 
 def _apply_modules_update(mapelites: MAPElites,
-                          modules: List[str]) -> bool:
+                          modules: List[str],
+                          logger: CustomLogger) -> bool:
     all_modules = [x for x in mapelites.lsystem.modules]
     names = [x.name for x in all_modules]
     for i, module in enumerate(names):
         if module in modules and not all_modules[i].active:
             # activate module
             mapelites.toggle_module_mutability(module=module)
-            logging.getLogger('dash-msgs').debug(msg=f'Enabled {module}.')
+            logger.log(msg=f'Enabled {module}.')
             break
         elif module not in modules and all_modules[i].active:
             # deactivate module
             mapelites.toggle_module_mutability(module=module)
-            logging.getLogger('dash-msgs').debug(msg=f'Disabled {module}.')
+            logger.log(msg=f'Disabled {module}.')
             break
     return True
 
 
 def _apply_rules_update(mapelites: MAPElites,
-                        rules: str) -> bool:
+                        rules: str,
+                        logger: CustomLogger) -> bool:
     new_rules = StochasticRules()
     for rule in rules.split('\n'):
         lhs, p, rhs = rule.strip().split(' ')
@@ -586,31 +602,35 @@ def _apply_rules_update(mapelites: MAPElites,
     try:
         new_rules.validate()
         mapelites.lsystem.hl_solver.parser.rules = new_rules
-        logging.getLogger('dash-msgs').debug(msg=f'L-system rules updated.')
+        logger.log(msg=f'L-system rules updated.')
         return True
     except AssertionError as e:
-        logging.getLogger('dash-msgs').warning(msg=f'Failed updating L-system rules ({e}).')
+        logger.log(msg=f'Failed updating L-system rules ({e}).')
         return False
 
 
 def _apply_fitness_reweight(mapelites: MAPElites,
-                            weights: List[float]) -> bool:
+                            weights: List[float],
+                                logger: CustomLogger) -> bool:
     mapelites.update_fitness_weights(weights=weights)
-    logging.getLogger('dash-msgs').warning(msg='Updated fitness functions weights.')
+    logger.log(msg='Updated fitness functions weights.')
     hm_callback_props['metric']['Fitness']['zmax']['feasible'] = sum([x.weight * x.bounds[1] for x in mapelites.feasible_fitnesses]) + mapelites.nsc
     return True
 
 
-def _apply_bin_selection_toggle(mapelites: MAPElites) -> bool:
+def _apply_bin_selection_toggle(mapelites: MAPElites,
+                                logger: CustomLogger) -> bool:
     mapelites.enforce_qnt = not mapelites.enforce_qnt
-    logging.getLogger('dash-msgs').debug(msg=f'MAP-Elites single bin selection set to {mapelites.enforce_qnt}.')
+    logger.log(msg=f'MAP-Elites single bin selection set to {mapelites.enforce_qnt}.')
     
 
 
 @app.callback(Output('console-out', 'value'),
-              Input('interval1', 'n_intervals'))
-def update_output(n):
-    return ('\n'.join(dashLoggerHandler.queue))
+              Input('interval1', 'n_intervals'),
+              Input('logger', 'data'))
+def update_output(n, logger):
+    logger: CustomLogger = json_loads(logger)
+    return ('\n'.join(logger.queue))
 
 
 @app.callback(
@@ -637,6 +657,7 @@ def download_content(n_clicks,
               Output('content-string', 'value'),
               Output('spaceship-size', 'children'),
               Output('n-blocks', 'children'),
+              Output('logger', 'data'),
               State('heatmap-plot', 'figure'),
               State('selected-bins', 'data'),
               State('gen-counter', 'data'),
@@ -647,6 +668,7 @@ def download_content(n_clicks,
               State('content-string', 'value'),
               State('spaceship-size', 'children'),
               State('n-blocks', 'children'),
+              State('logger', 'data'),
               Input('population-dropdown', 'value'),
               Input('metric-dropdown', 'value'),
               Input('method-radio', 'value'),
@@ -662,12 +684,13 @@ def download_content(n_clicks,
               Input('selection-btn', 'n_clicks'),
               Input('selection-clr-btn', 'n_clicks'))
 def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
-                     curr_selected, curr_content, cs_string, cs_size, cs_n_blocks,
+                     curr_selected, curr_content, cs_string, cs_size, cs_n_blocks, logger,
                      pop_name, metric_name, method_name, n_clicks_step, n_clicks_reset, n_clicks_sub, weights, b0, b1, modules, n_clicks_rules,
-                     clickData, selection_btn, clear_btn,):
+                     clickData, selection_btn, clear_btn):
     gen_counter: int = json.loads(gen_counter) if gen_counter else 0
     selected_bins = json.loads(selected_bins) if selected_bins else []
-    selected_bins = [(x[1], x[0]) for x in selected_bins]
+    # selected_bins = [(x[1], x[0]) for x in selected_bins]
+    logger: CustomLogger = json_loads(logger)
     mapelites: MAPElites = json_loads(s=mapelites)
 
     ctx = dash.callback_context
@@ -680,7 +703,8 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
     if event_trig == 'step-btn':
         res = _apply_step(mapelites=mapelites,
                           selected_bins=selected_bins,
-                          gen_counter=gen_counter)
+                          gen_counter=gen_counter,
+                          logger=logger)
         if res:
             gen_counter += 1
             curr_heatmap = _build_heatmap(mapelites=mapelites,
@@ -688,7 +712,8 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
                                           metric_name=metric_name,
                                           method_name=method_name)
     elif event_trig == 'reset-btn':
-        res = _apply_reset(mapelites=mapelites)
+        res = _apply_reset(mapelites=mapelites,
+                          logger=logger)
         if res:
             gen_counter = 0
             curr_heatmap = _build_heatmap(mapelites=mapelites,
@@ -696,7 +721,8 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
                                           metric_name=metric_name,
                                           method_name=method_name)
     elif event_trig == 'b0-dropdown' or event_trig == 'b1-dropdown':
-        res = _apply_bc_change(mapelites=mapelites)
+        res = _apply_bc_change(mapelites=mapelites,
+                               logger=logger)
         if res:
             curr_heatmap = _build_heatmap(mapelites=mapelites,
                                           pop_name=pop_name,
@@ -704,7 +730,8 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
                                           method_name=method_name)
     elif event_trig == 'subdivide-btn':
         res = _apply_bin_subdivision(mapelites=mapelites,
-                                     selected_bins=selected_bins)
+                                     selected_bins=selected_bins,
+                                     logger=logger)
         if res:
             curr_heatmap = _build_heatmap(mapelites=mapelites,
                                           pop_name=pop_name,
@@ -713,14 +740,17 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
             selected_bins = []
     elif event_trig == 'lsystem-modules':
         res = _apply_modules_update(mapelites=mapelites,
-                                    modules=modules)
+                                    modules=modules,
+                                    logger=logger)
     elif event_trig == 'update-rules-btn':
         res = _apply_rules_update(mapelites=mapelites,
-                                  rules=rules)
+                                  rules=rules,
+                                  logger=logger)
     # event_trig is a str of a dict, ie: '{"index":*,"type":"fitness-sldr"}', go figure
     elif event_trig is not None and 'fitness-sldr' in event_trig:
         res = _apply_fitness_reweight(mapelites=mapelites,
-                                      weights=weights)
+                                      weights=weights,
+                                      logger=logger)
         if res:
             curr_heatmap = _build_heatmap(mapelites=mapelites,
                                      pop_name=pop_name,
@@ -740,27 +770,29 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
                                               bin_idx=(j, i),
                                               pop='feasible' if pop_name == 'Feasible' else 'infeasible')
             if not mapelites.enforce_qnt and selected_bins != []:
-                if (i, j) not in selected_bins:
-                    selected_bins.append((i, j))
+                if [i, j] not in selected_bins:
+                    selected_bins.append([i, j])
                 else:
-                    selected_bins.remove((i, j))
+                    selected_bins.remove([i, j])
             else:
-                selected_bins = [(i, j)]
+                selected_bins = [[i, j]]
             cs_string = cs_size = cs_n_blocks = ''
             if len(selected_bins) > 0:
-                elite = mapelites.get_elite(bin_idx=_switch([selected_bins[-1]])[0],
-                                        pop='feasible' if pop_name == 'Feasible' else 'infeasible')
+                # elite = mapelites.get_elite(bin_idx=_switch([selected_bins[-1]])[0],
+                elite = mapelites.get_elite(bin_idx=selected_bins[-1],
+                                            pop='feasible' if pop_name == 'Feasible' else 'infeasible')
                 cs_string = elite.string
-                cs_size = elite.content._max_dims
-                cs_n_blocks = len(elite.content._blocks.keys())
+                cs_size = f'Spaceship size: {elite.content._max_dims}'
+                cs_n_blocks = f'Number of blocks: {len(elite.content._blocks.keys())}'
         else:
-            logging.getLogger('dash-msgs').error(msg=f'Empty bin selected ({i}, {j}).')
+            logger.log(msg=f'Empty bin selected ({i}, {j}).')
     elif event_trig == 'selection-btn':
-        _ = _apply_bin_selection_toggle(mapelites=mapelites)
+        _ = _apply_bin_selection_toggle(mapelites=mapelites,
+                                        logger=logger)
         if mapelites.enforce_qnt and selected_bins:
             selected_bins = [selected_bins[-1]]
     elif event_trig == 'selection-clr-btn':
-        logging.getLogger('dash-msgs').debug(msg='Cleared bins selection.')
+        logger.log(msg='Cleared bins selection.')
         selected_bins = []
         curr_content = go.Figure(data=[])
         cs_string = cs_size = cs_n_blocks  = ''
@@ -770,6 +802,6 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
                                     metric_name=metric_name,
                                     method_name=method_name)
     else:
-        logging.getLogger('dash-msgs').error(msg=f'Unrecognized event trigger: {event_trig}. No operations have been applied!')
+        logger.log(msg=f'Unrecognized event trigger: {event_trig}. No operations have been applied!')
 
-    return curr_heatmap, curr_content, f'Valid bins are: {_get_valid_bins(mapelites=mapelites)}', f'Current generation: {gen_counter}', json.dumps(gen_counter), json_dumps(mapelites), str(mapelites.lsystem.hl_solver.parser.rules), f'Selected bin(s): {selected_bins}', json.dumps([[int(x[0]), int(x[1])] for x in selected_bins]), cs_string, f'Spaceship size: {cs_size}', f'Number of blocks: {cs_n_blocks}' 
+    return curr_heatmap, curr_content, f'Valid bins are: {_get_valid_bins(mapelites=mapelites)}', f'Current generation: {gen_counter}', json.dumps(gen_counter), json_dumps(mapelites), str(mapelites.lsystem.hl_solver.parser.rules), f'Selected bin(s): {selected_bins}', json.dumps([[int(x[0]), int(x[1])] for x in selected_bins]), cs_string, cs_size, cs_n_blocks, json_dumps(obj=logger) 
