@@ -10,6 +10,9 @@ from ..lsystem.structure_maker import LLStructureMaker
 from ..structure import Structure
 
 
+
+
+
 class Fitness:
     def __init__(self,
                  name: str,
@@ -32,6 +35,21 @@ class Fitness:
                  extra_args: Dict[str, Any]) -> float:
         return self.f(cs=cs,
                       extra_args=extra_args)
+    
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'name': self.name,
+            'f': self.f.__name__,
+            'bounds': list(self.bounds),
+            'weight': self.weight
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'Fitness':
+        return Fitness(name=my_args['name'],
+                       f=fitness_functions[my_args['f']],
+                       bounds=tuple(my_args['bounds']),
+                       weight=my_args['weight'])
 
 
 # load pickled estimators
@@ -197,3 +215,11 @@ def mami_fitness(cs: CandidateSolution,
     largest_axis, medium_axis, smallest_axis = reversed(sorted(list(volume)))
     mami = largest_axis / smallest_axis
     return mami_es.evaluate(mami)[0] / mami_max
+
+fitness_functions = {
+    'bounding_box_fitness': bounding_box_fitness,
+    'box_filling_fitness': box_filling_fitness,
+    'func_blocks_fitness': func_blocks_fitness,
+    'mame_fitness': mame_fitness,
+    'mami_fitness': mami_fitness
+}

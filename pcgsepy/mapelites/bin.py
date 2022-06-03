@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 
@@ -145,3 +145,19 @@ class MAPBin:
             return len(self._infeasible)
         else:
             raise NotImplementedError(f'Unrecognized population {pop}')
+    
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'feasible': [cs.to_json() for cs in self._feasible],
+            'infeasible': [cs.to_json() for cs in self._infeasible],
+            'bin_idx': list(self.bin_idx),
+            'bin_size': list(self.bin_size)
+            }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'MAPBin':
+        mb = MAPBin(bin_idx=tuple(my_args['bin_idx']),
+                    bin_size=tuple(my_args['bin_size']))
+        mb._feasible = [CandidateSolution.from_json(cs) for cs in my_args['feasible']]
+        mb._infeasible = [CandidateSolution.from_json(cs) for cs in my_args['infeasible']]
+        return mb

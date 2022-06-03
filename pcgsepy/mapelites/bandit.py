@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 import numpy as np
 
 
@@ -26,6 +26,19 @@ class Bandit:
         """
         return 0 if self.tot_actions == 0 else self.tot_rewards / self.tot_actions
 
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'action': self.action,
+            'tot_rewards': self.tot_rewards,
+            'tot_actions': self.tot_actions
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'Bandit':
+        b = Bandit(action=my_args['action'])
+        b.tot_rewards = my_args['tot_rewards']
+        b.tot_actions = my_args['tot_actions']
+        return b
 
 class EpsilonGreedyAgent:
     def __init__(self,
@@ -76,3 +89,17 @@ class EpsilonGreedyAgent:
         self.tot_actions += 1
         bandit.tot_actions += 1
         bandit.tot_rewards += reward
+    
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'bandits': [b.to_json() for b in self.bandits],
+            'epsilon': self.epsilon,
+            'tot_actions': self.tot_actions
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'EpsilonGreedyAgent':
+        ega = EpsilonGreedyAgent(bandits=[Bandit.from_json(b) for b in my_args['bandits']],
+                                 epsilon=my_args.get('epsilon', None))
+        ega.tot_actions = my_args['tot_actions']
+        return ega

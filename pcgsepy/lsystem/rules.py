@@ -48,7 +48,7 @@ class StochasticRules:
     def to_json(self) -> Dict[str, Any]:
         return {
             'rules': self._rules,
-            'lhs_alphabet': self.lhs_alphabet
+            'lhs_alphabet': list(self.lhs_alphabet)
         }
     
     @staticmethod

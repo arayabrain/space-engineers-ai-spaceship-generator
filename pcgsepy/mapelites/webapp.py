@@ -16,7 +16,7 @@ from pcgsepy.lsystem.solution import CandidateSolution
 from pcgsepy.common.jsonifier import json_dumps, json_loads
 
 from ..config import BIN_POP_SIZE, CS_MAX_AGE
-from ..mapelites.map import MAPElites
+from ..mapelites.map import MAPElites, get_structure
 
 
 # https://towardsdatascience.com/long-callbacks-in-dash-web-apps-72fd8de25937
@@ -495,12 +495,19 @@ def _get_elite_content(mapelites: MAPElites,
                        pop: List[CandidateSolution]) -> go.Scatter3d:
     # get elite content
     elite = mapelites.get_elite(bin_idx=bin_idx,
-                                pop=pop).content
-    structure = elite.as_grid_array()
-    arr = np.nonzero(structure)
+                                pop=pop)
+    structure = get_structure(string=elite.ll_string,
+                              extra_args={
+                                  'alphabet': mapelites.lsystem.ll_solver.atoms_alphabet
+                            })
+    # add hull
+    if mapelites.hull_builder is not None:
+        mapelites.hull_builder.add_external_hull(structure=structure)
+    content = structure.as_grid_array()
+    arr = np.nonzero(content)
     x, y, z = arr
-    cs = [structure[i, j, k] for i, j, k in zip(x, y, z)]
-    ss = [elite._clean_label(elite.ks[v - 1]) for v in cs]
+    cs = [content[i, j, k] for i, j, k in zip(x, y, z)]
+    ss = [structure._clean_label(structure.ks[v - 1]) for v in cs]
     fig = px.scatter_3d(x=x,
                         y=y,
                         z=z,
@@ -531,10 +538,12 @@ def _apply_step(mapelites: MAPElites,
                 valid &= bin_idx in valid_bins
         if valid:
             logger.log(msg=f'Started step {gen_counter}...')
+            print(f'Started step {gen_counter}...')
             mapelites._interactive_step(bin_idxs=selected_bins,
                                         gen=gen_counter)
             logger.log(msg=f'Completed step {gen_counter + 1}; running 5 additional emitter steps if available...')
-            for _ in range(0):
+            print(f'Completed step {gen_counter + 1}; running 5 additional emitter steps if available...')
+            for _ in range(5):
                 mapelites.emitter_step(gen=gen_counter)
             logger.log(msg=f'Emitter step(s) completed.')
             return True
@@ -702,7 +711,7 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
 
     if event_trig == 'step-btn':
         res = _apply_step(mapelites=mapelites,
-                          selected_bins=selected_bins,
+                          selected_bins=[[x[1], x[0]] for x in selected_bins],
                           gen_counter=gen_counter,
                           logger=logger)
         if res:
@@ -778,12 +787,11 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
                 selected_bins = [[i, j]]
             cs_string = cs_size = cs_n_blocks = ''
             if len(selected_bins) > 0:
-                # elite = mapelites.get_elite(bin_idx=_switch([selected_bins[-1]])[0],
-                elite = mapelites.get_elite(bin_idx=selected_bins[-1],
+                elite = mapelites.get_elite(bin_idx=_switch([selected_bins[-1]])[0],
                                             pop='feasible' if pop_name == 'Feasible' else 'infeasible')
                 cs_string = elite.string
-                cs_size = f'Spaceship size: {elite.content._max_dims}'
-                cs_n_blocks = f'Number of blocks: {len(elite.content._blocks.keys())}'
+                cs_size = f'Spaceship size: {elite.size}'
+                cs_n_blocks = f'Number of blocks: {elite.n_blocks}'
         else:
             logger.log(msg=f'Empty bin selected ({i}, {j}).')
     elif event_trig == 'selection-btn':

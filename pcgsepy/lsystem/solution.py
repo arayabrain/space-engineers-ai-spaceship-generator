@@ -24,6 +24,9 @@ class CandidateSolution:
         self.parents = []
         self.n_offspring = 0
         self.n_feas_offspring = 0
+        
+        self.size = ()
+        self.n_blocks = 0
 
     def __str__(self) -> str:
         return self.string
@@ -46,6 +49,8 @@ class CandidateSolution:
             raise Exception('Structure already exists for this CandidateSolution.')
         else:
             self._content = content
+            self.size = self._content._max_dims
+            self.n_blocks = len(self._content._blocks)
 
     @property
     def content(self) -> Structure:
@@ -57,8 +62,8 @@ class CandidateSolution:
     def to_json(self) -> Dict[str, Any]:
         return {
             'string': self.string,
-            'representation': self.representation.tolist(),
-            'fitness': self.fitness.tolist(),
+            'representation': self.representation,
+            'fitness': self.fitness,
             'c_fitness': self.c_fitness,
             'b_descs': self.b_descs,
             'is_feasible': self.is_feasible,
@@ -75,8 +80,8 @@ class CandidateSolution:
     def from_json(my_args: Dict[str, Any]) -> 'CandidateSolution':
         cs = CandidateSolution(string=my_args['string'],
                                content=None)
-        cs.representation = np.asarray(my_args['representation'])
-        cs.fitness = np.asarray(my_args['fitness'])
+        cs.representation = my_args['representation']
+        cs.fitness = my_args['fitness']
         cs.c_fitness = my_args['c_fitness']
         cs.b_descs = my_args['b_descs']
         cs.is_feasible = my_args['is_feasible']

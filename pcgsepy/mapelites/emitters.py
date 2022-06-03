@@ -1,15 +1,41 @@
-from abc import ABC, abstractmethod
-from typing import List, Tuple
 import warnings
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import numpy.typing as npt
-from matplotlib.pyplot import grid
 from pcgsepy.config import CS_MAX_AGE
 from pcgsepy.mapelites.bin import MAPBin
 from pcgsepy.mapelites.buffer import Buffer, mean_merge
-from sklearn.linear_model import LinearRegression, Ridge
+from sklearn.linear_model import LinearRegression
 
+
+def diversity_builder(bins: 'np.ndarray[MAPBin]',
+                      n_features: int) -> npt.NDArray[np.float32]:
+    
+    def _distance(a: np.ndarray,
+                  b: np.ndarray) -> np.ndarray:
+        return np.linalg.norm(a - b)
+    
+    representations = np.zeros(shape=(bins.shape[0], bins.shape[1], n_features))
+    for i in range(bins.shape[0]):
+        for j in range(bins.shape[1]):
+            if bins[i, j].non_empty(pop='feasible'):
+                representations[i, j, :] = np.asarray(bins[i, j].get_elite(population='feasible').representation)
+    representations[representations == 0] = np.nan
+    mean_representation = np.nanmean(representations, axis=(0, 1))
+    div = np.zeros(shape=bins.shape)
+    with warnings.catch_warnings():
+        warnings.filterwarnings(action="ignore", message='Mean of empty slice', category=RuntimeWarning)
+        warnings.filterwarnings(action="ignore", message='All-NaN slice encountered', category=RuntimeWarning)
+        for i in range(div.shape[0]):
+            for j in range(div.shape[1]):
+                div[i, j] = np.nanmean(_distance(representations[i, j],
+                                                mean_representation))
+        div = div / np.nanmax(div, axis=1)
+        div[np.isnan(div)] = 0
+    return div
+    
 
 class Emitter(ABC):
     def __init__(self) -> None:
@@ -84,6 +110,25 @@ class RandomEmitter(Emitter):
     def reset(self) -> None:
         pass
 
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'name': self.name,
+            'requires_init': self.requires_init,
+            'requires_pre': self.requires_pre,
+            'requires_post': self.requires_post,
+            'diversity_weight': self.diversity_weight
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'RandomEmitter':
+        re = RandomEmitter()
+        re.name = my_args['name']
+        re.requires_init = my_args['requires_init']
+        re.requires_pre = my_args['requires_pre']
+        re.requires_post = my_args['requires_post']
+        re.diversity_weight = my_args['diversity_weight']
+        return re
+
 
 class OptimisingEmitter(Emitter):
     def __init__(self) -> None:
@@ -114,6 +159,25 @@ class OptimisingEmitter(Emitter):
 
     def reset(self) -> None:
         pass
+    
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'name': self.name,
+            'requires_init': self.requires_init,
+            'requires_pre': self.requires_pre,
+            'requires_post': self.requires_post,
+            'diversity_weight': self.diversity_weight
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'OptimisingEmitter':
+        re = OptimisingEmitter()
+        re.name = my_args['name']
+        re.requires_init = my_args['requires_init']
+        re.requires_pre = my_args['requires_pre']
+        re.requires_post = my_args['requires_post']
+        re.diversity_weight = my_args['diversity_weight']
+        return re
 
 
 class OptimisingEmitterV2(Emitter):
@@ -148,45 +212,26 @@ class OptimisingEmitterV2(Emitter):
 
     def reset(self) -> None:
         pass
-
-
-def get_emitter_by_str(emitter: str) -> Emitter:
-    if emitter == 'random-emitter':
-        return RandomEmitter()
-    elif emitter == 'optimising-emitter':
-        return OptimisingEmitter()
-    elif emitter == 'optimising-emitter-v2':
-        return OptimisingEmitterV2()
-    else:
-        raise NotImplementedError(f'Unrecognized emitter from string: {emitter}')
-
-
-def diversity_builder(bins: 'np.ndarray[MAPBin]',
-                      n_features: int) -> npt.NDArray[np.float32]:
     
-    def _distance(a: np.ndarray,
-                  b: np.ndarray) -> np.ndarray:
-        return np.linalg.norm(a - b)
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'name': self.name,
+            'requires_init': self.requires_init,
+            'requires_pre': self.requires_pre,
+            'requires_post': self.requires_post,
+            'diversity_weight': self.diversity_weight
+        }
     
-    representations = np.zeros(shape=(bins.shape[0], bins.shape[1], n_features))
-    for i in range(bins.shape[0]):
-        for j in range(bins.shape[1]):
-            if bins[i, j].non_empty(pop='feasible'):
-                representations[i, j, :] = np.asarray(bins[i, j].get_elite(population='feasible').representation)
-    representations[representations == 0] = np.nan
-    mean_representation = np.nanmean(representations, axis=(0, 1))
-    div = np.zeros(shape=bins.shape)
-    with warnings.catch_warnings():
-        warnings.filterwarnings(action="ignore", message='Mean of empty slice', category=RuntimeWarning)
-        warnings.filterwarnings(action="ignore", message='All-NaN slice encountered', category=RuntimeWarning)
-        for i in range(div.shape[0]):
-            for j in range(div.shape[1]):
-                div[i, j] = np.nanmean(_distance(representations[i, j],
-                                                mean_representation))
-        div = div / np.nanmax(div, axis=1)
-        div[np.isnan(div)] = 0
-    return div
-    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'OptimisingEmitterV2':
+        re = OptimisingEmitterV2()
+        re.name = my_args['name']
+        re.requires_init = my_args['requires_init']
+        re.requires_pre = my_args['requires_pre']
+        re.requires_post = my_args['requires_post']
+        re.diversity_weight = my_args['diversity_weight']
+        return re
+
 
 class HumanPrefMatrixEmitter(Emitter):
     def __init__(self,
@@ -319,7 +364,34 @@ class HumanPrefMatrixEmitter(Emitter):
     def reset(self) -> None:
         self._prefs = 0
         self._tot_actions = 0
-        
+    
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'name': self.name,
+            'requires_init': self.requires_init,
+            'requires_pre': self.requires_pre,
+            'requires_post': self.requires_post,
+            'diversity_weight': self.diversity_weight,
+            'tot_actions': self._tot_actions,
+            'decay': self._decay,
+            'last_selected': self._last_selected,  # may need conversion tolist()
+            'prefs': self._prefs.tolist(),
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'HumanPrefMatrixEmitter':
+        re = HumanPrefMatrixEmitter()
+        re.name = my_args['name']
+        re.requires_init = my_args['requires_init']
+        re.requires_pre = my_args['requires_pre']
+        re.requires_post = my_args['requires_post']
+        re.diversity_weight = my_args['diversity_weight']
+        re._tot_actions = my_args['tot_actions']
+        re._decay = my_args['decay']
+        re._last_selected = my_args['last_selected']  # may need conversion np.asarray
+        re._prefs = np.asarray(my_args['prefs'])
+        return re
+
 
 class ContextualBanditEmitter(Emitter):
     def __init__(self,
@@ -395,3 +467,69 @@ class ContextualBanditEmitter(Emitter):
         self._buffer.clear()
         self._estimator = None
         self._fitted = False
+    
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'name': self.name,
+            'requires_init': self.requires_init,
+            'requires_pre': self.requires_pre,
+            'requires_post': self.requires_post,
+            'diversity_weight': self.diversity_weight,
+            
+            'initial_epsilon': self._initial_epsilon,
+            'epsilon': self._epsilon,
+            'decay': self._decay,
+            'buffer': self._buffer.to_json(),
+            'n_features_context': self._n_features_context,
+            'diversity_weight': self.diversity_weight,
+            'fitted': self._fitted,
+            
+            'estimator_params': self._estimator.get_params(),
+            'estimator_coefs': self._estimator.coef_.tolist() if self._fitted else None,
+            'estimator_intercept': np.asarray(self._estimator.intercept_).tolist() if self._fitted else None,
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'OptimisingEmitterV2':
+        re = OptimisingEmitterV2()
+        re.name = my_args['name']
+        re.requires_init = my_args['requires_init']
+        re.requires_pre = my_args['requires_pre']
+        re.requires_post = my_args['requires_post']
+        re.diversity_weight = my_args['diversity_weight']
+        
+        re._initial_epsilon = my_args['initial_epsilon']
+        re._epsilon = my_args['epsilon']
+        re._decay = my_args['decay']
+        re.buffer = Buffer.from_json(my_args['buffer'])
+        re._n_features_context = my_args['n_features_context']
+        re._fitted = my_args['fitted']
+        
+        re._estimator = LinearRegression()
+        re._estimator.set_params(my_args['estimator_params'])
+        if my_args['estimator_coefs'] is not None:
+            re._estimator.coef_ = np.asarray(my_args['estimator_coefs'])
+        if my_args['estimator_intercept'] is not None:
+            re._estimator.intercept_ = np.asarray(my_args['estimator_intercept'])
+                
+        return re
+
+
+def get_emitter_by_str(emitter: str) -> Emitter:
+    if emitter == 'random-emitter':
+        return RandomEmitter()
+    elif emitter == 'optimising-emitter':
+        return OptimisingEmitter()
+    elif emitter == 'optimising-emitter-v2':
+        return OptimisingEmitterV2()
+    else:
+        raise NotImplementedError(f'Unrecognized emitter from string: {emitter}')
+
+
+emitters = {
+    'random-emitter': RandomEmitter,
+    'optimising-emitter': OptimisingEmitter,
+    'optimising-emitter-v2': OptimisingEmitterV2,
+    'human-preference-matrix-emitter': HumanPrefMatrixEmitter,
+    'contextual-bandit-emitter': ContextualBanditEmitter
+}

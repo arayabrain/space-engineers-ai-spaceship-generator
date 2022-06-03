@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Any, Dict, Tuple
 
 import numpy as np
 
@@ -25,6 +25,19 @@ class BehaviorCharacterization:
     def __call__(self,
                  cs: CandidateSolution) -> float:
         return self.f(cs)
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'name': self.name,
+            'bounds': list(self.bounds),
+            'f': self.f.__name__
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'BehaviorCharacterization':
+        return BehaviorCharacterization(name=my_args['name'],
+                                        func=behavior_funcs[my_args['f']],
+                                        bounds=tuple(my_args['bounds']))
 
 
 def mame(cs: CandidateSolution) -> float:
@@ -126,3 +139,11 @@ def symmetry(cs: CandidateSolution):
     symm_x = 1 - ((err_x / 2) / (len(bps) - excl_x))
     symm_z = 1 - ((err_z / 2) / (len(bps) - excl_z))
     return max(symm_x, symm_z)
+
+
+behavior_funcs = {
+    'mame': mame,
+    'mami': mami,
+    'avg_ma': avg_ma,
+    'symmetry': symmetry
+}

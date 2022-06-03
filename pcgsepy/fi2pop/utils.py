@@ -166,7 +166,24 @@ class MLPEstimator(nn.Module):
             self.load_state_dict(prev['model_params'])
             self.optimizer.load_state_dict(prev['optimizer'])
             self.is_trained = prev['is_trained']
-
+        
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'xshape': self.xshape,
+            'yshape': self.yshape,
+            'is_trained': self.is_trained,
+            'model_params': str(self.state_dict()),
+            'optimizer': str(self.optimizer.state_dict()),
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'MLPEstimator':
+        mlpe = MLPEstimator(xhsape=my_args['xshape'],
+                            yshape=my_args['yshape'])
+        mlpe.is_trained = my_args['is_trained']
+        mlpe.load_state_dict(eval(my_args['model_params']))
+        mlpe.load_state_dict(eval(my_args['optimizer']))
+        return mlpe
 
 def train_estimator(estimator: MLPEstimator,
                     xs: List[List[float]],

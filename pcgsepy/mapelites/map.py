@@ -8,7 +8,7 @@ from pcgsepy.lsystem.constraints import ConstraintLevel
 from pcgsepy.mapelites.bandit import EpsilonGreedyAgent
 from pcgsepy.mapelites.buffer import Buffer, EmptyBufferException
 from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, Emitter, HumanPrefMatrixEmitter, RandomEmitter,
-                                        get_emitter_by_str)
+                                        get_emitter_by_str, emitters)
 from pcgsepy.nn.estimators import QuantileEstimator
 from tqdm.notebook import trange
 from typing_extensions import Self
@@ -72,6 +72,13 @@ def fitness_reward(mapelites: 'MAPElites') -> float:
     fit_diff = current_best - prev_best
     return fit_diff / prev_best
 
+
+agent_rewards = {
+    'coverage_reward': coverage_reward,
+    'fitness_reward': fitness_reward
+}
+
+
 class MAPElites:
 
     def __init__(self,
@@ -80,7 +87,7 @@ class MAPElites:
                  buffer: Buffer,
                  behavior_descriptors: Tuple[BehaviorCharacterization, BehaviorCharacterization],
                  n_bins: Tuple[int, int] = (8, 8),
-                 estimator: Optional[Union[GaussianEstimator, MLPEstimator, QuantileEstimator]] = None,
+                 estimator: Optional[Union[GaussianEstimator, MLPEstimator, QuantileEstimator]] = None,  # Only MLPEstimator is currently JSON-compatible
                  emitter: Optional[Emitter] = RandomEmitter(),
                  agent: Optional[EpsilonGreedyAgent] = None,
                  agent_rewards: Optional[List[Callable[[Self], float]]] = []):
@@ -133,8 +140,7 @@ class MAPElites:
         self.allow_aging = True
                 
         assert self.agent is not None or self.emitter is not None, 'MAP-Elites requires either an agent or an emitter!'
-        if self.agent is not None and not self.agent_rewards:
-            raise AssertionError(f'You selected an agent but no reward functions have been provided!')
+        if self.agent is not None and not self.agent_rewards: raise AssertionError(f'You selected an agent but no reward functions have been provided!')
 
     def show_metric(self,
                     metric: str,
@@ -285,6 +291,9 @@ class MAPElites:
                                                             }) + (self.nsc - cs.ncv)
                         self._set_behavior_descriptors(cs=cs)
                         cs.age = CS_MAX_AGE
+                        
+                        cs._content = None
+                        
                         feasible_pop.append(cs)
                     elif not cs.is_feasible and len(infeasible_pop) < pops_size and cs not in feasible_pop:
                         if self.hull_builder is not None:
@@ -295,6 +304,9 @@ class MAPElites:
                                                             })
                         self._set_behavior_descriptors(cs=cs)
                         cs.age = CS_MAX_AGE
+                        
+                        cs._content = None
+                        
                         infeasible_pop.append(cs)
                 iterations.set_postfix(ordered_dict={
                     'fpop-size': f'{len(feasible_pop)}/{pops_size}',
@@ -461,6 +473,9 @@ class MAPElites:
                         self._set_behavior_descriptors(cs=cs)
                         # set age
                         cs.age = CS_MAX_AGE
+                        
+                        cs._content = None
+                        
                         generated.append(cs)
                     
                     if self.estimator is not None:
@@ -788,3 +803,46 @@ class MAPElites:
                 if self.bins[i, j].non_empty(pop=pop):
                     nonempty.append(self.bins[i, j])
         return np.random.choice(nonempty).get_elite(population=pop)
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'lsystem': self.lsystem.to_json(),
+            'feasible_fitnesses': [f.to_json() for f in self.feasible_fitnesses],
+            'b_descs': [bd.to_json() for bd in list(self.b_descs)],
+            'emitter': self.emitter.to_json() if self.emitter else None,
+            'agent': self.agent.to_json() if self.agent else None,
+            'agent_rewards': [ar.__name__ for ar in self.agent_rewards],
+            'initial_n_bins': list(self._initial_n_bins),
+            'bin_qnt': list(self.bin_qnt),
+            'bins': [b.to_json() for b in self.bins.flatten().tolist()],
+            'enforce_qnt': self.enforce_qnt,
+            'estimator': self.estimator.to_json() if self.estimator else None,
+            'buffer': self.buffer.to_json(),
+            'allow_res_increase': self.allow_res_increase,
+            'allow_aging': self.allow_aging,
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'MAPElites':
+        me = MAPElites(lsystem=LSystem.from_json(my_args['lsystem']),
+                       feasible_fitnesses=[Fitness.from_json(f) for f in my_args['feasible_fitnesses']],
+                       buffer=Buffer.from_json(my_args['buffer']),
+                       behavior_descriptors=tuple([BehaviorCharacterization.from_json(bc) for bc in my_args['b_descs']]),
+                       n_bins=tuple(my_args['bin_qnt']),
+                       estimator=None,
+                       emitter=RandomEmitter(),
+                       agent=None,
+                       agent_rewards=None)
+        me._initial_n_bins = my_args['initial_n_bins']
+        me.enforce_qnt = my_args['enforce_qnt']
+        me.allow_res_increase = my_args['allow_res_increase']
+        me.allow_aging = my_args['allow_aging']
+        if my_args['emitter']:
+            me.emitter = emitters[my_args['emitter']['name']].from_json(my_args['emitter'])
+        if my_args['estimator']:
+            me.estimator = MLPEstimator.from_json(my_args['estimator'])
+        if my_args['agent']:
+            me.agent = EpsilonGreedyAgent.from_json(my_args['agent'])
+            me.agent_rewards = [agent_rewards[ar] for ar in my_args['agent_rewards']]
+        me.bins = np.asarray([MAPBin.from_json(mb) for mb in my_args['bins']]).reshape(me.bin_qnt)
+        return me

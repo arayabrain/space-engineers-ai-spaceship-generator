@@ -1,4 +1,4 @@
-from typing import Any, Callable, Tuple
+from typing import Any, Callable, Dict, Tuple
 
 import numpy as np
 
@@ -13,6 +13,12 @@ def max_merge(x1, x2):
 
 def min_merge(x1, x2):
     return min(x1, x2)
+
+merge_methods = {
+    'mean_merge': mean_merge,
+    'max_merge': max_merge,
+    'min_merge': min_merge
+}
 
 class Buffer:
     def __init__(self,
@@ -52,4 +58,17 @@ class Buffer:
     def clear(self) -> None:
         self._xs = []
         self._ys = []
-        
+   
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'xs': [x.tolist() for x in self._xs],
+            'ys': [y.tolist() for y in self._ys],
+            'merge_method': self._merge.__name__
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'Buffer':
+        b = Buffer(merge_method=merge_methods[my_args['merge_method']])
+        b._xs = [np.asarray(x) for x in my_args['xs']]
+        b._ys = [np.asarray(y) for y in my_args['ys']]
+        return b
