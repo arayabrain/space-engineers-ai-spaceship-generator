@@ -1,7 +1,17 @@
 from enum import IntEnum, auto
 from typing import Any, Callable, Dict
 
+from pcgsepy.lsystem.constraints_funcs import *
+
 from .solution import CandidateSolution
+
+
+constraint_funcs = {
+    'components_constraint': components_constraint,
+    'intersection_constraint': intersection_constraint,
+    'symmetry_constraint': symmetry_constraint,
+    'axis_constraint': axis_constraint,
+}
 
 
 class ConstraintLevel(IntEnum):
@@ -42,3 +52,22 @@ class ConstraintHandler:
     def __hash__(self):
         return hash((self.name, self.level.value, self.when.value,
                      str(self.extra_args)))
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'name': self.name,
+            'level': self.level.value,
+            'when': self.when.value,
+            'needs_ll': self.needs_ll,
+            'constraint': self.constraint.__name__,
+            'extra_args': self.extra_args
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'ConstraintHandler':
+        return ConstraintHandler(name=my_args['name'],
+                                 level=ConstraintLevel(my_args['level']),
+                                 when=ConstraintTime(my_args['when']),
+                                 f=constraint_funcs[my_args['constraint']],
+                                 extra_args=my_args['extra_args'],
+                                 needs_ll=my_args['needs_ll'])

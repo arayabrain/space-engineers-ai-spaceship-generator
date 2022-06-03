@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from ..common.vecs import Orientation, Vec
 from ..config import N_SPE
@@ -82,6 +82,28 @@ class LSystemModule:
             hl_solutions.pop(i)
 
         return hl_solutions
+    
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'hlsolver': self.hlsolver.to_json(),
+            'llsolver': self.llsolver.to_json(),
+            'check_sat': self.check_sat,
+            'name': self.name,
+            'active': self.active,
+            'hl_constraints': [c.to_json() for c in self.hl_constraints],
+            'll_constraints': [c.to_json() for c in self.ll_constraints],
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'LSystemModule':
+        lsm = LSystemModule(hl_solver=LSolver.from_json(my_args['hlsolver']),
+                            ll_solver=LSolver.from_json(my_args['llsolver']),
+                            name=my_args['name'])
+        lsm.active = my_args['active']
+        lsm.hl_constraints = [ConstraintHandler.from_json(c) for c in my_args['hl_constraints']]
+        lsm.ll_constraints = [ConstraintHandler.from_json(c) for c in my_args['ll_constraints']]
+        return lsm
+        
 
 
 class LSystem:
@@ -219,3 +241,23 @@ class LSystem:
                     structure.show(title=cs.string)
 
         return solutions
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'hlsolver': self.hl_solver.to_json(),
+            'llsolver': self.ll_solver.to_json(),
+            'check_sat': self.check_sat,
+            'modules': [m.to_json() for m in self.modules],
+            'all_hl_constraints': [c.to_json() for c in self.all_hl_constraints],
+            'all_ll_constraints': [c.to_json() for c in self.all_ll_constraints]
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'LSystem':
+        ls = LSystem(hl_solver=LSolver.from_json(my_args['hlsolver']),
+                     ll_solver=LSolver.from_json(my_args['llsolver']),
+                     names=[])
+        ls.modules = [LSystemModule.from_json(lsm) for lsm in my_args['modules']]
+        ls.all_hl_constraints = set([ConstraintHandler.from_json(c) for c in my_args['all_hl_constraints']])
+        ls.all_ll_constraints = set([ConstraintHandler.from_json(c) for c in my_args['all_ll_constraints']])
+        return ls

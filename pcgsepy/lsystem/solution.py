@@ -1,4 +1,6 @@
-from typing import Optional
+from typing import Any, Dict, Optional
+
+import numpy as np
 
 from ..structure import Structure
 
@@ -51,3 +53,38 @@ class CandidateSolution:
             return self._content
         else:
             raise NotImplementedError('Structure has not been set yet.')
+    
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'string': self.string,
+            'representation': self.representation.tolist(),
+            'fitness': self.fitness.tolist(),
+            'c_fitness': self.c_fitness,
+            'b_descs': self.b_descs,
+            'is_feasible': self.is_feasible,
+            'age': self.age,
+            'll_string': self.ll_string,
+            'hls_mod': self.hls_mod,
+            'ncv': self.ncv,
+            'parents': [p.to_json() for p in self.parents],
+            'n_offsprings': self.n_offspring,
+            'n_feas_offsprings': self.n_feas_offspring
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'CandidateSolution':
+        cs = CandidateSolution(string=my_args['string'],
+                               content=None)
+        cs.representation = np.asarray(my_args['representation'])
+        cs.fitness = np.asarray(my_args['fitness'])
+        cs.c_fitness = my_args['c_fitness']
+        cs.b_descs = my_args['b_descs']
+        cs.is_feasible = my_args['is_feasible']
+        cs.age = my_args['age']
+        cs.ll_string = my_args['ll_string']
+        cs.hls_mod = my_args['hls_mod']
+        cs.ncv = my_args['ncv']
+        cs.parents = [CandidateSolution.from_json(args=p) for p in my_args['parents']]
+        cs.n_offsprings = my_args['n_offsprings']
+        cs.n_feas_offsprings = my_args['n_feas_offsprings']
+        return cs

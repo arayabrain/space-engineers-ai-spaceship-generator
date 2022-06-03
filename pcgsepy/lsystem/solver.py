@@ -1,6 +1,8 @@
 import logging
 from typing import Any, Dict, List, Optional
 
+from pcgsepy.lsystem.rules import StochasticRules
+
 from .constraints import ConstraintHandler, ConstraintTime, ConstraintLevel
 from .parser import HLParser, HLtoMLTranslator, LParser, LLParser
 from .solution import CandidateSolution
@@ -104,3 +106,24 @@ class LSolver:
     def set_constraints(self,
                         cs: List[ConstraintHandler]) -> None:
         self.constraints = cs
+    
+    def to_json(self) -> Dict[str, Any]:
+        j = {
+            'has_hl_parser': isinstance(self.parser, HLParser),
+            'rules': self.parser.rules.to_json(),
+            'atoms_alphabet': self.atoms_alphabet
+        }
+        if isinstance(self.parser, HLParser):
+            j['extra_args'] = {
+                'tiles_dimensions': self.translator.td,
+                'tiles_block_offset': self.translator.tbo,
+                'll_rules': self.ll_rules
+            }
+        return j
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'LSolver':
+        parser = HLParser if my_args['has_hl_parser'] else LLParser
+        return LSolver(parser=parser(rules=StochasticRules.from_json(my_args['rules'])),
+                       atoms_alphabet=my_args['atoms_alphabet'],
+                       extra_args=my_args.get('extra_args', {}))

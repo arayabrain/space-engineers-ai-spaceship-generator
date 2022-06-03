@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Dict, List
 import numpy as np
 
 
@@ -45,6 +45,18 @@ class StochasticRules:
                 s.append(f'{k} {p} {o}')
         return '\n'.join(s)
 
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'rules': self._rules,
+            'lhs_alphabet': self.lhs_alphabet
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'StochasticRules':
+        sr = StochasticRules()
+        sr._rules = my_args['rules']
+        sr.lhs_alphabet = set(my_args['lhs_alphabet'])
+        return sr
 
 class RuleMaker:
     def __init__(self,
