@@ -1,0 +1,61 @@
+
+
+cockpitcorridorsimple(1)[RotYcwXcorridorsimple(1)]corridorsimple(1)corridorreactors(1)corridorsimple(1)corridorgyros(1)corridorcargo(1)[RotYcwXcorridorsimple(1)[RotYccwZcorridorsimple(1)]corridorreactors(1)thrusters(1)]thrusters
+Fitness: [0.9141287278842003, 0.015546612864934969, 0.5380172584428852, 0.4317102273338044]
+
+cockpitcorridorsimple(1)corridorcargo(1)corridorcargo(1)corridorgyros(1)[RotYcwXcorridorsimple(1)[RotYcwXcorridorsimple(1)[RotYccwZcorridorsimple(2)][RotYccwXcorridorsimple(1)]corridorreactors(1)thrusters(1)]corridorreactors(1)thrusters(1)]thrusters
+Fitness: [0.9611888953601939, 0.053178666901451725, 0.9999854561938708, 0.9909555298906021]
+
+cockpitcorridorsimple(1)corridorcargo(2)[RotYccwXcorridorsimple(1)]corridorcargo(2)corridorsimple(1)corridorreactors(2)corridorreactors(1)corridorgyros(1)thrusters
+Fitness: [0.8964174900915087, 0.07357495505861575, 1.704358345330127e-07, 0.010431929588092925]
+
+cockpitcorridorsimple(1)corridorcargo(1)corridorreactors(1)[RotYcwXcorridorsimple(1)][RotYccwXcorridorsimple(1)corridorgyros(2)corridorsimple(1)corridorsimple(2)thrusters(1)]thrusters
+Fitness: [0.9126637395391858, 0.04814955773607387, 0.9283212192900909, 0.2058232959486169]
+
+cockpitcorridorsimple(1)[RotYccwXcorridorsimple(1)corridorgyros(1)thrusters(1)]corridorreactors(2)[RotYccwXcorridorsimple(1)corridorgyros(1)thrusters(1)][RotYcwXcorridorsimple(1)corridorcargo(2)[RotYccwXcorridorsimple(1)]thrusters(1)]thrusters
+Fitness: [0.9375683999472282, 0.06496489024076442, 0.7809730744875123, 0.2058232959486169]
+
+cockpitcorridorsimple(1)corridorgyros(2)corridorcargo(2)corridorreactors(1)corridorcargo(1)thrusters
+Fitness: [0.36304845154986404, 0.09779989548713282, 0.006996013977378512, 0.011096692598497547]
+
+cockpitcorridorsimple(1)corridorcargo(2)corridorreactors(1)corridorsimple(1)corridorreactors(1)corridorgyros(1)corridorsimple(1)corridorsimple(2)corridorcargo(1)corridorreactors(2)thrusters
+Fitness: [0.3534786628176814, 0.05926699238935433, 4.9098663824910095e-28, 2.4854887844488377e-51]
+
+cockpitcorridorsimple(1)corridorsimple(1)corridorreactors(1)corridorsimple(1)corridorsimple(1)corridorsimple(1)corridorgyros(1)corridorcargo(1)thrusters
+Fitness: [0.44571237749951226, 0.045153912880397946, 0.0037550798527359055, 0.009476004146451915]
+
+cockpitcorridorsimple(1)[RotYcwZcorridorsimple(2)]corridorreactors(1)[RotYccwZcorridorsimple(1)corridorcargo(1)corridorcargo(1)corridorsimple(1)corridorreactors(1)thrusters(1)][RotYccwXcorridorsimple(1)[RotYccwXcorridorsimple(1)]corridorgyros(2)thrusters(1)]corridorcargo(2)thrusters
+Fitness: [0.4181890239802392, 0.061398656797678315, 0.9569917500881789, 0.7623249859154199]
+
+cockpitcorridorsimple(1)corridorgyros(1)corridorcargo(2)corridorreactors(1)corridorsimple(1)corridorcargo(2)corridorgyros(1)[RotYcwXcorridorsimple(1)thrusters(1)]thrusters
+Fitness: [0.9496255341547786, 0.09820447119029364, 0.0062804353729424, 0.031882498388464894]
+
+cockpitcorridorsimple(1)corridorcargo(2)[RotYcwZcorridorsimple(2)]corridorsimple(1)[RotYccwZcorridorsimple(2)][RotYccwXcorridorsimple(2)]corridorgyros(1)[RotYcwXcorridorsimple(1)[RotYccwXcorridorsimple(2)]corridorreactors(2)thrusters(1)]thrusters
+Fitness: [0.4514416447659288, 0.036706321309240376, 0.9814824288849262, 0.9139079136183755]
+
+cockpitcorridorsimple(1)corridorcargo(2)corridorsimple(1)corridorsimple(2)corridorreactors(1)corridorgyros(1)thrusters
+Fitness: [0.4294111092280612, 0.06561122876518267, 0.007538061978873987, 0.018536740303657928]
+
+cockpitcorridorsimple(1)[RotYcwZcorridorsimple(1)][RotYccwXcorridorsimple(1)]corridorreactors(1)corridorsimple(1)corridorcargo(2)corridorgyros(1)[RotYcwXcorridorsimple(2)][RotYccwXcorridorsimple(1)corridorsimple(2)thrusters(1)]thrusters
+Fitness: [0.7937759622707642, 0.04704657202089179, 0.5351861241918665, 0.3586939288201331]
+
+cockpitcorridorsimple(1)corridorgyros(1)corridorreactors(1)[RotYcwXcorridorsimple(1)[RotYcwXcorridorsimple(2)]thrusters(1)]corridorcargo(1)thrusters
+Fitness: [0.9785178088813488, 0.0501714760952353, 0.4270768095536735, 0.4192680122431562]
+
+cockpitcorridorsimple(1)corridorsimple(1)[RotYccwZcorridorsimple(1)[RotYcwXcorridorsimple(2)][RotYccwXcorridorsimple(1)thrusters(1)]corridorsimple(1)corridorgyros(1)thrusters(1)]corridorreactors(1)corridorcargo(2)[RotYccwZcorridorsimple(1)[RotYccwXcorridorsimple(1)]corridorsimple(1)corridorgyros(1)thrusters(1)]thrusters
+Fitness: [0.6694928511372772, 0.04610138997617593, 0.981730313247119, 0.9707593008219085]
+
+cockpitcorridorsimple(1)corridorgyros(1)corridorcargo(2)[RotYccwXcorridorsimple(2)]corridorreactors(2)thrusters
+Fitness: [0.9791396915953848, 0.05629621966201049, 0.09369551565204723, 0.08915271471191194]
+
+cockpitcorridorsimple(1)corridorreactors(1)[RotYccwZcorridorsimple(1)corridorgyros(1)corridorcargo(1)thrusters(1)]corridorcargo(2)corridorsimple(1)[RotYcwZcorridorsimple(1)][RotYccwZcorridorsimple(1)corridorgyros(1)corridorcargo(1)thrusters(1)]corridorgyros(2)[RotYccwZcorridorsimple(1)]thrusters
+Fitness: [0.9704897159259759, 0.06381637684480539, 0.5380172584428852, 1.5902460374080163e-15]
+
+cockpitcorridorsimple(1)[RotYcwXcorridorsimple(1)]corridorreactors(1)[RotYccwZcorridorsimple(2)]corridorsimple(1)corridorgyros(1)[RotYcwZcorridorsimple(1)]corridorcargo(2)thrusters
+Fitness: [0.8553017244654565, 0.03723400703126556, 0.32187764136893443, 0.0901023050013758]
+
+cockpitcorridorsimple(1)[RotYccwXcorridorsimple(2)]corridorgyros(2)[RotYcwXcorridorsimple(2)]corridorsimple(1)corridorsimple(1)corridorcargo(1)[RotYccwXcorridorsimple(1)corridorreactors(1)thrusters(1)]thrusters
+Fitness: [0.9004704408258748, 0.03238584027009262, 0.5757117896823074, 0.07941692295649366]
+
+cockpitcorridorsimple(1)corridorsimple(1)corridorcargo(2)corridorgyros(1)[RotYccwZcorridorsimple(1)][RotYcwXcorridorsimple(1)[RotYcwXcorridorsimple(1)corridorcargo(1)[RotYccwZcorridorsimple(1)]corridorreactors(2)thrusters(1)]corridorreactors(2)thrusters(1)]thrusters
+Fitness: [0.7928474937236014, 0.05654650133264866, 0.9993713536971017, 0.8373676241056879]
