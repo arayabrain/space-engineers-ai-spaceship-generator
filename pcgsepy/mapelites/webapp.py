@@ -177,6 +177,13 @@ def set_app_layout(mapelites: MAPElites,
                                     className='button-div'),
                         dcc.Download(id='download-content')
                     ],
+                        className='button-div'),
+                    html.Div(children=[
+                        html.Button('Download MAP-Elites',
+                                    id='download-mapelites-btn',
+                                    className='button-div'),
+                        dcc.Download(id='download-mapelites')
+                    ],
                         className='button-div')
                 ],
                     style={'padding-left': '10px'}),
@@ -690,6 +697,23 @@ def download_content(n_clicks,
         return dict(content=content_string, filename='MySpaceship.txt')
 
 
+@app.callback(
+    Output("download-mapelites", "data"),
+    Input("download-mapelites-btn", "n_clicks"),
+    State('mapelites', 'data'),
+    State('gen-counter', 'data'),
+    prevent_initial_call=True,
+)
+def download_mapelites(n_clicks,
+                       mapelites,
+                       gen_counter):
+    if mapelites != '':
+        me: MAPElites = json_loads(s=mapelites)
+        t = datetime.now().strftime("%Y%m%d%H%M%S")
+        fname = f'{t}_mapelites_{me.emitter.name}_gen{str(gen_counter).zfill(2)}'
+        return dict(content=mapelites, filename=f'{fname}.json')
+
+
 @app.callback(Output('heatmap-plot', 'figure'),
               Output('content-plot', 'figure'),
               Output('valid-bins', 'children'),
@@ -737,7 +761,7 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
     selected_bins = json.loads(selected_bins) if selected_bins else []
     logger: CustomLogger = json_loads(logger)
     mapelites: MAPElites = json_loads(s=mapelites)
-
+    
     ctx = dash.callback_context
 
     if not ctx.triggered:
