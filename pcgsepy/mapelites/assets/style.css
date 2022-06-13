@@ -124,6 +124,10 @@
 .button:hover {
     box-shadow: #121212 0 0 0 1px, transparent 0 0 0 0;
 }
+.button:disabled {
+    background-color: #EEEEEE;
+    color: #fefefe
+  }
 
 /* Dropdown */
 /* Normal appearance */

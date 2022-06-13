@@ -70,3 +70,6 @@ RESCALE_INFEAS_FITNESS = config['MAPELITES'].getboolean('rescale_infeas_fitness'
 N_RUNS = config['EXPERIMENT'].getint('n_runs')
 # name of the current experiment
 EXP_NAME = config['EXPERIMENT'].get('exp_name')
+
+# number of generations allowed per experiment
+N_GENS_ALLOWED = config['USER-STUDY'].getint('n_generations_allowed')

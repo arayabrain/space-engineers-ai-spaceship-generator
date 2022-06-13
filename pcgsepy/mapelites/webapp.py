@@ -17,27 +17,8 @@ from pcgsepy.lsystem.solution import CandidateSolution
 from pcgsepy.common.jsonifier import json_dumps, json_loads
 from pcgsepy.mapelites.emitters import RandomEmitter, HumanPrefMatrixEmitter, ContextualBanditEmitter
 
-from ..config import BIN_POP_SIZE, CS_MAX_AGE
+from ..config import BIN_POP_SIZE, CS_MAX_AGE, N_GENS_ALLOWED
 from ..mapelites.map import MAPElites, get_structure
-
-
-# https://towardsdatascience.com/long-callbacks-in-dash-web-apps-72fd8de25937
-
-
-# class DashLoggerHandler(logging.StreamHandler):
-#     def __init__(self):
-#         logging.StreamHandler.__init__(self)
-#         self.queue = []
-
-#     def emit(self, record):
-#         t = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-#         msg = self.format(record)
-#         self.queue.append(f'[{t}]\t{msg}')
-
-# logger = logging.getLogger('dash-msgs')
-# logger.setLevel(logging.DEBUG)
-# dashLoggerHandler = DashLoggerHandler()
-# logger.addHandler(dashLoggerHandler)
 
 
 class CustomLogger:
@@ -122,8 +103,12 @@ app = dash.Dash(__name__,
                 update_title=None)
 
 
+# TODO: use ‘content-visibilitｙ` to toggle between dev mode and user-friendly mode
+
+
 def set_app_layout(mapelites: MAPElites,
-                   behavior_descriptors_names):
+                   behavior_descriptors_names,
+                   dev_mode: bool = True):
 
     app.layout = html.Div(children=[
         # HEADER
@@ -176,13 +161,6 @@ def set_app_layout(mapelites: MAPElites,
                                     id='download-btn',
                                     className='button-div'),
                         dcc.Download(id='download-content')
-                    ],
-                        className='button-div'),
-                    html.Div(children=[
-                        html.Button('Download MAP-Elites',
-                                    id='download-mapelites-btn',
-                                    className='button-div'),
-                        dcc.Download(id='download-mapelites')
                     ],
                         className='button-div')
                 ],
@@ -286,18 +264,21 @@ def set_app_layout(mapelites: MAPElites,
                                'display': 'grid', 'grid-template-columns': '40% 60%'}
                     ) for i, f in enumerate(mapelites.feasible_fitnesses)
                 ]),
-                html.H6(children='Select emitter',
-                        className='section-title'),
                 html.Div(children=[
+                    html.H6(children='Select emitter',
+                            className='section-title'),
                     html.Div(children=[
-                        dcc.Dropdown(['Random', 'Preference-matrix', 'Contextual Bandit'],  # TODO: continue from here, needs callback
-                             'Random',
-                             id='emitter-dropdown',
-                             className='dropdown',
-                             style={'width': '100%'}),
-                        ],
-                             style={'width': '80%', 'vertical-align': 'middle', 'margin': '0 auto'})
-                ]),
+                        html.Div(children=[
+                            dcc.Dropdown(['Random', 'Preference-matrix', 'Contextual Bandit'],
+                                'Random',
+                                id='emitter-dropdown',
+                                className='dropdown',
+                                style={'width': '100%'}),
+                            ],
+                                style={'width': '80%', 'vertical-align': 'middle', 'margin': '0 auto'})
+                        ]),
+                    ],
+                         style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
             ],
                 className='experiment-controls-div'),
             # EXPERIMENT CONTROLS
@@ -318,7 +299,8 @@ def set_app_layout(mapelites: MAPElites,
                                 n_clicks=0,
                                 className='button')
                 ],
-                    className='button-div'),
+                    className='button-div',
+                    style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
                 html.Br(),
                 html.Div(children=[
                     html.Button(children='Clear selection',
@@ -342,7 +324,17 @@ def set_app_layout(mapelites: MAPElites,
                                 n_clicks=0,
                                 className='button')
                 ],
-                    className='button-div'),
+                    className='button-div',
+                    style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
+                html.Br(),
+                html.Div(children=[
+                    html.Button(children='Download MAP-Elites',
+                                id='download-mapelites-btn',
+                                className='button',
+                                disabled=True),
+                    dcc.Download(id='download-mapelites')
+                ],
+                    className='button-div')
             ],
                 className='experiment-controls-div'),
             # RULES
@@ -363,7 +355,8 @@ def set_app_layout(mapelites: MAPElites,
                     className='button-div'),
             ],
                 # style={'width': '30%', 'display': 'inline-block', 'vertical-align': 'top'}),
-                className='experiment-controls-div'),
+                className='experiment-controls-div',
+                style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
         ],
             className='body-div'),
         html.Br(),
@@ -559,11 +552,9 @@ def _apply_step(mapelites: MAPElites,
                 valid &= bin_idx in valid_bins
         if valid:
             logger.log(msg=f'Started step {gen_counter}...')
-            print(f'Started step {gen_counter}...')
             mapelites._interactive_step(bin_idxs=selected_bins,
                                         gen=gen_counter)
             logger.log(msg=f'Completed step {gen_counter + 1}; running 5 additional emitter steps if available...')
-            print(f'Completed step {gen_counter + 1}; running 5 additional emitter steps if available...')
             for _ in range(5):
                 mapelites.emitter_step(gen=gen_counter)
             logger.log(msg=f'Emitter step(s) completed.')
@@ -727,6 +718,7 @@ def download_mapelites(n_clicks,
               Output('spaceship-size', 'children'),
               Output('n-blocks', 'children'),
               Output('logger', 'data'),
+              Output('download-mapelites-btn', 'disabled'),
               State('heatmap-plot', 'figure'),
               State('selected-bins', 'data'),
               State('gen-counter', 'data'),
@@ -876,4 +868,4 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
     else:
         logger.log(msg=f'Unrecognized event trigger: {event_trig}. No operations have been applied!')
 
-    return curr_heatmap, curr_content, f'Valid bins are: {_get_valid_bins(mapelites=mapelites)}', f'Current generation: {gen_counter}', json.dumps(gen_counter), json_dumps(mapelites), str(mapelites.lsystem.hl_solver.parser.rules), f'Selected bin(s): {selected_bins}', json.dumps([[int(x[0]), int(x[1])] for x in selected_bins]), cs_string, cs_size, cs_n_blocks, json_dumps(obj=logger) 
+    return curr_heatmap, curr_content, f'Valid bins are: {_get_valid_bins(mapelites=mapelites)}', f'Current generation: {gen_counter}', json.dumps(gen_counter), json_dumps(mapelites), str(mapelites.lsystem.hl_solver.parser.rules), f'Selected bin(s): {selected_bins}', json.dumps([[int(x[0]), int(x[1])] for x in selected_bins]), cs_string, cs_size, cs_n_blocks, json_dumps(obj=logger), gen_counter < N_GENS_ALLOWED
