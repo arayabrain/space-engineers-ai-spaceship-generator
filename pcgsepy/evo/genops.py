@@ -188,6 +188,8 @@ def crossover(a1: CandidateSolution,
                     }
                 
                 childs.append(o)
+                a1.n_offspring += 1
+                a2.n_offspring += 1
     else:
         print(a1.string, a1.hls_mod, idxs1)
         print(a2.string, a2.hls_mod, idxs2)
