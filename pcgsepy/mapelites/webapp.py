@@ -71,13 +71,6 @@ def set_callback_props(mapelites: MAPElites):
     }
 
 
-description_str, help_str = '', ''
-with open('./assets/description.md', 'r') as f:
-    description_str = f.read()
-with open('./assets/help.md', 'r') as f:
-    help_str = f.read()
-
-
 block_to_colour = {
     # colours from https://developer.mozilla.org/en-US/docs/Web/CSS/color_value
     'LargeBlockArmorCorner': '#778899',
@@ -103,13 +96,20 @@ app = dash.Dash(__name__,
                 update_title=None)
 
 
-# TODO: use ‘content-visibilitｙ` to toggle between dev mode and user-friendly mode
+# TODO: enable/disable "download content" button if nothing is selected
 
 
 def set_app_layout(mapelites: MAPElites,
                    behavior_descriptors_names,
                    dev_mode: bool = True):
 
+    description_str, help_str = '', ''
+    with open('./assets/description.md', 'r') as f:
+        description_str = f.read()
+    help_file = './assets/help_dev.md' if dev_mode else './assets/help_user.md'
+    with open(help_file, 'r') as f:
+        help_str = f.read()
+    
     app.layout = html.Div(children=[
         # HEADER
         html.Div(children=[
