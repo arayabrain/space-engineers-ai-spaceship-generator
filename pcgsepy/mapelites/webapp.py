@@ -1,6 +1,7 @@
 import json
 import logging
 from datetime import datetime
+from multiprocessing import Event
 from typing import Dict, List, Tuple
 
 import dash
@@ -14,6 +15,7 @@ from dash import dcc, html
 from pcgsepy.lsystem.rules import StochasticRules
 from pcgsepy.lsystem.solution import CandidateSolution
 from pcgsepy.common.jsonifier import json_dumps, json_loads
+from pcgsepy.mapelites.emitters import RandomEmitter, HumanPrefMatrixEmitter, ContextualBanditEmitter
 
 from ..config import BIN_POP_SIZE, CS_MAX_AGE
 from ..mapelites.map import MAPElites, get_structure
@@ -276,6 +278,18 @@ def set_app_layout(mapelites: MAPElites,
                         style={'width': '80%', 'vertical-align': 'middle', 'margin': '0 auto',
                                'display': 'grid', 'grid-template-columns': '40% 60%'}
                     ) for i, f in enumerate(mapelites.feasible_fitnesses)
+                ]),
+                html.H6(children='Select emitter',
+                        className='section-title'),
+                html.Div(children=[
+                    html.Div(children=[
+                        dcc.Dropdown(['Random', 'Preference-matrix', 'Contextual Bandit'],  # TODO: continue from here, needs callback
+                             'Random',
+                             id='emitter-dropdown',
+                             className='dropdown',
+                             style={'width': '100%'}),
+                        ],
+                             style={'width': '80%', 'vertical-align': 'middle', 'margin': '0 auto'})
                 ]),
             ],
                 className='experiment-controls-div'),
@@ -632,6 +646,28 @@ def _apply_bin_selection_toggle(mapelites: MAPElites,
     mapelites.enforce_qnt = not mapelites.enforce_qnt
     logger.log(msg=f'MAP-Elites single bin selection set to {mapelites.enforce_qnt}.')
     
+    
+def _apply_emitter_change(mapelites: MAPElites,
+                          emitter_name: str,
+                          logger: CustomLogger) -> bool:
+    if emitter_name == 'Random':
+        mapelites.emitter = RandomEmitter()
+        logger.log(msg=f'Emitter set to {emitter_name}')
+        return True
+    elif emitter_name == 'Preference-matrix':
+        mapelites.emitter = HumanPrefMatrixEmitter()
+        mapelites.emitter._build_pref_matrix(bins=mapelites.bins)
+        logger.log(msg=f'Emitter set to {emitter_name}')
+        return True
+        pass
+    elif emitter_name == 'Contextual Bandit':
+        mapelites.emitter = ContextualBanditEmitter()
+        logger.log(msg=f'Emitter set to {emitter_name}')
+        return True
+        pass
+    else:
+        logger.log(msg=f'Unrecognized emitter type {emitter_name}')
+        return False
 
 
 @app.callback(Output('console-out', 'value'),
@@ -691,14 +727,14 @@ def download_content(n_clicks,
               Input('update-rules-btn', 'n_clicks'),
               Input('heatmap-plot', 'clickData'),
               Input('selection-btn', 'n_clicks'),
-              Input('selection-clr-btn', 'n_clicks'))
+              Input('selection-clr-btn', 'n_clicks'),
+              Input('emitter-dropdown', 'value'))
 def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
                      curr_selected, curr_content, cs_string, cs_size, cs_n_blocks, logger,
                      pop_name, metric_name, method_name, n_clicks_step, n_clicks_reset, n_clicks_sub, weights, b0, b1, modules, n_clicks_rules,
-                     clickData, selection_btn, clear_btn):
+                     clickData, selection_btn, clear_btn, emitter_name):
     gen_counter: int = json.loads(gen_counter) if gen_counter else 0
     selected_bins = json.loads(selected_bins) if selected_bins else []
-    # selected_bins = [(x[1], x[0]) for x in selected_bins]
     logger: CustomLogger = json_loads(logger)
     mapelites: MAPElites = json_loads(s=mapelites)
 
@@ -804,6 +840,10 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
         selected_bins = []
         curr_content = go.Figure(data=[])
         cs_string = cs_size = cs_n_blocks  = ''
+    elif event_trig == 'emitter-dropdown':
+        _ = _apply_emitter_change(mapelites=mapelites,
+                                  emitter_name=emitter_name,
+                                  logger=logger)
     elif event_trig is None:
         curr_heatmap = _build_heatmap(mapelites=mapelites,
                                     pop_name=pop_name,
