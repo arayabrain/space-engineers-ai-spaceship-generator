@@ -358,6 +358,7 @@ class MAPElites:
                     new_bins[m, n] = MAPBin(bin_idx=(m, n),
                                             bin_size=(self.bin_sizes[0][m],
                                                       self.bin_sizes[1][n]))
+                new_bins[m, n].bin_idx = (m, n)
         # assign new bin map
         self.bins = new_bins
         # assign solutions to bins
