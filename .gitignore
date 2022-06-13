@@ -8,3 +8,4 @@ block_definitions.json
 *.pyc
 *.pkl
 *test*
+icmap-elites/estimators_perf.log
