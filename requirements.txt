@@ -10,3 +10,4 @@ dash-html-components
 dash-core-components
 torch
 sklearn
+simplejson
