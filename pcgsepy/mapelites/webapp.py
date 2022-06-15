@@ -96,9 +96,6 @@ app = dash.Dash(__name__,
                 update_title=None)
 
 
-# TODO: enable/disable "download content" button if nothing is selected
-
-
 def set_app_layout(mapelites: MAPElites,
                    behavior_descriptors_names,
                    dev_mode: bool = True):
@@ -159,7 +156,8 @@ def set_app_layout(mapelites: MAPElites,
                     html.Div(children=[
                         html.Button('Download content',
                                     id='download-btn',
-                                    className='button-div'),
+                                    className='button',
+                                    disabled=True),
                         dcc.Download(id='download-content')
                     ],
                         className='button-div')
@@ -719,6 +717,7 @@ def download_mapelites(n_clicks,
               Output('n-blocks', 'children'),
               Output('logger', 'data'),
               Output('download-mapelites-btn', 'disabled'),
+              Output('download-btn', 'disabled'),
               State('heatmap-plot', 'figure'),
               State('selected-bins', 'data'),
               State('gen-counter', 'data'),
@@ -868,4 +867,4 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
     else:
         logger.log(msg=f'Unrecognized event trigger: {event_trig}. No operations have been applied!')
 
-    return curr_heatmap, curr_content, f'Valid bins are: {_get_valid_bins(mapelites=mapelites)}', f'Current generation: {gen_counter}', json.dumps(gen_counter), json_dumps(mapelites), str(mapelites.lsystem.hl_solver.parser.rules), f'Selected bin(s): {selected_bins}', json.dumps([[int(x[0]), int(x[1])] for x in selected_bins]), cs_string, cs_size, cs_n_blocks, json_dumps(obj=logger), gen_counter < N_GENS_ALLOWED
+    return curr_heatmap, curr_content, f'Valid bins are: {_get_valid_bins(mapelites=mapelites)}', f'Current generation: {gen_counter}', json.dumps(gen_counter), json_dumps(mapelites), str(mapelites.lsystem.hl_solver.parser.rules), f'Selected bin(s): {selected_bins}', json.dumps([[int(x[0]), int(x[1])] for x in selected_bins]), cs_string, cs_size, cs_n_blocks, json_dumps(obj=logger), gen_counter < N_GENS_ALLOWED, len(selected_bins) == 0
