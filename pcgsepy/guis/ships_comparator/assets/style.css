@@ -1,0 +1,225 @@
+.title {
+    padding: 20px;
+    text-align: center;
+}
+.page-description {
+    padding: 10px;
+    text-align: left;
+}
+.header {
+    background: #121212;
+    background-color: initial;
+    background-image: linear-gradient(#464d55, #25292e);
+    color: #EEEEEE;
+    height: 15%;
+    left: 0;
+    margin: 0px auto;
+    position: relative;
+    right: 0;
+    top: 0;
+    vertical-align: top;
+    width: 100%;
+}
+.footer {
+    background: #121212;
+    background-color: initial;
+    background-image: linear-gradient(#464d55, #25292e);
+    bottom: 0;
+    color: #EEEEEE;
+    height: 20%;
+    left: 0;
+    margin: 0px auto;
+    position: relative;
+    right: 0;
+    vertical-align: bottom;
+    width: 100%;
+}
+.section-title {
+    text-align: center;
+}
+.generic-description { 
+}
+.graph-controls-div {
+    margin-top: auto;
+    display: inline-block;
+    vertical-align: top;
+    width: 25%;
+    background-color: rgba(128, 245, 128, 0.3);
+}
+.plots {
+    margin-top: auto;
+    display: inline-block;
+    vertical-align: middle;
+    width: 80%;
+    background-color: rgba(225, 225, 225, 0.3);
+}
+.heatmap-div {
+    display: inline-block;
+    vertical-align: top;
+    width: 25%;
+    background-color: rgba(128, 245, 128, 0.3);
+}
+.content-div {
+    display: inline-block;
+    vertical-align: top;
+    width: 75%;
+}
+
+.properties-div {
+    width: 20%;
+    display: inline-block;
+    vertical-align: top;
+    background-color: rgba(225, 225, 225, 0.3)
+}
+
+.properties-text {
+}
+.button-div {
+    margin: auto;
+    text-align: center;
+}
+.experiment-controls-div {
+    display: inline-block;
+    vertical-align: top;
+    width: 25%;
+    background-color: rgba(128, 128, 245, 0.3);
+}
+.body-div {
+    display: inline-block;
+    left: 0;
+    right: 0;
+    vertical-align: top;
+    width: 100%;
+}
+
+/* Button */
+.button {
+    align-items: center;
+    background-color: #EEEEEE;
+    border-radius: 12px;
+    box-shadow: transparent 0 0 0 3px,rgba(18, 18, 18, .1) 0 6px 20px;
+    box-sizing: border-box;
+    color: #121212;
+    cursor: pointer;
+    display: inline-flex;
+    flex: 1 1 auto;
+    font-family: Inter,sans-serif;
+    font-weight: bold;
+    font-size: 11px;
+    justify-content: center;
+    line-height: 1;
+    margin: 0;
+    outline: none;
+    padding: 1rem 1.2rem;
+    text-align: center;
+    text-decoration: none;
+    transition: box-shadow .2s,-webkit-box-shadow .2s;
+    white-space: nowrap;
+    width: 80%;
+    border: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+.button:hover {
+    box-shadow: #121212 0 0 0 1px, transparent 0 0 0 0;
+}
+.button:disabled {
+    background-color: #EEEEEE;
+    color: #fefefe
+  }
+
+/* Dropdown */
+/* Normal appearance */
+.dropdown > .Select-control {
+    background-color: #EEEEEE;
+    box-shadow: transparent 0 0 0 3px,rgba(18, 18, 18, .1) 0 6px 20px;
+    color: #121212;
+    cursor: pointer;
+    flex: 1 1 auto;
+    font-family: Inter,sans-serif;
+    font-weight: bold;
+    font-size: 11px;
+    line-height: 1;
+    outline: none;
+    width: 80%;
+    text-align: center;
+}
+/* Appearance when selected */
+.dropdown > .Select-value {
+    background-color: #EEEEEE;
+    color: #121212;
+    cursor: pointer;
+    font-family: Inter,sans-serif;
+    font-weight: bold;
+    font-size: 11px;
+    justify-content: center;
+    text-align: center;
+    border: 1px solid #121212;
+}
+/* Appearance of the available entries */
+.dropdown > .Select-menu-outer {
+    background-color: #EEEEEE;
+    color: #121212;
+    cursor: pointer;
+    font-family: Inter,sans-serif;
+    font-weight: bold;
+    font-size: 11px;
+    justify-content: center;
+    text-align: center;
+    width: 80%;
+}
+
+/* Radio button */
+.radio > label {
+    padding: .25em .25em;
+    box-shadow: transparent 0 0 0 3px,rgba(18, 18, 18, .1) 0 6px 20px;
+    cursor: pointer;
+    color: #121212;
+    background-color: #EEEEEE;
+    border-radius: .7em .7em .7em .7em;
+    width: 80%;
+    font-family: Inter,sans-serif;
+    font-weight: bold;
+    font-size: 11px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+.radio > label:hover {
+    box-shadow: #121212 0 0 0 1px, transparent 0 0 0 0;
+}
+
+.checkboxes {
+    color: #121212;
+    padding: 5px auto;
+} 
+
+.rc-slider {
+    height: 6px;
+    padding: 1px 0;
+    border-radius: 2px;
+}
+
+.rc-slider > .rc-slider-rail {
+    background-color: #EEEEEE;
+    height: 4px;
+    border-radius: 2px;
+}
+
+.rc-slider > .rc-slider-track {
+    height: 4px;
+    border-radius: 2px;
+    background-color: #121212;
+}
+
+.rc-slider > .rc-slider-handle {
+    width: 6px;
+    height: 6px;
+    cursor: pointer;
+    margin-top: -2px;
+    cursor: grab;
+    border-radius: 50%;
+    border: solid 2px #121212;
+    background-color: #EEEEEE;
+    touch-action: pan-x;
+}

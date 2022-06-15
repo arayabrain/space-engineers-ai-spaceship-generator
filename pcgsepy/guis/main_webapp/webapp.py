@@ -1,24 +1,22 @@
 import json
-import logging
 from datetime import datetime
 from multiprocessing import Event
 from typing import Dict, List, Tuple
 
 import dash
-from dash.dependencies import Input, Output, State
-from dash import ALL
-from dash.exceptions import PreventUpdate
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from dash import dcc, html
+from dash import ALL, dcc, html
+from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
+from pcgsepy.config import BIN_POP_SIZE, CS_MAX_AGE, N_GENS_ALLOWED
+from pcgsepy.common.jsonifier import json_dumps, json_loads
 from pcgsepy.lsystem.rules import StochasticRules
 from pcgsepy.lsystem.solution import CandidateSolution
-from pcgsepy.common.jsonifier import json_dumps, json_loads
-from pcgsepy.mapelites.emitters import RandomEmitter, HumanPrefMatrixEmitter, ContextualBanditEmitter
-
-from ..config import BIN_POP_SIZE, CS_MAX_AGE, N_GENS_ALLOWED
-from ..mapelites.map import MAPElites, get_structure
+from pcgsepy.mapelites.emitters import (ContextualBanditEmitter,
+                                        HumanPrefMatrixEmitter, RandomEmitter)
+from pcgsepy.mapelites.map import MAPElites, get_structure
 
 
 class CustomLogger:
@@ -99,7 +97,6 @@ app = dash.Dash(__name__,
 def set_app_layout(mapelites: MAPElites,
                    behavior_descriptors_names,
                    dev_mode: bool = True):
-
     description_str, help_str = '', ''
     with open('./assets/description.md', 'r') as f:
         description_str = f.read()
@@ -542,6 +539,9 @@ def _apply_step(mapelites: MAPElites,
                 selected_bins: List[Tuple[int, int]],
                 gen_counter: int,
                 logger: CustomLogger) -> bool:
+    
+    import time
+    
     if len(selected_bins) > 0:
         valid = True
         if mapelites.enforce_qnt:

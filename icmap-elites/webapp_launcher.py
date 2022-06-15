@@ -1,5 +1,6 @@
 import argparse
 import datetime
+from secrets import choice
 
 from pcgsepy.common.jsonifier import json_dumps, json_loads
 from pcgsepy.evo.fitness import (Fitness, bounding_box_fitness,
@@ -7,14 +8,13 @@ from pcgsepy.evo.fitness import (Fitness, bounding_box_fitness,
                                  mame_fitness, mami_fitness)
 from pcgsepy.evo.genops import expander
 from pcgsepy.fi2pop.utils import MLPEstimator
+from pcgsepy.guis.main_webapp.webapp import app, set_app_layout, set_callback_props
 from pcgsepy.mapelites.behaviors import (BehaviorCharacterization, avg_ma,
                                          mame, mami, symmetry)
 from pcgsepy.mapelites.buffer import Buffer, max_merge, mean_merge, min_merge
 from pcgsepy.mapelites.emitters import *
 from pcgsepy.mapelites.map import MAPElites
-from pcgsepy.mapelites.webapp import app, set_app_layout, set_callback_props
 from pcgsepy.setup_utils import get_default_lsystem, setup_matplotlib
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--mapelites_file", help="Location of the MAP-Elites object",
@@ -23,6 +23,8 @@ parser.add_argument("--dev_mode", help="Launch the webapp in developer mode",
                     action='store_true')
 parser.add_argument("--debug", help="Launch the webapp in debug mode",
                     action='store_true')
+parser.add_argument("--emitter", help="Specify the emitter type",
+                    type=str, choices=['random', 'preference-matrix', 'contextual-bandit'], default='random')
 parser.add_argument("--host", help="Specify host address",
                     type=str, default='127.0.0.1')
 parser.add_argument("--port", help="Specify port",
@@ -93,13 +95,18 @@ if args.mapelites_file:
     with open(args.mapelites_file, 'r') as f:
         mapelites = json_loads(f.read())
 else:
+    emitter_choices = {
+		'random': RandomEmitter(),
+		'preference-matrix': HumanPrefMatrixEmitter(),
+  		'contextual-bandit': ContextualBanditEmitter()
+	}
     mapelites = MAPElites(lsystem=lsystem,
                           feasible_fitnesses=feasible_fitnesses,
                           behavior_descriptors=(behavior_descriptors[0], behavior_descriptors[1]),
                           estimator=MLPEstimator(xshape=len(feasible_fitnesses),
                                                  yshape=1),
                           buffer = Buffer(merge_method=mean_merge),
-                          emitter=RandomEmitter(),
+                          emitter=emitter_choices[args.emitter],
                           n_bins=(8, 8))
     mapelites.emitter.diversity_weight = 0.25
     mapelites.generate_initial_populations()
