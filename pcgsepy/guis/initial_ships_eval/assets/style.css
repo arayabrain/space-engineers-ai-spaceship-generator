@@ -69,10 +69,10 @@
     width: 20%;
     display: inline-block;
     vertical-align: top;
-    background-color: rgba(225, 225, 225, 0.3)
 }
 
 .properties-text {
+    text-align: center
 }
 .button-div {
     margin: auto;
