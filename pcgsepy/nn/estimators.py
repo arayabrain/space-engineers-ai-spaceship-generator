@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import Any, Dict, List, Union
 import torch as th
 import numpy as np
 from pcgsepy.config import EPSILON_F
@@ -62,6 +62,7 @@ class QuantileEstimator(th.nn.Module):
         self.optimizer = th.optim.Adam(self.parameters(), lr=1e-3)
         self.criterion = quantile_loss
         self.is_trained = False
+        self.train_losses = []
 
     def forward(self, x):
         out = self.net(x)
@@ -70,6 +71,51 @@ class QuantileEstimator(th.nn.Module):
         yq3 = self.q3_l(out)
         out = th.cat((yq1, yq2, yq3), dim=1)
         return th.sigmoid(out)
+
+    def save(self,
+             fname: str):
+        """Save the current model to file.
+
+        Args:
+            fname (str): The filename.
+        """
+        with open(f'{fname}.pth', 'wb') as f:
+            th.save({
+                'model_params': self.state_dict(),
+                'optimizer': self.optimizer.state_dict(),
+                'is_trained': self.is_trained
+            }, f)
+
+    def load(self,
+             fname: str):
+        """Load the parameters for the model from file.
+
+        Args:
+            fname (str): The filename.
+        """
+        with open(f'{fname}.pth', 'rb') as f:
+            prev = th.load(f)
+            self.load_state_dict(prev['model_params'])
+            self.optimizer.load_state_dict(prev['optimizer'])
+            self.is_trained = prev['is_trained']
+        
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'xshape': self.xshape,
+            'yshape': self.yshape,
+            'is_trained': self.is_trained,
+            'model_params': str(self.state_dict()),
+            'optimizer': str(self.optimizer.state_dict()),
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'QuantileEstimator':
+        qe = QuantileEstimator(xhsape=my_args['xshape'],
+                                 yshape=my_args['yshape'])
+        qe.is_trained = my_args['is_trained']
+        qe.load_state_dict(eval(my_args['model_params']))
+        qe.load_state_dict(eval(my_args['optimizer']))
+        return qe
 
 
 class MLPEstimator(th.nn.Module):
@@ -92,6 +138,7 @@ class MLPEstimator(th.nn.Module):
         self.optimizer = th.optim.Adam(self.parameters())
         self.criterion = th.nn.MSELoss()
         self.is_trained = False
+        self.train_losses = []
 
     def forward(self, x):
         out = th.F.elu(self.l1(x))
@@ -122,4 +169,7 @@ def train_estimator(estimator: Union[MLPEstimator, QuantileEstimator],
         losses.append(loss.item())
         loss.backward()
         estimator.optimizer.step()
+    
+    estimator.train_losses.append(losses[-1])
+    
     estimator.is_trained = True

@@ -87,7 +87,10 @@ def create_new_pool(population: List[CandidateSolution],
             o2.parents = [p1, p2]
             for o in [o1, o2]:
                 # mutation
-                mutate(cs=o, n_iteration=generation)
+                try:
+                    mutate(cs=o, n_iteration=generation)
+                except EvoException:
+                    pass
                 if o not in pool:
                     pool.append(o)
         else:
@@ -133,6 +136,7 @@ class MLPEstimator(nn.Module):
         self.optimizer = th.optim.Adam(self.parameters())
         self.criterion = nn.MSELoss()
         self.is_trained = False
+        self.train_losses = []
 
     def forward(self, x):
         out = F.elu(self.l1(x))
@@ -208,8 +212,7 @@ def train_estimator(estimator: MLPEstimator,
         loss.backward()
         estimator.optimizer.step()
     
-    with open('estimators_perf.log', 'a') as f:
-        f.write(f'{type(estimator).__name__} train losses: {losses}\n')
+    estimator.train_losses.append(losses[-1])
     
     estimator.is_trained = True
 

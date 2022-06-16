@@ -796,6 +796,32 @@ class MAPElites:
             top = np.min(fs)
         return top, np.average(fs)
 
+    def get_qdscore(self,
+                    pop: str) -> float:
+        qd = 0
+        for i in range(self.bins.shape[0]):
+            for j in range(self.bins.shape[1]):
+                if self.bins[i, j].non_empty(pop=pop):
+                    qd += self.bins[i, j].get_elite(population=pop).c_fitness
+        return qd
+    
+    def get_new_feas_with_unfeas_parents(self):
+        n_new = 0
+        total = 0
+        for i in range(self.bins.shape[0]):
+            for j in range(self.bins.shape[1]):
+                for cs in self.bins[i, j]._feasible:
+                    if cs.age == CS_MAX_AGE:
+                        if cs.parents:
+                            if not cs.parents[0].is_feasible:
+                                n_new += 1
+                                total += 1
+                                break
+                for cs in self.bins[i, j]._infeasible:
+                    if cs.age == CS_MAX_AGE:
+                        total += 1
+        return n_new, total
+    
     def get_random_elite(self,
                          pop: str) -> CandidateSolution:
         nonempty = []

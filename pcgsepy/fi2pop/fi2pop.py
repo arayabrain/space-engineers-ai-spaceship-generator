@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm.notebook import trange
 
-from ..config import N_GENS, N_ITERATIONS, N_RETRIES, POP_SIZE
+from ..config import CS_MAX_AGE, N_GENS, N_ITERATIONS, N_RETRIES, POP_SIZE
 from ..evo.fitness import Fitness
 from ..lsystem.constraints import ConstraintLevel
 from ..lsystem.lsystem import LSystem
@@ -35,14 +35,17 @@ class FI2PopSolver:
         self.nsc = [c for c in self.lsystem.all_hl_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
         self.nsc = [c for c in self.lsystem.all_ll_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
         self.nsc = len(self.nsc) * 0.5
-
+        
+        self.perc_feas_infeas = []
+        
     def reset(self):
         self.ftop = []
         self.itop = []
         self.fmean = []
         self.imean = []
         self.ffs, self.ifs = [], []
-
+        self.perc_feas_infeas = []
+        
     def _compute_fitness(self,
                          cs: CandidateSolution,
                          extra_args: Dict[str, Any]) -> List[float]:
@@ -150,6 +153,9 @@ class FI2PopSolver:
                 subdivide_solutions(lcs=new_pool,
                                     lsystem=self.lsystem)
                 for cs in new_pool:
+                    
+                    cs.age = CS_MAX_AGE
+                    
                     if cs.is_feasible:
                         f_pool.append(cs)
                         cs.ll_string = self.lsystem.hl_to_ll(cs=cs).string
@@ -182,6 +188,9 @@ class FI2PopSolver:
                 subdivide_solutions(lcs=new_pool,
                                     lsystem=self.lsystem)
                 for cs in new_pool:
+                    
+                    cs.age = CS_MAX_AGE
+                    
                     if cs.is_feasible:
                         f_pool.append(cs)
                         cs.ll_string = self.lsystem.hl_to_ll(cs=cs).string
@@ -202,6 +211,15 @@ class FI2PopSolver:
                                                to=POP_SIZE)
                 # set the feasible pool as the feasible population
                 f_pop[:] = f_pool[:]
+                
+                n_new_feas_infeas = 0
+                for cs in f_pop:
+                    if cs.age == CS_MAX_AGE:
+                        if not cs.parents[0].is_feasible:
+                            n_new_feas_infeas += 1
+                    cs.age -= 1
+                n_new_feas_infeas /= len(f_pop)
+                
                 # update tracking
                 f_fitnesses = [cs.c_fitness for cs in f_pop]
                 i_fitnesses = [cs.c_fitness for cs in i_pop]
@@ -211,6 +229,9 @@ class FI2PopSolver:
                 self.imean.append(sum(i_fitnesses) / len(i_fitnesses))
                 self.ffs.append([self.ftop[-1], self.fmean[-1]])
                 self.ifs.append([self.itop[-1], self.imean[-1]])
+                
+                self.perc_feas_infeas.append(n_new_feas_infeas)
+                
                 gens.set_postfix(ordered_dict={'top-f': self.ftop[-1],
                                                'mean-f': self.fmean[-1],
                                                'top-i': self.itop[-1],
