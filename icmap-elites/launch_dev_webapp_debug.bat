@@ -1,1 +1,0 @@
-python webapp_launcher.py --mapelites_file=./me.json --debug --dev_mode

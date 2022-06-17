@@ -1,8 +1,7 @@
 import json
+import pathlib
 from datetime import datetime
-from multiprocessing import Event
-from typing import Dict, List, Tuple
-import os, pathlib
+from typing import Dict, List
 
 import dash
 import numpy as np
@@ -10,30 +9,19 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import ALL, dcc, html
 from dash.dependencies import Input, Output, State
-from dash.exceptions import PreventUpdate
-from pcgsepy.config import BIN_POP_SIZE, CS_MAX_AGE, N_GENS_ALLOWED
-from pcgsepy.common.jsonifier import json_dumps, json_loads
-from pcgsepy.hullbuilder import HullBuilder
-from pcgsepy.lsystem.rules import StochasticRules
-from pcgsepy.lsystem.solution import CandidateSolution
-from pcgsepy.mapelites.emitters import (ContextualBanditEmitter,
-                                        HumanPrefMatrixEmitter, RandomEmitter)
-from pcgsepy.mapelites.map import MAPElites, get_structure
-
-from pcgsepy.common.jsonifier import json_dumps, json_loads
-from pcgsepy.evo.fitness import (Fitness, bounding_box_fitness,
-                                 box_filling_fitness, func_blocks_fitness,
-                                 mame_fitness, mami_fitness)
+from pcgsepy.evo.fitness import (Fitness, box_filling_fitness,
+                                 func_blocks_fitness, mame_fitness,
+                                 mami_fitness)
 from pcgsepy.evo.genops import expander
-from pcgsepy.fi2pop.utils import MLPEstimator
+from pcgsepy.hullbuilder import HullBuilder
+from pcgsepy.lsystem.solution import CandidateSolution
 from pcgsepy.mapelites.behaviors import (BehaviorCharacterization, avg_ma,
                                          mame, mami, symmetry)
-from pcgsepy.mapelites.buffer import Buffer, max_merge, mean_merge, min_merge
 from pcgsepy.mapelites.emitters import *
-from pcgsepy.mapelites.map import MAPElites
-from pcgsepy.guis.main_webapp.webapp import app, set_app_layout, set_callback_props
-from pcgsepy.setup_utils import get_default_lsystem, setup_matplotlib
-
+from pcgsepy.mapelites.emitters import (ContextualBanditEmitter,
+                                        HumanPrefMatrixEmitter, RandomEmitter)
+from pcgsepy.mapelites.map import get_structure
+from pcgsepy.setup_utils import get_default_lsystem
 
 used_ll_blocks = [
     'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerInv',
@@ -161,7 +149,7 @@ def set_app_layout(spaceships: List[str]):
                               figure=go.Figure(data=[])),
                 ],
                     className='content-div',
-                    style={'width': '70%'}),
+                    style={'width': '80%'}),
                 html.Div(children=[
                     html.H6('Content properties',
                             className='section-title'),
@@ -169,7 +157,7 @@ def set_app_layout(spaceships: List[str]):
                              id='spaceship-properties'),
                     ],
                          className='properties-div',
-                         style={'width': '30%'}),
+                         style={'width': '20%'}),
             html.Br(),
             # controls
             html.Div(children=[

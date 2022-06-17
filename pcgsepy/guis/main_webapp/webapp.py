@@ -1,6 +1,5 @@
 import json
 from datetime import datetime
-from multiprocessing import Event
 from typing import Dict, List, Tuple
 
 import dash
@@ -9,9 +8,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import ALL, dcc, html
 from dash.dependencies import Input, Output, State
-from dash.exceptions import PreventUpdate
-from pcgsepy.config import BIN_POP_SIZE, CS_MAX_AGE, N_GENS_ALLOWED
 from pcgsepy.common.jsonifier import json_dumps, json_loads
+from pcgsepy.config import BIN_POP_SIZE, CS_MAX_AGE, N_GENS_ALLOWED
 from pcgsepy.lsystem.rules import StochasticRules
 from pcgsepy.lsystem.solution import CandidateSolution
 from pcgsepy.mapelites.emitters import (ContextualBanditEmitter,

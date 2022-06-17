@@ -146,11 +146,56 @@ class MLPEstimator(th.nn.Module):
         out = th.F.elu(self.l3(out))
         return th.clamp(out, EPSILON_F, 1)
 
+    def save(self,
+             fname: str):
+        """Save the current model to file.
+
+        Args:
+            fname (str): The filename.
+        """
+        with open(f'{fname}.pth', 'wb') as f:
+            th.save({
+                'model_params': self.state_dict(),
+                'optimizer': self.optimizer.state_dict(),
+                'is_trained': self.is_trained
+            }, f)
+
+    def load(self,
+             fname: str):
+        """Load the parameters for the model from file.
+
+        Args:
+            fname (str): The filename.
+        """
+        with open(f'{fname}.pth', 'rb') as f:
+            prev = th.load(f)
+            self.load_state_dict(prev['model_params'])
+            self.optimizer.load_state_dict(prev['optimizer'])
+            self.is_trained = prev['is_trained']
+        
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'xshape': self.xshape,
+            'yshape': self.yshape,
+            'is_trained': self.is_trained,
+            'model_params': str(self.state_dict()),
+            'optimizer': str(self.optimizer.state_dict()),
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'MLPEstimator':
+        mlpe = MLPEstimator(xhsape=my_args['xshape'],
+                            yshape=my_args['yshape'])
+        mlpe.is_trained = my_args['is_trained']
+        mlpe.load_state_dict(eval(my_args['model_params']))
+        mlpe.load_state_dict(eval(my_args['optimizer']))
+        return mlpe
+
 
 def train_estimator(estimator: Union[MLPEstimator, QuantileEstimator],
                     xs: List[List[float]],
                     ys: List[List[float]],
-                    n_epochs: int = 20):
+                    n_epochs: int = 50):
     """Train the MLP estimator.
 
     Args:

@@ -7,25 +7,27 @@ import torch as th
 from pcgsepy.lsystem.constraints import ConstraintLevel
 from pcgsepy.mapelites.bandit import EpsilonGreedyAgent
 from pcgsepy.mapelites.buffer import Buffer, EmptyBufferException
-from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, Emitter, HumanPrefMatrixEmitter, RandomEmitter,
-                                        get_emitter_by_str, emitters)
+from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, Emitter,
+                                        HumanPrefMatrixEmitter, RandomEmitter,
+                                        emitters, get_emitter_by_str)
 from pcgsepy.nn.estimators import QuantileEstimator
 from tqdm.notebook import trange
 from typing_extensions import Self
 
 from ..common.vecs import Orientation, Vec
-from ..config import (ALIGNMENT_INTERVAL, BIN_POP_SIZE, CS_MAX_AGE, EPSILON_F, MAX_X_SIZE, MAX_Y_SIZE, MAX_Z_SIZE,
-                      N_ITERATIONS, N_RETRIES, POP_SIZE)
+from ..config import (ALIGNMENT_INTERVAL, BIN_POP_SIZE, CS_MAX_AGE, EPSILON_F,
+                      MAX_X_SIZE, MAX_Y_SIZE, MAX_Z_SIZE, N_ITERATIONS,
+                      N_RETRIES, POP_SIZE)
 from ..evo.fitness import (Fitness, box_filling_fitness, func_blocks_fitness,
                            mame_fitness, mami_fitness)
 from ..evo.genops import EvoException
-from ..fi2pop.utils import (GaussianEstimator,
-                            MLPEstimator, create_new_pool, prepare_dataset,
-                            subdivide_solutions, train_estimator)
+from ..fi2pop.utils import (GaussianEstimator, create_new_pool,
+                            prepare_dataset, subdivide_solutions)
 from ..hullbuilder import HullBuilder
 from ..lsystem.lsystem import LSystem
 from ..lsystem.solution import CandidateSolution
 from ..lsystem.structure_maker import LLStructureMaker
+from ..nn.estimators import MLPEstimator, QuantileEstimator, train_estimator
 from ..structure import Structure
 from .behaviors import BehaviorCharacterization
 from .bin import MAPBin
@@ -184,8 +186,8 @@ class MAPElites:
                    np.cumsum(self.bin_sizes[0]) + self.b_descs[0].bounds[0])
         plt.yticks(np.arange(self.bin_qnt[1]),
                    np.cumsum(self.bin_sizes[1]) + self.b_descs[1].bounds[0])
-        plt.xlabel(self.b_descs[0].name)
-        plt.ylabel(self.b_descs[1].name)
+        plt.xlabel(self.b_descs[1].name)
+        plt.ylabel(self.b_descs[0].name)
         plt.title(f'CMAP-Elites {"Avg." if show_mean else ""}{metric} ({population})')
         cbar = plt.colorbar()
         cbar.set_label(f'{"mean" if show_mean else "max"} {metric}',
