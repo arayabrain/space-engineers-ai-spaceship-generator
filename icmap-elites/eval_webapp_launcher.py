@@ -1,5 +1,5 @@
 import argparse
-from pcgsepy.guis.ships_comparator.webapp import app, set_app_layout
+from pcgsepy.guis.initial_ships_eval.webapp import app, set_app_layout
 
 parser = argparse.ArgumentParser()
 # parser.add_argument("--mapelites_file", help="Location of the MAP-Elites object",
@@ -17,12 +17,13 @@ args = parser.parse_args()
 
 # TODO: This list should be loaded from the end-user
 
-set_app_layout(spaceships=[
-    "cockpit(1)corridorsimple(1)thrusters(1)",
-    "cockpit(1)corridorsimple(1)corridorcargo(1)thrusters(1)",
-    "cockpit(1)corridorsimple(1)[RotYccwXcorridorsimple(1)]thrusters(1)",
-    "cockpit(1)corridorsimple(1)[RotYcwXcorridorsimple(1)thrusters]thrusters(1)",
-])
+set_app_layout(spaceship="cockpitcorridorsimplethrusters",
+               ref_spaceships={
+                   "cockpit(1)corridorsimple(1)thrusters(1)": 0.75,
+                    "cockpit(1)corridorsimple(1)corridorcargo(1)thrusters(1)": 1.25,
+                    "cockpit(1)corridorsimple(1)[RotYccwXcorridorsimple(1)]thrusters(1)": 1.5,
+                    "cockpit(1)corridorsimple(1)[RotYcwXcorridorsimple(1)thrusters]thrusters(1)": 0.5
+               })
 
 app.run_server(debug=args.debug,
                host=args.host,
