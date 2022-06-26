@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Union
 import torch as th
+import torch.nn.functional as F
 import numpy as np
 from pcgsepy.config import EPSILON_F
 
@@ -141,9 +142,9 @@ class MLPEstimator(th.nn.Module):
         self.train_losses = []
 
     def forward(self, x):
-        out = th.F.elu(self.l1(x))
-        out = th.F.elu(self.l2(out))
-        out = th.F.elu(self.l3(out))
+        out = F.elu(self.l1(x))
+        out = F.elu(self.l2(out))
+        out = F.elu(self.l3(out))
         return th.clamp(out, EPSILON_F, 1)
 
     def save(self,
@@ -195,7 +196,7 @@ class MLPEstimator(th.nn.Module):
 def train_estimator(estimator: Union[MLPEstimator, QuantileEstimator],
                     xs: List[List[float]],
                     ys: List[List[float]],
-                    n_epochs: int = 50):
+                    n_epochs: int = 20):
     """Train the MLP estimator.
 
     Args:

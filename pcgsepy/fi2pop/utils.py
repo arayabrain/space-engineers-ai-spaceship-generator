@@ -28,25 +28,33 @@ def subdivide_solutions(lcs: List[CandidateSolution],
     """
     lsystem.hl_solver.set_constraints(cs=lsystem.all_hl_constraints)
     lsystem.ll_solver.set_constraints(cs=lsystem.all_ll_constraints)
-    for cs in lcs:
-        for t in [ConstraintTime.DURING, ConstraintTime.END]:
-            sat = lsystem.hl_solver._check_constraints(cs=cs,
-                                                       when=t,
-                                                       keep_track=True)
-            cs.is_feasible &= sat[ConstraintLevel.HARD_CONSTRAINT][0]
-            cs.ncv += sat[ConstraintLevel.HARD_CONSTRAINT][1]
-            cs.ncv += sat[ConstraintLevel.SOFT_CONSTRAINT][1]            
-        if cs.is_feasible:
-            if cs.ll_string == '':
-                ml_string = lsystem.hl_solver.translator.transform(string=cs.string)
-                cs.ll_string = LLParser(rules=lsystem.hl_solver.ll_rules).expand(string=ml_string)
+    too_big_cs = []
+    for i, cs in enumerate(lcs):
+        try:
             for t in [ConstraintTime.DURING, ConstraintTime.END]:
-                sat = lsystem.ll_solver._check_constraints(cs=cs,
-                                                           when=t,
-                                                           keep_track=True)
+                sat = lsystem.hl_solver._check_constraints(cs=cs,
+                                                        when=t,
+                                                        keep_track=True)
                 cs.is_feasible &= sat[ConstraintLevel.HARD_CONSTRAINT][0]
                 cs.ncv += sat[ConstraintLevel.HARD_CONSTRAINT][1]
-                cs.ncv += sat[ConstraintLevel.SOFT_CONSTRAINT][1]
+                cs.ncv += sat[ConstraintLevel.SOFT_CONSTRAINT][1]            
+            if cs.is_feasible:
+                if cs.ll_string == '':
+                    ml_string = lsystem.hl_solver.translator.transform(string=cs.string)
+                    cs.ll_string = LLParser(rules=lsystem.hl_solver.ll_rules).expand(string=ml_string)
+                for t in [ConstraintTime.DURING, ConstraintTime.END]:
+                    sat = lsystem.ll_solver._check_constraints(cs=cs,
+                                                            when=t,
+                                                            keep_track=True)
+                    cs.is_feasible &= sat[ConstraintLevel.HARD_CONSTRAINT][0]
+                    cs.ncv += sat[ConstraintLevel.HARD_CONSTRAINT][1]
+                    cs.ncv += sat[ConstraintLevel.SOFT_CONSTRAINT][1]
+        except Exception:
+            too_big_cs.append(i)
+    # print(f'lcs: {len(lcs)}; to remove: {len(too_big_cs)}')
+    for i in list(reversed(too_big_cs)):
+        lcs.pop(i)
+    # print(f'\t-> lcs: {len(lcs)}')
 
 
 def create_new_pool(population: List[CandidateSolution],
@@ -192,7 +200,7 @@ class MLPEstimator(nn.Module):
 def train_estimator(estimator: MLPEstimator,
                     xs: List[List[float]],
                     ys: List[List[float]],
-                    n_epochs: int = 20):
+                    n_epochs: int = 50):
     """Train the MLP estimator.
 
     Args:
