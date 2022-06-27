@@ -7,5 +7,4 @@ block_definitions.json
 *.jupyterlab-workspace
 *.pyc
 *.pkl
-*test*
 icmap-elites/estimators_perf.log
