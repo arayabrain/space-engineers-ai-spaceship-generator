@@ -11,4 +11,4 @@ dash-core-components
 torch
 sklearn
 simplejson
-scikit_posthocs
+statsmodels

@@ -3,6 +3,7 @@ from typing import List, Tuple
 
 from numpy.typing import NDArray
 from scipy.stats import f_oneway, kruskal, shapiro
+from statsmodels.stats.multitest import multipletests
 
 THRESHOLD_PVALUE = 0.05
 
@@ -14,6 +15,7 @@ def shapiro_wilk(samples: List[NDArray]) -> List[Tuple[float, float]]:
         stats.append((shapiro_test.statistic, shapiro_test.pvalue))
     return stats
 
+
 def anova(samples: List[NDArray]) -> List[Tuple[float, float]]:
     stats = []
     stats.append(f_oneway(*samples))
@@ -22,6 +24,7 @@ def anova(samples: List[NDArray]) -> List[Tuple[float, float]]:
                                            r=2):
             stats.append(f_oneway(*comb))
     return stats
+
 
 def kruskal_wallis(samples: List[NDArray]) -> List[Tuple[float, float]]:
     stats = []
@@ -33,3 +36,9 @@ def kruskal_wallis(samples: List[NDArray]) -> List[Tuple[float, float]]:
             kruskal_test = kruskal(*comb)
             stats.append((kruskal_test.statistic, kruskal_test.pvalue))
     return stats
+
+
+def holm_posthoc_correction(pvals: List[float]) -> Tuple[List[bool], List[float], float, float]:
+    return multipletests(pvals=pvals,
+                         alpha=THRESHOLD_PVALUE,
+                         method='holm')
