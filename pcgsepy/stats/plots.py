@@ -42,4 +42,5 @@ def plot_scores(samples: List[NDArray],
 
     plt.bar(names, height=[np.sum(x) for x in all_values])
     plt.title(title)
+    plt.xticks(rotation = 45)
     plt.show()
