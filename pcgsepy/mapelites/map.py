@@ -204,6 +204,11 @@ class MAPElites:
         Args:
             cs (CandidateSolution): The candidate solution.
         """
+        if cs._content is None:
+            cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
+                                        extra_args={
+                                            'alphabet': self.lsystem.ll_solver.atoms_alphabet
+            }))
         b0 = self.b_descs[0](cs)
         b1 = self.b_descs[1](cs)
         cs.b_descs = (b0, b1)
@@ -624,6 +629,8 @@ class MAPElites:
         
         if lcs is not None:
             self._update_bins(lcs=lcs)
+            if self.emitter is not None and self.emitter.requires_init:
+                self.emitter.init_emitter(bins=self.bins)
             self._check_res_trigger()
         else:
             self.generate_initial_populations()

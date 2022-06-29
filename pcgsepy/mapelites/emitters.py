@@ -362,7 +362,7 @@ class HumanPrefMatrixEmitter(Emitter):
         self._decay_preferences()
 
     def reset(self) -> None:
-        self._prefs = 0
+        self._prefs = None
         self._tot_actions = 0
     
     def to_json(self) -> Dict[str, Any]:
@@ -397,7 +397,7 @@ class ContextualBanditEmitter(Emitter):
     def __init__(self,
                  epsilon: float = 0.2,
                  decay: float = 0.01,
-                 n_features_context: int = 4) -> None:
+                 n_features_context: int = 7) -> None:
         super().__init__()
         self.name = 'contextual-bandit-emitter'
         self.requires_pre = True
@@ -431,7 +431,7 @@ class ContextualBanditEmitter(Emitter):
     def _predict(self,
                  bins: 'np.ndarray[MAPBin]') -> Tuple[int, int]:
         context = self._extract_context(bins=bins)
-        choose_from = self._estimator.predict(X=context) * (1 - self.diversity_weight) + diversity_builder(bins=bins, n_features=self._n_features_context) * self.diversity_weight
+        choose_from = self._estimator.predict(X=context) * (1 - self.diversity_weight) + diversity_builder(bins=bins, n_features=self._n_features_context).flatten() * self.diversity_weight
         return np.flip(np.argsort(choose_from, axis=None))
     
     def pre_step(self, **kwargs) -> None:

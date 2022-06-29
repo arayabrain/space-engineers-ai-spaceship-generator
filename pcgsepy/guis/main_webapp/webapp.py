@@ -12,6 +12,7 @@ from pcgsepy.common.jsonifier import json_dumps, json_loads
 from pcgsepy.config import BIN_POP_SIZE, CS_MAX_AGE, N_GENS_ALLOWED
 from pcgsepy.lsystem.rules import StochasticRules
 from pcgsepy.lsystem.solution import CandidateSolution
+from pcgsepy.mapelites.behaviors import BehaviorCharacterization, avg_ma, mame, mami, symmetry
 from pcgsepy.mapelites.emitters import (ContextualBanditEmitter,
                                         HumanPrefMatrixEmitter, RandomEmitter)
 from pcgsepy.mapelites.map import MAPElites, get_structure
@@ -568,11 +569,29 @@ def _apply_reset(mapelites: MAPElites,
     return True
 
 
-def _apply_bc_change(mapelites: MAPElites,
+behavior_descriptors = [
+    BehaviorCharacterization(name='Major axis / Medium axis',
+                             func=mame,
+                             bounds=(0, 10)),
+    BehaviorCharacterization(name='Major axis / Smallest axis',
+                             func=mami,
+                             bounds=(0, 20)),
+    BehaviorCharacterization(name='Average Proportions',
+                             func=avg_ma,
+                             bounds=(0, 20)),
+    BehaviorCharacterization(name='Symmetry',
+                             func=symmetry,
+                             bounds=(0, 1))
+]
+
+
+def _apply_bc_change(bcs: Tuple[str, str],
+                     mapelites: MAPElites,
                      logger: CustomLogger) -> bool:
+    b0, b1 = bcs
     logger.log(msg=f'Updating feature descriptors to ({b0}, {b1})...')
-    b0 = mapelites.b_descs[[b.name for b in mapelites.b_descs].index(b0)]
-    b1 = mapelites.b_descs[[b.name for b in mapelites.b_descs].index(b1)]
+    b0 = behavior_descriptors[[b.name for b in behavior_descriptors].index(b0)]
+    b1 = behavior_descriptors[[b.name for b in behavior_descriptors].index(b1)]
     mapelites.update_behavior_descriptors((b0, b1))
     logger.log(msg='Feature descriptors update completed.')
     return True
@@ -779,7 +798,8 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
                                           metric_name=metric_name,
                                           method_name=method_name)
     elif event_trig == 'b0-dropdown' or event_trig == 'b1-dropdown':
-        res = _apply_bc_change(mapelites=mapelites,
+        res = _apply_bc_change(bcs=(b0, b1),
+                               mapelites=mapelites,
                                logger=logger)
         if res:
             curr_heatmap = _build_heatmap(mapelites=mapelites,
