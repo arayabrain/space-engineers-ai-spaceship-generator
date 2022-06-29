@@ -4,7 +4,7 @@ Here it is possible to change the data that is being visualized in the MAP-Elite
 
 It is possible to visualize behavior characteristics for both the feasible and infeasible population. It is possible to plot either the Fitness, the Age, and the Coverage metric for all solutions. Additionally, it is possible to plot metrics for only the elite or the bin population.
 
-By selecting a bin in the MAP-Elites plot, the elite content will be displayed in the content plot (right) and the content properties (spaceship size, number of blocks used, and string representation) will be shown next to it. Additionally, the spaceship(s) can be downloaded by clicking the "DOWNLOAD CONTENT" button.
+By selecting a bin in the MAP-Elites plot, the elite content will be displayed in the content plot (right) and the content properties (spaceship size, number of blocks used, and string representation) will be shown next to it. Additionally, the selected spaceship can be downloaded by clicking the "DOWNLOAD CONTENT" button **only** at the end of the experiment.
 
 ###### Experiment settings & control
 Here there are both information on the experiment and buttons that allow the user to interact with the evolution procedure.

@@ -1,11 +1,14 @@
+from cmath import exp
 import json
 from datetime import datetime
 from typing import Dict, List, Tuple
 
 import dash
+from matplotlib.style import available
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import random
 from dash import ALL, dcc, html
 from dash.dependencies import Input, Output, State
 from pcgsepy.common.jsonifier import json_dumps, json_loads
@@ -86,6 +89,9 @@ block_to_colour = {
 }
 
 
+available_mapelites = ['mapelites_random.json', 'mapelites_prefmatrix.json', 'mapelites_contbandit.json']
+
+
 app = dash.Dash(__name__,
                 title='SE ICMAP-Elites',
                 external_stylesheets=[
@@ -93,8 +99,7 @@ app = dash.Dash(__name__,
                 update_title=None)
 
 
-def set_app_layout(mapelites: MAPElites,
-                   behavior_descriptors_names,
+def set_app_layout(behavior_descriptors_names,
                    dev_mode: bool = True):
     description_str, help_str = '', ''
     with open('./assets/description.md', 'r') as f:
@@ -102,6 +107,16 @@ def set_app_layout(mapelites: MAPElites,
     help_file = './assets/help_dev.md' if dev_mode else './assets/help_user.md'
     with open(help_file, 'r') as f:
         help_str = f.read()
+        
+    my_rngseed = random.randint(0, 128)
+    random.seed(my_rngseed)
+    my_emitterslist = available_mapelites.copy()
+    random.shuffle(my_emitterslist)
+    with open(my_emitterslist[0], 'r') as f:
+        mapelites = json_loads(f.read())
+    
+    my_logger = CustomLogger()
+    my_logger.log(msg=f'Your ID is {str(my_rngseed).zfill(3)}; please remember this!')
     
     app.layout = html.Div(children=[
         # HEADER
@@ -283,7 +298,8 @@ def set_app_layout(mapelites: MAPElites,
                     html.Button(children='Apply step',
                                 id='step-btn',
                                 n_clicks=0,
-                                className='button')
+                                className='button',
+                                disabled=False)
                 ],
                     className='button-div'),
                 html.Br(),
@@ -328,7 +344,8 @@ def set_app_layout(mapelites: MAPElites,
                                 disabled=True),
                     dcc.Download(id='download-mapelites')
                 ],
-                    className='button-div')
+                    className='button-div',
+                    style={'content-visibility': 'hidden' if not dev_mode else 'visible'})
             ],
                 className='experiment-controls-div'),
             # RULES
@@ -383,7 +400,10 @@ def set_app_layout(mapelites: MAPElites,
         # client-side storage
         dcc.Store(id='gen-counter'),
         dcc.Store(id='selected-bins'),
-        dcc.Store(id='logger', data=json_dumps(obj=CustomLogger())),
+        dcc.Store(id='experiment-number', data=json.dumps(0)),
+        dcc.Store(id='emitters-order', data=json.dumps(my_emitterslist)),
+        dcc.Store(id='rng-seed', data=json.dumps(my_rngseed)),
+        dcc.Store(id='logger', data=json_dumps(obj=my_logger)),
         dcc.Store(id='mapelites', data=json_dumps(obj=mapelites))
     ])
 
@@ -691,16 +711,20 @@ def update_output(n, logger):
     return ('\n'.join(logger.queue))
 
 
-@app.callback(
-    Output("download-content", "data"),
-    Input("download-btn", "n_clicks"),
-    State('content-string', 'value'),
-    prevent_initial_call=True,
-)
-def download_content(n_clicks,
-                     content_string):
-    if content_string != '':
-        return dict(content=content_string, filename='MySpaceship.txt')
+# @app.callback(
+#     Output("download-content", "data"),
+#     Output('experiment-number', 'data'),
+#     Output('gen-counter', 'data'),
+#     Input("download-btn", "n_clicks"),
+#     State('content-string', 'value'),
+#     State('experiment-number', 'data'),
+#     prevent_initial_call=True,
+# )
+# def download_content(n_clicks,
+#                      content_string, exp_n):
+#     exp_n: int = json.loads(exp_n)
+#     if content_string != '':
+#         return dict(content=content_string, filename='MySpaceship.txt'), json.dumps(exp_n + 1), json.dumps(0)
 
 
 @app.callback(
@@ -735,6 +759,11 @@ def download_mapelites(n_clicks,
               Output('logger', 'data'),
               Output('download-mapelites-btn', 'disabled'),
               Output('download-btn', 'disabled'),
+              Output('step-btn', 'disabled'),
+              
+              Output("download-content", "data"),
+              Output('experiment-number', 'data'),
+    
               State('heatmap-plot', 'figure'),
               State('selected-bins', 'data'),
               State('gen-counter', 'data'),
@@ -746,6 +775,9 @@ def download_mapelites(n_clicks,
               State('spaceship-size', 'children'),
               State('n-blocks', 'children'),
               State('logger', 'data'),
+              State('experiment-number', 'data'),
+              State('emitters-order', 'data'),
+              State('rng-seed', 'data'),
               Input('population-dropdown', 'value'),
               Input('metric-dropdown', 'value'),
               Input('method-radio', 'value'),
@@ -760,15 +792,20 @@ def download_mapelites(n_clicks,
               Input('heatmap-plot', 'clickData'),
               Input('selection-btn', 'n_clicks'),
               Input('selection-clr-btn', 'n_clicks'),
-              Input('emitter-dropdown', 'value'))
-def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
-                     curr_selected, curr_content, cs_string, cs_size, cs_n_blocks, logger,
-                     pop_name, metric_name, method_name, n_clicks_step, n_clicks_reset, n_clicks_sub, weights, b0, b1, modules, n_clicks_rules,
-                     clickData, selection_btn, clear_btn, emitter_name):
+              Input('emitter-dropdown', 'value'),
+              
+              Input("download-btn", "n_clicks")
+              )
+def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules, curr_selected, curr_content, cs_string, cs_size, cs_n_blocks, logger, exp_n, emitters_list, rngseed,
+                     pop_name, metric_name, method_name, n_clicks_step, n_clicks_reset, n_clicks_sub, weights, b0, b1, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download):
     gen_counter: int = json.loads(gen_counter) if gen_counter else 0
-    selected_bins = json.loads(selected_bins) if selected_bins else []
+    selected_bins: List[Tuple[int, int]] = json.loads(selected_bins) if selected_bins else []
+    exp_n: int = json.loads(exp_n)
+    rngseed: int = json.loads(rngseed)
+    emitters_list: List[str] = json.loads(emitters_list)
     logger: CustomLogger = json_loads(logger)
     mapelites: MAPElites = json_loads(s=mapelites)
+    content_dl = None
     
     ctx = dash.callback_context
 
@@ -877,6 +914,29 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
         _ = _apply_emitter_change(mapelites=mapelites,
                                   emitter_name=emitter_name,
                                   logger=logger)
+    elif event_trig == 'download-btn':
+        if cs_string != '':
+            exp_n += 1
+            content_dl = dict(content=cs_string,
+                              filename=f'MySpaceship_exp_{exp_n}.txt')
+            if exp_n >= len(emitters_list):
+                curr_heatmap = go.Figure(data=[])
+                selected_bins = []
+                curr_content = go.Figure(data=[])
+                cs_string = cs_size = cs_n_blocks  = ''                
+                logger.log(f'Reached end of all experiments! Please go HERE to continue the evaluation.')
+            else:
+                gen_counter = 0
+                with open(emitters_list[exp_n], 'r') as f:
+                    mapelites = json_loads(f.read())
+                curr_heatmap = _build_heatmap(mapelites=mapelites,
+                                        pop_name=pop_name,
+                                        metric_name=metric_name,
+                                        method_name=method_name)
+                selected_bins = []
+                curr_content = go.Figure(data=[])
+                cs_string = cs_size = cs_n_blocks  = ''
+                logger.log(msg=f'Reached end of experiment {exp_n}! Loaded next experiment.')
     elif event_trig is None:
         curr_heatmap = _build_heatmap(mapelites=mapelites,
                                     pop_name=pop_name,
@@ -885,4 +945,4 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
     else:
         logger.log(msg=f'Unrecognized event trigger: {event_trig}. No operations have been applied!')
 
-    return curr_heatmap, curr_content, f'Valid bins are: {_get_valid_bins(mapelites=mapelites)}', f'Current generation: {gen_counter}', json.dumps(gen_counter), json_dumps(mapelites), str(mapelites.lsystem.hl_solver.parser.rules), f'Selected bin(s): {selected_bins}', json.dumps([[int(x[0]), int(x[1])] for x in selected_bins]), cs_string, cs_size, cs_n_blocks, json_dumps(obj=logger), gen_counter < N_GENS_ALLOWED, len(selected_bins) == 0
+    return curr_heatmap, curr_content, f'Valid bins are: {_get_valid_bins(mapelites=mapelites)}', f'Current generation: {gen_counter}', json.dumps(gen_counter), json_dumps(mapelites), str(mapelites.lsystem.hl_solver.parser.rules), f'Selected bin(s): {selected_bins}', json.dumps([[int(x[0]), int(x[1])] for x in selected_bins]), cs_string, cs_size, cs_n_blocks, json_dumps(obj=logger), gen_counter < N_GENS_ALLOWED, gen_counter < N_GENS_ALLOWED, gen_counter >= N_GENS_ALLOWED, content_dl, json.dumps(exp_n)
