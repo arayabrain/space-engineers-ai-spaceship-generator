@@ -1,7 +1,10 @@
+import base64
 import json
 import pathlib
-from datetime import datetime
+import datetime
 from typing import Dict, List
+import random
+import io
 
 import dash
 import numpy as np
@@ -80,6 +83,7 @@ behavior_descriptors = [
 
 behavior_descriptors_names = [x.name for x in behavior_descriptors]
 
+emitters = ['Random', 'Preference Matrix', 'Contextual Bandit']
 
 block_to_colour = {
     # colours from https://developer.mozilla.org/en-US/docs/Web/CSS/color_value
@@ -113,8 +117,7 @@ app = dash.Dash(__name__,
                     'https://codepen.io/chriddyp/pen/bWLwgP.css'],
                 update_title=None)
 
-def set_app_layout(spaceship: str,
-                   ref_spaceships: Dict[str, float]):
+def set_app_layout():
     description_str, help_str = '', ''
     
     curr_dir = pathlib.Path(__file__).parent.resolve()
@@ -134,109 +137,156 @@ def set_app_layout(spaceship: str,
         ],
             className='header'),
         html.Br(),
+        
+        dcc.Upload(
+            id='upload-data',
+            children=html.Div([
+                'Drag and Drop or ',
+                html.A('Select Files')
+            ]),
+            style={
+                'width': '60%',
+                'height': '60px',
+                'lineHeight': '60px',
+                'borderWidth': '1px',
+                'borderStyle': 'dashed',
+                'borderRadius': '5px',
+                'textAlign': 'center',
+                'margin': '10px'
+            },
+            # Allow multiple files to be uploaded
+            multiple=True
+        ),
+        
         # BODY
         html.Div(children=[
             
             # content plots
             html.Div(children=[
                 
-                # my spaceship
+                # spaceship 1
                 html.Div(children=[
                     # title
                     html.Div(children=[
-                        html.H1(children='My spaceship',
+                        html.H1(children='Spaceship from Experiment 1',
                                 style={'text-align': 'center'})
                         ]),
                     html.Br(),
                     # spaceship content display + properties
                     # CONTENT PLOT
                         html.Div(children=[
-                            dcc.Graph(id="my-spaceship-content",
+                            dcc.Graph(id="spaceship-1-content",
                                     figure=go.Figure(data=[])),
                         ],
                             className='content-div',
-                            style={'width': '80%'}),
+                            style={'width': '100%'}),
                         html.Div(children=[
                             html.H6('Content properties',
                                     className='section-title'),
                             html.Div(children=[],
-                                    id='my-spaceship-properties'),
+                                    id='spaceship-1-properties'),
                             ],
                                 className='properties-div',
-                                style={'width': '20%'}),
-                    ],
-                         style={'width': '50%'}),
-                # ref spaceship
-                html.Div(children=[
-                    # title
-                    html.Div(children=[
-                        html.H1(children=f'Spaceship 1 / {len(ref_spaceships)}',
-                                id='ref-spaceship-current',
-                                style={'text-align': 'center'})
-                        ]),
-                    html.Br(),
-                    # spaceship content display + properties
-                    # CONTENT PLOT
+                                style={'width': '60%', 'textAlign': 'center'}),
                         html.Div(children=[
-                            dcc.Graph(id="ref-spaceship-content",
-                                    figure=go.Figure(data=[])),
-                        ],
-                            className='content-div',
-                            style={'width': '80%'}),
-                        html.Div(children=[
-                            html.H6('Content properties',
-                                    className='section-title'),
-                            html.Div(children=[],
-                                    id='ref-spaceship-properties'),
+                            dcc.Slider(1, 3, 1,
+                                    value=1,
+                                    id='spaceship-1-slider',
+                                    marks=None,
+                                    tooltip={"placement": "bottom",
+                                            "always_visible": True}),
                             ],
-                                className='properties-div',
-                                style={'width': '20%'}),
+                                style={'width': '60%', 'margin': '0 auto'})
                     ],
-                         style={'width': '50%'}),
+                        style={'width': '30%'}),
                 
-            ],
-                     style={'display': 'flex'}),
-            
-            html.Br(),
-            
-            # controls
-            html.Div(children=[
-                # slider
+                # spaceship 2
                 html.Div(children=[
-                    dcc.Slider(-3, 3, 0.5,
-                            value=0,
-                            id='value-slider',
-                            marks=None,
-                            tooltip={"placement": "bottom",
-                                     "always_visible": True}),
-                    ],
-                        style={'width': '60%', 'margin': '0 auto'}),
-                html.Br(),
-                # prev/next and save buttons
-                html.Div(children=[
+                    # title
                     html.Div(children=[
-                        html.Button('<',
-                                    id='prev-btn',
-                                    className='button'),
-                        html.Button('>',
-                                    id='next-btn',
-                                    className='button')
-                        ],
-                             style={'display': 'flex'}),
+                        html.H1(children='Spaceship from Experiment 2',
+                                style={'text-align': 'center'})
+                        ]),
                     html.Br(),
-                    html.Div(children=[
-                        html.Button('SAVE',
-                                id='save-btn',
-                                disabled=False,
-                                className='button'),
-                        dcc.Download(id='download-values')
+                    # spaceship content display + properties
+                    # CONTENT PLOT
+                        html.Div(children=[
+                            dcc.Graph(id="spaceship-2-content",
+                                    figure=go.Figure(data=[])),
                         ],
-                             style={'display': 'flex'})
+                            className='content-div',
+                            style={'width': '100%'}),
+                        html.Div(children=[
+                            html.H6('Content properties',
+                                    className='section-title'),
+                            html.Div(children=[],
+                                    id='spaceship-2-properties'),
+                            ],
+                                className='properties-div',
+                                style={'width': '60%', 'textAlign': 'center'}),
+                        html.Div(children=[
+                            dcc.Slider(1, 3, 1,
+                                    value=1,
+                                    id='spaceship-2-slider',
+                                    marks=None,
+                                    tooltip={"placement": "bottom",
+                                            "always_visible": True}),
+                            ],
+                                style={'width': '60%', 'margin': '0 auto'}),
                     ],
-                         style={'width': '20%', 'display': 'flex', 'flex-direction': 'column', 'margin': '0 auto'})
-            ],
-                     style={'width': '100%', 'display': 'flex', 'flex-direction': 'column', 'justify-content': 'center'})
-            ]),
+                        style={'width': '30%'}),
+                
+                # spaceship 3
+                html.Div(children=[
+                    # title
+                    html.Div(children=[
+                        html.H1(children='Spaceship from Experiment 3',
+                                style={'text-align': 'center'})
+                        ]),
+                    html.Br(),
+                    # spaceship content display + properties
+                    # CONTENT PLOT
+                        html.Div(children=[
+                            dcc.Graph(id="spaceship-3-content",
+                                    figure=go.Figure(data=[])),
+                        ],
+                            className='content-div',
+                            style={'width': '100%'}),
+                        html.Div(children=[
+                            html.H6('Content properties',
+                                    className='section-title'),
+                            html.Div(children=[],
+                                    id='spaceship-3-properties'),
+                            ],
+                                className='properties-div',
+                                style={'width': '60%', 'textAlign': 'center'}),
+                        html.Div(children=[
+                            dcc.Slider(1, 3, 1,
+                                    value=1,
+                                    id='spaceship-3-slider',
+                                    marks=None,
+                                    tooltip={"placement": "bottom",
+                                            "always_visible": True}),
+                            ],
+                                style={'width': '60%', 'margin': '0 auto'}),
+                    ],
+                        style={'width': '30%'}),
+        ],
+                     style={'width': '100%', 'display': 'flex', 'flex-direction': 'row', 'justify-content': 'center'}),
+        ]), 
+        html.Br(),
+        html.Div(id='eoe',
+                 children=[]),
+        html.Br(),
+        html.Div(children=[
+                    html.Button(children='Save',
+                                id='save-btn',
+                                n_clicks=0,
+                                className='button',
+                                disabled=False),
+                    dcc.Download(id='save-data')
+                ],
+                    className='button-div'),     
         html.Br(),
         # FOOTER
         html.Div(children=[
@@ -246,33 +296,20 @@ def set_app_layout(spaceship: str,
                          className='page-description')
         ],
             className='footer'),
-        dcc.Store(id='my-spaceship',
-                  data=json.dumps(spaceship)),
-        dcc.Store(id='ref-spaceships',
-                  data=json.dumps(ref_spaceships)),
-        dcc.Store(id='current-idx',
-                  data=0),
-        dcc.Store(id='values',
-                  data=','.join(['0' for _ in range(len(ref_spaceships))]))
-    ])
+        dcc.Store(id='rngseed', data=json.dumps(0))
+        ])
 
 
-@app.callback(
-    Output("download-values", "data"),
-    Input("save-btn", "n_clicks"),
-    State('values', 'data'),
-    State('ref-spaceships', 'data'),
-    prevent_initial_call=True,
-)
-def download_values(n_clicks,
-                    values,
-                    spaceships):
-    spaceships = json.loads(spaceships)
-    values = [float(x) for x in values.split(',')]
-    t = datetime.now().strftime("%Y%m%d%H%M%S")
-    fname = f'{t}'
-    content = {k:v for k, v in zip(spaceships, values)}
-    return dict(content=json.dumps(content), filename=f'{fname}.log')
+def parse_contents(filename,
+                   contents):
+    _, rngseed, exp_n = filename.split('_')
+    rngseed = int(rngseed)
+    exp_n = int(exp_n.replace('exp', '').replace('.txt', ''))
+
+    _, content_string = contents.split(',')
+    cs_string = base64.b64decode(content_string).decode(encoding='utf-8')
+
+    return rngseed, exp_n, cs_string    
 
 
 def get_content_plot(spaceship: CandidateSolution) -> go.Figure:
@@ -320,29 +357,65 @@ def get_spaceship_properties(spaceship: CandidateSolution) -> Dict[str, Any]:
     return spaceship_properties
 
 
-@app.callback(Output('current-idx', 'data'),
-              Output('values', 'data'),
-              Output('ref-spaceship-current', 'children'),
-              Output('ref-spaceship-content', 'figure'),
-              Output('ref-spaceship-properties', 'children'),
-              Output('my-spaceship-content', 'figure'),
-              Output('my-spaceship-properties', 'children'),
-              Output('value-slider', 'value'),
+@app.callback(
+    Output("save-data", "data"),
+    Output('eoe', "children"),
+    Input("save-btn", "n_clicks"),
+    State('spaceship-1-slider', 'value'),
+    State('spaceship-2-slider', 'value'),
+    State('spaceship-3-slider', 'value'),
+    State('rngseed', 'data'),
+    prevent_initial_call=True,
+)
+def download_mapelites(n_clicks,
+                       slider1_value, slider2_value, slider3_value, rng_seed):
+    rng_seed = json.loads(rng_seed)
+    
+    random.seed(rng_seed)
+    my_emitterslist = emitters.copy()
+    random.shuffle(my_emitterslist)
+    
+    res = {emitter:v for emitter, v in zip(my_emitterslist, [slider1_value, slider2_value, slider3_value])}
+    
+    eoe = dcc.Markdown('''
+                       ##### This concludes the experiment
+                       
+                       Please visit the [Google Form](/) page to compile the questionnaire.
+                       ''')
+    
+    return dict(content=str(res), filename=f'{str(rng_seed).zfill(3)}_res.json'), eoe
+
+
+@app.callback(
+              Output('spaceship-1-content', 'figure'),
+              Output('spaceship-1-properties', 'children'),
               
-              Input('value-slider', 'value'),
-              Input('prev-btn', 'n_clicks'),
-              Input('next-btn', 'n_clicks'),
+              Output('spaceship-2-content', 'figure'),
+              Output('spaceship-2-properties', 'children'),
               
-              State('my-spaceship', 'data'),
-              State('ref-spaceships', 'data'),
-              State('current-idx', 'data'),
-              State('values', 'data'))
-def general_callback(slider_value, prev_n_clicks, next_n_clicks,
-                     my_spaceship, ref_spaceships, current_idx, values):
-    ref_spaceships = json.loads(ref_spaceships)
-    my_spaceship = json.loads(my_spaceship)
-    current_idx = int(current_idx)
-    values = [float(x) for x in values.split(',')]
+              Output('spaceship-3-content', 'figure'),
+              Output('spaceship-3-properties', 'children'),
+              
+              Output('rngseed', 'data'),
+              
+              Input('upload-data', 'contents'),
+              
+              State('upload-data', 'filename'),
+              
+              State('spaceship-1-content', 'figure'),
+              State('spaceship-1-properties', 'children'),
+              
+              State('spaceship-2-content', 'figure'),
+              State('spaceship-2-properties', 'children'),
+              
+              State('spaceship-3-content', 'figure'),
+              State('spaceship-3-properties', 'children'),
+              
+              State('rngseed', 'data')
+)
+def general_callback(list_of_contents,
+                     list_of_names, spaceship_1_plot, spaceship_1_properties, spaceship_2_plot, spaceship_2_properties, spaceship_3_plot, spaceship_3_properties, rng_seed):
+    rng_seed = json.loads(rng_seed)
     
     ctx = dash.callback_context
 
@@ -351,23 +424,19 @@ def general_callback(slider_value, prev_n_clicks, next_n_clicks,
     else:
         event_trig = ctx.triggered[0]['prop_id'].split('.')[0]
 
-    if event_trig == 'prev-btn':
-        current_idx -= 1
-        current_idx = max(0, current_idx)
-    elif event_trig == 'next-btn':
-        current_idx += 1
-        current_idx = min(len(values) - 1, current_idx)
-    elif event_trig is not None and 'value-slider' in event_trig:
-        values[current_idx] = slider_value
+    if event_trig == 'upload-data':
+        children = [parse_contents(n, c) for c, n in zip(list_of_contents, list_of_names)]
+        for child in children:
+            rng_seed, exp_n, cs_string = child
+            cs = CandidateSolution(string=cs_string)
+            if exp_n == 1:
+                spaceship_1_plot = get_content_plot(spaceship=cs)
+                spaceship_1_properties = get_spaceship_properties(spaceship=cs)
+            elif exp_n == 2:
+                spaceship_2_plot = get_content_plot(spaceship=cs)
+                spaceship_2_properties = get_spaceship_properties(spaceship=cs)
+            elif exp_n == 3:
+                spaceship_3_plot = get_content_plot(spaceship=cs)
+                spaceship_3_properties = get_spaceship_properties(spaceship=cs)
     
-    my_spaceship = CandidateSolution(string=my_spaceship)
-    my_spaceship_plot = get_content_plot(spaceship=my_spaceship)
-    my_spaceship_properties = get_spaceship_properties(spaceship=my_spaceship)
-    
-    current_spaceship = CandidateSolution(string=list(ref_spaceships.keys())[current_idx])
-    current_spaceship_plot = get_content_plot(spaceship=current_spaceship)
-    current_spaceship_properties = get_spaceship_properties(spaceship=current_spaceship)
-    
-    
-    
-    return str(current_idx), ','.join([str(x) for x in values]), f'Spaceship {current_idx + 1} / {len(values)}', current_spaceship_plot, current_spaceship_properties, my_spaceship_plot, my_spaceship_properties, values[current_idx]
+    return spaceship_1_plot, spaceship_1_properties, spaceship_2_plot, spaceship_2_properties, spaceship_3_plot, spaceship_3_properties, json.dumps(rng_seed)

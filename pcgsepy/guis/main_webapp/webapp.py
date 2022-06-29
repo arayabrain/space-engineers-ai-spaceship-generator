@@ -918,7 +918,7 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
         if cs_string != '':
             exp_n += 1
             content_dl = dict(content=cs_string,
-                              filename=f'MySpaceship_exp_{exp_n}.txt')
+                              filename=f'MySpaceship_{rngseed}_exp{exp_n}.txt')
             if exp_n >= len(emitters_list):
                 curr_heatmap = go.Figure(data=[])
                 selected_bins = []

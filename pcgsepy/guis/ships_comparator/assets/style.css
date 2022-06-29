@@ -223,3 +223,9 @@
     background-color: #EEEEEE;
     touch-action: pan-x;
 }
+
+a {
+    font-weight: bold;
+    color: blue;
+    cursor: pointer;
+}
