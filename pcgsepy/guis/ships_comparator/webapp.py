@@ -283,12 +283,17 @@ def get_content_plot(spaceship: CandidateSolution) -> go.Figure:
                             'color': 'Block type'
                         },
                         title='')
+    
+    fig.update_traces(marker=dict(size=4,
+                              line=dict(width=3,
+                                        color='DarkSlateGrey')),
+                      selector=dict(mode='markers'))
+    
     fig.update_scenes(
                       xaxis={'visible': False, 'showticklabels': False},
                       yaxis={'visible': False, 'showticklabels': False},
                       zaxis={'visible': False, 'showticklabels': False},
     )
-    
     
     camera = dict(
         up=dict(x=0, y=0, z=1),

@@ -8,3 +8,8 @@ Use the sliders to rank the different spaceships. Note that `1` is the lowest sc
 
 ### Saving scores
 Once you're happy with the scores, click the "Save" button to download the results! You will need to upload this file in the final part of the questionnaire.
+
+## How do the spaceships look in-game?
+Here's an example:
+
+![image](./ref_spaceships_lowres.png)
