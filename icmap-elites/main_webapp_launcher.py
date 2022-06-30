@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import random
 from secrets import choice
 
 from pcgsepy.common.jsonifier import json_dumps, json_loads
@@ -57,9 +58,6 @@ lsystem = get_default_lsystem(used_ll_blocks=used_ll_blocks)
 expander.initialize(rules=lsystem.hl_solver.parser.rules)
 
 feasible_fitnesses = [
-    #     Fitness(name='BoundingBox',
-    #             f=bounding_box_fitness,
-    #             bounds=(0, 1)),
     Fitness(name='BoxFilling',
             f=box_filling_fitness,
             bounds=(0, 1)),
@@ -91,33 +89,19 @@ behavior_descriptors = [
 
 behavior_descriptors_names = [x.name for x in behavior_descriptors]
 
+available_mapelites = ['mapelites_random.json', 'mapelites_prefmatrix.json', 'mapelites_contbandit.json']
+
 if args.mapelites_file:
     with open(args.mapelites_file, 'r') as f:
         mapelites = json_loads(f.read())
 else:
-    emitter_choices = {
-		'random': RandomEmitter(),
-		'preference-matrix': HumanPrefMatrixEmitter(),
-  		'contextual-bandit': ContextualBanditEmitter()
-	}
-    mapelites = MAPElites(lsystem=lsystem,
-                          feasible_fitnesses=feasible_fitnesses,
-                          behavior_descriptors=(behavior_descriptors[0], behavior_descriptors[1]),
-                          estimator=MLPEstimator(xshape=len(feasible_fitnesses),
-                                                 yshape=1),
-                          buffer = Buffer(merge_method=mean_merge),
-                          emitter=emitter_choices[args.emitter],
-                          n_bins=(8, 8))
-    mapelites.emitter.diversity_weight = 0.25
-    mapelites.generate_initial_populations()
-    t = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open(f'{t}_mapelites_{mapelites.emitter.name}_gen00', 'w') as f:
-        f.write(json_dumps(mapelites))
+    mapelites_file = random.choice(available_mapelites)
+    with open(mapelites_file, 'r') as f:
+        mapelites = json_loads(f.read())
 
 set_callback_props(mapelites=mapelites)
 
-set_app_layout(mapelites=mapelites,
-               behavior_descriptors_names=behavior_descriptors_names,
+set_app_layout(behavior_descriptors_names=behavior_descriptors_names,
                dev_mode=args.dev_mode)
 
 app.run_server(debug=args.debug,

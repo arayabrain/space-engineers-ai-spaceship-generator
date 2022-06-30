@@ -1,1 +1,1 @@
-python main_webapp_launcher.py --mapelites_file=./me.json --port 8010
+python main_webapp_launcher.py --host "127.0.0.1" --port 8010

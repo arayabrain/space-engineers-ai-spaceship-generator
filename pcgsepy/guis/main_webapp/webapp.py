@@ -548,7 +548,20 @@ def _get_elite_content(mapelites: MAPElites,
                             'color': 'Block type'
                         },
                         title='Last clicked elite content')
+    
+    fig.update_traces(marker=dict(size=4,
+                              line=dict(width=3,
+                                        color='DarkSlateGrey')),
+                      selector=dict(mode='markers'))
+    
+    camera = dict(
+        up=dict(x=0, y=0, z=1),
+        center=dict(x=0, y=0, z=0),
+        eye=dict(x=2, y=2, z=2)
+        )
+    
     fig.update_layout(scene=dict(aspectmode='data'),
+                      scene_camera=camera,
                       paper_bgcolor='rgba(0,0,0,0)',
                       plot_bgcolor='rgba(0,0,0,0)')
     return fig

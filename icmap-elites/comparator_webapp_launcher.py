@@ -17,12 +17,7 @@ args = parser.parse_args()
 
 # TODO: This list should be loaded from the end-user
 
-set_app_layout(spaceships=[
-    "cockpit(1)corridorsimple(1)thrusters(1)",
-    "cockpit(1)corridorsimple(1)corridorcargo(1)thrusters(1)",
-    "cockpit(1)corridorsimple(1)[RotYccwXcorridorsimple(1)]thrusters(1)",
-    "cockpit(1)corridorsimple(1)[RotYcwXcorridorsimple(1)thrusters]thrusters(1)",
-])
+set_app_layout()
 
 app.run_server(debug=args.debug,
                host=args.host,
