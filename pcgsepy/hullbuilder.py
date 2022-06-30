@@ -1,16 +1,32 @@
 from scipy.spatial import ConvexHull, Delaunay
 from scipy.ndimage import grey_erosion, binary_erosion
 import numpy as np
-from pcgsepy.common.vecs import Orientation, Vec
+from pcgsepy.common.vecs import Orientation, Vec, orientation_from_vec
 from pcgsepy.structure import Block, Structure
+from typing import Optional, Tuple
+
 from typing import Tuple
+from pcgsepy.structure import Block
+
+def vec_to_idx(v: Vec) -> Tuple[int, int, int]:
+    return (v.x, v.y, v.z)
+
+def idx_to_vec(idx: Tuple[int, int, int]) -> Vec:
+    return Vec(x=idx[0], y=idx[1], z=idx[2])
+
+def is_slope_block(block: Block) -> bool:
+    return "Slope" in block.block_type or "Corner" in block.block_type
 
 class HullBuilder:
     def __init__(self,
                  erosion_type: str,
                  apply_erosion: bool,
                  apply_smoothing: bool):
-        self.BASE_BLOCK_VALUE = 0.1
+        self.AIR_BLOCK_VALUE = 0
+        self.BASE_BLOCK_VALUE = 1
+        self.SLOPE_BLOCK_VALUE = 2
+        self.CORNER_BLOCK_VALUE = 3
+        self.CORNERINV_BLOCK_VALUE = 4
         self.available_erosion_types = ['grey', 'bin']
         self.erosion_type = erosion_type
         assert self.erosion_type in self.available_erosion_types, f'Unrecognized erosion type {self.erosion_type}; available are {self.available_erosion_types}.'
@@ -40,77 +56,7 @@ class HullBuilder:
         self.apply_smoothing = apply_smoothing
         
         self.base_block = 'MyObjectBuilder_CubeBlock_LargeBlockArmorBlock'
-        # TODO: Test and expand this map
-        self.smoothing_blocks = {
-            #fu
-            4259840: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #fd
-            4195328: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #fr
-            4198400: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #fl
-            4210688: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #ul
-            81920: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #ur
-            69632: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #dl
-            17408: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #dr
-            5120: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #bu
-            65552: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #bd
-            1040: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #br
-            4112: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #bl
-            16400: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #ful
-            4276224: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorCorner', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #fur
-            4263936: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorCorner', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #fdl
-            4211712: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorCorner', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #fdr
-            4199424: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorCorner', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #bul
-            81936: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorCorner', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #bur
-            69648: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorCorner', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #bdl
-            17424: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorCorner', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #bdr
-            5136: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorCorner', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #fbrd
-            4199440: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerInv', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #fblu
-            4276240: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerInv', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #fbru
-            4263952: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerInv', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #fbld
-            4211728: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerInv', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #fblrd
-            4215824: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #fblru
-            4280336: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #dlrb
-            21520: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #dlrf
-            4215808: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #ulrb
-            86032: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #ulrf
-            4280320: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #ludb
-            82960: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #ludf
-            4277248: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #rudb
-            70672: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP},
-            #rudf
-            4264960: {'block': 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope', 'of': Orientation.FORWARD, 'ou': Orientation.UP}
-        }
+        self._blocks_set = {}
     
     def _get_convex_hull(self,
                          arr: np.ndarray) -> np.ndarray:
@@ -173,53 +119,10 @@ class HullBuilder:
         block = Block(block_type=block_type,
                       orientation_forward=orientation_forward,
                       orientation_up=orientation_up)
-        position = Vec.v3i(x=int(i * structure.grid_size),
-                           y=int(j * structure.grid_size),
-                           z=int(k * structure.grid_size))
-        block.position = position
-        structure.add_block(block=block,
-                            grid_position=Vec.as_tuple(position))    
-
-    def _get_neighbourhood(self,
-                           idx: Tuple[int, int, int],
-                           arr: np.ndarray) -> np.ndarray:
-        """Get the 3x3x3 neighbourhood around idx in the array.
-
-        Args:
-            idx (Tuple[int, int, int]): The index (center of neighbourhood).
-            arr (np.ndarray): The array.
-
-        Returns:
-            np.ndarray: The neighbourhood around idx.
-        """
-        neighbourhood = np.zeros(shape=(3, 3, 3), dtype=int)
-        i, j, k = idx
-        for di, dj, dk in zip([+1, 0, 0, 0, 0, -1], [0, +1, 0, 0, -1, 0], [0, 0, +1, -1, 0, 0]):
-            ni, nj, nk = 1 + di, 1 + dj, 1 + dk
-            if 0 < i + di < arr.shape[0] and 0 < j + dj < arr.shape[1] and 0 < k + dk < arr.shape[2]:
-                v = 1 if arr[i, j, k] == self.BASE_BLOCK_VALUE else 0 
-            else:
-                v = 0
-            neighbourhood[ni, nj, nk] = v
-        return neighbourhood
-    
-    def _get_bit_neighbourhood(self,
-                               neighbourhood: np.ndarray) -> int:
-        """Get the bit (numerical) representation of the 3x3x3 neighbourhood.
-
-        Args:
-            neighbourhood (np.ndarray): The neighbourhood.
-
-        Returns:
-            int: The numerical representation.
-        """
-        v = 0
-        for i in range(neighbourhood.shape[0]):
-            for j in range(neighbourhood.shape[1]):
-                for k in range(neighbourhood.shape[2]):
-                    v = v << 1
-                    v |= neighbourhood[i, j, k]
-        return v
+        block.position = Vec.v3i(x=int(i * structure.grid_size),
+                                 y=int(j * structure.grid_size),
+                                 z=int(k * structure.grid_size))
+        self._blocks_set[(i, j, k)] = block
 
     def _tag_internal_air_blocks(self,
                                  arr: np.ndarray):
@@ -235,7 +138,103 @@ class HullBuilder:
                         sum(arr[i, j, k:arr.shape[2]]) != 0:
                             air_blocks[i, j, k] = self.BASE_BLOCK_VALUE
         return air_blocks
+        
+    def _exists_block(self,
+                      idx: Tuple[int, int, int],
+                      structure: Structure) -> bool:
+        return structure._blocks.get(idx, None) is not None
     
+    def _is_valid_block(self,
+                        loc: Vec,
+                        structure: Structure,
+                        hull: np.typing.NDArray) -> bool:
+        return (self._exists_block(idx=vec_to_idx(v=loc), structure=structure) and not is_slope_block(structure._blocks.get(vec_to_idx(v=loc), None))) or hull[vec_to_idx(v=loc.scale(1 / structure.grid_size).to_veci())] == self.BASE_BLOCK_VALUE
+    
+    def _is_air_block(self,
+                      loc: Vec,
+                      structure: Structure,
+                      hull: np.typing.NDArray) -> bool:
+        return not self._exists_block(idx=vec_to_idx(v=loc), structure=structure) and hull[vec_to_idx(v=loc.scale(1 / structure.grid_size).to_veci())] == self.AIR_BLOCK_VALUE
+    
+    def _pointing_against(self,
+                          loc: Vec,
+                          structure: Structure,
+                          direction: Vec) -> bool:
+        direction = direction.scale(v=1 / structure.grid_size)
+        print(f'Observing block at {loc} via {direction}:')
+        if self._exists_block(vec_to_idx(v=loc), structure=structure):
+            obs_block = structure._blocks.get(vec_to_idx(v=loc))
+        else:
+            obs_block = self._blocks_set.get(vec_to_idx(v=loc.scale(1 / structure.grid_size).to_veci()))
+            if obs_block is None:
+                return False
+        # return obs_block.orientation_forward == direction.opposite() or obs_block.orientation_up == direction.opposite()            
+        return obs_block.orientation_up == direction.opposite()            
+    
+    def simple_conversion(self,
+                          idx: Tuple[int, int, int],
+                          hull: np.typing.NDArray,
+                          structure: Structure) -> Optional[Block]:
+        i, j, k = idx
+        scale = structure.grid_size
+        loc = idx_to_vec(idx=(scale * i, scale * j, scale * k))
+        
+        # for slope, this is a test
+        dd, du = Orientation.DOWN.value.scale(v=scale), Orientation.UP.value.scale(v=scale)
+        dr, dl = Orientation.RIGHT.value.scale(v=scale), Orientation.LEFT.value.scale(v=scale)
+        df, db = Orientation.FORWARD.value.scale(v=scale), Orientation.BACKWARD.value.scale(v=scale)
+        
+        # debugging
+        print(f'\n\nBlock at {i} {j}, {k}:')
+        
+        # print(f' {hull[i,j+1,k+1]} \n{hull[i-1,j,k+1]} {hull[i+1,j,k+1]}\n {hull[i,j-1,k+1]}')
+        # print(f' {hull[i,j+1,k]} \n{hull[i-1,j,k]} {hull[i+1,j,k]}\n {hull[i,j-1,k]}')
+        # print(f' {hull[i,j+1,k-1]} \n{hull[i-1,j,k-1]} {hull[i+1,j,k-1]}\n {hull[i,j-1,k-1]}')
+        
+        # removal check
+        # slopes checks
+        for direction in [dd, du, dr, dl, df, db]:
+            if not self._is_valid_block(loc=loc.sum(direction), structure=structure, hull=hull) and \
+                self._pointing_against(loc=loc.sum(direction), structure=structure, direction=direction):
+                    return None, self.AIR_BLOCK_VALUE
+        
+        # case-based slope assignment
+        if hull[i, j, k] == self.BASE_BLOCK_VALUE:
+            # slope connecting DOWN-LEFT requires air UP-RIGHT
+            if self._is_valid_block(loc=loc.sum(dd), structure=structure, hull=hull) and \
+                self._is_valid_block(loc=loc.sum(dl), structure=structure, hull=hull) and \
+                    self._is_air_block(loc=loc.sum(du), structure=structure, hull=hull) and \
+                    self._is_air_block(loc=loc.sum(dr), structure=structure, hull=hull):
+                return Block(block_type='MyObjectBuilder_CubeBlock_LargeBlockArmorSlope',
+                                orientation_forward=Orientation.DOWN,
+                                orientation_up=Orientation.RIGHT), self.SLOPE_BLOCK_VALUE
+            # slope connecting DOWN-RIGHT requires air UP-LEFT
+            elif self._is_valid_block(loc=loc.sum(dd), structure=structure, hull=hull) and \
+                self._is_valid_block(loc=loc.sum(dr), structure=structure, hull=hull) and \
+                    self._is_air_block(loc=loc.sum(du), structure=structure, hull=hull) and \
+                    self._is_air_block(loc=loc.sum(dl), structure=structure, hull=hull):
+                return Block(block_type='MyObjectBuilder_CubeBlock_LargeBlockArmorSlope',
+                                orientation_forward=Orientation.DOWN,
+                                orientation_up=Orientation.LEFT), self.SLOPE_BLOCK_VALUE
+            # slope connecting UP-LEFT requires air DOWN-RIGHT
+            elif self._is_valid_block(loc=loc.sum(du), structure=structure, hull=hull) and \
+                self._is_valid_block(loc=loc.sum(dl), structure=structure, hull=hull) and \
+                    self._is_air_block(loc=loc.sum(dd), structure=structure, hull=hull) and \
+                    self._is_air_block(loc=loc.sum(dr), structure=structure, hull=hull):
+                return Block(block_type='MyObjectBuilder_CubeBlock_LargeBlockArmorSlope',
+                                orientation_forward=Orientation.UP,
+                                orientation_up=Orientation.RIGHT), self.SLOPE_BLOCK_VALUE
+            # slope connecting UP-RIGHT requires air DOWN-LEFT
+            elif self._is_valid_block(loc=loc.sum(du), structure=structure, hull=hull) and \
+                self._is_valid_block(loc=loc.sum(dr), structure=structure, hull=hull) and \
+                    self._is_air_block(loc=loc.sum(dd), structure=structure, hull=hull) and \
+                    self._is_air_block(loc=loc.sum(dl), structure=structure, hull=hull):
+                return Block(block_type='MyObjectBuilder_CubeBlock_LargeBlockArmorSlope',
+                                orientation_forward=Orientation.UP,
+                                orientation_up=Orientation.LEFT), self.SLOPE_BLOCK_VALUE
+
+        return None, self.BASE_BLOCK_VALUE
+        
     def add_external_hull(self,
                           structure: Structure) -> None:
         """Add an external hull to the given Structure.
@@ -247,8 +246,8 @@ class HullBuilder:
         arr = structure.as_grid_array()
         air = self._tag_internal_air_blocks(arr=arr)
         hull = self._get_convex_hull(arr=arr)
-        hull[np.nonzero(air)] = 0
-        hull[np.nonzero(arr)] = 0
+        hull[np.nonzero(air)] = self.AIR_BLOCK_VALUE
+        hull[np.nonzero(arr)] = self.AIR_BLOCK_VALUE
         
         
         if self.apply_erosion:
@@ -257,51 +256,52 @@ class HullBuilder:
                                     footprint=self.footprint,
                                     mode='constant',
                                     cval=1)
-                hull = hull.astype(float)
+                hull = hull.astype(int)
                 hull *= self.BASE_BLOCK_VALUE                
             elif self.erosion_type == 'bin':
                 mask = np.zeros(arr.shape)
                 for i in range(mask.shape[0]):
                     for j in range(mask.shape[1]):
                         for k in range(mask.shape[2]):
-                            mask[i, j, k] = 0 if self._adj_to_spaceship(i=i,
-                                                                        j=j,
-                                                                        k=k,
-                                                                        spaceship=arr) else 1
+                            mask[i, j, k] = self.AIR_BLOCK_VALUE if self._adj_to_spaceship(i=i, j=j, k=k, spaceship=arr) else self.BASE_BLOCK_VALUE
                 hull = binary_erosion(input=hull,
                                       mask=mask,
                                       iterations=self.iterations)
-                hull = hull.astype(float)
+                hull = hull.astype(int)
                 hull *= self.BASE_BLOCK_VALUE
         
-        if self.apply_smoothing:
-            smoothed_idxs = []
-            # For each block in the hull
-            for i in range(hull.shape[0]):
+        # add blocks to self._blocks_set
+        for i in range(hull.shape[0]):
                 for j in range(hull.shape[1]):
                     for k in range(hull.shape[2]):
-                        # if it has neighbouring block in direction
-                        if hull[i, j, k] == self.BASE_BLOCK_VALUE:
-                            neighbourhood = self._get_neighbourhood(idx=(i, j, k),
-                                                                    arr=hull)
-                            bit_n = self._get_bit_neighbourhood(neighbourhood=neighbourhood)
-                            # add the correct block to the structure
-                            if bit_n in self.smoothing_blocks.keys():
-                                smoothed_idxs.append((i, j, k))
-                                self._add_block(block_type=self.smoothing_blocks[bit_n]['block'],
-                                                structure=structure,
-                                                pos=(i, j, k),
-                                                orientation_forward=self.smoothing_blocks[bit_n]['of'],
-                                                orientation_up=self.smoothing_blocks[bit_n]['ou'])
-            # and set to 0 the value in the hull
-            for (i, j, k) in smoothed_idxs:
-                hull[i, j, k] = 0
-            
+                        if hull[i, j, k] != self.AIR_BLOCK_VALUE:
+                            self._add_block(block_type=self.base_block,
+                                            structure=structure,
+                                            pos=(i, j, k),
+                                            orientation_forward=Orientation.FORWARD,
+                                            orientation_up=Orientation.UP)
         
-        for i in range(hull.shape[0]):
-            for j in range(hull.shape[1]):
-                for k in range(hull.shape[2]):
-                    if hull[i, j, k] != 0:
-                        self._add_block(block_type=self.base_block,
-                                        structure=structure,
-                                        pos=(i, j, k))
+        if self.apply_smoothing:
+            modified = 1
+            while modified != 0:
+                modified = 0
+                to_rem = []      
+                for (i, j, k), block in self._blocks_set.items():
+                    substitute_block, val = self.simple_conversion(idx=(i, j, k),
+                                                                hull=hull,
+                                                                structure=structure)
+                    if substitute_block is not None:
+                        substitute_block.position = block.position
+                        self._blocks_set[(i, j, k)] = substitute_block
+                        modified += 1
+                    elif substitute_block is None and val == self.AIR_BLOCK_VALUE:
+                        to_rem.append((i, j, k))
+                        modified += 1
+                    hull[i, j, k] = val
+                for r in to_rem:
+                    self._blocks_set.pop(r)
+        
+        # add blocks to structure
+        for k, block in self._blocks_set.items():
+            structure.add_block(block=block,
+                                grid_position=block.position.as_tuple())

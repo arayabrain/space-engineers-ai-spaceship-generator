@@ -305,6 +305,9 @@ class Vec:
         else:
             return Vec(x=self.x * v,
                        y=self.y * v)
+    
+    def opposite(self) -> "Vec":
+        return self.scale(v=-1)
 
 
 class Orientation(Enum):
