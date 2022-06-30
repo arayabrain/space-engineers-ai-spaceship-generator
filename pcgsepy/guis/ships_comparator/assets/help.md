@@ -11,5 +11,3 @@ Once you're happy with the scores, click the "Save" button to download the resul
 
 ## How do the spaceships look in-game?
 Here's an example:
-
-![image](./ref_spaceships_lowres.png)

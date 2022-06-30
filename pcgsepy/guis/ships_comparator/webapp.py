@@ -77,6 +77,8 @@ def _get_colour_mapping(block_types: List[str]) -> Dict[str, str]:
     return colour_map
 
 
+
+
 app = dash.Dash(__name__,
                 title='Spasceships comparator',
                 external_stylesheets=[
@@ -93,6 +95,8 @@ def set_app_layout():
         description_str = f.read()
     with open(curr_dir.joinpath('assets/help.md'), 'r') as f:
         help_str = f.read()
+        
+    encoded_image = base64.b64encode(open(curr_dir.joinpath('assets/ref_spaceships_lowres.png'), 'rb').read())
 
     app.layout = html.Div(children=[
         # HEADER
@@ -238,7 +242,12 @@ def set_app_layout():
             html.H2(children='Help',
                     className='section-title'),
             dcc.Markdown(help_str,
-                         className='page-description')
+                         className='page-description'),
+            html.Div(children=[
+                html.Img(src='data:image/png;base64,{}'.format(encoded_image.decode()))
+                ],
+                     style={'display': 'flex', 'flex-direction': 'row', 'justify-content': 'center'})
+            
         ],
             className='footer'),
         dcc.Store(id='rngseed', data=json.dumps(0))
