@@ -571,9 +571,6 @@ def _apply_step(mapelites: MAPElites,
                 selected_bins: List[Tuple[int, int]],
                 gen_counter: int,
                 logger: CustomLogger) -> bool:
-    
-    import time
-    
     if len(selected_bins) > 0:
         valid = True
         if mapelites.enforce_qnt:
@@ -582,12 +579,16 @@ def _apply_step(mapelites: MAPElites,
                 valid &= bin_idx in valid_bins
         if valid:
             logger.log(msg=f'Started step {gen_counter}...')
+            current_n_solutions = mapelites.count_solutions(ignore_age_zero=True)
             mapelites._interactive_step(bin_idxs=selected_bins,
                                         gen=gen_counter)
-            logger.log(msg=f'Completed step {gen_counter + 1}; running 5 additional emitter steps if available...')
+            n_solutions_user = mapelites.count_solutions(ignore_age_zero=True) - current_n_solutions
+            logger.log(msg=f'Completed step {gen_counter + 1} (created {n_solutions_user} solutions); running 5 additional emitter steps if available...')
+            n_solutions_emitter = 0
             for _ in range(5):
                 mapelites.emitter_step(gen=gen_counter)
-            logger.log(msg=f'Emitter step(s) completed.')
+                n_solutions_emitter += mapelites.count_solutions(ignore_age_zero=True) - (current_n_solutions + n_solutions_user) - n_solutions_emitter
+            logger.log(msg=f'Emitter step(s) completed (created {n_solutions_emitter} solutions).')
             return True
         else:
             logger.log(msg='Step not applied: invalid bin(s) selected.')

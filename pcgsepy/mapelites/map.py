@@ -840,6 +840,15 @@ class MAPElites:
                     nonempty.append(self.bins[i, j])
         return np.random.choice(nonempty).get_elite(population=pop)
 
+    def count_solutions(self,
+                        ignore_age_zero: bool = True):
+        n_solutions = 0
+        for i in range(self.bins.shape[0]):
+            for j in range(self.bins.shape[1]):
+                n_solutions += np.sum([1  if x.age != 0 else (1 if ignore_age_zero else 0) for x in self.bins[i, j]._feasible])
+                n_solutions += np.sum([1  if x.age != 0 else (1 if ignore_age_zero else 0) for x in self.bins[i, j]._infeasible])
+        return int(n_solutions)
+    
     def to_json(self) -> Dict[str, Any]:
         return {
             'lsystem': self.lsystem.to_json(),
