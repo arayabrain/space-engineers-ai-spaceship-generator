@@ -442,8 +442,7 @@ def format_bins(mapelites: MAPElites,
                 str_prefix: str,
                 do_switch: bool = True,
                 filter_out_empty: bool = True) -> Tuple[List[Tuple[int, int]], str]:
-    bins_idx_list = _switch(bins_idx_list) if do_switch else bins_idx_list
-    bins_list: List[MAPBin] = [mapelites.bins[i, j] for (i, j) in bins_idx_list]
+    bins_list: List[MAPBin] = [mapelites.bins[j, i] if do_switch else mapelites.bins[i, j] for (i, j) in bins_idx_list]
     sel_bins_str = f'{str_prefix}'
     for b in bins_list:
         if filter_out_empty:
@@ -457,7 +456,6 @@ def format_bins(mapelites: MAPElites,
                 bins_idx_list.remove((i, j))
         else:
             i, j = b.bin_idx
-            i, j = (j, i) if do_switch else (i, j)
             bc1 = np.sum([mbin.bin_size[0] for mbin in mapelites.bins[:i, j]])
             bc2 = np.sum([mbin.bin_size[1] for mbin in mapelites.bins[i, :j]])
             sel_bins_str += f' {(i, j)} [{bc1}:{bc2}];'
@@ -974,6 +972,7 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
         logger.log(msg=f'Unrecognized event trigger: {event_trig}. No operations have been applied!')
 
     selected_bins, selected_bins_str = format_bins(mapelites=mapelites,
+                                                #    bins_idx_list=_switch(selected_bins),
                                                    bins_idx_list=selected_bins,
                                                    do_switch=True,
                                                    str_prefix='Selected bin(s):',

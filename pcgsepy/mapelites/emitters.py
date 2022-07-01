@@ -1,3 +1,4 @@
+from doctest import UnexpectedException
 import warnings
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Tuple
@@ -515,6 +516,93 @@ class ContextualBanditEmitter(Emitter):
         return re
 
 
+class PreferenceBanditEmitter(Emitter):
+    def __init__(self,
+                 epsilon: float = 0.2,
+                 decay: float = 0.01) -> None:
+        super().__init__()
+        self.name = 'preference-bandit-emitter'
+        self.requires_pre = True
+        
+        self._initial_epsilon = epsilon
+        self._epsilon = self._initial_epsilon
+        self._decay = decay
+        self._buffer = Buffer(merge_method=mean_merge)
+        self._estimator: LinearRegression = None
+        self._fitted = False
+
+    def _fit(self) -> None:
+        xs, ys = self._buffer.get()
+        self._estimator = LinearRegression().fit(X=xs, y=ys)
+        self._fitted = True
+    
+    def _get_valid_bins(self,
+                        bins: 'np.ndarray[MAPBin]') -> npt.NDArray[np.float32]:
+        valid = np.zeros_like(bins, dtype=np.uint8)
+        for i in range(bins.shape[0]):
+            for j in range(bins.shape[1]):
+                if bins[i, j].non_empty(pop='feasible'):
+                    valid[i, j] = 1
+        return valid
+    
+    def _get_bins_index(self,
+                        bins: 'np.ndarray[MAPBin]',
+                        normalize: bool = True) -> npt.NDArray[np.float32]:
+        bin_idxs = np.zeros(shape=(bins.shape[0], bins.shape[1], 2))
+        for i in range(bins.shape[0]):
+            for j in range(bins.shape[1]):
+                bin_idxs[i, j, :] = [i, j]
+        if normalize:
+            bin_idxs[:, :, 0] = bin_idxs[:, :, 0] / bins.shape[0]
+            bin_idxs[:, :, 1] = bin_idxs[:, :, 1] / bins.shape[1]
+        return bin_idxs
+    
+    def _predict(self,
+                 bins: 'np.ndarray[MAPBin]') -> Tuple[int, int]:
+        mask = self._get_valid_bins(bins=bins)
+        preferences = self._get_bins_index(bins=bins, normalize=True)
+        mask3d = np.zeros(preferences.shape, dtype=bool)
+        mask3d[:,:,:] = mask[:,:, np.newaxis] == 1
+        preferences = preferences[mask3d].reshape(-1, 2)
+        choose_from = self._estimator.predict(X=preferences)
+        out = np.zeros_like(bins, dtype=np.float32)
+        out[mask == 1] = choose_from[:]
+        return np.flip(np.argsort(out, axis=None))
+    
+    def pre_step(self, **kwargs) -> None:
+        bins: 'np.ndarray[MAPBin]' = kwargs['bins']
+        idxs: List[Tuple[int, int]] = kwargs['selected_idxs']
+        for i in range(bins.shape[0]):
+            for j in range(bins.shape[1]):
+                if bins[i, j].non_empty(pop='feasible'):
+                    self._buffer.insert(x=np.asarray([i / bins.shape[0], j / bins.shape[1]]),
+                                        y=1. if (i, j) in idxs else 0.)
+        self._fit()
+        
+    def pick_bin(self,
+                 bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
+        assert self._fitted, f'{self.name} requires fitting and has not been fit yet!'
+        sorted_bins = np.transpose(np.unravel_index(self._predict(bins=bins), bins.shape))
+        p = np.random.uniform(low=0, high=1, size=1) < self._epsilon
+        self._epsilon -= self._epsilon * self._decay
+        if p:
+            np.random.shuffle(sorted_bins)
+        fcs, ics, i = 0, 0, 0
+        selected_bins = []
+        while fcs < 2 or ics < 2:
+            b = bins[sorted_bins[i][0], sorted_bins[i][1]]
+            fcs += b.len('feasible')
+            ics += b.len('infeasible')
+            selected_bins.append(b)
+            i += 1
+        return selected_bins
+
+    def reset(self) -> None:
+        self._epsilon = self._initial_epsilon
+        self._buffer.clear()
+        self._estimator = None
+        self._fitted = False
+
 def get_emitter_by_str(emitter: str) -> Emitter:
     if emitter == 'random-emitter':
         return RandomEmitter()
@@ -531,5 +619,6 @@ emitters = {
     'optimising-emitter': OptimisingEmitter,
     'optimising-emitter-v2': OptimisingEmitterV2,
     'human-preference-matrix-emitter': HumanPrefMatrixEmitter,
-    'contextual-bandit-emitter': ContextualBanditEmitter
+    'contextual-bandit-emitter': ContextualBanditEmitter,
+    'preference-bandit-emitter': PreferenceBanditEmitter
 }
