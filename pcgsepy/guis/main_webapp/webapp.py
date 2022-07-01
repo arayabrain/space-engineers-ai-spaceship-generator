@@ -1,7 +1,7 @@
 from cmath import exp
 import json
 from datetime import datetime
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import dash
 from matplotlib.style import available
@@ -12,10 +12,11 @@ import random
 from dash import ALL, dcc, html
 from dash.dependencies import Input, Output, State
 from pcgsepy.common.jsonifier import json_dumps, json_loads
-from pcgsepy.config import BIN_POP_SIZE, CS_MAX_AGE, N_GENS_ALLOWED
+from pcgsepy.config import BIN_POP_SIZE, CS_MAX_AGE, N_EMITTER_STEPS, N_GENS_ALLOWED
 from pcgsepy.lsystem.rules import StochasticRules
 from pcgsepy.lsystem.solution import CandidateSolution
 from pcgsepy.mapelites.behaviors import BehaviorCharacterization, avg_ma, mame, mami, symmetry
+from pcgsepy.mapelites.bin import MAPBin
 from pcgsepy.mapelites.emitters import (ContextualBanditEmitter,
                                         HumanPrefMatrixEmitter, RandomEmitter)
 from pcgsepy.mapelites.map import MAPElites, get_structure
@@ -100,6 +101,7 @@ app = dash.Dash(__name__,
 
 
 def set_app_layout(behavior_descriptors_names,
+                   mapelites: Optional[MAPElites] = None,
                    dev_mode: bool = True):
     description_str, help_str = '', ''
     with open('./assets/description.md', 'r') as f:
@@ -107,13 +109,14 @@ def set_app_layout(behavior_descriptors_names,
     help_file = './assets/help_dev.md' if dev_mode else './assets/help_user.md'
     with open(help_file, 'r') as f:
         help_str = f.read()
-        
+    
     my_rngseed = random.randint(0, 128)
-    random.seed(my_rngseed)
     my_emitterslist = available_mapelites.copy()
-    random.shuffle(my_emitterslist)
-    with open(my_emitterslist[0], 'r') as f:
-        mapelites = json_loads(f.read())
+    if mapelites is None:
+        random.seed(my_rngseed)
+        random.shuffle(my_emitterslist)
+        with open(my_emitterslist[0], 'r') as f:
+            mapelites = json_loads(f.read())
     
     my_logger = CustomLogger()
     my_logger.log(msg=f'Your ID is {str(my_rngseed).zfill(3)}; please remember this!')
@@ -434,6 +437,33 @@ def _get_valid_bins(mapelites: MAPElites):
     return _switch(valid_bins)
 
 
+def format_bins(mapelites: MAPElites,
+                bins_idx_list: List[Tuple[int, int]],
+                str_prefix: str,
+                do_switch: bool = True,
+                filter_out_empty: bool = True) -> Tuple[List[Tuple[int, int]], str]:
+    bins_idx_list = _switch(bins_idx_list) if do_switch else bins_idx_list
+    bins_list: List[MAPBin] = [mapelites.bins[i, j] for (i, j) in bins_idx_list]
+    sel_bins_str = f'{str_prefix}'
+    for b in bins_list:
+        if filter_out_empty:
+            if b.non_empty(pop='feasible') or b.non_empty(pop='infeasible'):
+                i, j = b.bin_idx
+                i, j = (j, i) if do_switch else (i, j)
+                bc1 = np.sum([mbin.bin_size[0] for mbin in mapelites.bins[:i, j]])
+                bc2 = np.sum([mbin.bin_size[1] for mbin in mapelites.bins[i, :j]])
+                sel_bins_str += f' {(i, j)} [{bc1}:{bc2}];'
+            elif b.bin_idx in bins_idx_list:
+                bins_idx_list.remove((i, j))
+        else:
+            i, j = b.bin_idx
+            i, j = (j, i) if do_switch else (i, j)
+            bc1 = np.sum([mbin.bin_size[0] for mbin in mapelites.bins[:i, j]])
+            bc2 = np.sum([mbin.bin_size[1] for mbin in mapelites.bins[i, :j]])
+            sel_bins_str += f' {(i, j)} [{bc1}:{bc2}];'
+    return bins_idx_list, sel_bins_str
+
+
 def _get_selected_bins_json(selected_bins):
     _switch(selected_bins)
 
@@ -583,9 +613,9 @@ def _apply_step(mapelites: MAPElites,
             mapelites._interactive_step(bin_idxs=selected_bins,
                                         gen=gen_counter)
             n_solutions_user = mapelites.count_solutions(ignore_age_zero=True) - current_n_solutions
-            logger.log(msg=f'Completed step {gen_counter + 1} (created {n_solutions_user} solutions); running 5 additional emitter steps if available...')
+            logger.log(msg=f'Completed step {gen_counter + 1} (created {n_solutions_user} solutions); running {N_EMITTER_STEPS} additional emitter steps if available...')
             n_solutions_emitter = 0
-            for _ in range(5):
+            for _ in range(N_EMITTER_STEPS):
                 mapelites.emitter_step(gen=gen_counter)
                 n_solutions_emitter += mapelites.count_solutions(ignore_age_zero=True) - (current_n_solutions + n_solutions_user) - n_solutions_emitter
             logger.log(msg=f'Emitter step(s) completed (created {n_solutions_emitter} solutions).')
@@ -723,22 +753,6 @@ def _apply_emitter_change(mapelites: MAPElites,
 def update_output(n, logger):
     logger: CustomLogger = json_loads(logger)
     return ('\n'.join(logger.queue))
-
-
-# @app.callback(
-#     Output("download-content", "data"),
-#     Output('experiment-number', 'data'),
-#     Output('gen-counter', 'data'),
-#     Input("download-btn", "n_clicks"),
-#     State('content-string', 'value'),
-#     State('experiment-number', 'data'),
-#     prevent_initial_call=True,
-# )
-# def download_content(n_clicks,
-#                      content_string, exp_n):
-#     exp_n: int = json.loads(exp_n)
-#     if content_string != '':
-#         return dict(content=content_string, filename='MySpaceship.txt'), json.dumps(exp_n + 1), json.dumps(0)
 
 
 @app.callback(
@@ -938,7 +952,7 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
                 selected_bins = []
                 curr_content = go.Figure(data=[])
                 cs_string = cs_size = cs_n_blocks  = ''                
-                logger.log(f'Reached end of all experiments! Please go HERE to continue the evaluation.')
+                logger.log(f'Reached end of all experiments! Please go back to the questionnaire to continue the evaluation.')
             else:
                 gen_counter = 0
                 with open(emitters_list[exp_n], 'r') as f:
@@ -950,7 +964,7 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
                 selected_bins = []
                 curr_content = go.Figure(data=[])
                 cs_string = cs_size = cs_n_blocks  = ''
-                logger.log(msg=f'Reached end of experiment {exp_n}! Loaded next experiment.')
+                logger.log(msg=f'Reached end of experiment {exp_n}! Loaded next experiment. Fill out the questionnaire before continuing.')
     elif event_trig is None:
         curr_heatmap = _build_heatmap(mapelites=mapelites,
                                     pop_name=pop_name,
@@ -959,4 +973,15 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
     else:
         logger.log(msg=f'Unrecognized event trigger: {event_trig}. No operations have been applied!')
 
-    return curr_heatmap, curr_content, f'Valid bins are: {_get_valid_bins(mapelites=mapelites)}', f'Current generation: {gen_counter}', json.dumps(gen_counter), json_dumps(mapelites), str(mapelites.lsystem.hl_solver.parser.rules), f'Selected bin(s): {selected_bins}', json.dumps([[int(x[0]), int(x[1])] for x in selected_bins]), cs_string, cs_size, cs_n_blocks, json_dumps(obj=logger), gen_counter < N_GENS_ALLOWED, gen_counter < N_GENS_ALLOWED, gen_counter >= N_GENS_ALLOWED, content_dl, json.dumps(exp_n)
+    selected_bins, selected_bins_str = format_bins(mapelites=mapelites,
+                                                   bins_idx_list=selected_bins,
+                                                   do_switch=True,
+                                                   str_prefix='Selected bin(s):',
+                                                   filter_out_empty=True) 
+    _, valid_bins_str = format_bins(mapelites=mapelites,
+                                    do_switch=False,
+                                    bins_idx_list=_get_valid_bins(mapelites=mapelites),
+                                    str_prefix='Valid bins are:',
+                                    filter_out_empty=False)
+    
+    return curr_heatmap, curr_content, valid_bins_str, f'Current generation: {gen_counter}', json.dumps(gen_counter), json_dumps(mapelites), str(mapelites.lsystem.hl_solver.parser.rules), selected_bins_str, json.dumps([[int(x[0]), int(x[1])] for x in selected_bins]), cs_string, cs_size, cs_n_blocks, json_dumps(obj=logger), gen_counter < N_GENS_ALLOWED, gen_counter < N_GENS_ALLOWED, gen_counter >= N_GENS_ALLOWED, content_dl, json.dumps(exp_n)
