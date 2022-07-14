@@ -9,6 +9,7 @@ from pcgsepy.config import CS_MAX_AGE
 from pcgsepy.mapelites.bin import MAPBin
 from pcgsepy.mapelites.buffer import Buffer, mean_merge
 from sklearn.linear_model import LinearRegression
+from scipy.stats import boltzmann
 
 
 def diversity_builder(bins: 'np.ndarray[MAPBin]',
@@ -247,6 +248,8 @@ class HumanPrefMatrixEmitter(Emitter):
         self._decay = decay
         self._last_selected = []
         self._prefs = None
+        
+        self.sampling_strategy = 'epsilon_greedy'  # or 'gibbs'
     
     def _build_pref_matrix(self,
                            bins: 'np.ndarray[MAPBin]') -> None:
@@ -326,7 +329,12 @@ class HumanPrefMatrixEmitter(Emitter):
                  bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
         assert self._prefs is not None, 'Human-preference emitter has not been initialized! Preference matrix has not been set.'
         self._last_selected = []
-        p = np.random.uniform(low=0, high=1, size=1) < 1 / (1 + self._tot_actions)
+        if self.sampling_strategy == 'epsilon_greedy':
+            p = np.random.uniform(low=0, high=1, size=1) < 1 / (1 + self._tot_actions)
+        elif self.sampling_strategy == 'gibbs':
+            p = np.random.uniform(low=0, high=1, size=1) < boltzmann.ppf(self._tot_actions, 0.5, 1)
+        else:
+            raise Exception(f'Unknown sampling method for emitter: {self.sampling_strategy}.')
         bins = self._random_bins(bins=bins) if p else self._most_likely_bins(bins=bins)
         self._tot_actions += 1
         return bins
@@ -411,6 +419,9 @@ class ContextualBanditEmitter(Emitter):
         self._estimator: LinearRegression = None
         self._fitted = False
         
+        self._tot_actions = 0
+        self.sampling_strategy = 'epsilon_greedy'  # or 'gibbs'
+        
     def _fit(self) -> None:
         xs, ys = self._buffer.get()
         self._estimator = LinearRegression().fit(X=xs, y=ys)
@@ -449,8 +460,14 @@ class ContextualBanditEmitter(Emitter):
                  bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
         assert self._fitted, f'{self.name} requires fitting and has not been fit yet!'
         sorted_bins = np.transpose(np.unravel_index(self._predict(bins=bins), bins.shape))
-        p = np.random.uniform(low=0, high=1, size=1) < self._epsilon
-        self._epsilon -= self._epsilon * self._decay
+        if self.sampling_strategy == 'epsilon_greedy':
+            p = np.random.uniform(low=0, high=1, size=1) < self._epsilon
+            self._epsilon -= self._epsilon * self._decay
+        elif self.sampling_strategy == 'gibbs':
+            p = np.random.uniform(low=0, high=1, size=1) < boltzmann.ppf(self._tot_actions, 0.5, 1)
+            self._tot_actions += 1
+        else:
+            raise Exception(f'Unknown sampling method for emitter: {self.sampling_strategy}.')
         if p:
             np.random.shuffle(sorted_bins)
         fcs, ics, i = 0, 0, 0
@@ -530,6 +547,9 @@ class PreferenceBanditEmitter(Emitter):
         self._buffer = Buffer(merge_method=mean_merge)
         self._estimator: LinearRegression = None
         self._fitted = False
+        
+        self._tot_actions = 0
+        self.sampling_strategy = 'epsilon_greedy'  # or 'gibbs'
 
     def _fit(self) -> None:
         xs, ys = self._buffer.get()
@@ -583,8 +603,14 @@ class PreferenceBanditEmitter(Emitter):
                  bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
         assert self._fitted, f'{self.name} requires fitting and has not been fit yet!'
         sorted_bins = np.transpose(np.unravel_index(self._predict(bins=bins), bins.shape))
-        p = np.random.uniform(low=0, high=1, size=1) < self._epsilon
-        self._epsilon -= self._epsilon * self._decay
+        if self.sampling_strategy == 'epsilon_greedy':
+            p = np.random.uniform(low=0, high=1, size=1) < self._epsilon
+            self._epsilon -= self._epsilon * self._decay
+        elif self.sampling_strategy == 'gibbs':
+            p = np.random.uniform(low=0, high=1, size=1) < boltzmann.ppf(self._tot_actions, 0.5, 1)
+            self._tot_actions += 1
+        else:
+            raise Exception(f'Unknown sampling method for emitter: {self.sampling_strategy}.')
         if p:
             np.random.shuffle(sorted_bins)
         fcs, ics, i = 0, 0, 0

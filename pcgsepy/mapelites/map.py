@@ -371,7 +371,7 @@ class MAPElites:
         # assign solutions to bins
         self._update_bins(lcs=all_cs)
         if type(self.emitter) is HumanPrefMatrixEmitter:
-            self.emitter._increase_preferences_res(idx=bin_idx) 
+            self.emitter._increase_preferences_res(idx=bin_idx)
 
     def _update_bins(self,
                      lcs: List[CandidateSolution]) -> None:
@@ -455,9 +455,9 @@ class MAPElites:
                 try:
                     minimize = False if pop[0].is_feasible else False if self.estimator is not None else True
                     new_pool = create_new_pool(population=pop,
-                                            generation=gen,
-                                            n_individuals=len(pop),
-                                            minimize=minimize)
+                                               generation=gen,
+                                               n_individuals=BIN_POP_SIZE,
+                                               minimize=minimize)
                     subdivide_solutions(lcs=new_pool,
                                         lsystem=self.lsystem)
                     # ensure content is set
@@ -754,6 +754,7 @@ class MAPElites:
                 ipop.extend(selected_bin._infeasible)
         else:
             raise NotImplementedError(f'Unrecognized emitter output: {selected_bins}.')
+        print(f'Emitter picked a total of {len(fpop)} feasible and {len(ipop)} infeasible solutions ({len(selected_bins)}).')
         generated = self._step(populations=[fpop, ipop],
                                gen=gen)
         if generated:
@@ -848,7 +849,7 @@ class MAPElites:
                 n_solutions += np.sum([1  if x.age != 0 else (1 if ignore_age_zero else 0) for x in self.bins[i, j]._feasible])
                 n_solutions += np.sum([1  if x.age != 0 else (1 if ignore_age_zero else 0) for x in self.bins[i, j]._infeasible])
         return int(n_solutions)
-    
+       
     def to_json(self) -> Dict[str, Any]:
         return {
             'lsystem': self.lsystem.to_json(),
