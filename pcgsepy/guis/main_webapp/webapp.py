@@ -1,3 +1,4 @@
+import base64
 from cmath import exp
 import json
 from datetime import datetime
@@ -286,6 +287,37 @@ def set_app_layout(behavior_descriptors_names,
                                 id='emitter-dropdown',
                                 className='dropdown',
                                 style={'width': '100%'}),
+                            ],
+                                style={'width': '80%', 'vertical-align': 'middle', 'margin': '0 auto'})
+                        ]),
+                    ],
+                         style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
+                html.Div(children=[
+                    html.H6(children='Save/load population',
+                            className='section-title'),
+                    html.Div(children=[
+                        html.Div(children=[
+                            html.Button('Download current population',
+                                        id='popdownload-btn',
+                                        className='button',
+                                        style={'width': '100%'}),
+                            html.Br(),
+                            dcc.Upload(
+                                id='popupload-data',
+                                children='Upload population',
+                                style={
+                                    'width': '60%',
+                                    'height': '60px',
+                                    'lineHeight': '60px',
+                                    'borderWidth': '1px',
+                                    'borderStyle': 'dashed',
+                                    'borderRadius': '5px',
+                                    'textAlign': 'center',
+                                    'margin': '10px auto'
+                                },
+                                # Allow multiple files to be uploaded
+                                multiple=False
+                            ),
                             ],
                                 style={'width': '80%', 'vertical-align': 'middle', 'margin': '0 auto'})
                         ]),
@@ -820,10 +852,12 @@ def download_mapelites(n_clicks,
               Input('selection-clr-btn', 'n_clicks'),
               Input('emitter-dropdown', 'value'),
               
-              Input("download-btn", "n_clicks")
+              Input("download-btn", "n_clicks"),
+              Input('popdownload-btn', 'n_clicks'),
+              Input('popupload-data', 'contents'),
               )
 def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules, curr_selected, curr_content, cs_string, cs_size, cs_n_blocks, logger, exp_n, emitters_list, rngseed,
-                     pop_name, metric_name, method_name, n_clicks_step, n_clicks_reset, n_clicks_sub, weights, b0, b1, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download):
+                     pop_name, metric_name, method_name, n_clicks_step, n_clicks_reset, n_clicks_sub, weights, b0, b1, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents):
     gen_counter: int = json.loads(gen_counter) if gen_counter else 0
     selected_bins: List[Tuple[int, int]] = json.loads(selected_bins) if selected_bins else []
     exp_n: int = json.loads(exp_n)
@@ -840,6 +874,8 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
     else:
         event_trig = ctx.triggered[0]['prop_id'].split('.')[0]
 
+    print(f'Received trigger {event_trig}.')
+    
     if event_trig == 'step-btn':
         res = _apply_step(mapelites=mapelites,
                           selected_bins=[[x[1], x[0]] for x in selected_bins],
@@ -963,6 +999,21 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
                 curr_content = go.Figure(data=[])
                 cs_string = cs_size = cs_n_blocks  = ''
                 logger.log(msg=f'Reached end of experiment {exp_n}! Loaded next experiment. Fill out the questionnaire before continuing.')
+    elif event_trig == 'popdownload-btn':
+        content_dl = dict(content=json.dumps([b.to_json() for b in mapelites.bins.flatten().tolist()]),
+                          filename=f'population_{rngseed}_exp{exp_n}.json')
+    elif event_trig == 'popupload-data':
+        _, upload_contents = upload_contents.split(',')
+        upload_contents = base64.b64decode(upload_contents).decode()
+        all_bins = np.asarray([MAPBin.from_json(x) for x in json.loads(upload_contents)])
+        mapelites.reset(lcs=[])
+        all_bins = all_bins.reshape(mapelites.bin_qnt)
+        mapelites.bins = all_bins
+        logger.log(msg=f'Set population from file successfully.')
+        curr_heatmap = _build_heatmap(mapelites=mapelites,
+                                    pop_name=pop_name,
+                                    metric_name=metric_name,
+                                    method_name=method_name)
     elif event_trig is None:
         curr_heatmap = _build_heatmap(mapelites=mapelites,
                                     pop_name=pop_name,
