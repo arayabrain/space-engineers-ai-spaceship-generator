@@ -18,8 +18,8 @@ from pcgsepy.lsystem.rules import StochasticRules
 from pcgsepy.lsystem.solution import CandidateSolution
 from pcgsepy.mapelites.behaviors import BehaviorCharacterization, avg_ma, mame, mami, symmetry
 from pcgsepy.mapelites.bin import MAPBin
-from pcgsepy.mapelites.emitters import (ContextualBanditEmitter,
-                                        HumanPrefMatrixEmitter, RandomEmitter)
+from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, HumanEmitter,
+                                        HumanPrefMatrixEmitter, PreferenceBanditEmitter, RandomEmitter)
 from pcgsepy.mapelites.map import MAPElites, get_structure
 
 
@@ -282,8 +282,8 @@ def set_app_layout(behavior_descriptors_names,
                             className='section-title'),
                     html.Div(children=[
                         html.Div(children=[
-                            dcc.Dropdown(['Random', 'Preference-matrix', 'Contextual Bandit'],
-                                'Random',
+                            dcc.Dropdown(['Human', 'Random', 'Preference Matrix', 'Preference Bandit', 'Contextual Bandit'],
+                                'Human',
                                 id='emitter-dropdown',
                                 className='dropdown',
                                 style={'width': '100%'}),
@@ -639,16 +639,14 @@ def _apply_step(mapelites: MAPElites,
                 valid &= bin_idx in valid_bins
         if valid:
             logger.log(msg=f'Started step {gen_counter}...')
-            current_n_solutions = mapelites.count_solutions(ignore_age_zero=True)
             mapelites._interactive_step(bin_idxs=selected_bins,
                                         gen=gen_counter)
-            n_solutions_user = mapelites.count_solutions(ignore_age_zero=True) - current_n_solutions
-            logger.log(msg=f'Completed step {gen_counter + 1} (created {n_solutions_user} solutions); running {N_EMITTER_STEPS} additional emitter steps if available...')
-            n_solutions_emitter = 0
+            logger.log(msg=f'Completed step {gen_counter + 1} (created {mapelites.n_new_solutions} solutions); running {N_EMITTER_STEPS} additional emitter steps if available...')
+            mapelites.n_new_solutions = 0
             for _ in range(N_EMITTER_STEPS):
                 mapelites.emitter_step(gen=gen_counter)
-                n_solutions_emitter += mapelites.count_solutions(ignore_age_zero=True) - (current_n_solutions + n_solutions_user) - n_solutions_emitter
-            logger.log(msg=f'Emitter step(s) completed (created {n_solutions_emitter} solutions).')
+            logger.log(msg=f'Emitter step(s) completed (created {mapelites.n_new_solutions} solutions).')
+            mapelites.n_new_solutions = 0
             return True
         else:
             logger.log(msg='Step not applied: invalid bin(s) selected.')
@@ -766,12 +764,18 @@ def _apply_emitter_change(mapelites: MAPElites,
         mapelites.emitter._build_pref_matrix(bins=mapelites.bins)
         logger.log(msg=f'Emitter set to {emitter_name}')
         return True
-        pass
     elif emitter_name == 'Contextual Bandit':
         mapelites.emitter = ContextualBanditEmitter()
         logger.log(msg=f'Emitter set to {emitter_name}')
         return True
-        pass
+    elif emitter_name == 'Preference Bandit':
+        mapelites.emitter = PreferenceBanditEmitter()
+        logger.log(msg=f'Emitter set to {emitter_name}')
+        return True
+    elif emitter_name == 'None':
+        mapelites.emitter = HumanEmitter()
+        logger.log(msg=f'Emitter set to {emitter_name}')
+        return True
     else:
         logger.log(msg=f'Unrecognized emitter type {emitter_name}')
         return False
@@ -1034,4 +1038,5 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, mapelites, rules,
                                     str_prefix='Valid bins are:',
                                     filter_out_empty=False)
     
-    return curr_heatmap, curr_content, valid_bins_str, f'Current generation: {gen_counter}', json.dumps(gen_counter), json_dumps(mapelites), str(mapelites.lsystem.hl_solver.parser.rules), selected_bins_str, json.dumps([[int(x[0]), int(x[1])] for x in selected_bins]), cs_string, cs_size, cs_n_blocks, json_dumps(obj=logger), gen_counter < N_GENS_ALLOWED, gen_counter < N_GENS_ALLOWED, gen_counter >= N_GENS_ALLOWED, content_dl, json.dumps(exp_n)
+    # return curr_heatmap, curr_content, valid_bins_str, f'Current generation: {gen_counter}', json.dumps(gen_counter), json_dumps(mapelites), str(mapelites.lsystem.hl_solver.parser.rules), selected_bins_str, json.dumps([[int(x[0]), int(x[1])] for x in selected_bins]), cs_string, cs_size, cs_n_blocks, json_dumps(obj=logger), gen_counter < N_GENS_ALLOWED, gen_counter < N_GENS_ALLOWED, gen_counter >= N_GENS_ALLOWED, content_dl, json.dumps(exp_n)
+    return curr_heatmap, curr_content, valid_bins_str, f'Current generation: {gen_counter}', json.dumps(gen_counter), json_dumps(mapelites), str(mapelites.lsystem.hl_solver.parser.rules), selected_bins_str, json.dumps([[int(x[0]), int(x[1])] for x in selected_bins]), cs_string, cs_size, cs_n_blocks, json_dumps(obj=logger), False, gen_counter < N_GENS_ALLOWED, gen_counter >= N_GENS_ALLOWED, content_dl, json.dumps(exp_n)

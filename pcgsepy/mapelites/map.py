@@ -140,6 +140,8 @@ class MAPElites:
         
         self.allow_res_increase = True
         self.allow_aging = True
+        
+        self.n_new_solutions = 0
                 
         assert self.agent is not None or self.emitter is not None, 'MAP-Elites requires either an agent or an emitter!'
         if self.agent is not None and not self.agent_rewards: raise AssertionError(f'You selected an agent but no reward functions have been provided!')
@@ -520,6 +522,9 @@ class MAPElites:
                                                                                     })
                 except EvoException:
                     pass
+        
+        self.n_new_solutions += len(generated)
+        
         return generated
 
     def rand_step(self,
@@ -742,30 +747,31 @@ class MAPElites:
         else:
             raise NotImplementedError('MAP-Elites requires either a fixed emitter or a MultiArmed Bandit Agent, but neither were provided.')
         selected_bins = emitter.pick_bin(bins=self.bins)
-        fpop, ipop = [], []
-        if isinstance(selected_bins[0], MAPBin):
-            for selected_bin in selected_bins:
-                fpop.extend(selected_bin._feasible)
-                ipop.extend(selected_bin._infeasible)
-        elif isinstance(selected_bins[0], list):
-            for selected_bin in selected_bins[0]:
-                fpop.extend(selected_bin._feasible)
-            for selected_bin in selected_bins[1]:
-                ipop.extend(selected_bin._infeasible)
-        else:
-            raise NotImplementedError(f'Unrecognized emitter output: {selected_bins}.')
-        print(f'Emitter picked a total of {len(fpop)} feasible and {len(ipop)} infeasible solutions ({len(selected_bins)}).')
-        generated = self._step(populations=[fpop, ipop],
-                               gen=gen)
-        if generated:
-            self._update_bins(lcs=generated)
-            self._check_res_trigger()
-        if self.emitter is not None and self.emitter.requires_post:
-            self.emitter.post_step(bins=self.bins)
-        if bandit is not None:
-            r = self.compute_bandit_reward()
-            self.agent.reward_bandit(bandit=bandit,
-                                     reward=r)
+        if selected_bins:
+            fpop, ipop = [], []
+            if isinstance(selected_bins[0], MAPBin):
+                for selected_bin in selected_bins:
+                    fpop.extend(selected_bin._feasible)
+                    ipop.extend(selected_bin._infeasible)
+            elif isinstance(selected_bins[0], list):
+                for selected_bin in selected_bins[0]:
+                    fpop.extend(selected_bin._feasible)
+                for selected_bin in selected_bins[1]:
+                    ipop.extend(selected_bin._infeasible)
+            else:
+                raise NotImplementedError(f'Unrecognized emitter output: {selected_bins}.')
+            print(f'Emitter picked a total of {len(fpop)} feasible and {len(ipop)} infeasible solutions ({len(selected_bins)}).')
+            generated = self._step(populations=[fpop, ipop],
+                                gen=gen)
+            if generated:
+                self._update_bins(lcs=generated)
+                self._check_res_trigger()
+            if self.emitter is not None and self.emitter.requires_post:
+                self.emitter.post_step(bins=self.bins)
+            if bandit is not None:
+                r = self.compute_bandit_reward()
+                self.agent.reward_bandit(bandit=bandit,
+                                        reward=r)
     
     def get_coverage(self,
                      pop: str) -> Tuple[int, int]:

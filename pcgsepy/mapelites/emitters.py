@@ -1,10 +1,11 @@
 from doctest import UnexpectedException
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
+from sklearn.preprocessing import scale
 from pcgsepy.config import CS_MAX_AGE
 from pcgsepy.mapelites.bin import MAPBin
 from pcgsepy.mapelites.buffer import Buffer, mean_merge
@@ -249,7 +250,8 @@ class HumanPrefMatrixEmitter(Emitter):
         self._last_selected = []
         self._prefs = None
         
-        self.sampling_strategy = 'epsilon_greedy'  # or 'gibbs'
+        self.sampling_strategy = 'epsilon_greedy'  # or 'gibbs', 'thompson'
+        self._thompson_stats = None
     
     def _build_pref_matrix(self,
                            bins: 'np.ndarray[MAPBin]') -> None:
@@ -258,13 +260,13 @@ class HumanPrefMatrixEmitter(Emitter):
             for j in range(bins.shape[1]):
                 if bins[i, j].non_empty(pop='feasible') or bins[i, j].non_empty(pop='infeasbile'):
                     self._prefs[i, j] = 2 * self._decay
+        self._thompson_stats = np.ones(shape=(self._prefs.shape[0], self._prefs.shape[1], 2))
     
     def _random_bins(self,
                      bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
         fcs, ics = 0, 0
         selected_bins = []
-        div_matrix = diversity_builder(bins=bins, n_features=7)
-        choose_from = self._prefs * (1 - self.diversity_weight) + div_matrix * self.diversity_weight
+        choose_from = self._prefs * (1 - self.diversity_weight) #+ diversity_builder(bins=bins, n_features=7) * self.diversity_weight
         idxs = np.argwhere(choose_from > 0)
         np.random.shuffle(idxs)
         while fcs < 2 or ics < 2:
@@ -277,12 +279,13 @@ class HumanPrefMatrixEmitter(Emitter):
         return selected_bins
     
     def _most_likely_bins(self,
-                          bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
+                          bins: 'np.ndarray[MAPBin]',
+                          prefs: Optional[np.typing.NDArray] = None) -> List[MAPBin]:
         fcs, ics = 0, 0
         selected_bins = []
-        div_matrix = diversity_builder(bins=bins, n_features=7)
-        choose_from = self._prefs * (1 - self.diversity_weight) + div_matrix * self.diversity_weight
-        idxs = np.transpose(np.unravel_index(np.flip(np.argsort(choose_from, axis=None)), self._prefs.shape))
+        prefs = prefs if prefs is not None else self._prefs
+        choose_from = prefs * (1 - self.diversity_weight) #+ diversity_builder(bins=bins, n_features=7) * self.diversity_weight
+        idxs = np.transpose(np.unravel_index(np.flip(np.argsort(choose_from, axis=None)), prefs.shape))
         while fcs < 2 or ics < 2:
             self._last_selected.append(idxs[0, :])
             idxs = idxs[1:, :]
@@ -305,21 +308,30 @@ class HumanPrefMatrixEmitter(Emitter):
                         break
         return n_new_bins
     
+    def _reshape_matrix(self,
+                        arr: np.typing.NDArray,
+                        idx: Tuple[int, int]) -> np.typing.NDArray:
+        i, j = idx
+        # create new matrix by coping preferences over to new column/rows
+        # rows repetitions
+        a = np.ones(shape=arr.shape[0], dtype=int)
+        a[i] += 1
+        # copy row
+        arr = np.repeat(arr, repeats=a, axis=0)
+        # columns repetitions
+        a = np.ones(shape=arr.shape[1], dtype=int)
+        a[j] += 1
+        # copy column
+        arr = np.repeat(arr, repeats=a, axis=1)
+        return arr
+    
     def _increase_preferences_res(self,
                                   idx: Tuple[int, int]) -> None:
         assert self._prefs is not None, 'Human-preference emitter has not been initialized! Preference matrix has not been set.'
-        i, j = idx
-        # create new preference matrix by coping preferences over to new column/rows
-        # rows repetitions
-        a = np.ones(shape=self._prefs.shape[0], dtype=int)
-        a[i] += 1
-        # copy row
-        self._prefs = np.repeat(self._prefs, repeats=a, axis=0)
-        # columns repetitions
-        a = np.ones(shape=self._prefs.shape[1], dtype=int)
-        a[j] += 1
-        # copy column
-        self._prefs = np.repeat(self._prefs, repeats=a, axis=1)
+        self._prefs = self._reshape_matrix(arr=self._prefs,
+                                           idx=idx)
+        self._thompson_stats = self._reshape_matrix(arr=self._thompson_stats,
+                                                    idx=idx)
     
     def _decay_preferences(self) -> None:
         self._prefs -= self._prefs * self._decay
@@ -329,15 +341,26 @@ class HumanPrefMatrixEmitter(Emitter):
                  bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
         assert self._prefs is not None, 'Human-preference emitter has not been initialized! Preference matrix has not been set.'
         self._last_selected = []
-        if self.sampling_strategy == 'epsilon_greedy':
-            p = np.random.uniform(low=0, high=1, size=1) < 1 / (1 + self._tot_actions)
-        elif self.sampling_strategy == 'gibbs':
-            p = np.random.uniform(low=0, high=1, size=1) < boltzmann.ppf(self._tot_actions, 0.5, 1)
+        if self.sampling_strategy in ['epsilon_greedy', 'gibbs']:
+            if self.sampling_strategy == 'epsilon_greedy':
+                p = np.random.uniform(low=0, high=1, size=1) < 1 / (1 + self._tot_actions)
+            elif self.sampling_strategy == 'gibbs':
+                p = np.random.uniform(low=0, high=1, size=1) < boltzmann.ppf(self._tot_actions, 0.5, 1)
+            selected_bins = self._random_bins(bins=bins) if p else self._most_likely_bins(bins=bins)
+        elif self.sampling_strategy == 'thompson':
+            prob_matrix = np.zeros_like(self._prefs)
+            for i in range(prob_matrix.shape[0]):
+                for j in range(prob_matrix.shape[1]):
+                    prob_matrix[i, j] = np.random.beta(a=self._thompson_stats[i, j, 0],
+                                                       b=self._thompson_stats[i, j, 1],
+                                                       size=1)
+            scaled_prefs = self._prefs * prob_matrix
+            selected_bins = self._most_likely_bins(bins=bins,
+                                                   prefs=scaled_prefs)
         else:
             raise Exception(f'Unknown sampling method for emitter: {self.sampling_strategy}.')
-        bins = self._random_bins(bins=bins) if p else self._most_likely_bins(bins=bins)
         self._tot_actions += 1
-        return bins
+        return selected_bins
     
     def init_emitter(self,
                      **kwargs) -> None:
@@ -347,8 +370,8 @@ class HumanPrefMatrixEmitter(Emitter):
         
     def pre_step(self, **kwargs) -> None:
         assert self._prefs is not None, f'{self.name} has not been initialized! Preference matrix has not been set.'
-        bins = kwargs['bins']
-        idxs = kwargs['selected_idxs']
+        bins: 'np.ndarray[MAPBin]' = kwargs['bins']
+        idxs: List[List[int]] = kwargs['selected_idxs']
         # get number of new/updated bins
         n_new_bins = self._get_n_new_bins(bins=bins)
         # update preference for selected bins
@@ -364,6 +387,12 @@ class HumanPrefMatrixEmitter(Emitter):
                         for mn in self._last_selected:
                             self._prefs[mn[0], mn[1]] += 1 / n_new_bins
                         break
+        for i in range(bins.shape[0]):
+            for j in range(bins.shape[1]):
+                if [i, j] in idxs:
+                    self._thompson_stats[i, j, 0] += 1
+                else:
+                    self._thompson_stats[i, j, 1] += 1
     
     def post_step(self,
                   bins: 'np.ndarray[MAPBin]') -> None:
@@ -372,6 +401,7 @@ class HumanPrefMatrixEmitter(Emitter):
 
     def reset(self) -> None:
         self._prefs = None
+        self._thompson_stats = None
         self._tot_actions = 0
     
     def to_json(self) -> Dict[str, Any]:
@@ -385,6 +415,7 @@ class HumanPrefMatrixEmitter(Emitter):
             'decay': self._decay,
             'last_selected': self._last_selected,  # may need conversion tolist()
             'prefs': self._prefs.tolist(),
+            'thompson_stats': self._thompson_stats.tolist()
         }
     
     @staticmethod
@@ -399,6 +430,7 @@ class HumanPrefMatrixEmitter(Emitter):
         re._decay = my_args['decay']
         re._last_selected = my_args['last_selected']  # may need conversion np.asarray
         re._prefs = np.asarray(my_args['prefs'])
+        re._thompson_stats = np.asarray(my_args['thompson_stats'])
         return re
 
 
@@ -420,7 +452,8 @@ class ContextualBanditEmitter(Emitter):
         self._fitted = False
         
         self._tot_actions = 0
-        self.sampling_strategy = 'epsilon_greedy'  # or 'gibbs'
+        self.sampling_strategy = 'epsilon_greedy'  # or 'gibbs', 'thompson'
+        self._thompson_stats = {}
         
     def _fit(self) -> None:
         xs, ys = self._buffer.get()
@@ -443,17 +476,35 @@ class ContextualBanditEmitter(Emitter):
     def _predict(self,
                  bins: 'np.ndarray[MAPBin]') -> Tuple[int, int]:
         context = self._extract_context(bins=bins)
-        choose_from = self._estimator.predict(X=context) * (1 - self.diversity_weight) + diversity_builder(bins=bins, n_features=self._n_features_context).flatten() * self.diversity_weight
+        choose_from = self._estimator.predict(X=context) #* (1 - self.diversity_weight) + diversity_builder(bins=bins, n_features=self._n_features_context).flatten() * self.diversity_weight
+        if self.sampling_strategy == 'thompson':
+            for i in range(context.shape[0]):
+                c = context[i].tobytes()
+                scale_factor = np.random.beta(a=self._thompson_stats[c][0] if c in self._thompson_stats else 1,
+                                              b=self._thompson_stats[c][1] if c in self._thompson_stats else 1 + self._tot_actions,
+                                              size=1)
+                choose_from[i] *= scale_factor
         return np.flip(np.argsort(choose_from, axis=None))
     
     def pre_step(self, **kwargs) -> None:
         bins: 'np.ndarray[MAPBin]' = kwargs['bins']
-        idxs: List[Tuple[int, int]] = kwargs['selected_idxs']
+        idxs: List[List[int]] = kwargs['selected_idxs']
         for i in range(bins.shape[0]):
             for j in range(bins.shape[1]):
                 if bins[i, j].non_empty(pop='feasible'):
                     self._buffer.insert(x=self._extract_bin_context(bins[i, j]),
-                                        y=1. if (i, j) in idxs else 0.)
+                                        y=1. if [i, j] in idxs else 0.)
+                    context = self._extract_bin_context(b=bins[i, j]).tobytes()
+                    if [i, j] in idxs:
+                        if context not in self._thompson_stats:
+                            self._thompson_stats[context] = [2, 1]
+                        else:
+                            self._thompson_stats[context][0] += 1
+                    else:
+                        if context not in self._thompson_stats:
+                            self._thompson_stats[context] = [1, 2]
+                        else:
+                            self._thompson_stats[context][1] += 1
         self._fit()
         
     def pick_bin(self,
@@ -464,8 +515,11 @@ class ContextualBanditEmitter(Emitter):
             p = np.random.uniform(low=0, high=1, size=1) < self._epsilon
             self._epsilon -= self._epsilon * self._decay
         elif self.sampling_strategy == 'gibbs':
-            p = np.random.uniform(low=0, high=1, size=1) < boltzmann.ppf(self._tot_actions, 0.5, 1)
+            lambda_, N = 1.4, self._tot_actions
+            p = np.random.uniform(low=0, high=1, size=1) < boltzmann.rvs(lambda_, N, loc=0, size=1)
             self._tot_actions += 1
+        elif self.sampling_strategy == 'thompson':
+            p = None
         else:
             raise Exception(f'Unknown sampling method for emitter: {self.sampling_strategy}.')
         if p:
@@ -483,6 +537,7 @@ class ContextualBanditEmitter(Emitter):
     def reset(self) -> None:
         self._epsilon = self._initial_epsilon
         self._buffer.clear()
+        self._thompson_stats = {}
         self._estimator = None
         self._fitted = False
     
@@ -505,11 +560,13 @@ class ContextualBanditEmitter(Emitter):
             'estimator_params': self._estimator.get_params(),
             'estimator_coefs': self._estimator.coef_.tolist() if self._fitted else None,
             'estimator_intercept': np.asarray(self._estimator.intercept_).tolist() if self._fitted else None,
+            
+            'thompson_stats': self._thompson_stats
         }
     
     @staticmethod
-    def from_json(my_args: Dict[str, Any]) -> 'OptimisingEmitterV2':
-        re = OptimisingEmitterV2()
+    def from_json(my_args: Dict[str, Any]) -> 'ContextualBanditEmitter':
+        re = ContextualBanditEmitter()
         re.name = my_args['name']
         re.requires_init = my_args['requires_init']
         re.requires_pre = my_args['requires_pre']
@@ -529,7 +586,9 @@ class ContextualBanditEmitter(Emitter):
             re._estimator.coef_ = np.asarray(my_args['estimator_coefs'])
         if my_args['estimator_intercept'] is not None:
             re._estimator.intercept_ = np.asarray(my_args['estimator_intercept'])
-                
+        
+        re._thompson_stats = my_args['thompson_stats']
+        
         return re
 
 
@@ -549,7 +608,8 @@ class PreferenceBanditEmitter(Emitter):
         self._fitted = False
         
         self._tot_actions = 0
-        self.sampling_strategy = 'epsilon_greedy'  # or 'gibbs'
+        self.sampling_strategy = 'epsilon_greedy'  # or 'gibbs', 'thompson'
+        self._thompson_stats = {}
 
     def _fit(self) -> None:
         xs, ys = self._buffer.get()
@@ -587,6 +647,15 @@ class PreferenceBanditEmitter(Emitter):
         choose_from = self._estimator.predict(X=preferences)
         out = np.zeros_like(bins, dtype=np.float32)
         out[mask == 1] = choose_from[:]
+        if self.sampling_strategy == 'thompson':
+            for i in range(bins.shape[0]):
+                for j in range(bins.shape[1]):
+                    n_i = i / bins.shape[0]
+                    n_j = j / bins.shape[1]
+                    scale_factor = np.random.beta(a=self._thompson_stats[n_i, n_j][0] if (n_i, n_j) in self._thompson_stats else 1,
+                                                  b=self._thompson_stats[n_i, n_j][1] if (n_i, n_j) in self._thompson_stats else 1 + self._tot_actions,
+                                                  size=1)
+                    out[i, j] *= scale_factor        
         return np.flip(np.argsort(out, axis=None))
     
     def pre_step(self, **kwargs) -> None:
@@ -597,6 +666,18 @@ class PreferenceBanditEmitter(Emitter):
                 if bins[i, j].non_empty(pop='feasible'):
                     self._buffer.insert(x=np.asarray([i / bins.shape[0], j / bins.shape[1]]),
                                         y=1. if (i, j) in idxs else 0.)
+            n_i = i / bins.shape[0]
+            n_j = j / bins.shape[1]
+            if [i, j] in idxs:
+                if (n_i, n_j) not in self._thompson_stats:
+                    self._thompson_stats[n_i, n_j] = [2, 1]
+                else:
+                    self._thompson_stats[n_i, n_j][0] += 1
+            else:
+                if (n_i, n_j) not in self._thompson_stats:
+                    self._thompson_stats[n_i, n_j] = [1, 2]
+                else:
+                    self._thompson_stats[n_i, n_j][1] += 1
         self._fit()
         
     def pick_bin(self,
@@ -607,8 +688,11 @@ class PreferenceBanditEmitter(Emitter):
             p = np.random.uniform(low=0, high=1, size=1) < self._epsilon
             self._epsilon -= self._epsilon * self._decay
         elif self.sampling_strategy == 'gibbs':
-            p = np.random.uniform(low=0, high=1, size=1) < boltzmann.ppf(self._tot_actions, 0.5, 1)
+            lambda_, N = 1.4, self._tot_actions
+            p = np.random.uniform(low=0, high=1, size=1) < boltzmann.rvs(lambda_, N, loc=0, size=1)
             self._tot_actions += 1
+        elif self.sampling_strategy == 'thompson':
+            p = None
         else:
             raise Exception(f'Unknown sampling method for emitter: {self.sampling_strategy}.')
         if p:
@@ -626,8 +710,73 @@ class PreferenceBanditEmitter(Emitter):
     def reset(self) -> None:
         self._epsilon = self._initial_epsilon
         self._buffer.clear()
+        self._thompson_stats = {}
         self._estimator = None
         self._fitted = False
+        self._tot_actions = 0
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'name': self.name,
+            'requires_init': self.requires_init,
+            'requires_pre': self.requires_pre,
+            'requires_post': self.requires_post,
+            'diversity_weight': self.diversity_weight,
+            'tot_actions': self._tot_actions,
+            
+            'initial_epsilon': self._initial_epsilon,
+            'epsilon': self._epsilon,
+            'decay': self._decay,
+            'buffer': self._buffer.to_json(),
+            'diversity_weight': self.diversity_weight,
+            'fitted': self._fitted,
+            
+            'estimator_params': self._estimator.get_params(),
+            'estimator_coefs': self._estimator.coef_.tolist() if self._fitted else None,
+            'estimator_intercept': np.asarray(self._estimator.intercept_).tolist() if self._fitted else None,
+            
+            'thompson_stats': self._thompson_stats
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'ContextualBanditEmitter':
+        re = ContextualBanditEmitter()
+        re.name = my_args['name']
+        re.requires_init = my_args['requires_init']
+        re.requires_pre = my_args['requires_pre']
+        re.requires_post = my_args['requires_post']
+        re.diversity_weight = my_args['diversity_weight']
+        re._tot_actions = my_args['tot_actions']
+        
+        re._initial_epsilon = my_args['initial_epsilon']
+        re._epsilon = my_args['epsilon']
+        re._decay = my_args['decay']
+        re.buffer = Buffer.from_json(my_args['buffer'])
+        re._n_features_context = my_args['n_features_context']
+        re._fitted = my_args['fitted']
+        
+        re._estimator = LinearRegression()
+        re._estimator.set_params(my_args['estimator_params'])
+        if my_args['estimator_coefs'] is not None:
+            re._estimator.coef_ = np.asarray(my_args['estimator_coefs'])
+        if my_args['estimator_intercept'] is not None:
+            re._estimator.intercept_ = np.asarray(my_args['estimator_intercept'])
+        
+        re._thompson_stats = my_args['thompson_stats']
+        
+        return re
+
+class HumanEmitter(Emitter):
+    def __init__(self) -> None:
+        super().__init__()
+        self.name = 'preference-bandit-emitter'
+    
+    def pick_bin(self, bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
+        return []
+
+    def reset(self) -> None:
+        pass    
+    
 
 def get_emitter_by_str(emitter: str) -> Emitter:
     if emitter == 'random-emitter':
@@ -646,5 +795,6 @@ emitters = {
     'optimising-emitter-v2': OptimisingEmitterV2,
     'human-preference-matrix-emitter': HumanPrefMatrixEmitter,
     'contextual-bandit-emitter': ContextualBanditEmitter,
-    'preference-bandit-emitter': PreferenceBanditEmitter
+    'preference-bandit-emitter': PreferenceBanditEmitter,
+    'human-emitter': HumanEmitter
 }
