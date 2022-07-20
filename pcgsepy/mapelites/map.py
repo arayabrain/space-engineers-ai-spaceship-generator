@@ -4,6 +4,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import torch as th
+from joblib import Parallel, delayed
 from pcgsepy.lsystem.constraints import ConstraintLevel
 from pcgsepy.mapelites.bandit import EpsilonGreedyAgent
 from pcgsepy.mapelites.buffer import Buffer, EmptyBufferException
@@ -439,6 +440,33 @@ class MAPElites:
                 for bin_idx in to_increase_res:
                     self.subdivide_range(bin_idx=bin_idx)
 
+    def _assign_fitness(self,
+                        cs: CandidateSolution) -> CandidateSolution:
+        # ensure content is set
+        if cs._content is None:
+            cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
+                                        extra_args={
+                                            'alphabet': self.lsystem.ll_solver.atoms_alphabet
+                                            }))
+        # add hull
+        if self.hull_builder is not None:
+            self.hull_builder.add_external_hull(structure=cs._content)
+        # assign fitness
+        cs.c_fitness = self.compute_fitness(cs=cs,
+                                            extra_args={
+                                                'alphabet': self.lsystem.ll_solver.atoms_alphabet
+                                            })
+        if cs.is_feasible:
+            cs.c_fitness += (self.nsc - cs.ncv)
+        # assign behavior descriptors
+        self._set_behavior_descriptors(cs=cs)
+        # set age
+        cs.age = CS_MAX_AGE
+        
+        cs._content = None
+        
+        return cs    
+    
     def _step(self,
               populations: List[List[CandidateSolution]],
               gen: int) -> List[CandidateSolution]:
@@ -450,7 +478,7 @@ class MAPElites:
 
         Returns:
             List[CandidateSolution]: The list of new solutions.
-        """
+        """      
         generated = []
         for pop in populations:
             if len(pop) > 0:
@@ -462,31 +490,8 @@ class MAPElites:
                                                minimize=minimize)
                     subdivide_solutions(lcs=new_pool,
                                         lsystem=self.lsystem)
-                    # ensure content is set
-                    for cs in new_pool:
-                        if cs._content is None:
-                            cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
-                                                        extra_args={
-                                                            'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                                            }))
-                        # add hull
-                        if self.hull_builder is not None:
-                            self.hull_builder.add_external_hull(structure=cs._content)
-                        # assign fitness
-                        cs.c_fitness = self.compute_fitness(cs=cs,
-                                                            extra_args={
-                                                                'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                                            })
-                        if cs.is_feasible:
-                            cs.c_fitness += (self.nsc - cs.ncv)
-                        # assign behavior descriptors
-                        self._set_behavior_descriptors(cs=cs)
-                        # set age
-                        cs.age = CS_MAX_AGE
-                        
-                        cs._content = None
-                        
-                        generated.append(cs)
+                    # generated = [self._assign_fitness(cs) for cs in new_pool]
+                    generated = Parallel(n_jobs=-1, prefer="threads")(delayed(self._assign_fitness)(cs) for cs in new_pool)
                     
                     if self.estimator is not None:
                         # subdivide for estimator/
@@ -522,7 +527,6 @@ class MAPElites:
                                                                                     })
                 except EvoException:
                     pass
-        
         self.n_new_solutions += len(generated)
         
         return generated
@@ -671,8 +675,7 @@ class MAPElites:
             for j in range(self.bins.shape[1]):
                 lcs.extend(self.bins[i, j]._feasible)
                 lcs.extend(self.bins[i, j]._infeasible)
-        for cs in lcs:
-            self._set_behavior_descriptors(cs=cs)
+            Parallel(n_jobs=-1, prefer="threads")(delayed(self._set_behavior_descriptors)(cs) for cs in lcs)
         self.reset(lcs=lcs)
 
     def toggle_module_mutability(self,
@@ -760,7 +763,7 @@ class MAPElites:
                     ipop.extend(selected_bin._infeasible)
             else:
                 raise NotImplementedError(f'Unrecognized emitter output: {selected_bins}.')
-            print(f'Emitter picked a total of {len(fpop)} feasible and {len(ipop)} infeasible solutions ({len(selected_bins)}).')
+            # print(f'Emitter picked a total of {len(fpop)} feasible and {len(ipop)} infeasible solutions ({len(selected_bins)}).')
             generated = self._step(populations=[fpop, ipop],
                                 gen=gen)
             if generated:
