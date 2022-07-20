@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import numpy.typing as npt
 from sklearn.preprocessing import scale
-from pcgsepy.config import CS_MAX_AGE
+from pcgsepy.config import CONTEXT_IDXS, CS_MAX_AGE
 from pcgsepy.mapelites.bin import MAPBin
 from pcgsepy.mapelites.buffer import Buffer, mean_merge
 from sklearn.linear_model import LinearRegression
@@ -438,7 +438,7 @@ class ContextualBanditEmitter(Emitter):
     def __init__(self,
                  epsilon: float = 0.2,
                  decay: float = 0.01,
-                 n_features_context: int = 7) -> None:
+                 n_features_context: int = len(CONTEXT_IDXS)) -> None:
         super().__init__()
         self.name = 'contextual-bandit-emitter'
         self.requires_pre = True
@@ -462,28 +462,32 @@ class ContextualBanditEmitter(Emitter):
     
     def _extract_bin_context(self,
                              b: MAPBin) -> npt.NDArray[np.float32]:
-        return np.asarray(b.get_elite(population='feasible').representation)
+        return np.asarray(b.get_elite(population='feasible').representation)[CONTEXT_IDXS]
     
     def _extract_context(self,
-                         bins: 'np.ndarray[MAPBin]') -> npt.NDArray[np.float32]:
+                         bins: 'np.ndarray[MAPBin]') -> Tuple[npt.NDArray[np.float32], npt.NDArray[np.uint8]]:
         bins = bins.flatten()
         context = np.zeros((bins.shape[0], self._n_features_context), dtype=np.float32)
+        mask = np.zeros((bins.shape[0]), dtype=np.uint8)
         for i in range(bins.shape[0]):
             if bins[i].non_empty(pop='feasible'):
                 context[i, :] = self._extract_bin_context(bins[i])
-        return context
+                mask[i] = 1
+        return context, mask
 
     def _predict(self,
                  bins: 'np.ndarray[MAPBin]') -> Tuple[int, int]:
-        context = self._extract_context(bins=bins)
+        context, mask = self._extract_context(bins=bins)
         choose_from = self._estimator.predict(X=context) #* (1 - self.diversity_weight) + diversity_builder(bins=bins, n_features=self._n_features_context).flatten() * self.diversity_weight
         if self.sampling_strategy == 'thompson':
             for i in range(context.shape[0]):
+                # if bins[i // bins.shape[0], i % bins.shape[1]].non_empty(pop='feasible'):
                 c = context[i].tobytes()
                 scale_factor = np.random.beta(a=self._thompson_stats[c][0] if c in self._thompson_stats else 1,
-                                              b=self._thompson_stats[c][1] if c in self._thompson_stats else 1 + self._tot_actions,
-                                              size=1)
+                                            b=self._thompson_stats[c][1] if c in self._thompson_stats else 1 + self._tot_actions,
+                                            size=1)
                 choose_from[i] *= scale_factor
+        choose_from *= mask
         return np.flip(np.argsort(choose_from, axis=None))
     
     def pre_step(self, **kwargs) -> None:
@@ -516,7 +520,7 @@ class ContextualBanditEmitter(Emitter):
             self._epsilon -= self._epsilon * self._decay
         elif self.sampling_strategy == 'gibbs':
             lambda_, N = 1.4, self._tot_actions
-            p = np.random.uniform(low=0, high=1, size=1) < boltzmann.rvs(lambda_, N, loc=0, size=1)
+            p = np.random.uniform(low=0, high=1, size=1) < boltzmann.pmf(self._tot_actions, lambda_, N)
             self._tot_actions += 1
         elif self.sampling_strategy == 'thompson':
             p = None

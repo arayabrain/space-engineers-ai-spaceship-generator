@@ -74,3 +74,6 @@ EXP_NAME = config['EXPERIMENT'].get('exp_name')
 # number of generations allowed per experiment
 N_GENS_ALLOWED = config['USER-STUDY'].getint('n_generations_allowed')
 N_EMITTER_STEPS = config['USER-STUDY'].getint('n_emitter_steps')
+
+CONTEXT_IDXS = config['USER-STUDY'].get('context_idxs').split(',')
+CONTEXT_IDXS = [int(x) for x in CONTEXT_IDXS]
