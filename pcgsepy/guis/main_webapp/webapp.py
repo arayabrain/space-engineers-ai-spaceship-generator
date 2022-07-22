@@ -1,25 +1,27 @@
 import base64
-from cmath import exp
 import json
+import random
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
 import dash
-from matplotlib.style import available
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-import random
 from dash import ALL, dcc, html
 from dash.dependencies import Input, Output, State
+from matplotlib.style import available
 from pcgsepy.common.jsonifier import json_dumps, json_loads
-from pcgsepy.config import BIN_POP_SIZE, CS_MAX_AGE, N_EMITTER_STEPS, N_GENS_ALLOWED
+from pcgsepy.config import (BIN_POP_SIZE, CS_MAX_AGE, N_EMITTER_STEPS,
+                            N_GENS_ALLOWED)
 from pcgsepy.lsystem.rules import StochasticRules
 from pcgsepy.lsystem.solution import CandidateSolution
-from pcgsepy.mapelites.behaviors import BehaviorCharacterization, avg_ma, mame, mami, symmetry
+from pcgsepy.mapelites.behaviors import (BehaviorCharacterization, avg_ma,
+                                         mame, mami, symmetry)
 from pcgsepy.mapelites.bin import MAPBin
-from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, HumanEmitter,
-                                        HumanPrefMatrixEmitter, PreferenceBanditEmitter, RandomEmitter)
+from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, GreedyEmitter,
+                                        HumanEmitter, HumanPrefMatrixEmitter,
+                                        PreferenceBanditEmitter, RandomEmitter)
 from pcgsepy.mapelites.map import MAPElites, get_structure
 
 
@@ -282,7 +284,7 @@ def set_app_layout(behavior_descriptors_names,
                             className='section-title'),
                     html.Div(children=[
                         html.Div(children=[
-                            dcc.Dropdown(['Human', 'Random', 'Preference Matrix', 'Preference Bandit', 'Contextual Bandit'],
+                            dcc.Dropdown(['Human', 'Random', 'Greedy', 'Preference Matrix', 'Preference Bandit', 'Contextual Bandit'],
                                 'Human',
                                 id='emitter-dropdown',
                                 className='dropdown',
@@ -492,10 +494,6 @@ def format_bins(mapelites: MAPElites,
             bc2 = np.sum([mbin.bin_size[1] for mbin in mapelites.bins[i, :j]])
             sel_bins_str += f' {(i, j)} [{bc1}:{bc2}];'
     return bins_idx_list, sel_bins_str
-
-
-def _get_selected_bins_json(selected_bins):
-    _switch(selected_bins)
 
 
 def _build_heatmap(mapelites: MAPElites,
@@ -757,6 +755,10 @@ def _apply_emitter_change(mapelites: MAPElites,
                           logger: CustomLogger) -> bool:
     if emitter_name == 'Random':
         mapelites.emitter = RandomEmitter()
+        logger.log(msg=f'Emitter set to {emitter_name}')
+        return True
+    if emitter_name == 'Greedy':
+        mapelites.emitter = GreedyEmitter()
         logger.log(msg=f'Emitter set to {emitter_name}')
         return True
     elif emitter_name == 'Preference-matrix':

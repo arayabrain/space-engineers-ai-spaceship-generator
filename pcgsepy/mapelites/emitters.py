@@ -236,6 +236,50 @@ class OptimisingEmitterV2(Emitter):
         return re
 
 
+class GreedyEmitter(Emitter):
+    def __init__(self) -> None:
+        """The random emitter class.
+        """
+        super().__init__()
+        self.name = 'greedy-emitter'
+        self.requires_pre = True
+        self._last_selected: List[List[int]] = []
+    
+    def pick_bin(self,
+                 bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
+        selected = [bins[idx] for idx in self._last_selected if bins[idx].non_empty(pop='feasible') or bins[idx].non_empty(pop='infeasbile')]
+        return selected
+    
+    def reset(self) -> None:
+        self._last_selected = []
+
+    def pre_step(self, **kwargs) -> None:
+        self._last_selected = []
+        for idx in kwargs['selected_idxs']:
+            self._last_selected.append(tuple(idx))
+    
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'name': self.name,
+            'requires_init': self.requires_init,
+            'requires_pre': self.requires_pre,
+            'requires_post': self.requires_post,
+            'diversity_weight': self.diversity_weight,
+            'last_selected': self._last_selected
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'GreedyEmitter':
+        re = GreedyEmitter()
+        re.name = my_args['name']
+        re.requires_init = my_args['requires_init']
+        re.requires_pre = my_args['requires_pre']
+        re.requires_post = my_args['requires_post']
+        re.diversity_weight = my_args['diversity_weight']
+        re._last_selected = my_args['last_selected']
+        return re
+
+
 class HumanPrefMatrixEmitter(Emitter):
     def __init__(self,
                  decay: float = 1e-2) -> None:
@@ -797,6 +841,7 @@ emitters = {
     'random-emitter': RandomEmitter,
     'optimising-emitter': OptimisingEmitter,
     'optimising-emitter-v2': OptimisingEmitterV2,
+    'greedy-emitter': GreedyEmitter,
     'human-preference-matrix-emitter': HumanPrefMatrixEmitter,
     'contextual-bandit-emitter': ContextualBanditEmitter,
     'preference-bandit-emitter': PreferenceBanditEmitter,
