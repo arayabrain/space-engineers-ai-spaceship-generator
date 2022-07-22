@@ -77,3 +77,6 @@ N_EMITTER_STEPS = config['USER-STUDY'].getint('n_emitter_steps')
 
 CONTEXT_IDXS = config['USER-STUDY'].get('context_idxs').split(',')
 CONTEXT_IDXS = [int(x) for x in CONTEXT_IDXS]
+
+BETA_A = config['USER-STUDY'].getint('beta_a')
+BETA_B = config['USER-STUDY'].getint('beta_b')

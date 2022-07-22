@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import numpy.typing as npt
 from sklearn.preprocessing import scale
-from pcgsepy.config import CONTEXT_IDXS, CS_MAX_AGE
+from pcgsepy.config import BETA_A, BETA_B, CONTEXT_IDXS, CS_MAX_AGE
 from pcgsepy.mapelites.bin import MAPBin
 from pcgsepy.mapelites.buffer import Buffer, mean_merge
 from sklearn.linear_model import LinearRegression
@@ -305,6 +305,8 @@ class HumanPrefMatrixEmitter(Emitter):
                 if bins[i, j].non_empty(pop='feasible') or bins[i, j].non_empty(pop='infeasbile'):
                     self._prefs[i, j] = 2 * self._decay
         self._thompson_stats = np.ones(shape=(self._prefs.shape[0], self._prefs.shape[1], 2))
+        self._thompson_stats[:,:,0] = BETA_A * self._thompson_stats[:,:,0]
+        self._thompson_stats[:,:,1] = BETA_B * self._thompson_stats[:,:,1]
     
     def _random_bins(self,
                      bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
@@ -527,9 +529,9 @@ class ContextualBanditEmitter(Emitter):
             for i in range(context.shape[0]):
                 # if bins[i // bins.shape[0], i % bins.shape[1]].non_empty(pop='feasible'):
                 c = context[i].tobytes()
-                scale_factor = np.random.beta(a=self._thompson_stats[c][0] if c in self._thompson_stats else 1,
-                                            b=self._thompson_stats[c][1] if c in self._thompson_stats else 1 + self._tot_actions,
-                                            size=1)
+                scale_factor = np.random.beta(a=BETA_A + (self._thompson_stats[c][0] if c in self._thompson_stats else 1),
+                                              b=BETA_B + (self._thompson_stats[c][1] if c in self._thompson_stats else 1 + self._tot_actions),
+                                              size=1)
                 choose_from[i] *= scale_factor
         choose_from *= mask
         return np.flip(np.argsort(choose_from, axis=None))
@@ -700,8 +702,8 @@ class PreferenceBanditEmitter(Emitter):
                 for j in range(bins.shape[1]):
                     n_i = i / bins.shape[0]
                     n_j = j / bins.shape[1]
-                    scale_factor = np.random.beta(a=self._thompson_stats[n_i, n_j][0] if (n_i, n_j) in self._thompson_stats else 1,
-                                                  b=self._thompson_stats[n_i, n_j][1] if (n_i, n_j) in self._thompson_stats else 1 + self._tot_actions,
+                    scale_factor = np.random.beta(a=BETA_A + (self._thompson_stats[n_i, n_j][0] if (n_i, n_j) in self._thompson_stats else 1),
+                                                  b=BETA_B + (self._thompson_stats[n_i, n_j][1] if (n_i, n_j) in self._thompson_stats else 1 + self._tot_actions),
                                                   size=1)
                     out[i, j] *= scale_factor        
         return np.flip(np.argsort(out, axis=None))
