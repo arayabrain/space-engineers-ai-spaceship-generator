@@ -1,5 +1,7 @@
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
+
+import numpy as np
 
 from pcgsepy.lsystem.rules import StochasticRules
 
@@ -32,23 +34,20 @@ class LSolver:
                            n: int,
                            dc_check: bool = False) -> Optional[CandidateSolution]:
         for i in range(n):
-            logging.getLogger('base-logger').debug(msg=f'Expanding string {cs.string}')
             cs.string = self.parser.expand(string=cs.string)
         if dc_check and len([c for c in self.constraints if c.when == ConstraintTime.DURING]) > 0:
             if not self._check_constraints(cs=cs,
-                                           when=ConstraintTime.DURING)[ConstraintLevel.HARD_CONSTRAINT]:
+                                           when=ConstraintTime.DURING)[ConstraintLevel.HARD_CONSTRAINT][0]:
                 cs = None  # do not continue expansion if it breaks hard constraints during expansion
         return cs
 
     def _check_constraints(self,
                            cs: CandidateSolution,
                            when: ConstraintTime,
-                           keep_track: bool = False) -> Dict[ConstraintLevel, bool]:
+                           keep_track: bool = False) -> Dict[ConstraintLevel, List[Union[bool, int]]]:
         sat = {
-            ConstraintLevel.SOFT_CONSTRAINT:
-                True if not keep_track else [True, 0],
-            ConstraintLevel.HARD_CONSTRAINT:
-                True if not keep_track else [True, 0],
+            ConstraintLevel.SOFT_CONSTRAINT: [True, 0],
+            ConstraintLevel.HARD_CONSTRAINT: [True, 0],
         }
         for lev in sat.keys():
             for c in self.constraints:
@@ -59,13 +58,11 @@ class LSolver:
                     s = c.constraint(cs=cs,
                                      extra_args=c.extra_args)
                     logging.getLogger('base-logger').debug(msg=f'\t{c}:\t{s}')
+                    sat[lev][0] &= s
                     if keep_track:
-                        sat[lev][0] &= s
                         sat[lev][1] += (
                             1 if lev == ConstraintLevel.HARD_CONSTRAINT else
                             0.5) if not s else 0
-                    else:
-                        sat[lev] &= s
         return sat
 
     def solve(self,
@@ -83,7 +80,7 @@ class LSolver:
                     new_cs = CandidateSolution(string=cs.string[:])
                     new_cs = self._forward_expansion(cs=new_cs,
                                                      n=1,
-                                                     dc_check=i > 0 and check_sat)
+                                                     dc_check=check_sat and i > 0)
                     if new_cs is not None:
                         new_all_solutions.append(new_cs)
             all_solutions = new_all_solutions
@@ -91,16 +88,14 @@ class LSolver:
 
         # END constraints check + possible backtracking
         if check_sat and len([c for c in self.constraints if c.when == ConstraintTime.END]) > 0:
-            to_rem = []
-            for cs in all_solutions:
+            to_keep = np.zeros(shape=len(all_solutions), dtype=np.bool8)
+            for i, cs in enumerate(all_solutions):
                 logging.getLogger('base-logger').debug(f'Finalizing string {cs.string}')
-                if not self._check_constraints(cs=cs,
-                                               when=ConstraintTime.END)[ConstraintLevel.HARD_CONSTRAINT]:
-                    to_rem.append(cs)
+                to_keep[i] = self._check_constraints(cs=cs,
+                                                     when=ConstraintTime.END)[ConstraintLevel.HARD_CONSTRAINT][0]
             # remaining strings are SAT
-            for a in to_rem:
-                all_solutions.remove(a)
-
+            all_solutions = [cs for i, cs in enumerate(all_solutions) if to_keep[i]]
+            
         return all_solutions
 
     def set_constraints(self,

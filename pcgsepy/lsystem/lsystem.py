@@ -1,6 +1,9 @@
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 
+import numpy as np
+import numpy.typing as npt
+
 from ..common.vecs import Orientation, Vec
 from ..config import N_SPE
 from .constraints import ConstraintHandler
@@ -48,8 +51,8 @@ class LSystemModule:
         ]
 
     def get_ll_solutions(self,
-                         cs: List[CandidateSolution]) -> Tuple[List[CandidateSolution], List[int]]:
-        ll_solutions, to_rem = [], []
+                         cs: List[CandidateSolution]) -> Tuple[List[CandidateSolution], npt.NDArray[np.bool8]]:
+        ll_solutions, to_keep = [], np.zeros(shape=len(cs), dtype=np.bool8)
         for i, cs in enumerate(cs):
             ll_solution = self.llsolver.solve(string=cs.string,
                                               iterations=1,
@@ -57,14 +60,12 @@ class LSystemModule:
                                               check_sat=self.check_sat)[0]
             if ll_solution:
                 ll_solutions.append(ll_solution)
-            else:
-                to_rem.append(i)
-        return ll_solutions, to_rem
+                to_keep[i] = True
+        return ll_solutions, to_keep
 
     def apply_rules(self,
                     starting_string: str,
-                    iterations: int = 1,
-                    make_graph: bool = False) -> List[CandidateSolution]:
+                    iterations: int = 1) -> List[CandidateSolution]:
         self.hlsolver.set_constraints(cs=self.hl_constraints)
         self.llsolver.set_constraints(cs=self.ll_constraints)
 
@@ -76,11 +77,12 @@ class LSystemModule:
         ml_strings = self.get_ml_strings([cs.string for cs in hl_solutions])
 
         logging.getLogger('base-logger').info(f'[{self.name}] Started low level solving...')
-        _, to_rem = self.get_ll_solutions([CandidateSolution(string=s) for s in ml_strings])
+                
+        _, to_keep = self.get_ll_solutions([CandidateSolution(string=s,
+                                                              content=hl_cs._content) for s, hl_cs in zip(ml_strings, hl_solutions)])
 
-        for i in reversed(to_rem):
-            hl_solutions.pop(i)
-
+        hl_solutions = [x for x, k in zip(hl_solutions, to_keep) if k]
+        
         return hl_solutions
     
     def to_json(self) -> Dict[str, Any]:
@@ -195,9 +197,7 @@ class LSystem:
         """
         import itertools
         # Cartesian product of all strings, return merged string
-        return [
-            self._merge_strings(lcs=x) for x in list(itertools.product(*lcs))
-        ]
+        return [self._merge_strings(lcs=x) for x in list(itertools.product(*lcs))]
 
     def apply_rules(self,
                     starting_strings: List[str],

@@ -528,7 +528,6 @@ class MAPElites:
                 except EvoException:
                     pass
         self.n_new_solutions += len(generated)
-        
         return generated
 
     def rand_step(self,
@@ -763,7 +762,7 @@ class MAPElites:
                     ipop.extend(selected_bin._infeasible)
             else:
                 raise NotImplementedError(f'Unrecognized emitter output: {selected_bins}.')
-            # print(f'Emitter picked a total of {len(fpop)} feasible and {len(ipop)} infeasible solutions ({len(selected_bins)}).')
+            print(f'Emitter picked a total of {len(fpop)} feasible and {len(ipop)} infeasible solutions ({len(selected_bins)}).')
             generated = self._step(populations=[fpop, ipop],
                                 gen=gen)
             if generated:
