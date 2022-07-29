@@ -12,3 +12,4 @@ torch
 sklearn
 simplejson
 statsmodels
+pyinstaller

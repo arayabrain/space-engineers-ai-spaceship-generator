@@ -1,3 +1,17 @@
+import sys
+import os
+
+
+def resource_path(relative_path):
+# get absolute path to resource
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 import base64
 import json
 import random
@@ -98,8 +112,8 @@ available_mapelites = ['mapelites_random.json', 'mapelites_prefmatrix.json', 'ma
 
 app = dash.Dash(__name__,
                 title='SE ICMAP-Elites',
-                external_stylesheets=[
-                    'https://codepen.io/chriddyp/pen/bWLwgP.css'],
+                external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
+                assets_folder=resource_path("assets"),
                 update_title=None)
 
 

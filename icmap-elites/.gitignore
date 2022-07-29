@@ -5,3 +5,6 @@ estimators/*
 spaceships/*
 *.npz
 *-checkpoint*
+build/*
+dist/*
+*.spec

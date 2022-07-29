@@ -1,3 +1,18 @@
+import sys
+import os
+
+
+def resource_path(relative_path):
+# get absolute path to resource
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
 import base64
 import json
 import pathlib
@@ -81,8 +96,8 @@ def _get_colour_mapping(block_types: List[str]) -> Dict[str, str]:
 
 app = dash.Dash(__name__,
                 title='Spasceships comparator',
-                external_stylesheets=[
-                    'https://codepen.io/chriddyp/pen/bWLwgP.css'],
+                external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
+                assets_folder=resource_path("assets"),
                 update_title=None)
 
 
