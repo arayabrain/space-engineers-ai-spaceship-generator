@@ -948,11 +948,13 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                      pop_name=pop_name,
                                      metric_name=metric_name,
                                      method_name=method_name)
-    
     elif event_trig == 'symmetry-dropdown' or event_trig == 'symmetry-radio':
+        logging.getLogger('dash-msgs').info(msg=f'Updating all solutions to enforce symmetry...')
         current_mapelites.reassign_all_content(sym_axis=symm_axis[0].lower() if symm_axis != "None" else None,
                                                sym_upper=symm_orientation == 'Upper')
-    
+        curr_content = go.Figure(data=[])
+        cs_string = cs_size = cs_n_blocks  = ''
+        logging.getLogger('dash-msgs').info(msg=f'Symmetry enforcement completed.')
     elif event_trig == 'heatmap-plot' or event_trig == 'population_dropdown':
         i, j = _from_bc_to_idx(bcs=(clickData['points'][0]['x'],
                                     clickData['points'][0]['y']),
