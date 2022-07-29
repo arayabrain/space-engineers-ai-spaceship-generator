@@ -4,17 +4,18 @@ import sys
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     os.chdir(sys._MEIPASS)
 
-from pcgsepy.evo.fitness import (Fitness,
-                                 box_filling_fitness, func_blocks_fitness,
-                                 mame_fitness, mami_fitness)
+from pcgsepy.evo.fitness import (Fitness, box_filling_fitness,
+                                 func_blocks_fitness, mame_fitness,
+                                 mami_fitness)
 from pcgsepy.evo.genops import expander
-from pcgsepy.nn.estimators import MLPEstimator
+from pcgsepy.guis.main_webapp.webapp import (app, set_app_layout,
+                                             set_callback_props)
 from pcgsepy.mapelites.behaviors import (BehaviorCharacterization, avg_ma,
                                          mame, mami, symmetry)
 from pcgsepy.mapelites.buffer import Buffer, mean_merge
 from pcgsepy.mapelites.emitters import *
 from pcgsepy.mapelites.map import MAPElites
-from pcgsepy.guis.main_webapp.webapp import app, set_app_layout, set_callback_props
+from pcgsepy.nn.estimators import MLPEstimator
 from pcgsepy.setup_utils import get_default_lsystem, setup_matplotlib
 
 setup_matplotlib(larger_fonts=False)
