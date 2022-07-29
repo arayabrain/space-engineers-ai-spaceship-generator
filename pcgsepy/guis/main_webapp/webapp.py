@@ -608,13 +608,7 @@ def _get_elite_content(mapelites: MAPElites,
     # get elite content
     elite = mapelites.get_elite(bin_idx=bin_idx,
                                 pop=pop)
-    structure = get_structure(string=elite.ll_string,
-                              extra_args={
-                                  'alphabet': mapelites.lsystem.ll_solver.atoms_alphabet
-                            })
-    # add hull
-    if mapelites.hull_builder is not None:
-        mapelites.hull_builder.add_external_hull(structure=structure)
+    structure = elite.content
     content = structure.as_grid_array()
     arr = np.nonzero(content)
     x, y, z = arr

@@ -33,8 +33,46 @@ from ..structure import Structure
 from .behaviors import BehaviorCharacterization
 from .bin import MAPBin
 
+# TODO: move this in HullBuilder if possible
+def enforce_symmetry(structure: Structure,
+                     axis: str = 'z',
+                     upper: bool = True) -> None:
+    def to_keep(v1: Vec,
+                v2: Vec,
+                axis: str,
+                upper: bool,
+                keep_equal: bool) -> bool:
+        if axis == 'x':
+            if upper:
+                return (v1.x > v2.x) or(keep_equal and v1.x == v2.x)
+            else:
+                return (v1.x < v2.x) or(keep_equal and v1.x == v2.x)
+        elif axis == 'y':
+            if upper:
+                return (v1.y > v2.y) or(keep_equal and v1.y == v2.y)
+            else:
+                return (v1.y < v2.y) or(keep_equal and v1.y == v2.y)
+        elif axis == 'z':
+            if upper:
+                return (v1.z > v2.z) or(keep_equal and v1.z == v2.z)
+            else:
+                return (v1.z < v2.z) or(keep_equal and v1.z == v2.z)
+    
+    midpoint = [x for x in structure._blocks.values() if x.block_type == 'MyObjectBuilder_Cockpit_OpenCockpitLarge'][0].position
+    structure._blocks = {k:v for k, v in structure._blocks.items() if to_keep(v1=v.position, v2=midpoint, axis=axis, upper=upper, keep_equal=True)}
+    half = [b for b in structure._blocks.values() if to_keep(v1=b.position, v2=midpoint, axis=axis, upper=upper, keep_equal=False)]
+    for b in half:
+        if axis == 'x':
+            b.position.x = midpoint.x - (b.position.x - midpoint.x)
+        elif axis == 'y':
+            b.position.y = midpoint.y - (b.position.y - midpoint.y)
+        elif axis == 'z':
+            b.position.z = midpoint.z - (b.position.z - midpoint.z)
+        structure.add_block(block=b,
+                            grid_position=b.position.as_tuple())
+    structure.sanify()
+        
 
-# TEMPORARY, CandidateSolution content should be set earlier
 def get_structure(string: str,
                   extra_args: Dict[str, Any]):
     base_position, orientation_forward, orientation_up = Vec.v3i(0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
@@ -207,11 +245,6 @@ class MAPElites:
         Args:
             cs (CandidateSolution): The candidate solution.
         """
-        if cs._content is None:
-            cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
-                                        extra_args={
-                                            'alphabet': self.lsystem.ll_solver.atoms_alphabet
-            }))
         b0 = self.b_descs[0](cs)
         b1 = self.b_descs[1](cs)
         cs.b_descs = (b0, b1)
@@ -288,35 +321,35 @@ class MAPElites:
                                     lsystem=self.lsystem)
                 for cs in solutions:
                     if cs._content is None:
-                            cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
-                                                        extra_args={
-                                                            'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                            }))
+                        cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
+                                                    extra_args={
+                                                        'alphabet': self.lsystem.ll_solver.atoms_alphabet
+                        }))
                     if cs.is_feasible and len(feasible_pop) < pops_size and cs not in feasible_pop:
                         if self.hull_builder is not None:
-                            self.hull_builder.add_external_hull(structure=cs._content)
+                                self.hull_builder.add_external_hull(structure=cs._content)
+
+                        enforce_symmetry(structure=cs.content)
+                        
                         cs.c_fitness = self.compute_fitness(cs=cs,
                                                             extra_args={
                                                                 'alphabet': self.lsystem.ll_solver.atoms_alphabet
                                                             }) + (self.nsc - cs.ncv)
                         self._set_behavior_descriptors(cs=cs)
                         cs.age = CS_MAX_AGE
-                        
-                        cs._content = None
-                        
                         feasible_pop.append(cs)
                     elif not cs.is_feasible and len(infeasible_pop) < pops_size and cs not in feasible_pop:
                         if self.hull_builder is not None:
-                            self.hull_builder.add_external_hull(structure=cs._content)
+                                self.hull_builder.add_external_hull(structure=cs._content)
+
+                        enforce_symmetry(structure=cs.content)
+                        
                         cs.c_fitness = self.compute_fitness(cs=cs,
                                                             extra_args={
                                                                 'alphabet': self.lsystem.ll_solver.atoms_alphabet
                                                             })
                         self._set_behavior_descriptors(cs=cs)
                         cs.age = CS_MAX_AGE
-                        
-                        cs._content = None
-                        
                         infeasible_pop.append(cs)
                 iterations.set_postfix(ordered_dict={
                     'fpop-size': f'{len(feasible_pop)}/{pops_size}',
@@ -442,15 +475,6 @@ class MAPElites:
 
     def _assign_fitness(self,
                         cs: CandidateSolution) -> CandidateSolution:
-        # ensure content is set
-        if cs._content is None:
-            cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
-                                        extra_args={
-                                            'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                            }))
-        # add hull
-        if self.hull_builder is not None:
-            self.hull_builder.add_external_hull(structure=cs._content)
         # assign fitness
         cs.c_fitness = self.compute_fitness(cs=cs,
                                             extra_args={
@@ -462,9 +486,6 @@ class MAPElites:
         self._set_behavior_descriptors(cs=cs)
         # set age
         cs.age = CS_MAX_AGE
-        
-        cs._content = None
-        
         return cs    
     
     def _step(self,
@@ -490,7 +511,20 @@ class MAPElites:
                                                minimize=minimize)
                     subdivide_solutions(lcs=new_pool,
                                         lsystem=self.lsystem)
-                    # generated = [self._assign_fitness(cs) for cs in new_pool]
+                    
+                    for cs in new_pool:
+                        if cs._content is None:
+                            cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
+                                                            extra_args={
+                                                                'alphabet': self.lsystem.ll_solver.atoms_alphabet
+                                                                }))
+                        # add hull
+                        if self.hull_builder is not None:
+                            self.hull_builder.add_external_hull(cs.content)
+
+                        enforce_symmetry(structure=cs.content)
+                        
+                    
                     generated = Parallel(n_jobs=-1, prefer="threads")(delayed(self._assign_fitness)(cs) for cs in new_pool)
                     
                     if self.estimator is not None:
@@ -857,7 +891,18 @@ class MAPElites:
                 n_solutions += np.sum([1  if x.age != 0 else (1 if ignore_age_zero else 0) for x in self.bins[i, j]._feasible])
                 n_solutions += np.sum([1  if x.age != 0 else (1 if ignore_age_zero else 0) for x in self.bins[i, j]._infeasible])
         return int(n_solutions)
-       
+    
+    def reassign_all_content(self) -> None:
+        for i in range(self.bins.shape[0]):
+            for j in range(self.bins.shape[1]):
+                b = self.bins[i, j]
+                for pop in [b._feasible, b._infeasible]:
+                    for cs in pop:
+                        cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
+                                                        extra_args={
+                                                            'alphabet': self.lsystem.ll_solver.atoms_alphabet
+                                                            }))
+    
     def to_json(self) -> Dict[str, Any]:
         return {
             'lsystem': self.lsystem.to_json(),

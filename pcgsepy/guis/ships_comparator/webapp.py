@@ -282,14 +282,6 @@ def parse_contents(filename,
 
 
 def get_content_plot(spaceship: CandidateSolution) -> go.Figure:
-    ll_spaceship = lsystem.hl_to_ll(spaceship)
-    spaceship.ll_string = ll_spaceship.string
-    spaceship.set_content(get_structure(string=spaceship.ll_string,
-                                        extra_args={
-                                            'alphabet': lsystem.ll_solver.atoms_alphabet
-                                        }))
-    # create content plot...
-    hull_builder.add_external_hull(structure=spaceship.content)
     content = spaceship.content.as_grid_array()
     arr = np.nonzero(content)
     x, y, z = arr
