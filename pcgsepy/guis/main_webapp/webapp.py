@@ -340,8 +340,7 @@ def set_app_layout(behavior_descriptors_names,
                             ],
                                 style={'width': '80%', 'vertical-align': 'middle', 'margin': '0 auto'})
                         ]),
-                    ],
-                         style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
+                    ]),
                 html.Div(children=[
                     html.H6(children='Save/load population',
                             className='section-title'),
@@ -891,8 +890,6 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
     else:
         event_trig = ctx.triggered[0]['prop_id'].split('.')[0]
 
-    print(f'Received trigger {event_trig}.')
-    
     if event_trig == 'step-btn':
         res = _apply_step(mapelites=current_mapelites,
                           selected_bins=[[x[1], x[0]] for x in selected_bins],
