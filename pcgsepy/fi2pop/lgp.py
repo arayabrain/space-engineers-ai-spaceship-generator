@@ -1,7 +1,7 @@
 from dataclasses import replace
 import math
 from random import choices, sample, uniform
-from tqdm.notebook import trange
+from tqdm import trange
 from typing import Any, Dict, List, Optional, Tuple
 
 from pcgsepy.config import (CROSSOVER_P, MUTATION_DECAY, MUTATION_INITIAL_P, N_GENS, N_RETRIES,

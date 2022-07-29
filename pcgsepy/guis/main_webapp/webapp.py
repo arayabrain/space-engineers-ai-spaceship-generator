@@ -14,6 +14,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import ALL, dcc, html
 from dash.dependencies import Input, Output, State
+from tqdm import trange
 from pcgsepy.common.jsonifier import json_loads
 from pcgsepy.config import (BIN_POP_SIZE, CS_MAX_AGE, N_EMITTER_STEPS,
                             N_GENS_ALLOWED)
@@ -576,15 +577,15 @@ def _build_heatmap(mapelites: MAPElites,
                           selector=dict(type='heatmap'))
     heatmap.update_layout(
         xaxis={
-            'tickmode': 'linear',
-            'tick0': 0,
-            'dtick': mapelites.bin_sizes[0],
+            # 'tickmode': 'linear',
+            # 'tick0': 0,
+            # 'dtick': mapelites.bin_sizes[0],
             'tickvals': x_labels
         },
         yaxis={
-            'tickmode': 'linear',
-            'tick0': 0,
-            'dtick': mapelites.bin_sizes[1],
+            # 'tickmode': 'linear',
+            # 'tick0': 0,
+            # 'dtick': mapelites.bin_sizes[1],
             'tickvals': y_labels
         }
     )
@@ -665,8 +666,9 @@ def _apply_step(mapelites: MAPElites,
                                         gen=gen_counter)
             logging.getLogger('dash-msgs').info(msg=f'Completed step {gen_counter + 1} (created {mapelites.n_new_solutions} solutions); running {N_EMITTER_STEPS} additional emitter steps if available...')
             mapelites.n_new_solutions = 0
-            for _ in range(N_EMITTER_STEPS):
-                mapelites.emitter_step(gen=gen_counter)
+            with trange(N_EMITTER_STEPS, desc='Emitter steps: ') as iterations:
+                for _ in iterations:
+                    mapelites.emitter_step(gen=gen_counter)
             logging.getLogger('dash-msgs').info(msg=f'Emitter step(s) completed (created {mapelites.n_new_solutions} solutions).')
             mapelites.n_new_solutions = 0
             return True

@@ -94,6 +94,10 @@ set_app_layout(behavior_descriptors_names=behavior_descriptors_names,
                mapelites=mapelites,
                
                dev_mode=True)
-# app.run_server(debug=False, host='127.0.0.1', port = 8080, use_reloader=False)
 
-serve(app.server, host="127.0.0.1", port=8080)
+# app.run_server(debug=False, host='127.0.0.1', port = 8050, use_reloader=False)
+
+serve(app.server,
+      threads=16,
+      host="127.0.0.1",
+      port=8050)

@@ -2,7 +2,7 @@ from typing import Any, Callable, Dict, List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
-from tqdm.notebook import trange
+from tqdm import trange
 
 from ..config import CS_MAX_AGE, N_GENS, N_ITERATIONS, N_RETRIES, POP_SIZE
 from ..evo.fitness import Fitness

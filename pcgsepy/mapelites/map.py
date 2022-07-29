@@ -12,7 +12,7 @@ from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, Emitter,
                                         HumanPrefMatrixEmitter, RandomEmitter,
                                         emitters, get_emitter_by_str)
 from pcgsepy.nn.estimators import QuantileEstimator
-from tqdm.notebook import trange
+from tqdm import trange
 from typing_extensions import Self
 
 from ..common.vecs import Orientation, Vec
