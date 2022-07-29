@@ -323,6 +323,26 @@ def set_app_layout(behavior_descriptors_names,
                     ],
                          style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
                 html.Div(children=[
+                    html.H6(children='Enforce symmetry',
+                            className='section-title'),
+                    html.Div(children=[
+                        html.Div(children=[
+                            dcc.Dropdown(['None', 'X-axis', 'Y-axis', 'Z-axis'],
+                                'None',
+                                id='symmetry-dropdown',
+                                className='dropdown',
+                                style={'width': '100%'}),
+                            dcc.RadioItems(['Upper', 'Lower'],
+                               'Upper',
+                               id='symmetry-radio',
+                               className='radio',
+                               style={'width': '100%', 'vertical-align': 'middle', 'margin': '0 auto'})
+                            ],
+                                style={'width': '80%', 'vertical-align': 'middle', 'margin': '0 auto'})
+                        ]),
+                    ],
+                         style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
+                html.Div(children=[
                     html.H6(children='Save/load population',
                             className='section-title'),
                     html.Div(children=[
@@ -850,9 +870,11 @@ def download_mapelites(n_clicks,
               Input("download-btn", "n_clicks"),
               Input('popdownload-btn', 'n_clicks'),
               Input('popupload-data', 'contents'),
+              Input('symmetry-dropdown', 'value'),
+              Input('symmetry-radio', 'value'),
               )
 def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n_blocks,
-                     pop_name, metric_name, method_name, n_clicks_step, n_clicks_reset, n_clicks_sub, weights, b0, b1, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents):
+                     pop_name, metric_name, method_name, n_clicks_step, n_clicks_reset, n_clicks_sub, weights, b0, b1, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_axis, symm_orientation):
     content_dl = None
     global current_mapelites
     global gen_counter
@@ -926,6 +948,11 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                      pop_name=pop_name,
                                      metric_name=metric_name,
                                      method_name=method_name)
+    
+    elif event_trig == 'symmetry-dropdown' or event_trig == 'symmetry-radio':
+        current_mapelites.reassign_all_content(sym_axis=symm_axis[0].lower() if symm_axis != "None" else None,
+                                               sym_upper=symm_orientation == 'Upper')
+    
     elif event_trig == 'heatmap-plot' or event_trig == 'population_dropdown':
         i, j = _from_bc_to_idx(bcs=(clickData['points'][0]['x'],
                                     clickData['points'][0]['y']),

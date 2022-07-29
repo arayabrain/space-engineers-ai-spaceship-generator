@@ -328,9 +328,6 @@ class MAPElites:
                     if cs.is_feasible and len(feasible_pop) < pops_size and cs not in feasible_pop:
                         if self.hull_builder is not None:
                                 self.hull_builder.add_external_hull(structure=cs._content)
-
-                        enforce_symmetry(structure=cs.content)
-                        
                         cs.c_fitness = self.compute_fitness(cs=cs,
                                                             extra_args={
                                                                 'alphabet': self.lsystem.ll_solver.atoms_alphabet
@@ -341,9 +338,6 @@ class MAPElites:
                     elif not cs.is_feasible and len(infeasible_pop) < pops_size and cs not in feasible_pop:
                         if self.hull_builder is not None:
                                 self.hull_builder.add_external_hull(structure=cs._content)
-
-                        enforce_symmetry(structure=cs.content)
-                        
                         cs.c_fitness = self.compute_fitness(cs=cs,
                                                             extra_args={
                                                                 'alphabet': self.lsystem.ll_solver.atoms_alphabet
@@ -521,9 +515,6 @@ class MAPElites:
                         # add hull
                         if self.hull_builder is not None:
                             self.hull_builder.add_external_hull(cs.content)
-
-                        enforce_symmetry(structure=cs.content)
-                        
                     
                     generated = Parallel(n_jobs=-1, prefer="threads")(delayed(self._assign_fitness)(cs) for cs in new_pool)
                     
@@ -892,16 +883,24 @@ class MAPElites:
                 n_solutions += np.sum([1  if x.age != 0 else (1 if ignore_age_zero else 0) for x in self.bins[i, j]._infeasible])
         return int(n_solutions)
     
-    def reassign_all_content(self) -> None:
+    def reassign_all_content(self, **kwargs) -> None:
         for i in range(self.bins.shape[0]):
             for j in range(self.bins.shape[1]):
                 b = self.bins[i, j]
                 for pop in [b._feasible, b._infeasible]:
                     for cs in pop:
+                        cs._content = None
                         cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
                                                         extra_args={
                                                             'alphabet': self.lsystem.ll_solver.atoms_alphabet
                                                             }))
+                        if self.hull_builder is not None:
+                            self.hull_builder.add_external_hull(structure=cs.content)
+                        if kwargs.get('sym_axis', None) is not None:
+                            enforce_symmetry(structure=cs.content,
+                                             axis=kwargs.get('sym_axis', None),
+                                             upper=kwargs.get('sym_upper', None))
+                            
     
     def to_json(self) -> Dict[str, Any]:
         return {
