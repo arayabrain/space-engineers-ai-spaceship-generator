@@ -1,5 +1,8 @@
+import logging
 import os
 import sys
+
+from waitress import serve
 
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     os.chdir(sys._MEIPASS)
@@ -82,6 +85,8 @@ mapelites = MAPElites(lsystem=lsystem,
                     n_bins=(8, 8))
 mapelites.emitter.sampling_strategy = 'thompson'
 
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
+
 set_callback_props(mapelites=mapelites)
 
 set_app_layout(behavior_descriptors_names=behavior_descriptors_names,
@@ -89,4 +94,6 @@ set_app_layout(behavior_descriptors_names=behavior_descriptors_names,
                mapelites=mapelites,
                
                dev_mode=True)
-app.run_server(debug=False, host='127.0.0.1', port = 8080, use_reloader=False)
+# app.run_server(debug=False, host='127.0.0.1', port = 8080, use_reloader=False)
+
+serve(app.server, host="127.0.0.1", port=8080)

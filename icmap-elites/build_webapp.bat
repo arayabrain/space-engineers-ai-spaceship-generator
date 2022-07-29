@@ -11,4 +11,8 @@ pyinstaller webapp_demo.py ^
 	--add-data "configs.ini;." ^
 	--add-data "hl_atoms.json;." ^
 	--add-data "hlrules;." ^
-	--add-data "llrules;."
+	--add-data "llrules;." ^
+	--add-data "mapelites_contbandit.json;." ^
+	--add-data "mapelites_prefbandit.json;." ^
+	--add-data "mapelites_prefmatrix.json;." ^
+	--add-data "mapelites_random.json;."

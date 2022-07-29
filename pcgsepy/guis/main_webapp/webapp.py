@@ -1,18 +1,7 @@
+from glob import glob
 import logging
 import sys
 import os
-
-
-def resource_path(relative_path):
-# get absolute path to resource
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-
-    return os.path.join(base_path, relative_path)
-
 import base64
 import json
 import random
@@ -25,8 +14,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import ALL, dcc, html
 from dash.dependencies import Input, Output, State
-from matplotlib.style import available
-from pcgsepy.common.jsonifier import json_dumps, json_loads
+from pcgsepy.common.jsonifier import json_loads
 from pcgsepy.config import (BIN_POP_SIZE, CS_MAX_AGE, N_EMITTER_STEPS,
                             N_GENS_ALLOWED)
 from pcgsepy.lsystem.rules import StochasticRules
@@ -58,6 +46,48 @@ logger.addHandler(dashLoggerHandler)
 
 
 hm_callback_props = {}
+block_to_colour = {
+    # colours from https://developer.mozilla.org/en-US/docs/Web/CSS/color_value
+    'LargeBlockArmorCorner': '#778899',
+    'LargeBlockArmorSlope': '#778899',
+    'LargeBlockArmorCornerInv': '#778899',
+    'LargeBlockArmorBlock': '#778899',
+    'LargeBlockGyro': '#2f4f4f',
+    'LargeBlockSmallGenerator': '#ffa07a',
+    'LargeBlockSmallContainer': '#008b8b',
+    'OpenCockpitLarge': '#32cd32',
+    'LargeBlockSmallThrust': '#ff8c00',
+    'SmallLight': '#fffaf0',
+    'Window1x1Slope': '#fffff0',
+    'Window1x1Flat': '#fffff0',
+    'LargeBlockLight_1corner': '#fffaf0'
+}
+gen_counter: int = 0
+selected_bins: List[Tuple[int, int]] = []
+exp_n: int = 0
+rngseed: int = 42
+current_mapelites = None
+my_emitterslist = ['mapelites_random.json',
+                       'mapelites_prefmatrix.json',
+                       'mapelites_prefbandit.json',
+                       'mapelites_contbandit.json']
+
+
+def resource_path(relative_path):
+# get absolute path to resource
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+
+app = dash.Dash(__name__,
+                title='SE ICMAP-Elites',
+                external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
+                assets_folder=resource_path("assets"),
+                update_title=None)
 
 
 def set_callback_props(mapelites: MAPElites):
@@ -97,42 +127,12 @@ def set_callback_props(mapelites: MAPElites):
     }
 
 
-block_to_colour = {
-    # colours from https://developer.mozilla.org/en-US/docs/Web/CSS/color_value
-    'LargeBlockArmorCorner': '#778899',
-    'LargeBlockArmorSlope': '#778899',
-    'LargeBlockArmorCornerInv': '#778899',
-    'LargeBlockArmorBlock': '#778899',
-    'LargeBlockGyro': '#2f4f4f',
-    'LargeBlockSmallGenerator': '#ffa07a',
-    'LargeBlockSmallContainer': '#008b8b',
-    'OpenCockpitLarge': '#32cd32',
-    'LargeBlockSmallThrust': '#ff8c00',
-    'SmallLight': '#fffaf0',
-    'Window1x1Slope': '#fffff0',
-    'Window1x1Flat': '#fffff0',
-    'LargeBlockLight_1corner': '#fffaf0'
-}
-
-
-available_mapelites = ['mapelites_random.json', 'mapelites_prefmatrix.json', 'mapelites_prefbandit.json', 'mapelites_contbandit.json']
-
-
-app = dash.Dash(__name__,
-                title='SE ICMAP-Elites',
-                external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
-                assets_folder=resource_path("assets"),
-                update_title=None)
-
-
-current_mapelites = None
-
-
 def set_app_layout(behavior_descriptors_names,
                    mapelites: Optional[MAPElites] = None,
                    dev_mode: bool = True):
     
     global current_mapelites
+    global rngseed
     
     description_str, help_str = '', ''
     with open('./assets/description.md', 'r') as f:
@@ -141,16 +141,15 @@ def set_app_layout(behavior_descriptors_names,
     with open(help_file, 'r') as f:
         help_str = f.read()
     
-    my_rngseed = random.randint(0, 128)
-    my_emitterslist = available_mapelites.copy()
+    rngseed = random.randint(0, 128)
     if mapelites is None:
-        random.seed(my_rngseed)
+        random.seed(rngseed)
         random.shuffle(my_emitterslist)
         with open(my_emitterslist[0], 'r') as f:
             mapelites = json_loads(f.read())
     current_mapelites = mapelites
     
-    logging.getLogger('dash-msgs').info(msg=f'Your ID is {str(my_rngseed).zfill(3)}; please remember this!')
+    logging.getLogger('dash-msgs').info(msg=f'Your ID is {str(rngseed).zfill(3)}; please remember this!')
     
     app.layout = html.Div(children=[
         # HEADER
@@ -462,12 +461,6 @@ def set_app_layout(behavior_descriptors_names,
                          className='page-description')
         ],
             className='footer'),
-        # client-side storage
-        dcc.Store(id='gen-counter'),
-        dcc.Store(id='selected-bins'),
-        dcc.Store(id='experiment-number', data=json.dumps(0)),
-        dcc.Store(id='emitters-order', data=json.dumps(my_emitterslist)),
-        dcc.Store(id='rng-seed', data=json.dumps(my_rngseed))
     ])
 
 
@@ -544,7 +537,7 @@ def _build_heatmap(mapelites: MAPElites,
             v = mapelites.bins[i, j].get_metric(metric=metric['name'],
                                                 use_mean=use_mean,
                                                 population=population)
-            disp_map[i, j] = v  # if v > 0 else None
+            disp_map[i, j] = v
             s = str((j, i)) if (i, j) in valid_bins else ''
             if j == 0:
                 text.append([s])
@@ -583,15 +576,15 @@ def _build_heatmap(mapelites: MAPElites,
                           selector=dict(type='heatmap'))
     heatmap.update_layout(
         xaxis={
-            # 'tickmode': 'linear',
-            # 'tick0': 0,
-            # 'dtick': mapelites.bin_sizes[0]
+            'tickmode': 'linear',
+            'tick0': 0,
+            'dtick': mapelites.bin_sizes[0],
             'tickvals': x_labels
         },
         yaxis={
-            # 'tickmode': 'linear',
-            # 'tick0': 0,
-            # 'dtick': mapelites.bin_sizes[1]
+            'tickmode': 'linear',
+            'tick0': 0,
+            'dtick': mapelites.bin_sizes[1],
             'tickvals': y_labels
         }
     )
@@ -826,36 +819,23 @@ def download_mapelites(n_clicks,
               Output('content-plot', 'figure'),
               Output('valid-bins', 'children'),
               Output('gen-display', 'children'),
-              Output('gen-counter', 'data'),
-            #   Output('mapelites', 'data'),
               Output('hl-rules', 'value'),
               Output('selected-bin', 'children'),
-              Output('selected-bins', 'data'),
               Output('content-string', 'value'),
               Output('spaceship-size', 'children'),
               Output('n-blocks', 'children'),
-            #   Output('logger', 'data'),
               Output('download-mapelites-btn', 'disabled'),
               Output('download-btn', 'disabled'),
               Output('step-btn', 'disabled'),
-              
               Output("download-content", "data"),
-              Output('experiment-number', 'data'),
     
               State('heatmap-plot', 'figure'),
-              State('selected-bins', 'data'),
-              State('gen-counter', 'data'),
-            #   State('mapelites', 'data'),
               State('hl-rules', 'value'),
-              State('selected-bin', 'children'),
               State('content-plot', 'figure'),
               State('content-string', 'value'),
               State('spaceship-size', 'children'),
               State('n-blocks', 'children'),
-            #   State('logger', 'data'),
-              State('experiment-number', 'data'),
-              State('emitters-order', 'data'),
-              State('rng-seed', 'data'),
+              
               Input('population-dropdown', 'value'),
               Input('metric-dropdown', 'value'),
               Input('method-radio', 'value'),
@@ -871,22 +851,20 @@ def download_mapelites(n_clicks,
               Input('selection-btn', 'n_clicks'),
               Input('selection-clr-btn', 'n_clicks'),
               Input('emitter-dropdown', 'value'),
-              
               Input("download-btn", "n_clicks"),
               Input('popdownload-btn', 'n_clicks'),
               Input('popupload-data', 'contents'),
               )
-def general_callback(curr_heatmap, selected_bins, gen_counter, rules, curr_selected, curr_content, cs_string, cs_size, cs_n_blocks, exp_n, emitters_list, rngseed,
+def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n_blocks,
                      pop_name, metric_name, method_name, n_clicks_step, n_clicks_reset, n_clicks_sub, weights, b0, b1, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents):
-    gen_counter: int = json.loads(gen_counter) if gen_counter else 0
-    selected_bins: List[Tuple[int, int]] = json.loads(selected_bins) if selected_bins else []
-    exp_n: int = json.loads(exp_n)
-    rngseed: int = json.loads(rngseed)
-    emitters_list: List[str] = json.loads(emitters_list)
-    # logger: CustomLogger = json_loads(logger)
-    # mapelites: MAPElites = json_loads(s=mapelites)
-    global current_mapelites
     content_dl = None
+    global current_mapelites
+    global gen_counter
+    global my_emitterslist
+    global selected_bins
+    global exp_n
+    global rngseed
+    
     
     ctx = dash.callback_context
 
@@ -993,7 +971,7 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, rules, curr_selec
             exp_n += 1
             content_dl = dict(content=cs_string,
                               filename=f'MySpaceship_{rngseed}_exp{exp_n}.txt')
-            if exp_n >= len(emitters_list):
+            if exp_n >= len(my_emitterslist):
                 curr_heatmap = go.Figure(data=[])
                 selected_bins = []
                 curr_content = go.Figure(data=[])
@@ -1001,7 +979,7 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, rules, curr_selec
                 logging.getLogger('dash-msgs').info(f'Reached end of all experiments! Please go back to the questionnaire to continue the evaluation.')
             else:
                 gen_counter = 0
-                with open(emitters_list[exp_n], 'r') as f:
+                with open(my_emitterslist[exp_n], 'r') as f:
                     current_mapelites = json_loads(f.read())
                 curr_heatmap = _build_heatmap(mapelites=current_mapelites,
                                         pop_name=pop_name,
@@ -1035,7 +1013,6 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, rules, curr_selec
         logging.getLogger('dash-msgs').info(msg=f'Unrecognized event trigger: {event_trig}. No operations have been applied!')
 
     selected_bins, selected_bins_str = format_bins(mapelites=current_mapelites,
-                                                #    bins_idx_list=_switch(selected_bins),
                                                    bins_idx_list=selected_bins,
                                                    do_switch=True,
                                                    str_prefix='Selected bin(s):',
@@ -1046,4 +1023,4 @@ def general_callback(curr_heatmap, selected_bins, gen_counter, rules, curr_selec
                                     str_prefix='Valid bins are:',
                                     filter_out_empty=False)
     
-    return curr_heatmap, curr_content, valid_bins_str, f'Current generation: {gen_counter}', json.dumps(gen_counter), str(current_mapelites.lsystem.hl_solver.parser.rules), selected_bins_str, json.dumps([[int(x[0]), int(x[1])] for x in selected_bins]), cs_string, cs_size, cs_n_blocks, False, gen_counter < N_GENS_ALLOWED, gen_counter >= N_GENS_ALLOWED, content_dl, json.dumps(exp_n)
+    return curr_heatmap, curr_content, valid_bins_str, f'Current generation: {gen_counter}', str(current_mapelites.lsystem.hl_solver.parser.rules), selected_bins_str, cs_string, cs_size, cs_n_blocks, False, gen_counter < N_GENS_ALLOWED, gen_counter >= N_GENS_ALLOWED, content_dl
