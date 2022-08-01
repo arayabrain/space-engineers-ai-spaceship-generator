@@ -308,6 +308,29 @@ class Vec:
     
     def opposite(self) -> "Vec":
         return self.scale(v=-1)
+    
+    def abs(self) -> "Vec":
+       if self.z is not None:
+           return Vec(x=abs(self.x),
+                      y=abs(self.y),
+                      z=abs(self.z))
+       else:
+           return Vec(x=abs(self.x),
+                      y=abs(self.y)) 
+    
+    def normalize(self) -> "Vec":
+        x, y, z = self.as_tuple()
+        if self.z is not None:
+            m = max(abs(x), abs(y), abs(z))
+        else:
+            m = max(abs(x), abs(y))
+        x /= m
+        y /= m
+        z /= m
+        if self.z is not None:
+            return Vec(x=x, y=y, z=z)
+        else:
+            return Vec(x=x, y=y)
 
 
 class Orientation(Enum):
