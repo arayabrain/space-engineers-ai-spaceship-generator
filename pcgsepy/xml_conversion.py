@@ -227,3 +227,74 @@ def extract_rule(bp_dir: str,
     z += 5
 
     return rule, (x, y, z)
+
+
+def structure_xml_converter(structure: Structure,
+                            name: str) -> str:
+    grid_sizes = {
+        1: 'Small',
+        2: 'Normal',
+        5: 'Large'
+    }
+    orientations_str = {
+        Orientation.FORWARD: 'Forward',
+        Orientation.BACKWARD: 'Backward',
+        Orientation.RIGHT: 'Right',
+        Orientation.LEFT: 'Left',
+        Orientation.UP: 'Up',
+        Orientation.DOWN: 'Down'
+    }
+    
+    header = f"""<?xml version="1.0"?>
+    <Definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <ShipBlueprints>
+            <ShipBlueprint xsi:type="MyObjectBuilder_ShipBlueprintDefinition">
+                <Id Type="MyObjectBuilder_ShipBlueprintDefinition" Subtype="{name.lower().strip()}"/>
+                <DisplayName>{name}</DisplayName>
+                <CubeGrids>
+                    <CubeGrid>
+                        <SubtypeName/>
+                        <EntityId>118144058179315893</EntityId>
+                        <PersistentFlags>CastShadows InScene</PersistentFlags>
+                        <PositionAndOrientation>
+                            <Position x ="0" y="0" z="0" />
+                            <Forward x="0" y="0" z="0" />
+                            <Up x="0" y="0" z="0" />
+                            <Orientation>
+                                <X>0</X>
+                                <Y>0</Y>
+                                <Z>0</Z>
+                                <W>0</W>
+                            </Orientation>
+                        </PositionAndOrientation>
+                        <GridSizeEnum>{grid_sizes[structure.grid_size]}</GridSizeEnum>
+                        <CubeBlocks>
+                    """
+    footer = f"""        </CubeBlocks>
+                         <DisplayName>{name.strip()}</DisplayName>
+                         <DestructibleBlocks>true</DestructibleBlocks>
+                         <IsRespawnGrid>false</IsRespawnGrid>
+                         <LocalCoordSys>0</LocalCoordSys>
+                         <TargetingTargets />
+                     </CubeGrid>
+                 </CubeGrids>
+                 <WorkshopId>0</WorkshopId>
+                 <OwnerSteamId>76561198082681546</OwnerSteamId>
+                 <Points>0</Points>
+             </ShipBlueprint>
+         </ShipBlueprints>
+     </Definitions>"""
+    
+    cube_blocks = ""      
+    for block in structure._blocks.values():
+        builder, xsi, type = block.block_type.split('_')
+        pos = block.position.scale(v=1 / structure.grid_size).to_veci()
+        cube_blocks += f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
+            <SubtypeName>{type}</SubtypeName>
+            <Min x = "{pos.x}" y="{pos.y}" z="{pos.z}" />
+            <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
+            <ColorMaskHSV x="0" y="-0.8" z="0.55" />
+        </MyObjectBuilder_CubeBlock>
+        """
+    
+    return header + cube_blocks + footer
