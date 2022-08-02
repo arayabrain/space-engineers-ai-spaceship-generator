@@ -36,6 +36,10 @@ POP_SIZE = config['FI2POP'].getint('population_size')
 N_RETRIES = config['FI2POP'].getint('n_initial_retries')
 # number of generations
 N_GENS = config['FI2POP'].getint('n_generations')
+# maximum string length (-1 for unlimited lenght)
+MAX_STRING_LEN = config['FI2POP'].getint('max_string_len')
+# maximum patience when generating new pools
+GEN_PATIENCE = config['FI2POP'].getint('gen_patience')
 
 # use or don't use the bounding box fitness
 USE_BBOX = config['FITNESS'].get('use_bounding_box')

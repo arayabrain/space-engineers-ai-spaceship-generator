@@ -1,10 +1,9 @@
-from glob import glob
-import logging
-import sys
-import os
 import base64
 import json
+import logging
+import os
 import random
+import sys
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
@@ -14,8 +13,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import ALL, dcc, html
 from dash.dependencies import Input, Output, State
-from tqdm import trange
-from pcgsepy.common.jsonifier import json_loads
+from pcgsepy.common.jsonifier import json_dumps, json_loads
 from pcgsepy.config import (BIN_POP_SIZE, CS_MAX_AGE, N_EMITTER_STEPS,
                             N_GENS_ALLOWED)
 from pcgsepy.lsystem.rules import StochasticRules
@@ -26,7 +24,8 @@ from pcgsepy.mapelites.bin import MAPBin
 from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, GreedyEmitter,
                                         HumanEmitter, HumanPrefMatrixEmitter,
                                         PreferenceBanditEmitter, RandomEmitter)
-from pcgsepy.mapelites.map import MAPElites, get_structure
+from pcgsepy.mapelites.map import MAPElites
+from tqdm import trange
 
 
 class DashLoggerHandler(logging.StreamHandler):
@@ -674,7 +673,7 @@ def _apply_step(mapelites: MAPElites,
             for bin_idx in selected_bins:
                 valid &= bin_idx in valid_bins
         if valid:
-            logging.getLogger('dash-msgs').info(msg=f'Started step {gen_counter}...')
+            logging.getLogger('dash-msgs').info(msg=f'Started step {gen_counter + 1}...')
             mapelites._interactive_step(bin_idxs=selected_bins,
                                         gen=gen_counter)
             logging.getLogger('dash-msgs').info(msg=f'Completed step {gen_counter + 1} (created {mapelites.n_new_solutions} solutions); running {N_EMITTER_STEPS} additional emitter steps if available...')
@@ -824,7 +823,7 @@ def download_mapelites(n_clicks):
     
     t = datetime.now().strftime("%Y%m%d%H%M%S")
     fname = f'{t}_mapelites_{current_mapelites.emitter.name}_gen{str(gen_counter).zfill(2)}'
-    return dict(content=current_mapelites, filename=f'{fname}.json')
+    return dict(content=json_dumps(current_mapelites), filename=f'{fname}.json')
 
 
 @app.callback(Output('heatmap-plot', 'figure'),

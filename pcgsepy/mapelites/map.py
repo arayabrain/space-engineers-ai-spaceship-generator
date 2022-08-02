@@ -514,43 +514,43 @@ class MAPElites:
                         # add hull
                         if self.hull_builder is not None:
                             self.hull_builder.add_external_hull(cs.content)
-                    
                     generated.extend(Parallel(n_jobs=-1, prefer="threads")(delayed(self._assign_fitness)(cs) for cs in new_pool))
-                    
-                    if self.estimator is not None:
-                        # subdivide for estimator/
-                        f_pop = [x for x in new_pool if x.is_feasible]
-                        # Prepare dataset for estimator
-                        xs, ys = prepare_dataset(f_pop=f_pop)
-                        for x, y in zip(xs, ys):
-                            self.buffer.insert(x=x,
-                                               y=y / self.max_f_fitness)
-                        # If possible, train estimator
-                        try:
-                            xs, ys = self.buffer.get()
-                            if isinstance(self.estimator, GaussianEstimator):
-                                self.estimator.fit(x=xs,
-                                                   y=ys)
-                            elif isinstance(self.estimator, MLPEstimator) or isinstance(self.estimator, QuantileEstimator):
-                                train_estimator(self.estimator,
-                                                xs=xs,
-                                                ys=ys)
-                            else:
-                                raise NotImplementedError(f'Unrecognized estimator type {type(self.estimator)}.')
-                        except EmptyBufferException:
-                            pass
-                        if self.estimator.is_trained and gen % ALIGNMENT_INTERVAL == 0:
-                            # Reassign previous infeasible fitnesses
-                            for i in range(self.bins.shape[0]):
-                                for j in range(self.bins.shape[1]):
-                                    for cs in self.bins[i, j]._infeasible:
-                                        if cs.age > ALIGNMENT_INTERVAL:
-                                            cs.c_fitness = self.compute_fitness(cs=cs,
-                                                                                extra_args={
-                                                                                    'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                                                                    })
                 except EvoException:
                     pass
+        
+        if self.estimator is not None:
+            # subdivide for estimator/
+            f_pop = [x for x in generated if x.is_feasible]
+            # Prepare dataset for estimator
+            xs, ys = prepare_dataset(f_pop=f_pop)
+            for x, y in zip(xs, ys):
+                self.buffer.insert(x=x,
+                                    y=y / self.max_f_fitness)
+            # If possible, train estimator
+            try:
+                xs, ys = self.buffer.get()
+                if isinstance(self.estimator, GaussianEstimator):
+                    self.estimator.fit(x=xs,
+                                        y=ys)
+                elif isinstance(self.estimator, MLPEstimator) or isinstance(self.estimator, QuantileEstimator):
+                    train_estimator(self.estimator,
+                                    xs=xs,
+                                    ys=ys)
+                else:
+                    raise NotImplementedError(f'Unrecognized estimator type {type(self.estimator)}.')
+            except EmptyBufferException:
+                pass
+            
+            if self.estimator.is_trained and gen % ALIGNMENT_INTERVAL == 0:
+                # Reassign previous infeasible fitnesses
+                for i in range(self.bins.shape[0]):
+                    for j in range(self.bins.shape[1]):
+                        for cs in self.bins[i, j]._infeasible:
+                            if cs.age > ALIGNMENT_INTERVAL:
+                                cs.c_fitness = self.compute_fitness(cs=cs,
+                                                                    extra_args={
+                                                                        'alphabet': self.lsystem.ll_solver.atoms_alphabet
+                                                                        })
         self.n_new_solutions += len(generated)
         return generated
 

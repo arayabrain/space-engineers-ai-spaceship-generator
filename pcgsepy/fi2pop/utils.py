@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from sklearn.decomposition import PCA, KernelPCA, SparsePCA
 from sklearn.preprocessing import StandardScaler
 
-from ..config import EPSILON_F, POP_SIZE, RESCALE_INFEAS_FITNESS
+from ..config import EPSILON_F, GEN_PATIENCE, MAX_STRING_LEN, POP_SIZE, RESCALE_INFEAS_FITNESS
 from ..evo.genops import EvoException, crossover, mutate, roulette_wheel_selection
 from ..lsystem.constraints import ConstraintLevel, ConstraintTime
 from ..lsystem.lsystem import LSystem
@@ -51,10 +51,8 @@ def subdivide_solutions(lcs: List[CandidateSolution],
                     cs.ncv += sat[ConstraintLevel.SOFT_CONSTRAINT][1]
         except Exception:
             too_big_cs.append(i)
-    # print(f'lcs: {len(lcs)}; to remove: {len(too_big_cs)}')
     for i in list(reversed(too_big_cs)):
         lcs.pop(i)
-    # print(f'\t-> lcs: {len(lcs)}')
 
 
 def create_new_pool(population: List[CandidateSolution],
@@ -76,15 +74,15 @@ def create_new_pool(population: List[CandidateSolution],
         List[CandidateSolution]: The pool of new solutions.
     """
     pool = []
+    patience = GEN_PATIENCE
     while len(pool) < n_individuals:
+        prev_len_pool = len(pool)
         # fitness-proportionate selection
         p1 = roulette_wheel_selection(pop=population,
                                       minimize=minimize)
-        
         new_pop = []
         new_pop[:] = population[:]
         new_pop.remove(p1)
-        
         p2 = roulette_wheel_selection(pop=new_pop,
                                       minimize=minimize)
         if p1 != p2:
@@ -94,15 +92,23 @@ def create_new_pool(population: List[CandidateSolution],
             o1.parents = [p1, p2]
             o2.parents = [p1, p2]
             for o in [o1, o2]:
-                # mutation
-                try:
-                    mutate(cs=o, n_iteration=generation)
-                except EvoException:
-                    pass
-                if o not in pool:
-                    pool.append(o)
+                if MAX_STRING_LEN == -1 or len(o.string) <= MAX_STRING_LEN:
+                    # mutation
+                    try:
+                        mutate(cs=o, n_iteration=generation)
+                    except EvoException:
+                        pass
+                    if o not in pool:
+                        pool.append(o)       
         else:
             raise EvoException('Picked same parents, this should never happen.')
+        if len(pool) == prev_len_pool:
+            patience -= 1
+        else:
+            patience = GEN_PATIENCE
+        if patience == 0:
+            # print(f'New Pool creation ran out of patience (current pool size: {len(pool)}.')
+            break
     return pool
 
 

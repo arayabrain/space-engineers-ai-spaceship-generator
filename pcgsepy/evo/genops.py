@@ -90,6 +90,7 @@ def mutate(cs: CandidateSolution,
         n_iteration (int): The current iteration number (used to compute decayed mutation
         probability).
     """
+    mutated = False
     for module in cs.hls_mod.keys():
         if cs.hls_mod[module]['mutable']:
             idxs = get_atom_indexes(string=cs.hls_mod[module]['string'],
@@ -117,8 +118,10 @@ def mutate(cs: CandidateSolution,
                                                    idx=idx[0])
                     d = offset - (idx[1] + 1 - idx[0])
                     cs.hls_mod[module]['string'] = cs.hls_mod[module]['string'][:idx[0]] + rhs + cs.hls_mod[module]['string'][idx[1] + 1 + d:]
-            else:
-                raise EvoException(f'No mutation could be applied to {cs.string}.')
+                    
+                    mutated |= True
+    if not mutated:
+        raise EvoException(f'No mutation could be applied to {cs.string}.')
     # Update solution string
     cs.string = ''.join([x['string'] for x in cs.hls_mod.values()])
 
@@ -178,8 +181,8 @@ def crossover(a1: CandidateSolution,
                     a2.n_offspring += 1
     
     if len(childs) == 0:
-        print(a1.string, a1.hls_mod)
-        print(a2.string, a2.hls_mod)
+        # print(a1.string, a1.hls_mod)
+        # print(a2.string, a2.hls_mod)
         raise EvoException(f'No cross-over could be applied ({a1.string} w/ {a2.string}).')
              
     return childs[:n_childs]
