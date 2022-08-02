@@ -421,7 +421,7 @@ class MAPElites:
                             bins=bc1,
                             right=False)[0] - 1
             self.bins[i, j].insert_cs(cs)
-            self.bins[i, j].remove_old()
+        self.bins[i, j].remove_old()
 
     def _age_bins(self,
                   diff: int = -1) -> None:
@@ -505,7 +505,6 @@ class MAPElites:
                                                minimize=minimize)
                     subdivide_solutions(lcs=new_pool,
                                         lsystem=self.lsystem)
-                    
                     for cs in new_pool:
                         if cs._content is None:
                             cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
@@ -516,7 +515,7 @@ class MAPElites:
                         if self.hull_builder is not None:
                             self.hull_builder.add_external_hull(cs.content)
                     
-                    generated = Parallel(n_jobs=-1, prefer="threads")(delayed(self._assign_fitness)(cs) for cs in new_pool)
+                    generated.extend(Parallel(n_jobs=-1, prefer="threads")(delayed(self._assign_fitness)(cs) for cs in new_pool))
                     
                     if self.estimator is not None:
                         # subdivide for estimator/
@@ -787,7 +786,7 @@ class MAPElites:
                     ipop.extend(selected_bin._infeasible)
             else:
                 raise NotImplementedError(f'Unrecognized emitter output: {selected_bins}.')
-            print(f'Emitter picked a total of {len(fpop)} feasible and {len(ipop)} infeasible solutions ({len(selected_bins)}).')
+            # print(f'Emitter picked a total of {len(fpop)} feasible and {len(ipop)} infeasible solutions ({len(selected_bins)}).')
             generated = self._step(populations=[fpop, ipop],
                                 gen=gen)
             if generated:

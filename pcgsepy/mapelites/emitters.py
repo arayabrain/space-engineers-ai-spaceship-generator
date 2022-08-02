@@ -104,7 +104,7 @@ class RandomEmitter(Emitter):
         bins = [b for b in bins.flatten().tolist() if len(b._feasible) > 0 or len(b._infeasible) > 0]
         fcs, ics = 0, 0
         selected = []
-        while fcs < 2 and ics < 2:
+        while fcs < 2 or ics < 2:
             selected.append(bins.pop(np.random.choice(np.arange(len(bins)))))
             fcs += len(selected[-1]._feasible)
             ics += len(selected[-1]._infeasible)
@@ -154,7 +154,7 @@ class OptimisingEmitter(Emitter):
         sorted_bins = sorted(bins, key=lambda x: x.get_metric(metric='fitness', use_mean=True, population='feasible'), reverse=True)
         fcs, ics = 0, 0
         selected = []
-        while fcs < 2 and ics < 2:
+        while fcs < 2 or ics < 2:
             selected.append(sorted_bins.pop(0))
             fcs += len(selected[-1]._feasible)
             ics += len(selected[-1]._infeasible)
