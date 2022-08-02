@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -93,3 +93,24 @@ class CandidateSolution:
         cs.n_offsprings = my_args['n_offsprings']
         cs.n_feas_offsprings = my_args['n_feas_offsprings']
         return cs
+
+def merge_solutions(lcs: List[CandidateSolution],
+                    modules_names: List[str]) -> CandidateSolution:
+        """
+        Merge solutions in a single solution, keeping track of modules' solutions.
+
+        Args:
+            lcs (List[CandidateSolution]): The list of solutions to merge, ordered.
+
+        Returns:
+            CandidateSolution: The merged solution
+        """
+        assert len(lcs) == len(modules_names), f'Each solution should be produced by a module! Passed {len(lcs)} solutions and {len(modules_names)} modules.'
+        # any additional control on alignment etc. should
+        # be done here.
+        merged = ''.join(cs.string for cs in lcs)
+        m_cs = CandidateSolution(string=merged)
+        for i, cs in enumerate(lcs):
+            m_cs.hls_mod[modules_names[i]] = {'string': cs.string,
+                                              'mutable': True}
+        return m_cs

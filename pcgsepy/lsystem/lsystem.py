@@ -10,7 +10,7 @@ from .constraints import ConstraintHandler
 from .solver import LSolver
 from .structure_maker import LLStructureMaker
 from ..structure import Structure
-from .solution import CandidateSolution
+from .solution import CandidateSolution, merge_solutions
 
 
 class LSystemModule:
@@ -165,26 +165,6 @@ class LSystem:
         return module.apply_rules(starting_string=starting_string,
                                   iterations=iterations)
 
-    def _merge_strings(self,
-                       lcs: List[CandidateSolution]) -> CandidateSolution:
-        """
-        Merge solutions in a single solution, keeping track of modules' solutions.
-
-        Args:
-            lcs (List[CandidateSolution]): The list of solutions to merge, ordered.
-
-        Returns:
-            CandidateSolution: The merged solution
-        """
-        # any additional control on alignment etc. should
-        # be done here.
-        merged = ''.join(cs.string for cs in lcs)
-        m_cs = CandidateSolution(string=merged)
-        for i, cs in enumerate(lcs):
-            m_cs.hls_mod[self.modules[i].name] = {'string': cs.string,
-                                                  'mutable': True}
-        return m_cs
-
     def _produce_strings_combinations(self,
                                       lcs: List[CandidateSolution]) -> List[CandidateSolution]:
         """Produce the combination of solutions' strings.
@@ -197,7 +177,8 @@ class LSystem:
         """
         import itertools
         # Cartesian product of all strings, return merged string
-        return [self._merge_strings(lcs=x) for x in list(itertools.product(*lcs))]
+        modules_names = [m.name for m in self.modules]
+        return [merge_solutions(lcs=x, modules_names=modules_names) for x in list(itertools.product(*lcs))]
 
     def apply_rules(self,
                     starting_strings: List[str],

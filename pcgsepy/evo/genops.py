@@ -90,33 +90,37 @@ def mutate(cs: CandidateSolution,
         n_iteration (int): The current iteration number (used to compute decayed mutation
         probability).
     """
-    idxs = get_atom_indexes(string=cs.string,
-                            atom='corridorsimple')  # TODO: Perhaps read from config instead
-    idxs = remove_immutable_idxs(cs=cs,
-                                 idxs=idxs)
-    n = len(idxs)
-    if n > 0:
-        p = max(MUTATION_INITIAL_P / math.exp(n_iteration * MUTATION_DECAY), 0)
-        to_mutate = int(p * n)
-        for_mutation = sample(population=idxs,
-                              k=to_mutate)
-        for_mutation = sorted(for_mutation,
-                              key=lambda x: x[0],
-                              reverse=True)
+    for module in cs.hls_mod.keys():
+        if cs.hls_mod[module]['mutable']:
+            idxs = get_atom_indexes(string=cs.hls_mod[module]['string'],
+                                    atom='corridorsimple')  # TODO: Perhaps read from config instead
+            # TODO: for enforcing symmetry automatically, should check if the atom to expand
+            # is within a bracketed along the symmetry axis. If it is, mutate and copy the mutation
+            # on the "next" bracketed enclosure.
+            # Use get_matching_brackets to get all brackets and find which tuple contains the mutating atom.
+            # example:
+            # ...[RotYccwZ corridorsimple corridorsimple][RotYcwZ corridorsimple corridorsimple]...
+            # ->
+            # ...[RotYccwZ [RotYcwX corridorsimple] corridorsimple][RotYcwZ [RotYcwX corridorsimple] corridorsimple]...
+            n = len(idxs)
+            if n > 0:
+                p = max(MUTATION_INITIAL_P / math.exp(n_iteration * MUTATION_DECAY), 0)
+                to_mutate = int(p * n)
+                for_mutation = sample(population=idxs,
+                                    k=to_mutate)
+                for_mutation = sorted(for_mutation,
+                                    key=lambda x: x[0],
+                                    reverse=True)
 
-        for idx in for_mutation:
-            rhs, offset = expander.get_rhs(string=cs.string,
-                                           idx=idx[0])
-            d = offset - (idx[1] + 1 - idx[0])
-            cs.string = cs.string[:idx[0]] + rhs + cs.string[idx[1] + 1 + d:]
-        # Update hls_mod 'string' values
-        mod_intervals = list(accumulate([len(cs.hls_mod[k]['string']) for k in cs.hls_mod.keys()]))
-        prev = 0
-        for interval, k in zip(mod_intervals, cs.hls_mod.keys()):
-            cs.hls_mod[k]['string'] = cs.string[prev:interval]
-            prev += interval
-    else:
-        raise EvoException(f'No mutation could be applied to {cs.string}.')
+                for idx in for_mutation:
+                    rhs, offset = expander.get_rhs(string=cs.hls_mod[module]['string'],
+                                                   idx=idx[0])
+                    d = offset - (idx[1] + 1 - idx[0])
+                    cs.hls_mod[module]['string'] = cs.hls_mod[module]['string'][:idx[0]] + rhs + cs.hls_mod[module]['string'][idx[1] + 1 + d:]
+            else:
+                raise EvoException(f'No mutation could be applied to {cs.string}.')
+    # Update solution string
+    cs.string = ''.join([x['string'] for x in cs.hls_mod.values()])
 
 
 def crossover(a1: CandidateSolution,
@@ -134,66 +138,50 @@ def crossover(a1: CandidateSolution,
     Returns:
         List[CandidateSolution]: A list containing the new offspring solutions.
     """
-    idxs1 = get_matching_brackets(string=a1.string)
-    idxs1 = remove_immutable_idxs(cs=a1,
-                                  idxs=idxs1)
-    idxs2 = get_matching_brackets(string=a2.string)
-    idxs2 = remove_immutable_idxs(cs=a2,
-                                  idxs=idxs2)
-    # if crossover can't be applied, use atoms
-    if not idxs1:
-        idxs1 = get_atom_indexes(string=a1.string,
-                                 atom='corridor')  # TODO: Perhaps read from config instead
-        idxs1 = remove_immutable_idxs(cs=a1,
-                                    idxs=idxs1)
-    if not idxs2:
-        idxs2 = get_atom_indexes(string=a2.string,
-                                 atom='corridor')  # TODO: Perhaps read from config instead
-        idxs2 = remove_immutable_idxs(cs=a2,
-                                    idxs=idxs2)
-    ws1 = [CROSSOVER_P for _ in range(len(idxs1))]
-    ws2 = [CROSSOVER_P for _ in range(len(idxs2))]
     childs = []
-    if len(idxs1) > 0 and len(idxs2) > 0:
-        while len(childs) < n_childs:
-            s1 = a1.string[:]
-            s2 = a2.string[:]
-
-            idx1 = choices(population=idxs1, weights=ws1, k=1)[0]
-            b1 = a1.string[idx1[0]:idx1[1] + 1]
-
-            idx2 = choices(population=idxs2, weights=ws2, k=1)[0]
-            b2 = a2.string[idx2[0]:idx2[1] + 1]
-
-            s1 = s1[:idx1[0]] + s1[idx1[0]:].replace(b1, b2, 1)
-            s2 = s2[:idx2[0]] + s2[idx2[0]:].replace(b2, b1, 1)
-
-            for s, idx in [(s1, idx1), (s2, idx2)]:
-                o = CandidateSolution(string=s)
-                # Update hls_mod
-                # mod_intervals = list(accumulate([len(a1.hls_mod[k]['string']) for k in a1.hls_mod.keys()]))
-                # prev = 0
-                # for interval, k in zip(mod_intervals, a1.hls_mod.keys()):
-                #     o.hls_mod[k] = {
-                #         'string': o.string[prev:interval],
-                #         'mutable': a1.hls_mod[k]['mutable']
-                #     }
-                #     prev += interval
-                # TODO: Figure out how to implement this correctly 😔
-                for module in ['HeadModule', 'BodyModule', 'TailModule']:
-                    s = 'cockpit' if module == 'HeadModule' else 'thrusters' if module == 'TailModule' else o.string.replace('cockpit', '').replace('thrusters', '')
-                    o.hls_mod[module] = {
-                        'string': s,
-                        'mutable': a1.hls_mod[module]['mutable']
-                    }
+    
+    for module in a1.hls_mod.keys():
+        if a1.hls_mod[module]['mutable']:
+            string1 = a1.hls_mod[module]['string'][:]
+            string2 = a2.hls_mod[module]['string'][:]
+            
+            idxs1 = get_matching_brackets(string=string1)
+            idxs2 = get_matching_brackets(string=string2)
+            if not idxs1:
+                idxs1 = get_atom_indexes(string=string1,
+                                         atom='corridor')
+            if not idxs2:
+                idxs2 = get_atom_indexes(string=string1,
+                                         atom='corridor')
+            if len(idxs1) == 0 or len(idxs2) == 0:
+                pass
+            else:
+                ws1 = [CROSSOVER_P for _ in range(len(idxs1))]
+                ws2 = [CROSSOVER_P for _ in range(len(idxs2))]
+                s1 = string1[:]
+                s2 = string2[:]
+                idx1 = choices(population=idxs1, weights=ws1, k=1)[0]
+                b1 = string1[idx1[0]:idx1[1] + 1]
+                idx2 = choices(population=idxs2, weights=ws2, k=1)[0]
+                b2 = string2[idx2[0]:idx2[1] + 1]
+                s1 = s1[:idx1[0]] + s1[idx1[0]:].replace(b1, b2, 1)
+                s2 = s2[:idx2[0]] + s2[idx2[0]:].replace(b2, b1, 1)
                 
-                childs.append(o)
-                a1.n_offspring += 1
-                a2.n_offspring += 1
-    else:
-        print(a1.string, a1.hls_mod, idxs1)
-        print(a2.string, a2.hls_mod, idxs2)
+                for solution, mutated in [(a1, s1), (a2, s2)]:
+                    modified_hls_mod = dict(solution.hls_mod)
+                    modified_hls_mod[module]['string'] = mutated
+                    modified_string = ''.join([x['string'] for x in modified_hls_mod.values()])
+                    o = CandidateSolution(string=modified_string)
+                    o.hls_mod = modified_hls_mod
+                    childs.append(o)
+                    a1.n_offspring += 1
+                    a2.n_offspring += 1
+    
+    if len(childs) == 0:
+        print(a1.string, a1.hls_mod)
+        print(a2.string, a2.hls_mod)
         raise EvoException(f'No cross-over could be applied ({a1.string} w/ {a2.string}).')
+             
     return childs[:n_childs]
 
 
@@ -239,26 +227,3 @@ def get_atom_indexes(string: str,
             indexes.append((i, cb))
             i = cb
     return indexes
-
-
-def remove_immutable_idxs(cs: CandidateSolution,
-                          idxs: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
-    """Remove indexes of an immutable part of the string.
-
-    Args:
-        cs (CandidateSolution): The solution
-        idxs (List[Tuple[int, int]]): The initial list of indexes
-
-    Returns:
-        List[Tuple[int, int]]: The filtered list of indexes
-    """
-    valid = []
-    mod_intervals = list(accumulate(
-        [len(cs.hls_mod[k]['string']) for k in cs.hls_mod.keys()]))
-    for idx in idxs:
-        for i, interval in enumerate(mod_intervals):
-            if idx[0] < interval and (i == len(mod_intervals) - 1 or idx[0] < mod_intervals[i + 1]):
-                if cs.hls_mod[list(cs.hls_mod.keys())[i]]['mutable']:
-                    valid.append(idx)
-                break
-    return valid

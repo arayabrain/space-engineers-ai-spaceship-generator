@@ -816,18 +816,15 @@ def _apply_emitter_change(mapelites: MAPElites,
 @app.callback(
     Output("download-mapelites", "data"),
     Input("download-mapelites-btn", "n_clicks"),
-    State('mapelites', 'data'),
-    State('gen-counter', 'data'),
     prevent_initial_call=True,
 )
-def download_mapelites(n_clicks,
-                       mapelites,
-                       gen_counter):
-    if mapelites != '':
-        me: MAPElites = json_loads(s=mapelites)
-        t = datetime.now().strftime("%Y%m%d%H%M%S")
-        fname = f'{t}_mapelites_{me.emitter.name}_gen{str(gen_counter).zfill(2)}'
-        return dict(content=mapelites, filename=f'{fname}.json')
+def download_mapelites(n_clicks):
+    global current_mapelites
+    global gen_counter
+    
+    t = datetime.now().strftime("%Y%m%d%H%M%S")
+    fname = f'{t}_mapelites_{current_mapelites.emitter.name}_gen{str(gen_counter).zfill(2)}'
+    return dict(content=current_mapelites, filename=f'{fname}.json')
 
 
 @app.callback(Output('heatmap-plot', 'figure'),
