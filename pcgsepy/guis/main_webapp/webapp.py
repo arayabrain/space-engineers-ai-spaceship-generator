@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import random
+from re import S
 import sys
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
@@ -335,7 +336,7 @@ def set_app_layout(behavior_descriptors_names,
                                'Upper',
                                id='symmetry-radio',
                                className='radio',
-                               style={'width': '100%', 'vertical-align': 'middle', 'margin': '0 auto'})
+                               style={'width': '100%', 'vertical-align': 'middle', 'margin': '0 auto', 'display': 'flex'})
                             ],
                                 style={'width': '80%', 'vertical-align': 'middle', 'margin': '0 auto'})
                         ]),
@@ -469,8 +470,9 @@ def set_app_layout(behavior_descriptors_names,
                                 disabled=True,
                                 style={'width': '100%', 'height': 300})
             ],
-                style={'width': '30%', 'display': 'inline-block', 'vertical-align': 'top'})
-        ]),
+                style={'width': '30%', 'display': 'inline-block', 'vertical-align': 'top', 'text-align': 'center'})
+        ],
+                 style={'text-align': 'center'}),
         html.Br(),
         # FOOTER
         html.Div(children=[

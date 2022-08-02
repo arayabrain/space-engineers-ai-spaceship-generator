@@ -154,7 +154,7 @@ def crossover(a1: CandidateSolution,
                 idxs1 = get_atom_indexes(string=string1,
                                          atom='corridor')
             if not idxs2:
-                idxs2 = get_atom_indexes(string=string1,
+                idxs2 = get_atom_indexes(string=string2,
                                          atom='corridor')
             if len(idxs1) == 0 or len(idxs2) == 0:
                 pass
