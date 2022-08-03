@@ -1,4 +1,5 @@
 import os
+import random
 import numpy as np
 import xml.etree.ElementTree as ET
 from typing import List, Tuple
@@ -231,6 +232,307 @@ def extract_rule(bp_dir: str,
 
 def structure_xml_converter(structure: Structure,
                             name: str) -> str:
+    
+    builder_id = str(random.getrandbits(64)).zfill(20)
+    
+    def armour_blocks(block: Block) -> str:
+        builder, xsi, block_type = block.block_type.split('_')
+        pos = block.position.scale(v=1 / structure.grid_size).to_veci()
+        return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
+            <SubtypeName>{block_type}</SubtypeName>
+            <Min x = "{pos.x}" y="{pos.y}" z="{pos.z}" />
+            <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
+            <ColorMaskHSV x="0" y="-0.8" z="0.55" />
+        </MyObjectBuilder_CubeBlock>
+        """
+    
+    def reactor_block(block: Block) -> str:
+        builder, xsi, block_type = block.block_type.split('_')
+        pos = block.position.scale(v=1 / structure.grid_size).to_veci()
+        return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
+              <SubtypeName>{block_type}</SubtypeName>
+              <EntityId>{str(random.getrandbits(64)).zfill(20)}</EntityId>
+              <Min x = "{pos.x}" y="{pos.y}" z="{pos.z}" />
+              <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
+              <ColorMaskHSV x="0.575" y="0" z="0" />
+              <BuiltBy>{builder_id}</BuiltBy>
+              <ComponentContainer>
+                <Components>
+                  <ComponentData>
+                    <TypeId>MyInventoryBase</TypeId>
+                    <Component xsi:type="MyObjectBuilder_Inventory">
+                      <Items>
+                        <MyObjectBuilder_InventoryItem>
+                          <Amount>19.996409</Amount>
+                          <PhysicalContent xsi:type="MyObjectBuilder_Ingot">
+                            <SubtypeName>Uranium</SubtypeName>
+                          </PhysicalContent>
+                          <ItemId>0</ItemId>
+                        </MyObjectBuilder_InventoryItem>
+                      </Items>
+                      <nextItemId>1</nextItemId>
+                      <Volume>1</Volume>
+                      <Mass>9223372036854.775807</Mass>
+                      <MaxItemCount>2147483647</MaxItemCount>
+                      <Size xsi:nil="true" />
+                      <InventoryFlags>CanReceive</InventoryFlags>
+                      <RemoveEntityOnEmpty>false</RemoveEntityOnEmpty>
+                    </Component>
+                  </ComponentData>
+                  <ComponentData>
+                    <TypeId>MyTimerComponent</TypeId>
+                    <Component xsi:type="MyObjectBuilder_TimerComponent">
+                      <Repeat>true</Repeat>
+                      <TimeToEvent>0</TimeToEvent>
+                      <SetTimeMinutes>0</SetTimeMinutes>
+                      <TimerEnabled>false</TimerEnabled>
+                      <RemoveEntityOnTimer>false</RemoveEntityOnTimer>
+                      <TimerType>Frame100</TimerType>
+                      <FramesFromLastTrigger>0</FramesFromLastTrigger>
+                      <TimerTickInFrames>900</TimerTickInFrames>
+                      <IsSessionUpdateEnabled>false</IsSessionUpdateEnabled>
+                    </Component>
+                  </ComponentData>
+                </Components>
+              </ComponentContainer>
+              <CustomName>{block_type}</CustomName>
+              <ShowOnHUD>false</ShowOnHUD>
+              <ShowInTerminal>true</ShowInTerminal>
+              <ShowInToolbarConfig>true</ShowInToolbarConfig>
+              <ShowInInventory>true</ShowInInventory>
+              <Enabled>true</Enabled>
+              <Capacity>19.9964085</Capacity>
+            </MyObjectBuilder_CubeBlock>"""
+    
+    def container_block(block: Block) -> str:
+        builder, xsi, block_type = block.block_type.split('_')
+        pos = block.position.scale(v=1 / structure.grid_size).to_veci()
+        return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
+              <SubtypeName>{block_type}</SubtypeName>
+              <EntityId>{str(random.getrandbits(64)).zfill(20)}</EntityId>
+              <Min x="{pos.x}" y="{pos.y}" z="{pos.z}" />
+              <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
+              <ColorMaskHSV x="0.575" y="0" z="0" />
+              <BuiltBy>{builder_id}</BuiltBy>
+              <ComponentContainer>
+                <Components>
+                  <ComponentData>
+                    <TypeId>MyInventoryBase</TypeId>
+                    <Component xsi:type="MyObjectBuilder_Inventory">
+                      <Items />
+                      <nextItemId>17</nextItemId>
+                      <Volume>15.625</Volume>
+                      <Mass>9223372036854.775807</Mass>
+                      <MaxItemCount>2147483647</MaxItemCount>
+                      <Size xsi:nil="true" />
+                      <InventoryFlags>CanReceive CanSend</InventoryFlags>
+                      <RemoveEntityOnEmpty>false</RemoveEntityOnEmpty>
+                    </Component>
+                  </ComponentData>
+                </Components>
+              </ComponentContainer>
+              <CustomName>{block_type}</CustomName>
+              <ShowOnHUD>false</ShowOnHUD>
+              <ShowInTerminal>true</ShowInTerminal>
+              <ShowInToolbarConfig>true</ShowInToolbarConfig>
+              <ShowInInventory>true</ShowInInventory>
+            </MyObjectBuilder_CubeBlock>"""
+    
+    def thruster_block(block: Block) -> str:
+        builder, xsi, block_type = block.block_type.split('_')
+        pos = block.position.scale(v=1 / structure.grid_size).to_veci()
+        return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
+              <SubtypeName>{block_type}</SubtypeName>
+              <EntityId>{str(random.getrandbits(64)).zfill(20)}</EntityId>
+              <Min x= "{pos.x}" y="{pos.y}" z="{pos.z}" />
+              <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
+              <BuiltBy>{builder_id}</BuiltBy>
+              <ComponentContainer>
+                <Components>
+                  <ComponentData>
+                    <TypeId>MyTimerComponent</TypeId>
+                    <Component xsi:type="MyObjectBuilder_TimerComponent">
+                      <Repeat>true</Repeat>
+                      <TimeToEvent>0</TimeToEvent>
+                      <SetTimeMinutes>0</SetTimeMinutes>
+                      <TimerEnabled>true</TimerEnabled>
+                      <RemoveEntityOnTimer>false</RemoveEntityOnTimer>
+                      <TimerType>Frame100</TimerType>
+                      <FramesFromLastTrigger>0</FramesFromLastTrigger>
+                      <TimerTickInFrames>100</TimerTickInFrames>
+                      <IsSessionUpdateEnabled>false</IsSessionUpdateEnabled>
+                    </Component>
+                  </ComponentData>
+                </Components>
+              </ComponentContainer>
+              <CustomName>{block_type}</CustomName>
+              <ShowOnHUD>false</ShowOnHUD>
+              <ShowInTerminal>true</ShowInTerminal>
+              <ShowInToolbarConfig>true</ShowInToolbarConfig>
+              <ShowInInventory>true</ShowInInventory>
+              <Enabled>true</Enabled>
+            </MyObjectBuilder_CubeBlock>"""
+    
+    def collector_block(block: Block) -> str:
+        builder, xsi, block_type = block.block_type.split('_')
+        pos = block.position.scale(v=1 / structure.grid_size).to_veci()
+        return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
+              <SubtypeName>{block_type}</SubtypeName>
+              <EntityId>{str(random.getrandbits(64)).zfill(20)}</EntityId>
+              <Min x="{pos.x}" y="{pos.y}" z="{pos.z}" />
+              <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
+              <ColorMaskHSV x="0.575" y="0" z="0" />
+              <BuiltBy>{builder_id}</BuiltBy>
+              <ComponentContainer>
+                <Components>
+                  <ComponentData>
+                    <TypeId>MyInventoryBase</TypeId>
+                    <Component xsi:type="MyObjectBuilder_Inventory">
+                      <Items />
+                      <nextItemId>0</nextItemId>
+                      <Volume>1.575</Volume>
+                      <Mass>9223372036854.775807</Mass>
+                      <MaxItemCount>2147483647</MaxItemCount>
+                      <Size xsi:nil="true" />
+                      <InventoryFlags>CanSend</InventoryFlags>
+                      <RemoveEntityOnEmpty>false</RemoveEntityOnEmpty>
+                    </Component>
+                  </ComponentData>
+                </Components>
+              </ComponentContainer>
+              <CustomName>{block_type}</CustomName>
+              <ShowOnHUD>false</ShowOnHUD>
+              <ShowInTerminal>true</ShowInTerminal>
+              <ShowInToolbarConfig>true</ShowInToolbarConfig>
+              <ShowInInventory>true</ShowInInventory>
+              <Enabled>true</Enabled>
+            </MyObjectBuilder_CubeBlock>"""
+    
+    def gyro_block(block: Block) -> str:
+        builder, xsi, block_type = block.block_type.split('_')
+        pos = block.position.scale(v=1 / structure.grid_size).to_veci()
+        return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
+              <SubtypeName>{block_type}</SubtypeName>
+              <EntityId>{str(random.getrandbits(64)).zfill(20)}</EntityId>
+              <Min x="{pos.x}" y="{pos.y}" z="{pos.z}" />
+              <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
+              <ColorMaskHSV x="0.575" y="0" z="0" />
+              <BuiltBy>{builder_id}</BuiltBy>
+              <CustomName>{block_type}</CustomName>
+              <ShowOnHUD>false</ShowOnHUD>
+              <ShowInTerminal>true</ShowInTerminal>
+              <ShowInToolbarConfig>true</ShowInToolbarConfig>
+              <ShowInInventory>true</ShowInInventory>
+              <Enabled>true</Enabled>
+            </MyObjectBuilder_CubeBlock>"""
+    
+    def oxygen_block(block: Block) -> str:
+        builder, xsi, block_type = block.block_type.split('_')
+        pos = block.position.scale(v=1 / structure.grid_size).to_veci()
+        return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
+              <SubtypeName>{block_type}</SubtypeName>
+              <EntityId>{str(random.getrandbits(64)).zfill(20)}</EntityId>
+              <Min x="{pos.x}" y="{pos.y}" z="{pos.z}" />
+              <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
+              <ColorMaskHSV x="0.575" y="0" z="0" />
+              <BuiltBy>{builder_id}</BuiltBy>
+              <ComponentContainer>
+                <Components>
+                  <ComponentData>
+                    <TypeId>MyInventoryBase</TypeId>
+                    <Component xsi:type="MyObjectBuilder_Inventory">
+                      <Items>
+                        <MyObjectBuilder_InventoryItem>
+                          <Amount>999.149691</Amount>
+                          <PhysicalContent xsi:type="MyObjectBuilder_Ore">
+                            <SubtypeName>Ice</SubtypeName>
+                          </PhysicalContent>
+                          <ItemId>0</ItemId>
+                        </MyObjectBuilder_InventoryItem>
+                      </Items>
+                      <nextItemId>1</nextItemId>
+                      <Volume>1</Volume>
+                      <Mass>9223372036854.775807</Mass>
+                      <MaxItemCount>2147483647</MaxItemCount>
+                      <Size xsi:nil="true" />
+                      <InventoryFlags>CanReceive</InventoryFlags>
+                      <RemoveEntityOnEmpty>false</RemoveEntityOnEmpty>
+                    </Component>
+                  </ComponentData>
+                  <ComponentData>
+                    <TypeId>MyTimerComponent</TypeId>
+                    <Component xsi:type="MyObjectBuilder_TimerComponent">
+                      <Repeat>true</Repeat>
+                      <TimeToEvent>0</TimeToEvent>
+                      <SetTimeMinutes>0</SetTimeMinutes>
+                      <TimerEnabled>false</TimerEnabled>
+                      <RemoveEntityOnTimer>false</RemoveEntityOnTimer>
+                      <TimerType>Frame10</TimerType>
+                      <FramesFromLastTrigger>240</FramesFromLastTrigger>
+                      <TimerTickInFrames>300</TimerTickInFrames>
+                      <IsSessionUpdateEnabled>false</IsSessionUpdateEnabled>
+                    </Component>
+                  </ComponentData>
+                </Components>
+              </ComponentContainer>
+              <CustomName>{block_type}</CustomName>
+              <ShowOnHUD>false</ShowOnHUD>
+              <ShowInTerminal>true</ShowInTerminal>
+              <ShowInToolbarConfig>true</ShowInToolbarConfig>
+              <ShowInInventory>true</ShowInInventory>
+              <Enabled>true</Enabled>
+            </MyObjectBuilder_CubeBlock>"""
+    
+    def lightcorner_block(block: Block) -> str:
+        builder, xsi, block_type = block.block_type.split('_')
+        pos = block.position.scale(v=1 / structure.grid_size).to_veci()
+        return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
+              <SubtypeName>{block_type}</SubtypeName>
+              <EntityId>{str(random.getrandbits(64)).zfill(20)}</EntityId>
+              <Min x="{pos.x}" y="{pos.y}" z="{pos.z}" />
+              <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
+              <BuiltBy>{builder_id}</BuiltBy>
+              <CustomName>{block_type}</CustomName>
+              <ShowOnHUD>false</ShowOnHUD>
+              <ShowInTerminal>true</ShowInTerminal>
+              <ShowInToolbarConfig>true</ShowInToolbarConfig>
+              <ShowInInventory>true</ShowInInventory>
+              <Enabled>true</Enabled>
+              <Radius>2</Radius>
+              <ReflectorRadius>120</ReflectorRadius>
+              <Falloff>1</Falloff>
+              <Intensity>4</Intensity>
+              <BlinkIntervalSeconds>0</BlinkIntervalSeconds>
+              <BlinkLenght>10</BlinkLenght>
+              <BlinkOffset>0</BlinkOffset>
+              <Offset>0.5</Offset>
+            </MyObjectBuilder_CubeBlock>"""
+    
+    def light_block(block: Block) -> str:
+        builder, xsi, block_type = block.block_type.split('_')
+        pos = block.position.scale(v=1 / structure.grid_size).to_veci()
+        return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
+              <SubtypeName>{block_type}</SubtypeName>
+              <EntityId>{str(random.getrandbits(64)).zfill(20)}</EntityId>
+              <Min x="{pos.x}" y="{pos.y}" z="{pos.z}" />
+              <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
+              <BuiltBy>{builder_id}</BuiltBy>
+              <CustomName>{block_type}</CustomName>
+              <ShowOnHUD>false</ShowOnHUD>
+              <ShowInTerminal>true</ShowInTerminal>
+              <ShowInToolbarConfig>true</ShowInToolbarConfig>
+              <ShowInInventory>true</ShowInInventory>
+              <Enabled>true</Enabled>
+              <Radius>3.6</Radius>
+              <ReflectorRadius>120</ReflectorRadius>
+              <Falloff>1.3</Falloff>
+              <Intensity>5</Intensity>
+              <BlinkIntervalSeconds>0</BlinkIntervalSeconds>
+              <BlinkLenght>10</BlinkLenght>
+              <BlinkOffset>0</BlinkOffset>
+              <Offset>0.5</Offset>
+            </MyObjectBuilder_CubeBlock>"""
+    
     grid_sizes = {
         1: 'Small',
         2: 'Normal',
@@ -245,6 +547,22 @@ def structure_xml_converter(structure: Structure,
         Orientation.DOWN: 'Down'
     }
     
+    block_xml = {
+        'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerInv': armour_blocks,
+        'MyObjectBuilder_CubeBlock_LargeBlockArmorCorner': armour_blocks,
+        'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope': armour_blocks,
+        'MyObjectBuilder_CubeBlock_LargeBlockArmorBlock': armour_blocks,
+        'MyObjectBuilder_Gyro_LargeBlockGyro': gyro_block,
+        'MyObjectBuilder_Reactor_LargeBlockSmallGenerator': reactor_block,
+        'MyObjectBuilder_CargoContainer_LargeBlockSmallContainer': container_block,
+        'MyObjectBuilder_Cockpit_OpenCockpitLarge': None,
+        'MyObjectBuilder_Thrust_LargeBlockSmallThrust': thruster_block,
+        'MyObjectBuilder_InteriorLight_SmallLight': light_block,
+        'MyObjectBuilder_CubeBlock_Window1x1Slope': armour_blocks,
+        'MyObjectBuilder_CubeBlock_Window1x1Flat': armour_blocks,
+        'MyObjectBuilder_InteriorLight_LargeBlockLight_1corner': lightcorner_block
+    }
+    
     header = f"""<?xml version="1.0"?>
     <Definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <ShipBlueprints>
@@ -254,7 +572,7 @@ def structure_xml_converter(structure: Structure,
                 <CubeGrids>
                     <CubeGrid>
                         <SubtypeName/>
-                        <EntityId>118144058179315893</EntityId>
+                        <EntityId>{str(random.getrandbits(64)).zfill(20)}</EntityId>
                         <PersistentFlags>CastShadows InScene</PersistentFlags>
                         <PositionAndOrientation>
                             <Position x ="0" y="0" z="0" />
@@ -279,7 +597,7 @@ def structure_xml_converter(structure: Structure,
                      </CubeGrid>
                  </CubeGrids>
                  <WorkshopId>0</WorkshopId>
-                 <OwnerSteamId>76561198082681546</OwnerSteamId>
+                 <OwnerSteamId>{builder_id}</OwnerSteamId>
                  <Points>0</Points>
              </ShipBlueprint>
          </ShipBlueprints>
@@ -287,14 +605,8 @@ def structure_xml_converter(structure: Structure,
     
     cube_blocks = ""      
     for block in structure._blocks.values():
-        builder, xsi, type = block.block_type.split('_')
-        pos = block.position.scale(v=1 / structure.grid_size).to_veci()
-        cube_blocks += f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
-            <SubtypeName>{type}</SubtypeName>
-            <Min x = "{pos.x}" y="{pos.y}" z="{pos.z}" />
-            <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
-            <ColorMaskHSV x="0" y="-0.8" z="0.55" />
-        </MyObjectBuilder_CubeBlock>
-        """
+        
+        if block_xml[block.block_type] is not None:
+            cube_blocks += block_xml[block.block_type](block)
     
     return header + cube_blocks + footer
