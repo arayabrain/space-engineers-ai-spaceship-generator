@@ -251,7 +251,7 @@ def structure_xml_converter(structure: Structure,
         pos = block.position.scale(v=1 / structure.grid_size).to_veci()
         return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
               <SubtypeName>{block_type}</SubtypeName>
-              <EntityId>{str(random.getrandbits(64)).zfill(20)}</EntityId>
+              <EntityId>{str(random.getrandbits(32)).zfill(16)}</EntityId>
               <Min x = "{pos.x}" y="{pos.y}" z="{pos.z}" />
               <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
               <ColorMaskHSV x="0.575" y="0" z="0" />
@@ -309,7 +309,7 @@ def structure_xml_converter(structure: Structure,
         pos = block.position.scale(v=1 / structure.grid_size).to_veci()
         return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
               <SubtypeName>{block_type}</SubtypeName>
-              <EntityId>{str(random.getrandbits(64)).zfill(20)}</EntityId>
+              <EntityId>{str(random.getrandbits(32)).zfill(16)}</EntityId>
               <Min x="{pos.x}" y="{pos.y}" z="{pos.z}" />
               <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
               <ColorMaskHSV x="0.575" y="0" z="0" />
@@ -343,7 +343,7 @@ def structure_xml_converter(structure: Structure,
         pos = block.position.scale(v=1 / structure.grid_size).to_veci()
         return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
               <SubtypeName>{block_type}</SubtypeName>
-              <EntityId>{str(random.getrandbits(64)).zfill(20)}</EntityId>
+              <EntityId>{str(random.getrandbits(32)).zfill(16)}</EntityId>
               <Min x= "{pos.x}" y="{pos.y}" z="{pos.z}" />
               <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
               <BuiltBy>{builder_id}</BuiltBy>
@@ -378,7 +378,7 @@ def structure_xml_converter(structure: Structure,
         pos = block.position.scale(v=1 / structure.grid_size).to_veci()
         return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
               <SubtypeName>{block_type}</SubtypeName>
-              <EntityId>{str(random.getrandbits(64)).zfill(20)}</EntityId>
+              <EntityId>{str(random.getrandbits(32)).zfill(16)}</EntityId>
               <Min x="{pos.x}" y="{pos.y}" z="{pos.z}" />
               <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
               <ColorMaskHSV x="0.575" y="0" z="0" />
@@ -413,7 +413,7 @@ def structure_xml_converter(structure: Structure,
         pos = block.position.scale(v=1 / structure.grid_size).to_veci()
         return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
               <SubtypeName>{block_type}</SubtypeName>
-              <EntityId>{str(random.getrandbits(64)).zfill(20)}</EntityId>
+              <EntityId>{str(random.getrandbits(32)).zfill(16)}</EntityId>
               <Min x="{pos.x}" y="{pos.y}" z="{pos.z}" />
               <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
               <ColorMaskHSV x="0.575" y="0" z="0" />
@@ -431,7 +431,7 @@ def structure_xml_converter(structure: Structure,
         pos = block.position.scale(v=1 / structure.grid_size).to_veci()
         return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
               <SubtypeName>{block_type}</SubtypeName>
-              <EntityId>{str(random.getrandbits(64)).zfill(20)}</EntityId>
+              <EntityId>{str(random.getrandbits(32)).zfill(16)}</EntityId>
               <Min x="{pos.x}" y="{pos.y}" z="{pos.z}" />
               <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
               <ColorMaskHSV x="0.575" y="0" z="0" />
@@ -484,11 +484,11 @@ def structure_xml_converter(structure: Structure,
             </MyObjectBuilder_CubeBlock>"""
     
     def lightcorner_block(block: Block) -> str:
-        builder, xsi, block_type = block.block_type.split('_')
+        builder, xsi, block_type = block.block_type.split('_', maxsplit=2)
         pos = block.position.scale(v=1 / structure.grid_size).to_veci()
         return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
               <SubtypeName>{block_type}</SubtypeName>
-              <EntityId>{str(random.getrandbits(64)).zfill(20)}</EntityId>
+              <EntityId>{str(random.getrandbits(32)).zfill(16)}</EntityId>
               <Min x="{pos.x}" y="{pos.y}" z="{pos.z}" />
               <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
               <BuiltBy>{builder_id}</BuiltBy>
@@ -513,7 +513,8 @@ def structure_xml_converter(structure: Structure,
         pos = block.position.scale(v=1 / structure.grid_size).to_veci()
         return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
               <SubtypeName>{block_type}</SubtypeName>
-              <EntityId>{str(random.getrandbits(64)).zfill(20)}</EntityId>
+              <!-- <EntityId>{str(random.getrandbits(32)).zfill(16)}</EntityId> -->
+              <EntityId>{random.randint(1, 99999999999)}</EntityId>
               <Min x="{pos.x}" y="{pos.y}" z="{pos.z}" />
               <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
               <BuiltBy>{builder_id}</BuiltBy>
@@ -532,6 +533,337 @@ def structure_xml_converter(structure: Structure,
               <BlinkOffset>0</BlinkOffset>
               <Offset>0.5</Offset>
             </MyObjectBuilder_CubeBlock>"""
+    
+    def cockpit_block(block: Block) -> str:
+      builder, xsi, block_type = block.block_type.split('_')
+      pos = block.position.scale(v=1 / structure.grid_size).to_veci()
+      return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
+        <SubtypeName>{block_type}</SubtypeName>
+        <EntityId>{str(random.getrandbits(32)).zfill(16)}</EntityId>
+        <Min x="{pos.x}" y="{pos.y}" z="{pos.z}" />
+        <BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
+        <Owner>{builder_id}</Owner>
+        <BuiltBy>{builder_id}</BuiltBy>
+        <ShareMode>Faction</ShareMode>
+        <ComponentContainer>
+        <Components>
+          <ComponentData>
+          <TypeId>MyInventoryBase</TypeId>
+          <Component xsi:type="MyObjectBuilder_Inventory">
+            <Items />
+            <nextItemId>0</nextItemId>
+            <Volume>1</Volume>
+            <Mass>9223372036854.775807</Mass>
+            <MaxItemCount>2147483647</MaxItemCount>
+            <Size xsi:nil="true" />
+            <InventoryFlags>CanReceive CanSend</InventoryFlags>
+            <RemoveEntityOnEmpty>false</RemoveEntityOnEmpty>
+          </Component>
+          </ComponentData>
+        </Components>
+        </ComponentContainer>
+        <ShowOnHUD>false</ShowOnHUD>
+        <ShowInTerminal>true</ShowInTerminal>
+        <ShowInToolbarConfig>true</ShowInToolbarConfig>
+        <ShowInInventory>true</ShowInInventory>
+        <NumberInGrid>1</NumberInGrid>
+        <UseSingleWeaponMode>false</UseSingleWeaponMode>
+        <Toolbar>
+        <ToolbarType>Character</ToolbarType>
+        <SelectedSlot xsi:nil="true" />
+        <Slots />
+        <SlotsGamepad />
+        </Toolbar>
+        <SelectedGunId xsi:nil="true" />
+        <BuildToolbar>
+        <ToolbarType>Character</ToolbarType>
+        <SelectedSlot xsi:nil="true" />
+        <Slots />
+        <SlotsGamepad />
+        </BuildToolbar>
+        <OnLockedToolbar>
+        <ToolbarType>Character</ToolbarType>
+        <SelectedSlot xsi:nil="true" />
+        <Slots />
+        <SlotsGamepad />
+        </OnLockedToolbar>
+        <PilotRelativeWorld xsi:nil="true" />
+        <PilotGunDefinition xsi:nil="true" />
+        <IsInFirstPersonView>true</IsInFirstPersonView>
+        <OxygenLevel>0</OxygenLevel>
+        <PilotJetpackEnabled xsi:nil="true" />
+        <TextPanels>
+        <MySerializedTextPanelData>
+          <ChangeInterval>0</ChangeInterval>
+          <Font Type="MyObjectBuilder_FontDefinition" Subtype="Debug" />
+          <FontSize>1</FontSize>
+          <ShowText>NONE</ShowText>
+          <FontColor>
+          <PackedValue>4294967295</PackedValue>
+          <X>255</X>
+          <Y>255</Y>
+          <Z>255</Z>
+          <R>255</R>
+          <G>255</G>
+          <B>255</B>
+          <A>255</A>
+          </FontColor>
+          <BackgroundColor>
+          <PackedValue>4278190080</PackedValue>
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R>0</R>
+          <G>0</G>
+          <B>0</B>
+          <A>255</A>
+          </BackgroundColor>
+          <CurrentShownTexture>0</CurrentShownTexture>
+          <ContentType>SCRIPT</ContentType>
+          <SelectedScript>TSS_ArtificialHorizon</SelectedScript>
+          <TextPadding>2</TextPadding>
+          <ScriptBackgroundColor>
+          <PackedValue>4288108544</PackedValue>
+          <X>0</X>
+          <Y>88</Y>
+          <Z>151</Z>
+          <R>0</R>
+          <G>88</G>
+          <B>151</B>
+          <A>255</A>
+          </ScriptBackgroundColor>
+          <ScriptForegroundColor>
+          <PackedValue>4294962611</PackedValue>
+          <X>179</X>
+          <Y>237</Y>
+          <Z>255</Z>
+          <R>179</R>
+          <G>237</G>
+          <B>255</B>
+          <A>255</A>
+          </ScriptForegroundColor>
+          <Sprites>
+          <Length>0</Length>
+          </Sprites>
+        </MySerializedTextPanelData>
+        <MySerializedTextPanelData>
+          <ChangeInterval>0</ChangeInterval>
+          <Font Type="MyObjectBuilder_FontDefinition" Subtype="Debug" />
+          <FontSize>1</FontSize>
+          <ShowText>NONE</ShowText>
+          <FontColor>
+          <PackedValue>4294967295</PackedValue>
+          <X>255</X>
+          <Y>255</Y>
+          <Z>255</Z>
+          <R>255</R>
+          <G>255</G>
+          <B>255</B>
+          <A>255</A>
+          </FontColor>
+          <BackgroundColor>
+          <PackedValue>4278190080</PackedValue>
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R>0</R>
+          <G>0</G>
+          <B>0</B>
+          <A>255</A>
+          </BackgroundColor>
+          <CurrentShownTexture>0</CurrentShownTexture>
+          <ContentType>SCRIPT</ContentType>
+          <SelectedScript>TSS_EnergyHydrogen</SelectedScript>
+          <TextPadding>2</TextPadding>
+          <ScriptBackgroundColor>
+          <PackedValue>4288108544</PackedValue>
+          <X>0</X>
+          <Y>88</Y>
+          <Z>151</Z>
+          <R>0</R>
+          <G>88</G>
+          <B>151</B>
+          <A>255</A>
+          </ScriptBackgroundColor>
+          <ScriptForegroundColor>
+          <PackedValue>4294962611</PackedValue>
+          <X>179</X>
+          <Y>237</Y>
+          <Z>255</Z>
+          <R>179</R>
+          <G>237</G>
+          <B>255</B>
+          <A>255</A>
+          </ScriptForegroundColor>
+          <Sprites>
+          <Length>0</Length>
+          </Sprites>
+        </MySerializedTextPanelData>
+        <MySerializedTextPanelData>
+          <ChangeInterval>0</ChangeInterval>
+          <Font Type="MyObjectBuilder_FontDefinition" Subtype="Debug" />
+          <FontSize>1</FontSize>
+          <ShowText>NONE</ShowText>
+          <FontColor>
+          <PackedValue>4294967295</PackedValue>
+          <X>255</X>
+          <Y>255</Y>
+          <Z>255</Z>
+          <R>255</R>
+          <G>255</G>
+          <B>255</B>
+          <A>255</A>
+          </FontColor>
+          <BackgroundColor>
+          <PackedValue>4278190080</PackedValue>
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R>0</R>
+          <G>0</G>
+          <B>0</B>
+          <A>255</A>
+          </BackgroundColor>
+          <CurrentShownTexture>0</CurrentShownTexture>
+          <ContentType>SCRIPT</ContentType>
+          <SelectedScript>TSS_Gravity</SelectedScript>
+          <TextPadding>2</TextPadding>
+          <ScriptBackgroundColor>
+          <PackedValue>4288108544</PackedValue>
+          <X>0</X>
+          <Y>88</Y>
+          <Z>151</Z>
+          <R>0</R>
+          <G>88</G>
+          <B>151</B>
+          <A>255</A>
+          </ScriptBackgroundColor>
+          <ScriptForegroundColor>
+          <PackedValue>4294962611</PackedValue>
+          <X>179</X>
+          <Y>237</Y>
+          <Z>255</Z>
+          <R>179</R>
+          <G>237</G>
+          <B>255</B>
+          <A>255</A>
+          </ScriptForegroundColor>
+          <Sprites>
+          <Length>0</Length>
+          </Sprites>
+        </MySerializedTextPanelData>
+        <MySerializedTextPanelData>
+          <ChangeInterval>0</ChangeInterval>
+          <Font Type="MyObjectBuilder_FontDefinition" Subtype="Debug" />
+          <FontSize>1</FontSize>
+          <ShowText>NONE</ShowText>
+          <FontColor>
+          <PackedValue>4294967295</PackedValue>
+          <X>255</X>
+          <Y>255</Y>
+          <Z>255</Z>
+          <R>255</R>
+          <G>255</G>
+          <B>255</B>
+          <A>255</A>
+          </FontColor>
+          <BackgroundColor>
+          <PackedValue>4278190080</PackedValue>
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R>0</R>
+          <G>0</G>
+          <B>0</B>
+          <A>255</A>
+          </BackgroundColor>
+          <CurrentShownTexture>0</CurrentShownTexture>
+          <ContentType>SCRIPT</ContentType>
+          <SelectedScript>TSS_ClockAnalog</SelectedScript>
+          <TextPadding>2</TextPadding>
+          <ScriptBackgroundColor>
+          <PackedValue>4288108544</PackedValue>
+          <X>0</X>
+          <Y>88</Y>
+          <Z>151</Z>
+          <R>0</R>
+          <G>88</G>
+          <B>151</B>
+          <A>255</A>
+          </ScriptBackgroundColor>
+          <ScriptForegroundColor>
+          <PackedValue>4294962611</PackedValue>
+          <X>179</X>
+          <Y>237</Y>
+          <Z>255</Z>
+          <R>179</R>
+          <G>237</G>
+          <B>255</B>
+          <A>255</A>
+          </ScriptForegroundColor>
+          <Sprites>
+          <Length>0</Length>
+          </Sprites>
+        </MySerializedTextPanelData>
+        <MySerializedTextPanelData>
+          <ChangeInterval>0</ChangeInterval>
+          <Font Type="MyObjectBuilder_FontDefinition" Subtype="Debug" />
+          <FontSize>1</FontSize>
+          <ShowText>NONE</ShowText>
+          <FontColor>
+          <PackedValue>4294967295</PackedValue>
+          <X>255</X>
+          <Y>255</Y>
+          <Z>255</Z>
+          <R>255</R>
+          <G>255</G>
+          <B>255</B>
+          <A>255</A>
+          </FontColor>
+          <BackgroundColor>
+          <PackedValue>4278190080</PackedValue>
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R>0</R>
+          <G>0</G>
+          <B>0</B>
+          <A>255</A>
+          </BackgroundColor>
+          <CurrentShownTexture>0</CurrentShownTexture>
+          <SelectedScript />
+          <TextPadding>2</TextPadding>
+          <ScriptBackgroundColor>
+          <PackedValue>4288108544</PackedValue>
+          <X>0</X>
+          <Y>88</Y>
+          <Z>151</Z>
+          <R>0</R>
+          <G>88</G>
+          <B>151</B>
+          <A>255</A>
+          </ScriptBackgroundColor>
+          <ScriptForegroundColor>
+          <PackedValue>4294962611</PackedValue>
+          <X>179</X>
+          <Y>237</Y>
+          <Z>255</Z>
+          <R>179</R>
+          <G>237</G>
+          <B>255</B>
+          <A>255</A>
+          </ScriptForegroundColor>
+          <Sprites>
+          <Length>0</Length>
+          </Sprites>
+        </MySerializedTextPanelData>
+        </TextPanels>
+        <TargetData>
+        <TargetId>0</TargetId>
+        <IsTargetLocked>false</IsTargetLocked>
+        <LockingProgress>0</LockingProgress>
+        </TargetData>
+      </MyObjectBuilder_CubeBlock>"""
     
     grid_sizes = {
         1: 'Small',
@@ -555,7 +887,7 @@ def structure_xml_converter(structure: Structure,
         'MyObjectBuilder_Gyro_LargeBlockGyro': gyro_block,
         'MyObjectBuilder_Reactor_LargeBlockSmallGenerator': reactor_block,
         'MyObjectBuilder_CargoContainer_LargeBlockSmallContainer': container_block,
-        'MyObjectBuilder_Cockpit_OpenCockpitLarge': None,
+        'MyObjectBuilder_Cockpit_OpenCockpitLarge': cockpit_block,
         'MyObjectBuilder_Thrust_LargeBlockSmallThrust': thruster_block,
         'MyObjectBuilder_InteriorLight_SmallLight': light_block,
         'MyObjectBuilder_CubeBlock_Window1x1Slope': armour_blocks,
@@ -572,7 +904,7 @@ def structure_xml_converter(structure: Structure,
                 <CubeGrids>
                     <CubeGrid>
                         <SubtypeName/>
-                        <EntityId>{str(random.getrandbits(64)).zfill(20)}</EntityId>
+                        <EntityId>{str(random.getrandbits(32)).zfill(16)}</EntityId>
                         <PersistentFlags>CastShadows InScene</PersistentFlags>
                         <PositionAndOrientation>
                             <Position x ="0" y="0" z="0" />

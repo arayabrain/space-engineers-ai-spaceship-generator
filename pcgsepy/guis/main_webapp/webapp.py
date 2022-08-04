@@ -7,6 +7,7 @@ from re import S
 import sys
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
+from zipfile import ZipFile
 
 import dash
 import numpy as np
@@ -27,6 +28,8 @@ from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, GreedyEmitter,
                                         PreferenceBanditEmitter, RandomEmitter)
 from pcgsepy.mapelites.map import MAPElites
 from tqdm import trange
+
+from pcgsepy.xml_conversion import structure_xml_converter
 
 
 class DashLoggerHandler(logging.StreamHandler):
@@ -989,8 +992,15 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
     elif event_trig == 'download-btn':
         if cs_string != '':
             exp_n += 1
-            content_dl = dict(content=cs_string,
-                              filename=f'MySpaceship_{rngseed}_exp{exp_n}.txt')
+            def write_archive(bytes_io):
+                with ZipFile(bytes_io, mode="w") as zf:
+                    with open('./assets/thumb.png', 'rb') as f:
+                        thumbnail_img = f.read()
+                    zf.writestr('thumb.png', thumbnail_img)
+                    elite = current_mapelites.get_elite(bin_idx=_switch([selected_bins[-1]])[0],
+                                            pop='feasible' if pop_name == 'Feasible' else 'infeasible')
+                    zf.writestr('bp.sbc', structure_xml_converter(structure=elite.content, name=f'My Spaceship ({rngseed}) (exp{exp_n})'))
+            content_dl = dcc.send_bytes(write_archive, f'MySpaceship_{rngseed}_exp{exp_n}.zip')
             if exp_n >= len(my_emitterslist):
                 curr_heatmap = go.Figure(data=[])
                 selected_bins = []
