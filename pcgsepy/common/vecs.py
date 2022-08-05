@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
 
@@ -184,6 +184,27 @@ class Vec:
             return cls(arr[0], arr[1])
         else:
             return cls(arr[0], arr[1], arr[2])
+        
+    @classmethod
+    def from_tuple(cls,
+                   arr: Union[Tuple[int, int], Tuple[int, int, int]]):
+        """
+        Create a vector from the NumPy array.
+
+        Parameters
+        ----------
+        arr : np.ndarray
+            The NumPy array.
+
+        Returns
+        -------
+        Vec
+            The vector.
+        """
+        if len(arr) == 2:
+            return cls(arr[0], arr[1])
+        else:
+            return cls(arr[0], arr[1], arr[2])
 
     def as_dict(self) -> Dict[str, Any]:
         """
@@ -295,6 +316,25 @@ class Vec:
                        y=self.y * other.y)
         else:
             raise Exception(f'Trying to multiply mixed-dimension vectors: {self} + {other}')
+    
+    def invert(self) -> "Vec":
+        if self.z is not None:
+            return Vec(x=1 / self.x,
+                       y=1 / self.y,
+                       z=1 / self.z)
+        else:
+            return Vec(x=1 / self.x,
+                       y=1 / self.y)
+    
+    def round(self,
+              n: int) -> "Vec":
+        if self.z is not None:
+            return Vec(x=np.round(self.x, n),
+                       y=np.round(self.y, n),
+                       z=np.round(self.z, n))
+        else:
+            return Vec(x=np.round(self.x, n),
+                       y=np.round(self.y, n))
     
     def scale(self,
               v: float) -> "Vec":

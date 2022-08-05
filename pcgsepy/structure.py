@@ -24,7 +24,8 @@ if not os.path.exists('./block_definitions.json'):
             'size': v['Size'],
             'mass': v['Mass'],
             'definition_id': {'Id': v['DefinitionId']['Id'],
-                              'Type': v['DefinitionId']['Type']}
+                              'Type': v['DefinitionId']['Type']},
+            'mountpoints': v['MountPoints']
         }
     with open('./block_definitions.json', 'w') as f:
         json.dump(block_definitions, f)
@@ -36,6 +37,42 @@ else:
 _blocks_sizes = {'Small': 1, 'Normal': 2, 'Large': 5}
 
 grid_to_coords = 0.5
+
+
+class MountPoint:
+    def __init__(self,
+                 face: Dict[str, int],
+                 start: Dict[str, float],
+                 end: Dict[str, float],
+                 exclusion_mask: int,
+                 properties_mask: int,
+                 block_size: Vec) -> None:
+        # https://forum.keenswh.com/threads/mount-points-help.7320047/
+        # https://steamcommunity.com/sharedfiles/filedetails/?id=581270158
+        self.face = Vec.from_json(face)
+        self.start = Vec.from_json(start).dot(block_size)#.to_veci()
+        self.start = Vec(np.rint(self.start.x), np.rint(self.start.y), np.rint(self.start.z))
+        self.end = Vec.from_json(end).dot(block_size)#.to_veci()
+        self.end = Vec(np.rint(self.end.x), np.rint(self.end.y), np.rint(self.end.z))
+        self.exclusion_mask = exclusion_mask
+        self.properties_mask = properties_mask
+        
+        # check implementation from https://github.com/KeenSoftwareHouse/SpaceEngineers/blob/master/Sources/Sandbox.Game/Definitions/MyCubeBlockDefinition.cs#L236
+        # self.computed_mps: Dict[str, List[Vec]] = {}
+        
+    # def _compute_valid_mountpoints(self) -> None:
+    #     # mountpoints define areas of valid placement, so we can precompute them all for the block
+    #     # when checking, remember to pick the correct face (orientation)!
+    #     for mp in self.mountpoints:
+    #         valid_mps = []
+    #         for x in range(mp.start.x, mp.end.x + 1, 1 if mp.end.x >= mp.start.x else -1):
+    #             for y in range(mp.start.y, mp.end.y + 1, 1 if mp.end.y >= mp.start.y else -1):
+    #                 for z in range(mp.start.z, mp.end.z + 1, 1 if mp.end.z >= mp.start.z else -1):
+    #                     valid_mps.append(mp.start.sum(Vec(x, y, z)))
+    #         self.computed_mps[mp.face.as_tuple()] = valid_mps
+    
+    def __repr__(self) -> str:
+        return f'Normal: {self.face}\tStart: {self.start}\tEnd: {self.end}'
 
 
 class Block:
@@ -70,7 +107,14 @@ class Block:
         self.position = Vec.v3f(0., 0., 0.)
         self.cube_size = block_definitions[self.block_type]['cube_size']
         self.size = Vec.from_json(block_definitions[self.block_type]['size'])
+        self.scaled_size = self.size.scale(_blocks_sizes[self.cube_size])
         self.mass = float(block_definitions[self.block_type]['mass'])
+        self.mountpoints = [MountPoint(face=v['Normal'],
+                                       start=v['Start'],
+                                       end=v['End'],
+                                       exclusion_mask=v['ExclusionMask'],
+                                       properties_mask=v['PropertiesMask'],
+                                       block_size=self.size.scale(_blocks_sizes[self.cube_size])) for v in block_definitions[self.block_type]['mountpoints']]
 
     def __str__(self) -> str:
         return f'{self.block_type} at {self.position}; OF {self.orientation_forward}; OU {self.orientation_up}'

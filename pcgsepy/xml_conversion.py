@@ -233,7 +233,7 @@ def extract_rule(bp_dir: str,
 def structure_xml_converter(structure: Structure,
                             name: str) -> str:
     
-    builder_id = str(random.getrandbits(64)).zfill(20)
+    builder_id = '0'
     
     def armour_blocks(block: Block) -> str:
         builder, xsi, block_type = block.block_type.split('_')
