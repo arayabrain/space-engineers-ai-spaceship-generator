@@ -305,6 +305,34 @@ class Vec:
         else:
             raise Exception(f'Trying to sum mixed-dimension vectors: {self} + {other}')
     
+    def diff(self,
+             other: "Vec") -> "Vec":
+        if self.z is not None and other.z is not None:
+            return Vec(x=self.x - other.x,
+                       y=self.y - other.y,
+                       z=self.z - other.z)
+        elif self.z is None and other.z is None:
+            return Vec(x=self.x - other.x,
+                       y=self.y - other.y)
+        else:
+            raise Exception(f'Trying to sum mixed-dimension vectors: {self} + {other}')
+    
+    def vol(self,
+            ignore_zero=True) -> "Vec":
+        if ignore_zero:
+            return self.x * self.y * self.z
+        else:
+            if self.x != 0 and self.y != 0 and self.z != 0:
+                return self.x * self.y * self.z
+            elif self.x == 0:
+                return self.y * self.z
+            elif self.y == 0:
+                return self.x * self.z
+            elif self.z == 0:
+                return self.x * self.y
+            else:
+                return 0
+    
     def dot(self,
             other: "Vec") -> "Vec":
         if self.z is not None and other.z is not None:
