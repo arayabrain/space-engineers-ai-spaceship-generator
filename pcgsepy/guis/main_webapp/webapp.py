@@ -93,9 +93,12 @@ def resource_path(relative_path):
 
 app = dash.Dash(__name__,
                 title='SE ICMAP-Elites',
-                # external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
+                # external_stylesheets=[dbc.themes.CYBORG],
                 external_stylesheets=[dbc.themes.DARKLY],
-                # assets_folder=resource_path("assets"),
+                # external_stylesheets=[dbc.themes.FLATLY],
+                # external_stylesheets=[dbc.themes.LUMEN],
+                # external_stylesheets=[dbc.themes.MORPH],
+                assets_folder=resource_path("assets"),
                 update_title=None)
 
 
@@ -160,145 +163,126 @@ def set_app_layout(behavior_descriptors_names,
     
     logging.getLogger('dash-msgs').info(msg=f'Your ID is {str(rngseed).zfill(3)}; please remember this!')
     
-    app.layout = html.Div(children=[
-        # HEADER
-        html.Div(children=[
+    header = html.Div(children=[
             html.H1(children='🚀Space Engineers🚀 IC MAP-Elites',
                     className='title'),
             dcc.Markdown(children=description_str,
                          className='page-description'),
         ],
-            className='header'),
-        html.Br(),
-        # BODY
-        html.Div(children=[
-            # PLOTS
-            html.Div(children=[
-                # HEATMAP
-                html.Div(children=[
-                    dcc.Graph(id="heatmap-plot",
-                              figure=go.Figure(data=[]))
-                ],
-                    className='heatmap-div'),
-                # CONTENT PLOT
-                html.Div(children=[
-                    dcc.Graph(id="content-plot",
-                              figure=go.Figure(data=[])),
-                ],
-                    className='content-div'),
-            ],
-                className='plots'),
-            # PROPERTIES & DOWNLOAD
-            html.Div(children=[
-                html.H6('Content properties',
-                        className='section-title'),
-                html.Div(children=[
-                    html.P(children='',
-                           className='properties-text',
-                           id='spaceship-size'),
-                    html.P(children='',
-                           className='properties-text',
-                           id='n-blocks'),
-                    html.P(children='Content string:',
-                           className='properties-text'),
-                    dcc.Textarea(id='content-string',
-                                    value='',
-                                    contentEditable=False,
-                                    disabled=True,
-                                    style={'width': '100%', 'height': 150}),
-                    html.Div(children=[
-                        html.Button('Download content',
-                                    id='download-btn',
-                                    className='button',
-                                    disabled=True),
-                        dcc.Download(id='download-content')
-                    ],
-                        className='button-div')
-                ],
-                    style={'padding-left': '10px'}),
-            ],
-                className='properties-div'),
+            className='header')
+    
+    footer = html.Div(children=[
+            html.H4(children='Help',
+                    className='title'),
+            dcc.Markdown(help_str,
+                         className='page-description')
+        ],
+            className='footer')
+    
+    mapelites_heatmap = html.Div(children=[
+        dcc.Graph(id="heatmap-plot",
+                  figure=go.Figure(data=[]))
+        ])
+    
+    mapelites_controls = html.Div(
+        children=[
+            html.H6(children='Plot settings',
+                    className='section-title'),
+            html.P(children='Choose which population to display.',
+                   className='generic-description'),
+            dbc.DropdownMenu(label='Feasible',
+                            children=[
+                                dbc.DropdownMenuItem('Feasible'),
+                                dbc.DropdownMenuItem('Infeasible'),
+                            ],
+                            id='population-dropdown'),
             html.Br(),
-            # PLOT CONTROLS
+            html.P(children='Choose which metric to plot.',
+                className='generic-description'),
+            dbc.DropdownMenu(label='Fitness',
+                            children=[
+                                dbc.DropdownMenuItem('Fitness'),
+                                dbc.DropdownMenuItem('Age'),
+                                dbc.DropdownMenuItem('Coverage'),
+                            ],
+                            id='metric-dropdown'),
+            html.Br(),
+            html.P(children='Choose whether to compute the metric for the entire bin population or just the elite.',
+                className='generic-description'),
+            dbc.RadioItems(id='method-radio',
+                        options=[
+                            {'label': 'Population', 'value': 'Population'},
+                            {'label': 'Elite', 'value': 'Elite'}
+                        ],
+                        value='Population')
+            ])
+    
+    content_plot = html.Div(children=[
+        dcc.Graph(id="content-plot",
+                  figure=go.Figure(data=[])),
+        ])
+    
+    content_properties = html.Div(
+        children=[
+            html.H6('Content properties',
+                    className='section-title'),
             html.Div(children=[
-                html.H6(children='Plot settings',
-                        className='section-title'),
-                html.P(children='Choose which population to display.',
-                       className='generic-description'),
-                dcc.Dropdown(['Feasible', 'Infeasible'],
-                             'Feasible',
-                             id='population-dropdown',
-                             className='dropdown'),
-                html.Br(),
-                html.P(children='Choose which metric to plot.',
-                       className='generic-description'),
-                dcc.Dropdown(['Fitness', 'Age', 'Coverage'],
-                             'Fitness',
-                             id='metric-dropdown',
-                             className='dropdown'),
-                html.Br(),
-                html.P(children='Choose whether to compute the metric for the entire bin population or just the elite.',
-                       className='generic-description'),
-                dcc.RadioItems(['Population', 'Elite'],
-                               'Population',
-                               id='method-radio',
-                               className='radio')
-            ],
-                className='graph-controls-div'),
-            # EXPERIMENT SETTINGS
+                html.P(children='',
+                       id='spaceship-size'),
+                html.P(children='',
+                       id='n-blocks'),
+                html.P(children='Content string: '),
+                dbc.Textarea(id='content-string',
+                             value='',
+                             contentEditable=False,
+                             disabled=True),
+                html.Div(children=[
+                    dbc.Button('Download content',
+                               id='download-btn',
+                               disabled=True),
+                    dcc.Download(id='download-content')
+                    ])
+                ])
+            ])
+    
+    experiment_settings = html.Div(
+        children=[
+            html.H6(children='Experiment settings',
+                    className='section-title'),
+            html.Br(),
             html.Div(children=[
-                html.H6(children='Experiment settings',
-                        className='section-title'),
-                html.Div(children=[
-                    html.P(children='Valid bins are: ',
-                           className='properties-text',
-                           id='valid-bins'),
-                    html.P(children='Current generation: 0',
-                           className='properties-text',
-                           id='gen-display'),
-                    html.P(children='Selected bin(s): []',
-                           className='properties-text',
-                           id='selected-bin')
+                html.P(children='Valid bins are: ',
+                       id='valid-bins'),
+                html.P(children=f'Current generation: {gen_counter}',
+                       id='gen-display'),
+                html.P(children=f'Selected bin(s): {selected_bins}',
+                       id='selected-bin')
+                ]),
+            html.Br(),
+            dbc.InputGroup(children=[
+                dbc.InputGroupText('Feature descriptors (X, Y):'),
+                dbc.DropdownMenu(label=current_mapelites.b_descs[0].name,
+                             children=[dbc.DropdownMenuItem(x) for x in behavior_descriptors_names],
+                             id='b0-dropdown'),
+                dbc.DropdownMenu(label=current_mapelites.b_descs[1].name,
+                             children=[dbc.DropdownMenuItem(x) for x in behavior_descriptors_names],
+                             id='b1-dropdown')
                 ],
-                    style={'margin-left': '10px'}),
-                html.H6(children='Choose feature descriptors (X, Y):',
-                        className='section-title'),
-                html.Div(children=[
-                    html.Div(children=[
-                        dcc.Dropdown(behavior_descriptors_names,
-                                     current_mapelites.b_descs[0].name,
-                                     id='b0-dropdown',
-                                     className='dropdown')
-                    ],
-                        style={'width': '50%'}),
-                    html.Div(children=[
-                        dcc.Dropdown(behavior_descriptors_names,
-                                     current_mapelites.b_descs[1].name,
-                                     id='b1-dropdown',
-                                     className='dropdown')
-                    ],
-                        style={'width': '50%'}),
+                           className="mb-3"),
+            dbc.InputGroup(children=[
+                dbc.InputGroupText('Toggle L-system modules:'),
+                dbc.Checklist(id='lsystem-modules',
+                              options=[{'label': x.name, 'value': x.name} for x in current_mapelites.lsystem.modules],
+                              value=[x.name for x in current_mapelites.lsystem.modules if x.active],
+                              inline=True,
+                              switch=True)
                 ],
-                    style={'display': 'flex', 'text-align': 'center', 'margin-left': '10px'}),
-                html.H6(children='Toggle L-system modules',
-                        className='section-title'),
-                html.Div(children=[
-                    dcc.Checklist(id='lsystem-modules',
-                                  options=[
-                                      x.name for x in current_mapelites.lsystem.modules],
-                                  value=[
-                                      x.name for x in current_mapelites.lsystem.modules if x.active],
-                                  inline=True,
-                                  className='checkboxes'
-                                  )],
-                         style={'text-align': 'center'}
-                         ),
-                html.H6(children='Control fitness weights',
-                        className='section-title'),
+                           className="mb-3"),
+            dbc.InputGroup(children=[
+                dbc.InputGroupText('Fitness weights:'),
                 html.Div(children=[
                     html.Div(children=[
-                        html.P(children=f.name,
-                               className='generic-description'),
+                        dbc.Label(children=f.name),
                         html.Div(children=[
                             dcc.Slider(min=0,
                                        max=1,
@@ -310,187 +294,134 @@ def set_app_layout(behavior_descriptors_names,
                                        id={'type': 'fitness-sldr',
                                            'index': i})
                         ],
-                        )],
-                        style={'width': '80%', 'vertical-align': 'middle', 'margin': '0 auto',
-                               'display': 'grid', 'grid-template-columns': '40% 60%'}
-                    ) for i, f in enumerate(current_mapelites.feasible_fitnesses)
-                ]),
-                html.Div(children=[
-                    html.H6(children='Select emitter',
-                            className='section-title'),
-                    html.Div(children=[
-                        html.Div(children=[
-                            dcc.Dropdown(['Human', 'Random', 'Greedy', 'Preference Matrix', 'Preference Bandit', 'Contextual Bandit'],
-                                'Human',
-                                id='emitter-dropdown',
-                                className='dropdown',
-                                style={'width': '100%'}),
-                            ],
-                                style={'width': '80%', 'vertical-align': 'middle', 'margin': '0 auto'})
-                        ]),
-                    ],
-                         style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
-                html.Div(children=[
-                    html.H6(children='Enforce symmetry',
-                            className='section-title'),
-                    html.Div(children=[
-                        html.Div(children=[
-                            dcc.Dropdown(['None', 'X-axis', 'Y-axis', 'Z-axis'],
-                                'None',
-                                id='symmetry-dropdown',
-                                className='dropdown',
-                                style={'width': '100%'}),
-                            dcc.RadioItems(['Upper', 'Lower'],
-                               'Upper',
-                               id='symmetry-radio',
-                               className='radio',
-                               style={'width': '100%', 'vertical-align': 'middle', 'margin': '0 auto', 'display': 'flex'})
-                            ],
-                                style={'width': '80%', 'vertical-align': 'middle', 'margin': '0 auto'})
-                        ]),
-                    ]),
-                html.Div(children=[
-                    html.H6(children='Save/load population',
-                            className='section-title'),
-                    html.Div(children=[
-                        html.Div(children=[
-                            html.Button('Download current population',
-                                        id='popdownload-btn',
-                                        className='button',
-                                        style={'width': '100%'}),
-                            html.Br(),
-                            dcc.Upload(
-                                id='popupload-data',
-                                children='Upload population',
-                                style={
-                                    'width': '60%',
-                                    'height': '60px',
-                                    'lineHeight': '60px',
-                                    'borderWidth': '1px',
-                                    'borderStyle': 'dashed',
-                                    'borderRadius': '5px',
-                                    'textAlign': 'center',
-                                    'margin': '10px auto'
-                                },
-                                # Allow multiple files to be uploaded
-                                multiple=False
-                            ),
-                            ],
-                                style={'width': '80%', 'vertical-align': 'middle', 'margin': '0 auto'})
-                        ]),
-                    ],
-                         style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
-            ],
-                className='experiment-controls-div'),
-            # EXPERIMENT CONTROLS
+                                 )
+                        ]) for i, f in enumerate(current_mapelites.feasible_fitnesses)
+                    ])
+                ],
+                           className="mb-3"),
+            dbc.InputGroup(children=[
+                dbc.InputGroupText('Select emitter:'),
+                dbc.DropdownMenu(label='Human',
+                             children=[
+                                 dbc.DropdownMenuItem('Human'),
+                                 dbc.DropdownMenuItem('Random'),
+                                 dbc.DropdownMenuItem('Greedy'),
+                                 dbc.DropdownMenuItem('Preference Matrix'),
+                                 dbc.DropdownMenuItem('Preference Bandit'),
+                                 dbc.DropdownMenuItem('Contextual Bandit'),
+                             ],
+                             id='emitter-dropdown')
+                ],
+                           className="mb-3",
+                           style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
+            dbc.InputGroup(children=[
+                dbc.InputGroupText('Enforce symmetry:'),
+                dbc.DropdownMenu(label='None',
+                             children=[
+                                 dbc.DropdownMenuItem('None'),
+                                 dbc.DropdownMenuItem('X-axis'),
+                                 dbc.DropdownMenuItem('Y-axis'),
+                                 dbc.DropdownMenuItem('Z-axis'),
+                             ],
+                             id='symmetry-dropdown'),
+                dbc.RadioItems(id='symmetry-radio',
+                        options=[
+                            {'label': 'Upper', 'value': 'Upper'},
+                            {'label': 'Lower', 'value': 'Lower'}
+                        ],
+                        value='Upper')
+                ],
+                           className="mb-3"),
+            dbc.InputGroup(children=[
+                dbc.InputGroupText('Save/load population:'),
+                dbc.Button(id='popdownload-btn',
+                           children='Download current population'),
+                dcc.Upload(
+                    id='popupload-data',
+                    children='Upload population',
+                    multiple=False
+                    ),
+                ],
+                           className="mb-3",
+                           style={'content-visibility': 'hidden' if not dev_mode else 'visible'})
+            ])
+    
+    experiment_controls = html.Div(
+        children=[
+            html.H6('Experiment controls'),
+            html.Br(),
+            dbc.Button(id='step-btn',
+                       children='Apply step'),
+            html.Br(),
+            dbc.Button(id='reset-btn',
+                       children='Initialize/Reset',
+                       style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
+            html.Br(),
+            dbc.Button(id='selection-clr-btn',
+                       children='Clear selection'),
+            html.Br(),
+            dbc.Button(id='selection-btn',
+                       children='Toggle single bin selection'),
+            html.Br(),
+            dbc.Button(id='subdivide-btn',
+                       children='Subdivide selected bin(s)',
+                       style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
+            html.Br(),
             html.Div(children=[
-                html.H6('Experiment controls',
-                        className='section-title'),
-                html.Div(children=[
-                    html.Button(children='Apply step',
-                                id='step-btn',
-                                n_clicks=0,
-                                className='button',
-                                disabled=False)
-                ],
-                    className='button-div'),
-                html.Br(),
-                html.Div(children=[
-                    html.Button(children='Initialize/Reset',
-                                id='reset-btn',
-                                n_clicks=0,
-                                className='button')
-                ],
-                    className='button-div',
-                    style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
-                html.Br(),
-                html.Div(children=[
-                    html.Button(children='Clear selection',
-                                id='selection-clr-btn',
-                                n_clicks=0,
-                                className='button')
-                ],
-                    className='button-div'),
-                html.Br(),
-                html.Div(children=[
-                    html.Button(children='Toggle single bin selection',
-                                id='selection-btn',
-                                n_clicks=0,
-                                className='button')
-                ],
-                    className='button-div'),
-                html.Br(),
-                html.Div(children=[
-                    html.Button(children='Subdivide selected bin(s)',
-                                id='subdivide-btn',
-                                n_clicks=0,
-                                className='button')
-                ],
-                    className='button-div',
-                    style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
-                html.Br(),
-                html.Div(children=[
-                    html.Button(children='Download MAP-Elites',
-                                id='download-mapelites-btn',
-                                className='button',
-                                disabled=True),
-                    dcc.Download(id='download-mapelites')
-                ],
-                    className='button-div',
-                    style={'content-visibility': 'hidden' if not dev_mode else 'visible'})
+                dbc.Button(id='download-mapelites-btn',
+                           children='Download MAP-Elites',
+                           disabled=True),
+                dcc.Download(id='download-mapelites')
             ],
-                className='experiment-controls-div'),
-            # RULES
-            html.Div(children=[
-                html.H6(children='High-level rules',
-                        className='section-title'),
-                dcc.Textarea(id='hl-rules',
-                                value=str(
-                                    current_mapelites.lsystem.hl_solver.parser.rules),
-                                wrap='False',
-                                style={'width': '100%', 'height': 250}),
-                html.Div(children=[
-                    html.Button(children='Update high-level rules',
-                                id='update-rules-btn',
-                                n_clicks=0,
-                                className='button')
-                ],
-                    className='button-div'),
+                     style={'content-visibility': 'hidden' if not dev_mode else 'visible'})
+        ])
+    
+    rules = html.Div(
+        children=[
+            html.H6(children='High-level rules'),
+            dbc.Textarea(id='hl-rules',
+                         value=str(current_mapelites.lsystem.hl_solver.parser.rules),
+                         wrap=False),
+            dbc.Button(children='Update high-level rules',
+                       id='update-rules-btn')
             ],
-                # style={'width': '30%', 'display': 'inline-block', 'vertical-align': 'top'}),
-                className='experiment-controls-div',
-                style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
-        ],
-            className='body-div'),
-        html.Br(),
-        html.Div(children=[
-            # LOG
-            html.Div(children=[
-                dcc.Interval(id='interval1',
-                                interval=1 * 1000,
-                                n_intervals=0),
-                html.H6(children='Log',
-                        className='section-title'),
-                dcc.Textarea(id='console-out',
-                                value='',
-                                wrap='False',
-                                contentEditable=False,
-                                disabled=True,
-                                style={'width': '100%', 'height': 300})
+        style={'content-visibility': 'hidden' if not dev_mode else 'visible'})
+    
+    log = html.Div(
+        children=[
+            dcc.Interval(id='interval1',
+                         interval=1 * 1000,
+                         n_intervals=0),
+            html.H6(children='Log'),
+            dbc.Textarea(id='console-out',
+                         value='',
+                         wrap=False,
+                         contentEditable=False,
+                         disabled=True)
+            ])
+    
+    app.layout = dbc.Container(
+        children=[
+            header,
+            html.Br(),
+            dbc.Row(children=[
+                dbc.Col(mapelites_heatmap, width=3),
+                dbc.Col(content_plot, width=6),
+                dbc.Col(content_properties, width=2)],
+                    align="center"),
+            dbc.Row(children=[
+                dbc.Col(mapelites_controls, width=3),
+                dbc.Col(experiment_settings, width=4),
+                dbc.Col(experiment_controls, width=3),
+                dbc.Col(rules, width=2)],
+                    align="start"),
+            dbc.Row(children=[
+                dbc.Col(log, width={'size': 4, 'offset': 4})],
+                    align="end"),
+            html.Br(),
+            footer
             ],
-                style={'width': '30%', 'display': 'inline-block', 'vertical-align': 'top', 'text-align': 'center'})
-        ],
-                 style={'text-align': 'center'}),
-        html.Br(),
-        # FOOTER
-        html.Div(children=[
-            html.H6(children='Help',
-                    className='section-title'),
-            dcc.Markdown(help_str,
-                         className='page-description')
-        ],
-            className='footer'),
-    ])
+        fluid=True)
 
 
 @app.callback(Output('console-out', 'value'),
@@ -857,25 +788,25 @@ def download_mapelites(n_clicks):
               State('spaceship-size', 'children'),
               State('n-blocks', 'children'),
               
-              Input('population-dropdown', 'value'),
-              Input('metric-dropdown', 'value'),
+              Input('population-dropdown', 'label'),
+              Input('metric-dropdown', 'label'),
               Input('method-radio', 'value'),
               Input('step-btn', 'n_clicks'),
               Input('reset-btn', 'n_clicks'),
               Input('subdivide-btn', 'n_clicks'),
               Input({'type': 'fitness-sldr', 'index': ALL}, 'value'),
-              Input('b0-dropdown', 'value'),
-              Input('b1-dropdown', 'value'),
+              Input('b0-dropdown', 'label'),
+              Input('b1-dropdown', 'label'),
               Input('lsystem-modules', 'value'),
               Input('update-rules-btn', 'n_clicks'),
               Input('heatmap-plot', 'clickData'),
               Input('selection-btn', 'n_clicks'),
               Input('selection-clr-btn', 'n_clicks'),
-              Input('emitter-dropdown', 'value'),
+              Input('emitter-dropdown', 'label'),
               Input("download-btn", "n_clicks"),
               Input('popdownload-btn', 'n_clicks'),
               Input('popupload-data', 'contents'),
-              Input('symmetry-dropdown', 'value'),
+              Input('symmetry-dropdown', 'label'),
               Input('symmetry-radio', 'value'),
               )
 def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n_blocks,
@@ -1099,8 +1030,5 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                     bins_idx_list=_get_valid_bins(mapelites=current_mapelites),
                                     str_prefix='Valid bins are:',
                                     filter_out_empty=False)
-    
-    logging.getLogger('dash-msgs').debug(msg=f'Times elapsed: {time_elapsed}')
-    logging.getLogger('dash-msgs').debug(msg=f'Spaceships inspected: {n_spaceships_inspected}')
     
     return curr_heatmap, curr_content, valid_bins_str, f'Current generation: {gen_counter}', str(current_mapelites.lsystem.hl_solver.parser.rules), selected_bins_str, cs_string, cs_size, cs_n_blocks, False, gen_counter < N_GENS_ALLOWED, gen_counter >= N_GENS_ALLOWED, content_dl

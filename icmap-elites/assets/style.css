@@ -9,7 +9,7 @@
 .header {
     background: #121212;
     background-color: initial;
-    background-image: linear-gradient(#464d55, #25292e);
+    background-image: linear-gradient(#464d55, #222222);
     color: #EEEEEE;
     height: 15%;
     left: 0;
@@ -23,7 +23,7 @@
 .footer {
     background: #121212;
     background-color: initial;
-    background-image: linear-gradient(#464d55, #25292e);
+    background-image: linear-gradient(#222222, #464d55);
     bottom: 0;
     color: #EEEEEE;
     height: 20%;

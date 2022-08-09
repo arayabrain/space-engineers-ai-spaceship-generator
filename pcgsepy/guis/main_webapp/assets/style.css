@@ -7,32 +7,12 @@
     text-align: left;
 }
 .header {
-    background: #121212;
-    background-color: initial;
-    background-image: linear-gradient(#464d55, #25292e);
+    background-image: linear-gradient(#464d55, #222222);
     color: #EEEEEE;
-    height: 15%;
-    left: 0;
-    margin: 0px auto;
-    position: relative;
-    right: 0;
-    top: 0;
-    vertical-align: top;
-    width: 100%;
 }
 .footer {
-    background: #121212;
-    background-color: initial;
-    background-image: linear-gradient(#464d55, #25292e);
-    bottom: 0;
+    background-image: linear-gradient(#222222, #464d55);
     color: #EEEEEE;
-    height: 20%;
-    left: 0;
-    margin: 0px auto;
-    position: relative;
-    right: 0;
-    vertical-align: bottom;
-    width: 100%;
 }
 .section-title {
     text-align: center;
@@ -51,7 +31,7 @@
     display: inline-block;
     vertical-align: middle;
     width: 80%;
-    background-color: rgba(225, 225, 225, 0.3);
+    /* background-color: rgba(225, 225, 225, 0.3); */
 }
 .heatmap-div {
     display: inline-block;
