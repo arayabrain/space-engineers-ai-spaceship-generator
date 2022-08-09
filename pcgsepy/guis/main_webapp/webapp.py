@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import random
-from re import S
+from re import S, template
 import sys
 from datetime import datetime
 from turtle import width
@@ -13,6 +13,7 @@ import time
 
 import dash
 import numpy as np
+import plotly.io as pio
 import plotly.express as px
 import plotly.graph_objects as go
 from dash import ALL, dcc, html
@@ -51,6 +52,25 @@ logger.setLevel(logging.DEBUG)
 dashLoggerHandler = DashLoggerHandler()
 logger.addHandler(dashLoggerHandler)
 
+# custom plotly theme
+# pio.templates['pcgsepy'] = go.layout.Template(
+#     layout=dict(
+#         font=dict(
+#             family='Courier New',
+#             color='#EEEEEE'
+#         ),
+#         title_font=dict(
+#             family='Courier New',
+#             color='#EEEEEE'
+#         ),
+#         legend_title=dict(
+#             family='Courier New',
+#             color='#EEEEEE'
+#         )
+#     ),
+# )
+
+# pio.templates.default = 'plotly+pcgsepy'
 
 hm_callback_props = {}
 block_to_colour = {
@@ -193,17 +213,17 @@ def set_app_layout(behavior_descriptors_names,
             dbc.Label('Choose which population to display.'),
             dbc.DropdownMenu(label='Feasible',
                             children=[
-                                dbc.DropdownMenuItem('Feasible'),
-                                dbc.DropdownMenuItem('Infeasible'),
+                                dbc.DropdownMenuItem('Feasible', id='population-feasible'),
+                                dbc.DropdownMenuItem('Infeasible', id='population-infeasible'),
                             ],
                             id='population-dropdown'),
             html.Br(),
             dbc.Label('Choose which metric to plot.'),
             dbc.DropdownMenu(label='Fitness',
                             children=[
-                                dbc.DropdownMenuItem('Fitness'),
-                                dbc.DropdownMenuItem('Age'),
-                                dbc.DropdownMenuItem('Coverage'),
+                                dbc.DropdownMenuItem('Fitness', id='metric-fitness'),
+                                dbc.DropdownMenuItem('Age', id='metric-age'),
+                                dbc.DropdownMenuItem('Coverage', id='metric-coverage'),
                             ],
                             id='metric-dropdown'),
             html.Br(),
@@ -262,10 +282,20 @@ def set_app_layout(behavior_descriptors_names,
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Feature descriptors (X, Y):'),
                 dbc.DropdownMenu(label=current_mapelites.b_descs[0].name,
-                             children=[dbc.DropdownMenuItem(x) for x in behavior_descriptors_names],
+                             children=[
+                                 dbc.DropdownMenuItem('Major axis / Medium axis', id='bc0-Major-axis_Medium-axis'),
+                                 dbc.DropdownMenuItem('Major axis / Smallest axis', id='bc0-Major-axis_Smallest-axis'),
+                                 dbc.DropdownMenuItem('Average Proportions', id='bc0-Average-Proportions'),
+                                 dbc.DropdownMenuItem('Symmetry', id='bc0-Symmetry')
+                                 ],
                              id='b0-dropdown'),
                 dbc.DropdownMenu(label=current_mapelites.b_descs[1].name,
-                             children=[dbc.DropdownMenuItem(x) for x in behavior_descriptors_names],
+                             children=[
+                                 dbc.DropdownMenuItem('Major axis / Medium axis', id='bc1-Major-axis_Medium-axis'),
+                                 dbc.DropdownMenuItem('Major axis / Smallest axis', id='bc1-Major-axis_Smallest-axis'),
+                                 dbc.DropdownMenuItem('Average Proportions', id='bc1-Average-Proportions'),
+                                 dbc.DropdownMenuItem('Symmetry', id='bc1-Symmetry')
+                                 ],
                              id='b1-dropdown')
                 ],
                            className="mb-3"),
@@ -318,10 +348,10 @@ def set_app_layout(behavior_descriptors_names,
                 dbc.InputGroupText('Enforce symmetry:'),
                 dbc.DropdownMenu(label='None',
                              children=[
-                                 dbc.DropdownMenuItem('None'),
-                                 dbc.DropdownMenuItem('X-axis'),
-                                 dbc.DropdownMenuItem('Y-axis'),
-                                 dbc.DropdownMenuItem('Z-axis'),
+                                 dbc.DropdownMenuItem('None', id='symmetry-none'),
+                                 dbc.DropdownMenuItem('X-axis', id='symmetry-x'),
+                                 dbc.DropdownMenuItem('Y-axis', id='symmetry-y'),
+                                 dbc.DropdownMenuItem('Z-axis', id='symmetry-z'),
                              ],
                              id='symmetry-dropdown'),
                 dbc.RadioItems(id='symmetry-radio',
@@ -359,14 +389,6 @@ def set_app_layout(behavior_descriptors_names,
                     className='spacer',
                     width={'size': 4, 'offset':4})),
             dbc.Row(dbc.Col(children=[
-                dbc.Button(id='reset-btn',
-                           children='Initialize/Reset',
-                           className='button-fullsize',
-                           style={'content-visibility': 'hidden' if not dev_mode else 'visible'})
-                ],
-                    className='spacer',
-                    width={'size': 4, 'offset':4})),
-            dbc.Row(dbc.Col(children=[
                 dbc.Button(id='selection-clr-btn',
                        children='Clear selection',
                            className='button-fullsize')
@@ -381,12 +403,20 @@ def set_app_layout(behavior_descriptors_names,
                     className='spacer',
                     width={'size': 4, 'offset':4})),
             dbc.Row(dbc.Col(children=[
-                dbc.Button(id='subdivide-btn',
-                       children='Subdivide selected bin(s)',
-                           className='button-fullsize',
-                       style={'content-visibility': 'hidden' if not dev_mode else 'visible'})
+                dbc.Button(id='reset-btn',
+                           children='Initialize/Reset',
+                           className='button-fullsize')
                 ],
                     className='spacer',
+                    style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
+                    width={'size': 4, 'offset':4})),
+            dbc.Row(dbc.Col(children=[
+                dbc.Button(id='subdivide-btn',
+                       children='Subdivide selected bin(s)',
+                           className='button-fullsize')
+                ],
+                    className='spacer',
+                    style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
                     width={'size': 4, 'offset':4})),
             dbc.Row(dbc.Col(children=[
                 dbc.Button(id='download-mapelites-btn',
@@ -560,18 +590,19 @@ def _build_heatmap(mapelites: MAPElites,
     y_labels = np.cumsum([0] + mapelites.bin_sizes[1]
                          [:-1]) + mapelites.b_descs[1].bounds[0]
     title = f'{pop_name} population {metric_name.lower()} ({"Average" if use_mean else "Elite"})'
-    heatmap = go.Figure(data=go.Heatmap(
-        z=disp_map,
-        zmin=0,
-        zmax=hm_callback_props['metric'][metric_name]['zmax'][population],
-        x=x_labels,
-        y=y_labels,
-        hoverongaps=False,
-        colorscale=hm_callback_props['metric'][metric_name]['colorscale'],
-        text=text,
-        texttemplate="%{text}",
-        textfont={"color": 'rgba(238, 238, 238, 1.)'},
-    ))
+    heatmap = go.Figure(
+        data=go.Heatmap(
+            z=disp_map,
+            zmin=0,
+            zmax=hm_callback_props['metric'][metric_name]['zmax'][population],
+            x=x_labels,
+            y=y_labels,
+            hoverongaps=False,
+            colorscale=hm_callback_props['metric'][metric_name]['colorscale'],
+            text=text,
+            texttemplate="%{text}",
+            textfont={"color": 'rgba(238, 238, 238, 1.)'}
+            ))
     heatmap.update_xaxes(title=dict(text=mapelites.b_descs[0].name))
     heatmap.update_yaxes(title=dict(text=mapelites.b_descs[1].name))
     heatmap.update_coloraxes(colorbar_title_text=metric_name)
@@ -579,7 +610,8 @@ def _build_heatmap(mapelites: MAPElites,
                           autosize=False,
                           clickmode='event+select',
                           paper_bgcolor='rgba(0,0,0,0)',
-                          plot_bgcolor='rgba(0,0,0,0)')
+                          plot_bgcolor='rgba(0,0,0,0)',
+                          template='plotly_dark')
     hovertemplate = f'{mapelites.b_descs[0].name}: X<br>{mapelites.b_descs[1].name}: Y<br>{metric_name}: Z<extra></extra>'
     hovertemplate = hovertemplate.replace('X', '%{x}').replace('Y', '%{y}').replace('Z', '%{z}')
     heatmap.update_traces(hovertemplate=hovertemplate,
@@ -635,12 +667,14 @@ def _get_elite_content(mapelites: MAPElites,
                                 'z': 'z',
                                 'color': 'Block type'
                             },
-                            title='Last clicked elite content')
+                            title='Last clicked elite content',
+                            template='plotly_dark')
     else:
         fig = px.scatter_3d(x=np.zeros(0, dtype=object),
                             y=np.zeros(0, dtype=object),
                             z=np.zeros(0, dtype=object),
-                            title='Last clicked elite content')
+                            title='Last clicked elite content',
+                            template='plotly_dark')
     
     fig.update_traces(marker=dict(size=4,
                               line=dict(width=3,
@@ -843,6 +877,11 @@ def download_mapelites(n_clicks):
               Output('download-btn', 'disabled'),
               Output('step-btn', 'disabled'),
               Output("download-content", "data"),
+              Output('population-dropdown', 'label'),
+              Output('metric-dropdown', 'label'),
+              Output('b0-dropdown', 'label'),
+              Output('b1-dropdown', 'label'),
+              Output('symmetry-dropdown', 'label'),
     
               State('heatmap-plot', 'figure'),
               State('hl-rules', 'value'),
@@ -850,16 +889,32 @@ def download_mapelites(n_clicks):
               State('content-string', 'value'),
               State('spaceship-size', 'children'),
               State('n-blocks', 'children'),
+              State('population-dropdown', 'label'),
+              State('metric-dropdown', 'label'),
+              State('b0-dropdown', 'label'),
+              State('b1-dropdown', 'label'),
+              State('symmetry-dropdown', 'label'),
               
-              Input('population-dropdown', 'label'),
-              Input('metric-dropdown', 'label'),
+              
+              Input('population-feasible', 'n_clicks'),
+              Input('population-infeasible', 'n_clicks'),
+              Input('metric-fitness', 'n_clicks'),
+              Input('metric-age', 'n_clicks'),
+              Input('metric-coverage', 'n_clicks'),
               Input('method-radio', 'value'),
               Input('step-btn', 'n_clicks'),
               Input('reset-btn', 'n_clicks'),
               Input('subdivide-btn', 'n_clicks'),
               Input({'type': 'fitness-sldr', 'index': ALL}, 'value'),
-              Input('b0-dropdown', 'label'),
-              Input('b1-dropdown', 'label'),
+              
+              Input('bc0-Major-axis_Medium-axis', 'n_clicks'),
+              Input('bc0-Major-axis_Smallest-axis', 'n_clicks'),
+              Input('bc0-Average-Proportions', 'n_clicks'),
+              Input('bc0-Symmetry', 'n_clicks'),
+              Input('bc1-Major-axis_Medium-axis', 'n_clicks'),
+              Input('bc1-Major-axis_Smallest-axis', 'n_clicks'),
+              Input('bc1-Average-Proportions', 'n_clicks'),
+              Input('bc1-Symmetry', 'n_clicks'),
               Input('lsystem-modules', 'value'),
               Input('update-rules-btn', 'n_clicks'),
               Input('heatmap-plot', 'clickData'),
@@ -869,11 +924,15 @@ def download_mapelites(n_clicks):
               Input("download-btn", "n_clicks"),
               Input('popdownload-btn', 'n_clicks'),
               Input('popupload-data', 'contents'),
-              Input('symmetry-dropdown', 'label'),
+              Input('symmetry-none', 'n_clicks'),
+              Input('symmetry-x', 'n_clicks'),
+              Input('symmetry-y', 'n_clicks'),
+              Input('symmetry-z', 'n_clicks'),
               Input('symmetry-radio', 'value'),
               )
-def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n_blocks,
-                     pop_name, metric_name, method_name, n_clicks_step, n_clicks_reset, n_clicks_sub, weights, b0, b1, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_axis, symm_orientation):
+def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n_blocks, pop_name, metric_name, b0, b1, symm_axis,
+                     pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_reset, n_clicks_sub, weights,
+                     b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation):
     content_dl = None
     global current_mapelites
     global gen_counter
@@ -931,9 +990,18 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
             if time_elapsed == []:
                 time_elapsed.append([])
             else:
-                time_elapsed[-1] = [[]]
-            
-    elif event_trig == 'b0-dropdown' or event_trig == 'b1-dropdown':
+                time_elapsed[-1] = [[]]   
+    elif event_trig in ['bc0-Major-axis_Medium-axis', 'bc0-Major-axis_Smallest-axis', 'bc0-Average-Proportions', 'bc0-Symmetry']:
+        b0 = event_trig.replace('bc0-', '').replace('_', ' / ').replace('-', ' ')
+        res = _apply_bc_change(bcs=(b0, b1),
+                               mapelites=current_mapelites)
+        if res:
+            curr_heatmap = _build_heatmap(mapelites=current_mapelites,
+                                          pop_name=pop_name,
+                                          metric_name=metric_name,
+                                          method_name=method_name)
+    elif event_trig in ['bc1-Major-axis_Medium-axis', 'bc1-Major-axis_Smallest-axis', 'bc1Average-Proportions', 'bc1-Symmetry']:
+        b1 = event_trig.replace('bc1-', '').replace('_', ' / ').replace('-', ' ')
         res = _apply_bc_change(bcs=(b0, b1),
                                mapelites=current_mapelites)
         if res:
@@ -965,13 +1033,31 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                      pop_name=pop_name,
                                      metric_name=metric_name,
                                      method_name=method_name)
-    elif event_trig == 'population-dropdown' or event_trig == 'metric-dropdown' or event_trig == 'method-radio':
+    elif event_trig in ['population-feasible', 'population-infeasible', 'metric-fitness', 'metric-age', 'metric-coverage'] or event_trig == 'method-radio':
+        if event_trig == 'population-feasible':
+            pop_name = 'Feasible'
+        elif event_trig == 'population-infeasible':
+            pop_name = 'Infeasible'
+        elif event_trig == 'metric-fitness':
+            metric_name = 'Fitness'
+        elif event_trig == 'metric-age':
+            metric_name = 'Age'
+        elif event_trig == 'metric-coverage':
+            metric_name = 'Coverage'
         curr_heatmap = _build_heatmap(mapelites=current_mapelites,
                                      pop_name=pop_name,
                                      metric_name=metric_name,
                                      method_name=method_name)
-    elif event_trig == 'symmetry-dropdown' or event_trig == 'symmetry-radio':
+    elif event_trig in ['symmetry-none', 'symmetry-x', 'symmetry-y', 'symmetry-z'] or event_trig == 'symmetry-radio':
         logging.getLogger('dash-msgs').info(msg=f'Updating all solutions to enforce symmetry...')
+        if event_trig == 'symmetry-none':
+            symm_axis = 'None'
+        elif event_trig == 'symmetry-x':
+            symm_axis = 'X-axis'
+        elif event_trig == 'symmetry-y':
+            symm_axis = 'Y-axis'
+        elif event_trig == 'symmetry-z':
+            symm_axis = 'Z-axis'
         current_mapelites.reassign_all_content(sym_axis=symm_axis[0].lower() if symm_axis != "None" else None,
                                                sym_upper=symm_orientation == 'Upper')
         curr_content = _get_elite_content(mapelites=current_mapelites,
@@ -1105,4 +1191,4 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                     str_prefix='Valid bins are:',
                                     filter_out_empty=False)
     
-    return curr_heatmap, curr_content, valid_bins_str, f'Current generation: {gen_counter}', str(current_mapelites.lsystem.hl_solver.parser.rules), selected_bins_str, cs_string, cs_size, cs_n_blocks, False, gen_counter < N_GENS_ALLOWED, gen_counter >= N_GENS_ALLOWED, content_dl
+    return curr_heatmap, curr_content, valid_bins_str, f'Current generation: {gen_counter}', str(current_mapelites.lsystem.hl_solver.parser.rules), selected_bins_str, cs_string, cs_size, cs_n_blocks, False, gen_counter < N_GENS_ALLOWED, gen_counter >= N_GENS_ALLOWED, content_dl, pop_name, metric_name, b0, b1, symm_axis
