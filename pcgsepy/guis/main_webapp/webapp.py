@@ -6,6 +6,7 @@ import random
 from re import S
 import sys
 from datetime import datetime
+from turtle import width
 from typing import Dict, List, Optional, Tuple
 from zipfile import ZipFile
 import time
@@ -75,6 +76,7 @@ rngseed: int = 42
 time_elapsed = []
 n_spaceships_inspected = []
 current_mapelites = None
+step_progress = -1
 my_emitterslist = ['mapelites_random.json',
                        'mapelites_prefmatrix.json',
                        'mapelites_prefbandit.json',
@@ -188,8 +190,7 @@ def set_app_layout(behavior_descriptors_names,
         children=[
             html.H6(children='Plot settings',
                     className='section-title'),
-            html.P(children='Choose which population to display.',
-                   className='generic-description'),
+            dbc.Label('Choose which population to display.'),
             dbc.DropdownMenu(label='Feasible',
                             children=[
                                 dbc.DropdownMenuItem('Feasible'),
@@ -197,8 +198,7 @@ def set_app_layout(behavior_descriptors_names,
                             ],
                             id='population-dropdown'),
             html.Br(),
-            html.P(children='Choose which metric to plot.',
-                className='generic-description'),
+            dbc.Label('Choose which metric to plot.'),
             dbc.DropdownMenu(label='Fitness',
                             children=[
                                 dbc.DropdownMenuItem('Fitness'),
@@ -207,8 +207,7 @@ def set_app_layout(behavior_descriptors_names,
                             ],
                             id='metric-dropdown'),
             html.Br(),
-            html.P(children='Choose whether to compute the metric for the entire bin population or just the elite.',
-                className='generic-description'),
+            dbc.Label('Choose whether to compute the metric for the entire bin population or just the elite.'),
             dbc.RadioItems(id='method-radio',
                         options=[
                             {'label': 'Population', 'value': 'Population'},
@@ -235,7 +234,8 @@ def set_app_layout(behavior_descriptors_names,
                 dbc.Textarea(id='content-string',
                              value='',
                              contentEditable=False,
-                             disabled=True),
+                             disabled=True,
+                             class_name='content-string-area'),
                 html.Div(children=[
                     dbc.Button('Download content',
                                id='download-btn',
@@ -348,56 +348,95 @@ def set_app_layout(behavior_descriptors_names,
     
     experiment_controls = html.Div(
         children=[
-            html.H6('Experiment controls'),
+            html.H6('Experiment controls',
+                    className='section-title'),
             html.Br(),
-            dbc.Button(id='step-btn',
-                       children='Apply step'),
-            html.Br(),
-            dbc.Button(id='reset-btn',
-                       children='Initialize/Reset',
-                       style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
-            html.Br(),
-            dbc.Button(id='selection-clr-btn',
-                       children='Clear selection'),
-            html.Br(),
-            dbc.Button(id='selection-btn',
-                       children='Toggle single bin selection'),
-            html.Br(),
-            dbc.Button(id='subdivide-btn',
+            dbc.Row(dbc.Col(children=[
+                dbc.Button(id='step-btn',
+                           children='Apply step',
+                           className='button-fullsize')
+                ],
+                    className='spacer',
+                    width={'size': 4, 'offset':4})),
+            dbc.Row(dbc.Col(children=[
+                dbc.Button(id='reset-btn',
+                           children='Initialize/Reset',
+                           className='button-fullsize',
+                           style={'content-visibility': 'hidden' if not dev_mode else 'visible'})
+                ],
+                    className='spacer',
+                    width={'size': 4, 'offset':4})),
+            dbc.Row(dbc.Col(children=[
+                dbc.Button(id='selection-clr-btn',
+                       children='Clear selection',
+                           className='button-fullsize')
+                ],
+                    className='spacer',
+                    width={'size': 4, 'offset':4})),
+            dbc.Row(dbc.Col(children=[
+                dbc.Button(id='selection-btn',
+                       children='Toggle single bin selection',
+                           className='button-fullsize')
+                ],
+                    className='spacer',
+                    width={'size': 4, 'offset':4})),
+            dbc.Row(dbc.Col(children=[
+                dbc.Button(id='subdivide-btn',
                        children='Subdivide selected bin(s)',
-                       style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
-            html.Br(),
-            html.Div(children=[
+                           className='button-fullsize',
+                       style={'content-visibility': 'hidden' if not dev_mode else 'visible'})
+                ],
+                    className='spacer',
+                    width={'size': 4, 'offset':4})),
+            dbc.Row(dbc.Col(children=[
                 dbc.Button(id='download-mapelites-btn',
                            children='Download MAP-Elites',
+                           className='button-fullsize',
                            disabled=True),
                 dcc.Download(id='download-mapelites')
-            ],
-                     style={'content-visibility': 'hidden' if not dev_mode else 'visible'})
+                ],
+                    className='spacer',
+                    style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
+                    width={'size': 4, 'offset':4})),
         ])
     
     rules = html.Div(
         children=[
-            html.H6(children='High-level rules'),
+            html.H6(children='High-level rules',
+                    className='section-title'),
             dbc.Textarea(id='hl-rules',
                          value=str(current_mapelites.lsystem.hl_solver.parser.rules),
-                         wrap=False),
+                         wrap=False,
+                         className='rules-area'),
             dbc.Button(children='Update high-level rules',
                        id='update-rules-btn')
             ],
         style={'content-visibility': 'hidden' if not dev_mode else 'visible'})
+    
+    progress = html.Div(
+        children=[
+            dbc.Label('Step progress: '),
+            dbc.Progress(id="step-progress",
+                         color='info',
+                         striped=True,
+                         animated=True)
+        ],
+        id='step-progress-div',
+        style={'content-visibility': 'visible' if 0 <= step_progress <= 100 else 'hidden'})
     
     log = html.Div(
         children=[
             dcc.Interval(id='interval1',
                          interval=1 * 1000,
                          n_intervals=0),
-            html.H6(children='Log'),
+            html.H6(children='Log',
+                    className='section-title'),
             dbc.Textarea(id='console-out',
                          value='',
                          wrap=False,
                          contentEditable=False,
-                         disabled=True)
+                         disabled=True,
+                         className='log-area')
             ])
     
     app.layout = dbc.Container(
@@ -406,7 +445,7 @@ def set_app_layout(behavior_descriptors_names,
             html.Br(),
             dbc.Row(children=[
                 dbc.Col(mapelites_heatmap, width=3),
-                dbc.Col(content_plot, width=6),
+                dbc.Col(content_plot, width=7),
                 dbc.Col(content_properties, width=2)],
                     align="center"),
             dbc.Row(children=[
@@ -415,6 +454,9 @@ def set_app_layout(behavior_descriptors_names,
                 dbc.Col(experiment_controls, width=3),
                 dbc.Col(rules, width=2)],
                     align="start"),
+            dbc.Row(children=[
+                dbc.Col(progress, width={'size': 4, 'offset': 4},
+                        className='spacer')]),
             dbc.Row(children=[
                 dbc.Col(log, width={'size': 4, 'offset': 4})],
                     align="end"),
@@ -428,6 +470,15 @@ def set_app_layout(behavior_descriptors_names,
               Input('interval1', 'n_intervals'))
 def update_output(n):
     return ('\n'.join(dashLoggerHandler.queue))
+
+@app.callback(
+    [Output("step-progress", "value"),
+     Output("step-progress", "label"),
+     Output('step-progress-div', 'style')],
+    [Input("interval1", "n_intervals")],
+)
+def update_progress(n):
+    return step_progress, f"{step_progress}%", {'content-visibility': 'visible' if 0 <= step_progress <= 100 else 'hidden'}
 
 
 def _from_bc_to_idx(bcs: Tuple[float, float],
@@ -519,7 +570,7 @@ def _build_heatmap(mapelites: MAPElites,
         colorscale=hm_callback_props['metric'][metric_name]['colorscale'],
         text=text,
         texttemplate="%{text}",
-        textfont={"color": 'rgba(0, 255, 0, 0.5)'},
+        textfont={"color": 'rgba(238, 238, 238, 1.)'},
     ))
     heatmap.update_xaxes(title=dict(text=mapelites.b_descs[0].name))
     heatmap.update_yaxes(title=dict(text=mapelites.b_descs[1].name))
@@ -530,8 +581,7 @@ def _build_heatmap(mapelites: MAPElites,
                           paper_bgcolor='rgba(0,0,0,0)',
                           plot_bgcolor='rgba(0,0,0,0)')
     hovertemplate = f'{mapelites.b_descs[0].name}: X<br>{mapelites.b_descs[1].name}: Y<br>{metric_name}: Z<extra></extra>'
-    hovertemplate = hovertemplate.replace(
-        'X', '%{x}').replace('Y', '%{y}').replace('Z', '%{z}')
+    hovertemplate = hovertemplate.replace('X', '%{x}').replace('Y', '%{y}').replace('Z', '%{z}')
     heatmap.update_traces(hovertemplate=hovertemplate,
                           selector=dict(type='heatmap'))
     heatmap.update_layout(
@@ -564,27 +614,33 @@ def _get_colour_mapping(block_types: List[str]) -> Dict[str, str]:
 def _get_elite_content(mapelites: MAPElites,
                        bin_idx: Tuple[int, int],
                        pop: List[CandidateSolution]) -> go.Scatter3d:
-    # get elite content
-    elite = mapelites.get_elite(bin_idx=bin_idx,
-                                pop=pop)
-    structure = elite.content
-    content = structure.as_grid_array()
-    arr = np.nonzero(content)
-    x, y, z = arr
-    cs = [content[i, j, k] for i, j, k in zip(x, y, z)]
-    ss = [structure._clean_label(structure.ks[v - 1]) for v in cs]
-    fig = px.scatter_3d(x=x,
-                        y=y,
-                        z=z,
-                        color=ss,
-                        color_discrete_map=_get_colour_mapping(ss),
-                        labels={
-                            'x': 'x',
-                            'y': 'y',
-                            'z': 'z',
-                            'color': 'Block type'
-                        },
-                        title='Last clicked elite content')
+    if bin_idx is not None:
+        # get elite content
+        elite = mapelites.get_elite(bin_idx=bin_idx,
+                                    pop=pop)
+        structure = elite.content
+        content = structure.as_grid_array()
+        arr = np.nonzero(content)
+        x, y, z = arr
+        cs = [content[i, j, k] for i, j, k in zip(x, y, z)]
+        ss = [structure._clean_label(structure.ks[v - 1]) for v in cs]
+        fig = px.scatter_3d(x=x,
+                            y=y,
+                            z=z,
+                            color=ss,
+                            color_discrete_map=_get_colour_mapping(ss),
+                            labels={
+                                'x': 'x',
+                                'y': 'y',
+                                'z': 'z',
+                                'color': 'Block type'
+                            },
+                            title='Last clicked elite content')
+    else:
+        fig = px.scatter_3d(x=np.zeros(0, dtype=object),
+                            y=np.zeros(0, dtype=object),
+                            z=np.zeros(0, dtype=object),
+                            title='Last clicked elite content')
     
     fig.update_traces(marker=dict(size=4,
                               line=dict(width=3,
@@ -607,6 +663,9 @@ def _get_elite_content(mapelites: MAPElites,
 def _apply_step(mapelites: MAPElites,
                 selected_bins: List[Tuple[int, int]],
                 gen_counter: int) -> bool:
+    global step_progress
+    perc_step = 100 / (1 + N_EMITTER_STEPS)
+    
     if len(selected_bins) > 0:
         valid = True
         if mapelites.enforce_qnt:
@@ -615,15 +674,19 @@ def _apply_step(mapelites: MAPElites,
                 valid &= bin_idx in valid_bins
         if valid:
             logging.getLogger('dash-msgs').info(msg=f'Started step {gen_counter + 1}...')
+            step_progress = 0
             mapelites._interactive_step(bin_idxs=selected_bins,
                                         gen=gen_counter)
+            step_progress += perc_step
             logging.getLogger('dash-msgs').info(msg=f'Completed step {gen_counter + 1} (created {mapelites.n_new_solutions} solutions); running {N_EMITTER_STEPS} additional emitter steps if available...')
             mapelites.n_new_solutions = 0
             with trange(N_EMITTER_STEPS, desc='Emitter steps: ') as iterations:
                 for _ in iterations:
                     mapelites.emitter_step(gen=gen_counter)
+                    step_progress += perc_step
             logging.getLogger('dash-msgs').info(msg=f'Emitter step(s) completed (created {mapelites.n_new_solutions} solutions).')
             mapelites.n_new_solutions = 0
+            step_progress = -1
             return True
         else:
             logging.getLogger('dash-msgs').info(msg='Step not applied: invalid bin(s) selected.')
@@ -911,7 +974,9 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
         logging.getLogger('dash-msgs').info(msg=f'Updating all solutions to enforce symmetry...')
         current_mapelites.reassign_all_content(sym_axis=symm_axis[0].lower() if symm_axis != "None" else None,
                                                sym_upper=symm_orientation == 'Upper')
-        curr_content = go.Figure(data=[])
+        curr_content = _get_elite_content(mapelites=current_mapelites,
+                                          bin_idx=None,
+                                          pop=None)
         cs_string = cs_size = cs_n_blocks  = ''
         logging.getLogger('dash-msgs').info(msg=f'Symmetry enforcement completed.')
     elif event_trig == 'heatmap-plot' or event_trig == 'population_dropdown':
@@ -951,7 +1016,9 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
     elif event_trig == 'selection-clr-btn':
         logging.getLogger('dash-msgs').info(msg='Cleared bins selection.')
         selected_bins = []
-        curr_content = go.Figure(data=[])
+        curr_content = _get_elite_content(mapelites=current_mapelites,
+                                          bin_idx=None,
+                                          pop=None)
         cs_string = cs_size = cs_n_blocks  = ''
     elif event_trig == 'emitter-dropdown':
         _ = _apply_emitter_change(mapelites=current_mapelites,
@@ -972,7 +1039,9 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
             if exp_n >= len(my_emitterslist):
                 curr_heatmap = go.Figure(data=[])
                 selected_bins = []
-                curr_content = go.Figure(data=[])
+                curr_content = _get_elite_content(mapelites=current_mapelites,
+                                                bin_idx=None,
+                                                pop=None)
                 cs_string = cs_size = cs_n_blocks  = ''
                 content_dl = dict(content=json.dumps({
                     'time_elapsed': time_elapsed,
@@ -991,7 +1060,9 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                         metric_name=metric_name,
                                         method_name=method_name)
                 selected_bins = []
-                curr_content = go.Figure(data=[])
+                curr_content = _get_elite_content(mapelites=current_mapelites,
+                                                bin_idx=None,
+                                                pop=None)
                 cs_string = cs_size = cs_n_blocks  = ''
                 n_spaceships_inspected.append([1])  # first generation of new experiment
                 time_elapsed.append([])  # first generation of new experiment
@@ -1017,6 +1088,9 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                     pop_name=pop_name,
                                     metric_name=metric_name,
                                     method_name=method_name)
+        curr_content = _get_elite_content(mapelites=current_mapelites,
+                                          bin_idx=None,
+                                          pop=None)
     else:
         logging.getLogger('dash-msgs').info(msg=f'Unrecognized event trigger: {event_trig}. No operations have been applied!')
 
