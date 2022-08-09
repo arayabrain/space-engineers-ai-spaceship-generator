@@ -8,6 +8,7 @@ import sys
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 from zipfile import ZipFile
+import time
 
 import dash
 import numpy as np
@@ -15,6 +16,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import ALL, dcc, html
 from dash.dependencies import Input, Output, State
+import dash_bootstrap_components as dbc
 from pcgsepy.common.jsonifier import json_dumps, json_loads
 from pcgsepy.config import (BIN_POP_SIZE, CS_MAX_AGE, N_EMITTER_STEPS,
                             N_GENS_ALLOWED)
@@ -70,6 +72,8 @@ gen_counter: int = 0
 selected_bins: List[Tuple[int, int]] = []
 exp_n: int = 0
 rngseed: int = 42
+time_elapsed = []
+n_spaceships_inspected = []
 current_mapelites = None
 my_emitterslist = ['mapelites_random.json',
                        'mapelites_prefmatrix.json',
@@ -89,8 +93,9 @@ def resource_path(relative_path):
 
 app = dash.Dash(__name__,
                 title='SE ICMAP-Elites',
-                external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
-                assets_folder=resource_path("assets"),
+                # external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
+                external_stylesheets=[dbc.themes.DARKLY],
+                # assets_folder=resource_path("assets"),
                 update_title=None)
 
 
@@ -882,6 +887,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
     global selected_bins
     global exp_n
     global rngseed
+    global n_spaceships_inspected
+    global time_elapsed
     
     
     ctx = dash.callback_context
@@ -892,15 +899,27 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
         event_trig = ctx.triggered[0]['prop_id'].split('.')[0]
 
     if event_trig == 'step-btn':
+        s = time.time()
         res = _apply_step(mapelites=current_mapelites,
                           selected_bins=[[x[1], x[0]] for x in selected_bins],
                           gen_counter=gen_counter)
         if res:
+            elapsed = time.time() - s
             gen_counter += 1
             curr_heatmap = _build_heatmap(mapelites=current_mapelites,
                                           pop_name=pop_name,
                                           metric_name=metric_name,
                                           method_name=method_name)
+            
+            n_spaceships_inspected[-1].append(1)  # new generation of last experiment
+            
+            if time_elapsed == []:  # first generation of first experiment
+                time_elapsed.append([elapsed])
+            elif time_elapsed[-1] == []:  # first generation of latest experiment
+                time_elapsed[-1] = [elapsed]
+            else:  # latest generation of latest experiment
+                time_elapsed[-1].append(elapsed)
+            
     elif event_trig == 'reset-btn':
         res = _apply_reset(mapelites=current_mapelites)
         if res:
@@ -909,6 +928,17 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                           pop_name=pop_name,
                                           metric_name=metric_name,
                                           method_name=method_name)
+            
+            if n_spaceships_inspected == []:
+                n_spaceships_inspected.append([0])
+            else:
+                n_spaceships_inspected[-1] = [[0]]
+            
+            if time_elapsed == []:
+                time_elapsed.append([])
+            else:
+                time_elapsed[-1] = [[]]
+            
     elif event_trig == 'b0-dropdown' or event_trig == 'b1-dropdown':
         res = _apply_bc_change(bcs=(b0, b1),
                                mapelites=current_mapelites)
@@ -961,6 +991,12 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
             curr_content = _get_elite_content(mapelites=current_mapelites,
                                               bin_idx=(j, i),
                                               pop='feasible' if pop_name == 'Feasible' else 'infeasible')
+            
+            if n_spaceships_inspected == []:  # first experiment
+                n_spaceships_inspected.append([1])  # one spaceship selected in the first generation
+            else:
+                n_spaceships_inspected[-1][-1] += 1  # update latest generation of the latest experiment
+            
             if not current_mapelites.enforce_qnt and selected_bins != []:
                 if [i, j] not in selected_bins:
                     selected_bins.append([i, j])
@@ -1000,17 +1036,25 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                     elite = current_mapelites.get_elite(bin_idx=_switch([selected_bins[-1]])[0],
                                             pop='feasible' if pop_name == 'Feasible' else 'infeasible')
                     zf.writestr('bp.sbc', structure_xml_converter(structure=elite.content, name=f'My Spaceship ({rngseed}) (exp{exp_n})'))
+                    zf.writestr(f'spaceship_{rngseed}_exp{exp_n}', cs_string)
             content_dl = dcc.send_bytes(write_archive, f'MySpaceship_{rngseed}_exp{exp_n}.zip')
             if exp_n >= len(my_emitterslist):
                 curr_heatmap = go.Figure(data=[])
                 selected_bins = []
                 curr_content = go.Figure(data=[])
-                cs_string = cs_size = cs_n_blocks  = ''                
+                cs_string = cs_size = cs_n_blocks  = ''
+                content_dl = dict(content=json.dumps({
+                    'time_elapsed': time_elapsed,
+                    'n_interactions': n_spaceships_inspected
+                    }),
+                                  filename=f'user_metrics_{rngseed}')   
                 logging.getLogger('dash-msgs').info(f'Reached end of all experiments! Please go back to the questionnaire to continue the evaluation.')
             else:
                 gen_counter = 0
-                with open(my_emitterslist[exp_n], 'r') as f:
-                    current_mapelites = json_loads(f.read())
+                # with open(my_emitterslist[exp_n], 'r') as f:
+                #     current_mapelites = json_loads(f.read())
+                current_mapelites.reset()
+                current_mapelites.generate_initial_populations()
                 curr_heatmap = _build_heatmap(mapelites=current_mapelites,
                                         pop_name=pop_name,
                                         metric_name=metric_name,
@@ -1018,6 +1062,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                 selected_bins = []
                 curr_content = go.Figure(data=[])
                 cs_string = cs_size = cs_n_blocks  = ''
+                n_spaceships_inspected.append([1])  # first generation of new experiment
+                time_elapsed.append([])  # first generation of new experiment
                 logging.getLogger('dash-msgs').info(msg=f'Reached end of experiment {exp_n}! Loaded next experiment. Fill out the questionnaire before continuing.')
     elif event_trig == 'popdownload-btn':
         content_dl = dict(content=json.dumps([b.to_json() for b in current_mapelites.bins.flatten().tolist()]),
@@ -1029,6 +1075,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
         current_mapelites.reset(lcs=[])
         all_bins = all_bins.reshape(current_mapelites.bin_qnt)
         current_mapelites.bins = all_bins
+        current_mapelites.reassign_all_content()
         logging.getLogger('dash-msgs').info(msg=f'Set population from file successfully.')
         curr_heatmap = _build_heatmap(mapelites=current_mapelites,
                                     pop_name=pop_name,
@@ -1052,5 +1099,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                     bins_idx_list=_get_valid_bins(mapelites=current_mapelites),
                                     str_prefix='Valid bins are:',
                                     filter_out_empty=False)
+    
+    logging.getLogger('dash-msgs').debug(msg=f'Times elapsed: {time_elapsed}')
+    logging.getLogger('dash-msgs').debug(msg=f'Spaceships inspected: {n_spaceships_inspected}')
     
     return curr_heatmap, curr_content, valid_bins_str, f'Current generation: {gen_counter}', str(current_mapelites.lsystem.hl_solver.parser.rules), selected_bins_str, cs_string, cs_size, cs_n_blocks, False, gen_counter < N_GENS_ALLOWED, gen_counter >= N_GENS_ALLOWED, content_dl

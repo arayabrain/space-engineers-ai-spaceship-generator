@@ -421,7 +421,7 @@ class MAPElites:
                             bins=bc1,
                             right=False)[0] - 1
             self.bins[i, j].insert_cs(cs)
-        self.bins[i, j].remove_old()
+            self.bins[i, j].remove_old()
 
     def _age_bins(self,
                   diff: int = -1) -> None:
