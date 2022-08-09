@@ -257,6 +257,8 @@ class GreedyEmitter(Emitter):
         self._last_selected = []
         for idx in kwargs['selected_idxs']:
             self._last_selected.append(tuple(idx))
+        for idx in kwargs['expanded_idxs']:
+            self._last_selected.append(tuple(idx))
     
     def to_json(self) -> Dict[str, Any]:
         return {

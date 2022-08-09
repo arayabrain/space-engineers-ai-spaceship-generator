@@ -44,19 +44,19 @@ def enforce_symmetry(structure: Structure,
                 keep_equal: bool) -> bool:
         if axis == 'x':
             if upper:
-                return (v1.x > v2.x) or(keep_equal and v1.x == v2.x)
+                return (v1.x > v2.x) or (keep_equal and v1.x == v2.x)
             else:
-                return (v1.x < v2.x) or(keep_equal and v1.x == v2.x)
+                return (v1.x < v2.x) or (keep_equal and v1.x == v2.x)
         elif axis == 'y':
             if upper:
-                return (v1.y > v2.y) or(keep_equal and v1.y == v2.y)
+                return (v1.y > v2.y) or (keep_equal and v1.y == v2.y)
             else:
-                return (v1.y < v2.y) or(keep_equal and v1.y == v2.y)
+                return (v1.y < v2.y) or (keep_equal and v1.y == v2.y)
         elif axis == 'z':
             if upper:
-                return (v1.z > v2.z) or(keep_equal and v1.z == v2.z)
+                return (v1.z > v2.z) or (keep_equal and v1.z == v2.z)
             else:
-                return (v1.z < v2.z) or(keep_equal and v1.z == v2.z)
+                return (v1.z < v2.z) or (keep_equal and v1.z == v2.z)
     
     midpoint = [x for x in structure._blocks.values() if x.block_type == 'MyObjectBuilder_Cockpit_OpenCockpitLarge'][0].position
     structure._blocks = {k:v for k, v in structure._blocks.items() if to_keep(v1=v.position, v2=midpoint, axis=axis, upper=upper, keep_equal=True)}
@@ -451,13 +451,13 @@ class MAPElites:
                     valid_bins.append(cbin)
         return valid_bins
 
-    def _check_res_trigger(self) -> None:
+    def _check_res_trigger(self) -> List[Tuple[int, int]]:
         """
         Trigger a resolution increase if at least 1 bin has reached full
         population capacity for both Feasible and Infeasible populations.
         """
+        to_increase_res = []
         if self.allow_res_increase:
-            to_increase_res = []
             for i in range(self.bins.shape[0]):
                 for j in range(self.bins.shape[1]):
                     cbin = self.bins[i, j]
@@ -466,6 +466,7 @@ class MAPElites:
             if to_increase_res:
                 for bin_idx in to_increase_res:
                     self.subdivide_range(bin_idx=bin_idx)
+        return to_increase_res
 
     def _assign_fitness(self,
                         cs: CandidateSolution) -> CandidateSolution:
@@ -596,12 +597,22 @@ class MAPElites:
                                gen=gen)
         if generated:
             self._update_bins(lcs=generated)
-            self._check_res_trigger()
+            expanded_idxs = self._check_res_trigger()
+            # keep track of expanded indexes only if they have also been selected
+            expanded_idxs = set(bin_idxs) - set(expanded_idxs)
+            if expanded_idxs:
+                for i, (m, n) in enumerate(expanded_idxs):
+                    expanded_idxs.append((m + i + 1, n + i))
+                    expanded_idxs.append((m + i, n + i + 1))
+                    expanded_idxs.append((m + i + 1, n + i + 1))
+            expanded_idxs = set(expanded_idxs) - set(bin_idxs)
         else:
             self._age_bins(diff=1)
+            expanded_idxs = []
         if self.emitter is not None and self.emitter.requires_pre:
             self.emitter.pre_step(bins=self.bins,
-                                  selected_idxs=bin_idxs)
+                                  selected_idxs=bin_idxs,
+                                  expanded_idxs=expanded_idxs)
 
     def interactive_mode(self,
                          n_steps: int = 10) -> None:
