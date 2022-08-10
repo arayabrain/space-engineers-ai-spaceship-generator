@@ -1,1 +1,0 @@
-python comparator_webapp_launcher.py --host "127.0.0.1" --port 8020

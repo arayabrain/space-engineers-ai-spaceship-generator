@@ -7,6 +7,10 @@ from waitress import serve
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     os.chdir(sys._MEIPASS)
 
+import argparse
+import random
+
+from pcgsepy.common.jsonifier import json_loads
 from pcgsepy.evo.fitness import (Fitness, box_filling_fitness,
                                  func_blocks_fitness, mame_fitness,
                                  mami_fitness)
@@ -15,11 +19,27 @@ from pcgsepy.guis.main_webapp.webapp import (app, set_app_layout,
                                              set_callback_props)
 from pcgsepy.mapelites.behaviors import (BehaviorCharacterization, avg_ma,
                                          mame, mami, symmetry)
-from pcgsepy.mapelites.buffer import Buffer, mean_merge
-from pcgsepy.mapelites.emitters import *
-from pcgsepy.mapelites.map import MAPElites
-from pcgsepy.nn.estimators import MLPEstimator
 from pcgsepy.setup_utils import get_default_lsystem, setup_matplotlib
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--mapelites_file", help="Location of the MAP-Elites object",
+                    type=str, default=None)
+parser.add_argument("--dev_mode", help="Launch the webapp in developer mode",
+                    action='store_true')
+parser.add_argument("--debug", help="Launch the webapp in debug mode",
+                    action='store_true')
+parser.add_argument("--emitter", help="Specify the emitter type",
+                    type=str, choices=['random', 'preference-matrix', 'contextual-bandit'], default='random')
+parser.add_argument("--host", help="Specify host address",
+                    type=str, default='127.0.0.1')
+parser.add_argument("--port", help="Specify port",
+                    type=int, default=8050)
+parser.add_argument("--use_reloader", help="Use reloader (set to True when using Jupyter Notebooks)",
+                    action='store_false')
+
+args = parser.parse_args()
+
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
 setup_matplotlib(larger_fonts=False)
 
@@ -75,29 +95,23 @@ behavior_descriptors = [
 
 behavior_descriptors_names = [x.name for x in behavior_descriptors]
 
-mapelites = MAPElites(lsystem=lsystem,
-                    feasible_fitnesses=feasible_fitnesses,
-                    behavior_descriptors=(behavior_descriptors[0], behavior_descriptors[1]),
-                    estimator=MLPEstimator(xshape=len(feasible_fitnesses),
-                                            yshape=1),
-                    buffer = Buffer(merge_method=mean_merge),
-                    emitter=ContextualBanditEmitter(),
-                    n_bins=(8, 8))
-mapelites.emitter.sampling_strategy = 'thompson'
+available_mapelites = ['mapelites_random.json',
+                       'mapelites_prefmatrix.json', 'mapelites_contbandit.json']
 
-logging.getLogger('werkzeug').setLevel(logging.ERROR)
+if args.mapelites_file:
+    with open(args.mapelites_file, 'r') as f:
+        mapelites = json_loads(f.read())
+else:
+    mapelites_file = random.choice(available_mapelites)
+    with open(mapelites_file, 'r') as f:
+        mapelites = json_loads(f.read())
 
 set_callback_props(mapelites=mapelites)
 
 set_app_layout(behavior_descriptors_names=behavior_descriptors_names,
-               
-               mapelites=mapelites,
-               
-               dev_mode=True)
-
-# app.run_server(debug=False, host='127.0.0.1', port = 8050, use_reloader=False)
+               dev_mode=args.dev_mode)
 
 serve(app.server,
       threads=16,
-      host="127.0.0.1",
-      port=8050)
+      host=args.host,
+      port=args.port)

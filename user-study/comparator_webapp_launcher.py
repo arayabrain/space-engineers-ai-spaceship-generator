@@ -2,8 +2,6 @@ import argparse
 from pcgsepy.guis.ships_comparator.webapp import app, set_app_layout
 
 parser = argparse.ArgumentParser()
-# parser.add_argument("--mapelites_file", help="Location of the MAP-Elites object",
-#                     type=str, default=None)
 parser.add_argument("--debug", help="Launch the webapp in debug mode",
                     action='store_true')
 parser.add_argument("--host", help="Specify host address",
@@ -14,8 +12,6 @@ parser.add_argument("--use_reloader", help="Use reloader (set to True when using
                     action='store_false')
 
 args = parser.parse_args()
-
-# TODO: This list should be loaded from the end-user
 
 set_app_layout()
 

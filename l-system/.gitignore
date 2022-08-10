@@ -1,9 +1,9 @@
 .ipynb_checkpoints/*
-tileset/*
-*.json
-estimators/*
-spaceships/*
-*.npz
 *-checkpoint*
+*.json
 *.log
+*.npz
+estimators/*
 results/*
+spaceships/*
+tileset/*

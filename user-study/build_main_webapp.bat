@@ -1,0 +1,18 @@
+pyinstaller main_webapp_launcher.py ^
+	--clean ^
+	--onefile ^
+	--noconfirm ^
+	--name "Space Engineers PCG" ^
+	--icon assets\favicon.ico ^
+	--add-data "./estimators;estimators" ^
+	--add-data "./assets;assets" ^
+	--add-data "./block_definitions.json;." ^
+	--add-data "./common_atoms.json;." ^
+	--add-data "./configs.ini;." ^
+	--add-data "./hl_atoms.json;." ^
+	--add-data "./hlrules;." ^
+	--add-data "./llrules;." ^
+	--add-data "./mapelites_contbandit.json;." ^
+	--add-data "./mapelites_prefbandit.json;." ^
+	--add-data "./mapelites_prefmatrix.json;." ^
+	--add-data "./mapelites_random.json;."

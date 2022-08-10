@@ -1,0 +1,22 @@
+{
+    "+": {"action": "move", "args": "R"},
+    "-": {"action": "move", "args": "L"},
+    "!": {"action": "move", "args": "U"},
+    "?": {"action": "move", "args": "D"},
+    ">": {"action": "move", "args": "F"},
+    "<": {"action": "move", "args": "B"},
+    "RotXcwY": {"action": "rotate", "args": "XcwY"},
+    "RotXcwZ": {"action": "rotate", "args": "XcwZ"},
+    "RotYcwX": {"action": "rotate", "args": "YcwX"},
+    "RotYcwZ": {"action": "rotate", "args": "YcwZ"},
+    "RotZcwX": {"action": "rotate", "args": "ZcwX"},
+    "RotZcwY": {"action": "rotate", "args": "ZcwY"},
+    "RotXccwY": {"action": "rotate", "args": "XccwY"},
+    "RotXccwZ": {"action": "rotate", "args": "XccwZ"},
+    "RotYccwX": {"action": "rotate", "args": "YccwX"},
+    "RotYccwZ": {"action": "rotate", "args": "YccwZ"},
+    "RotZccwX": {"action": "rotate", "args": "ZccwX"},
+    "RotZccwY": {"action": "rotate", "args": "ZccwY"},
+    "[": {"action": "push", "args": []},
+    "]": {"action": "pop", "args": []}
+}
