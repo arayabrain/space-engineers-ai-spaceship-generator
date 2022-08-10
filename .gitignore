@@ -1,12 +1,12 @@
+__pycache__/*
 .ipynb_checkpoints/*
 .virtual_documents/*
 .vscode/*
-__pycache__/*
-PCGSEPy.egg-info/*
-block_definitions.json
 *.jupyterlab-workspace
-*.pyc
 *.pkl
-icmap-elites/estimators_perf.log
+*.pyc
+block_definitions.json
 cppn-system/*
 custom-tests/*
+icmap-elites/estimators_perf.log
+PCGSEPy.egg-info/*
