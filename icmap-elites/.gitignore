@@ -8,3 +8,5 @@ spaceships/*
 build/*
 dist/*
 *.spec
+results/*
+*.log
