@@ -5,3 +5,5 @@ estimators/*
 spaceships/*
 *.npz
 *-checkpoint*
+*.log
+results/*
