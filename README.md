@@ -1,22 +1,38 @@
-# space-engineers-research
-A collection of research code for the Space Engineers project.
+# PCGSEPy
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![Lines of code](https://img.shields.io/tokei/lines/github/arayabrain/space-engineers-research)
+![GitHub issues](https://img.shields.io/github/issues-raw/arayabrain/space-engineers-research)
+![GitHub forks](https://img.shields.io/github/forks/arayabrain/space-engineers-research?style=social)
+![GitHub Repo stars](https://img.shields.io/github/stars/arayabrain/space-engineers-research?style=social)
+![GitHub last commit](https://img.shields.io/github/last-commit/arayabrain/space-engineers-research)
 
-## Contents:
-- Notebooks / Utilities:
-    - `l-system`: Contains a notebook that shows how to place an arbitrary structure defined by an L System in Space Engineers. Additional information in the `README.md` file. All the code was used for the "Evolving Spaceships with a Hybrid L-system Constrained Optimisation Evolutionary Algorithm" poster presented at GECCO 2022.
-    - `steam-workshop-downloader`: Contains a notebook to download items from the Steam Workshop. Additional information in the `README.md` file.
-    - `cppn-system`: Contains a notebook to train a CPPN to produce user content as downloaded from the Steam Workshop. Additional information in the `README.md` file. Currently not in development.
-    - `icmap-elites`: Contains notebooks to run an interactive CMAP-Elites webapp, as well as the results for the "Surrogate Infeasible Fitness Acquirement FI-2Pop for Procedural Content Generation" poster presented at CoG 2022. Additional information in the `README.md` file.
-- `PCGSEPy` package folders:
-    - `common`: Contains a collection of modules that are shared across projects (mainly interfacing to the Space Engineers API).
-    - `evo`: Contains all code for anything EC.
-    - `fi2pop`: Contains all code and necessary components for the `FI-2Pop` GA.
-    - `guis`: Contains the web applications for interfacing with the CMAP-Elites object as well as the interfaces for the user study.
-    - `lsystem`: Contains a collection of modules that define data types and methods used n the L-System demo.
-    - `mapelites`: Contains the code for all necessary components of a `CMAP-Elites` system.
-    - `nn`: Contains the `PyTorch` code for defining and training neural networks.
-    - `config.py`: Contains shared configurations defined in the `configs.ini` file.
-    - `hullbuilder.py`: Defines the `HullBuilder` class and its methods.
-    - `setup_utils.py`: Contains methods to define a basic L-system as well as configuring `matplotlib`
-    - `structure.py`: Contains the definitions of the `Structure` and `Block` objects, as well as the basic methods for these objects.
-    - `xml_conversion.py`: Contains the method to convert an XML file to its corresponding `Structure` object.
+A collection of research code for the Space Engineers PCG project developed under the GoodAI research grant.
+
+## Installation
+Install the `PCGSEPy` library by first installing the requirements:
+```
+pip install -r requirements.txt
+```
+And then install the library:
+```
+pip install -e .
+```
+
+## Contents overview
+- `pcgsepy`: this directory contains the main Python PCGSEPy library.
+- `steam-workshop-downloader`: this directory contains the code used to download the spaceships from the Steam Workshop and extract the metrics of interest.
+- `l-system`: this directory contains the code used for the L-system and FI-2Pop experiments.
+- `icmap-elites`: this directory contains the code used for the Interactive Constrained MAP-Elites experiments and the user study.
+- `user-study`: this directory contains additional code used in the user study.
+
+For more information, refer to the `README`s in each directory.
+
+
+## Publications
+This library was used in the following publications:
+```
+Roberto Gallotta, Kai Arulkumaran, and L. B. Soros. 2022. Evolving spaceships with a hybrid L-system constrained optimisation evolutionary algorithm. In Proceedings of the Genetic and Evolutionary Computation Conference Companion (GECCO '22). Association for Computing Machinery, New York, NY, USA, 711–714. https://doi.org/10.1145/3520304.3528775
+```
+```
+Gallotta, Roberto, Kai Arulkumaran and Lisa B. Soros. “Surrogate Infeasible Fitness Acquirement FI-2Pop for Procedural Content Generation.” ArXiv abs/2205.05834 (2022): 4 pag.
+```

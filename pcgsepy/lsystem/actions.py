@@ -32,6 +32,22 @@ class Rotations(str, Enum):
     ZccwY = 'ZccwY'
 
 
+rotations_from_str = {
+    'XcwY': Rotations.XcwY,
+    'XcwZ': Rotations.XcwZ,
+    'YcwX': Rotations.YcwX,
+    'YcwZ': Rotations.YcwZ,
+    'ZcwX': Rotations.ZcwX,
+    'ZcwY': Rotations.ZcwY,
+    'XccwY': Rotations.XccwY,
+    'XccwZ': Rotations.XccwZ,
+    'YccwX': Rotations.YccwX,
+    'YccwZ': Rotations.YccwZ,
+    'ZccwX': Rotations.ZccwX,
+    'ZccwY': Rotations.ZccwY
+}
+
+
 # Rotation matrices for each rotation as NumPy matrices.
 rotation_matrices = {
     Rotations.XcwY: np.asarray([[0, 1, 0], [-1, 0, 0], [0, 0, 1]]),

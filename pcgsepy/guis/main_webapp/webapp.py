@@ -33,7 +33,7 @@ from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, GreedyEmitter,
 from pcgsepy.mapelites.map import MAPElites
 from tqdm import trange
 
-from pcgsepy.xml_conversion import structure_xml_converter
+from pcgsepy.xml_conversion import convert_structure_to_xml
 
 
 class DashLoggerHandler(logging.StreamHandler):
@@ -1119,7 +1119,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                     zf.writestr('thumb.png', thumbnail_img)
                     elite = current_mapelites.get_elite(bin_idx=_switch([selected_bins[-1]])[0],
                                             pop='feasible' if pop_name == 'Feasible' else 'infeasible')
-                    zf.writestr('bp.sbc', structure_xml_converter(structure=elite.content, name=f'My Spaceship ({rngseed}) (exp{exp_n})'))
+                    zf.writestr('bp.sbc', convert_structure_to_xml(structure=elite.content, name=f'My Spaceship ({rngseed}) (exp{exp_n})'))
                     zf.writestr(f'spaceship_{rngseed}_exp{exp_n}', cs_string)
             content_dl = dcc.send_bytes(write_archive, f'MySpaceship_{rngseed}_exp{exp_n}.zip')
             if exp_n >= len(my_emitterslist):

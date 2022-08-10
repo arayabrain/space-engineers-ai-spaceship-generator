@@ -1,14 +1,12 @@
 import math
-from itertools import accumulate
 from random import choices, random, sample
 from typing import List, Tuple
 
 import numpy as np
-
-from ..config import (CROSSOVER_P, MUTATION_DECAY, MUTATION_INITIAL_P, PL_HIGH,
-                      PL_LOW)
-from ..lsystem.rules import StochasticRules
-from ..lsystem.solution import CandidateSolution
+from pcgsepy.config import (CROSSOVER_P, MUTATION_DECAY, MUTATION_INITIAL_P,
+                            PL_HIGH, PL_LOW)
+from pcgsepy.lsystem.rules import StochasticRules
+from pcgsepy.lsystem.solution import CandidateSolution, string_merging
 
 
 class EvoException(Exception):
@@ -28,16 +26,15 @@ def roulette_wheel_selection(pop: List[CandidateSolution],
     Returns:
         CandidateSolution: The individual solution.
     """
-    fs = [cs.c_fitness if not minimize else 1/(cs.c_fitness + 1e-6) for cs in pop]
-    # fs = [cs.c_fitness for cs in pop]
-    s = sum(fs)
-    r = s * random()
-    
+    fs = [cs.c_fitness if not minimize else 1 / (cs.c_fitness + 1e-6) for cs in pop]
+    r = random() * sum(fs)
     p = 0.
+
     for i, f in enumerate(fs):
         p += f
         if p >= r:
             return pop[i]
+
     raise EvoException('Unable to find valid solution')
 
 
@@ -47,11 +44,25 @@ class SimplifiedExpander:
 
     def initialize(self,
                    rules: StochasticRules):
+        """Initialize the expander.
+
+        Args:
+            rules (StochasticRules): The set of expansion rules.
+        """
         self.rules = rules
 
     def get_rhs(self,
                 string: str,
                 idx: int) -> str:
+        """Get the string produced by the rules for the given string.
+
+        Args:
+            string (str): The string.
+            idx (int): The index of the LHS of interest.
+
+        Returns:
+            str: The resulting RHS.
+        """
         assert self.rules is not None, 'SimplifiedExpander has not been initialized'
         for k in self.rules.lhs_alphabet:
             if string[idx:].startswith(k):
@@ -78,23 +89,28 @@ class SimplifiedExpander:
                 return rhs, offset
 
 
+# module-scoped uninitialized variable
 expander = SimplifiedExpander()
 
 
 def mutate(cs: CandidateSolution,
-           n_iteration: int) -> None:
+           n_iteration: int,
+           mutable_atom: str = 'corridorsimple') -> None:
     """Apply mutation to the parameters of the solution string.
 
     Args:
-        cs (CandidateSolution): The olution to mutate.
-        n_iteration (int): The current iteration number (used to compute decayed mutation
-        probability).
+        cs (CandidateSolution): The solution to mutate.
+        n_iteration (int): _desThe current iteration number (used to compute decayed mutation probability).
+        mutable_atom (str, optional): The atom that can mutate. Defaults to `'corridorsimple'`.
+
+    Raises:
+        EvoException: Raised if no mutation can be applied to the candidate solution.
     """
     mutated = False
     for module in cs.hls_mod.keys():
         if cs.hls_mod[module]['mutable']:
             idxs = get_atom_indexes(string=cs.hls_mod[module]['string'],
-                                    atom='corridorsimple')  # TODO: Perhaps read from config instead
+                                    atom=mutable_atom)
             # TODO: for enforcing symmetry automatically, should check if the atom to expand
             # is within a bracketed along the symmetry axis. If it is, mutate and copy the mutation
             # on the "next" bracketed enclosure.
@@ -105,49 +121,48 @@ def mutate(cs: CandidateSolution,
             # ...[RotYccwZ [RotYcwX corridorsimple] corridorsimple][RotYcwZ [RotYcwX corridorsimple] corridorsimple]...
             n = len(idxs)
             if n > 0:
-                p = max(MUTATION_INITIAL_P / math.exp(n_iteration * MUTATION_DECAY), 0)
+                p = max(MUTATION_INITIAL_P /
+                        math.exp(n_iteration * MUTATION_DECAY), 0)
                 to_mutate = int(p * n)
                 for_mutation = sample(population=idxs,
-                                    k=to_mutate)
+                                      k=to_mutate)
                 for_mutation = sorted(for_mutation,
-                                    key=lambda x: x[0],
-                                    reverse=True)
-
+                                      key=lambda x: x[0],
+                                      reverse=True)
                 for idx in for_mutation:
                     rhs, offset = expander.get_rhs(string=cs.hls_mod[module]['string'],
                                                    idx=idx[0])
                     d = offset - (idx[1] + 1 - idx[0])
-                    cs.hls_mod[module]['string'] = cs.hls_mod[module]['string'][:idx[0]] + rhs + cs.hls_mod[module]['string'][idx[1] + 1 + d:]
-                    
+                    cs.hls_mod[module]['string'] = f"{cs.hls_mod[module]['string'][:idx[0]]}{rhs}{cs.hls_mod[module]['string'][idx[1] + 1 + d:]}"
                     mutated |= True
     if not mutated:
         raise EvoException(f'No mutation could be applied to {cs.string}.')
     # Update solution string
-    cs.string = ''.join([x['string'] for x in cs.hls_mod.values()])
+    cs.string = string_merging(ls=[x['string'] for x in cs.hls_mod.values()])
 
 
 def crossover(a1: CandidateSolution,
               a2: CandidateSolution,
               n_childs: int) -> List[CandidateSolution]:
-    """Apply 2-point crossover between two solutions.
-    Note: may never terminate if `n_childs` is greater than the maximum number
-    of possible offsprings.
+    """Apply n-point crossover between two solutions.
+    Note: may never terminate if `n_childs` is greater than the maximum number of possible offsprings.
 
     Args:
         a1 (CandidateSolution): The first solution.
         a2 (CandidateSolution): The second solution.
         n_childs (int): The number of offsprings to produce (suggested: 2).
 
+    Raises:
+        EvoException: Raised if no crossover could be applied to the candidate solutions.
+
     Returns:
         List[CandidateSolution]: A list containing the new offspring solutions.
     """
     childs = []
-    
     for module in a1.hls_mod.keys():
         if a1.hls_mod[module]['mutable']:
             string1 = a1.hls_mod[module]['string'][:]
             string2 = a2.hls_mod[module]['string'][:]
-            
             idxs1 = get_matching_brackets(string=string1)
             idxs2 = get_matching_brackets(string=string2)
             if not idxs1:
@@ -169,22 +184,18 @@ def crossover(a1: CandidateSolution,
                 b2 = string2[idx2[0]:idx2[1] + 1]
                 s1 = s1[:idx1[0]] + s1[idx1[0]:].replace(b1, b2, 1)
                 s2 = s2[:idx2[0]] + s2[idx2[0]:].replace(b2, b1, 1)
-                
                 for solution, mutated in [(a1, s1), (a2, s2)]:
                     modified_hls_mod = dict(solution.hls_mod)
                     modified_hls_mod[module]['string'] = mutated
-                    modified_string = ''.join([x['string'] for x in modified_hls_mod.values()])
+                    modified_string = string_merging([x['string'] for x in modified_hls_mod.values()])
                     o = CandidateSolution(string=modified_string)
                     o.hls_mod = modified_hls_mod
                     childs.append(o)
                     a1.n_offspring += 1
                     a2.n_offspring += 1
-    
     if len(childs) == 0:
-        # print(a1.string, a1.hls_mod)
-        # print(a2.string, a2.hls_mod)
-        raise EvoException(f'No cross-over could be applied ({a1.string} w/ {a2.string}).')
-             
+        raise EvoException(
+            f'No cross-over could be applied ({a1.string} w/ {a2.string}).')
     return childs[:n_childs]
 
 

@@ -1,10 +1,10 @@
 from typing import Any, Dict, List, Union
+
+import numpy as np
 import torch as th
 import torch.nn.functional as F
-import numpy as np
 from pcgsepy.config import EPSILON_F
-
-from pcgsepy.fi2pop.utils import MLPEstimator
+from sklearn.gaussian_process import GaussianProcessRegressor
 
 
 def quantile_loss(predicted: th.Tensor,
@@ -118,6 +118,60 @@ class QuantileEstimator(th.nn.Module):
         qe.load_state_dict(eval(my_args['optimizer']))
         return qe
 
+
+class GaussianEstimator:
+    def __init__(self,
+                 bound: str,
+                 kernel: Any,
+                 max_f: float,
+                 min_f: float = 0,
+                 alpha: float = 1e-10,
+                 normalize_y: bool = False) -> None:
+        self.bound = bound
+        self.max_f = max_f
+        self.min_f = min_f
+        self.gpr = GaussianProcessRegressor(kernel=kernel,
+                                            alpha=alpha,
+                                            normalize_y=normalize_y)
+        self.is_trained = False
+    
+    def fit(self,
+            X: np.ndarray,
+            y: np.ndarray) -> None:
+        self.gpr.fit(X, y)
+        self.is_trained = True
+    
+    def predict(self,
+                x: np.ndarray) -> float:
+        if len(x.shape) == 1:
+            x = x.reshape(1, -1)
+        y_mean, y_std = self.gpr.predict(x, return_std=True)
+        if self.bound == 'upper':
+            f = (y_mean[0] + y_std[0]) / self.max_f
+        elif self.bound == 'lower':
+            f = max(y_mean[0] - y_std[0], self.min_f)
+        else:
+            raise NotImplementedError(f'Unrecognized bound ({self.bound}) encountered in GaussianEstimator.')
+        return f
+         
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'bound': self.bound,
+            'max_f': self.max_f,
+            'min_f': self.min_f,
+            'is_trained': self.is_trained,
+            'gpr': self.gpr.get_params()
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'GaussianEstimator':
+        gpe = GaussianEstimator(bound=my_args['bound'],
+                                max_f=my_args['max_f'],
+                                min_f=my_args['min_f'],
+                                kernel=None)
+        gpe.is_trained = my_args['is_trained']
+        gpe.gpr.set_params(my_args['gpr'])
+        return gpe
 
 class MLPEstimator(th.nn.Module):
     def __init__(self,

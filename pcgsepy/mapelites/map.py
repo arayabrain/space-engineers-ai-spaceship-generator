@@ -22,13 +22,13 @@ from ..config import (ALIGNMENT_INTERVAL, BIN_POP_SIZE, CS_MAX_AGE, EPSILON_F,
 from ..evo.fitness import (Fitness, box_filling_fitness, func_blocks_fitness,
                            mame_fitness, mami_fitness)
 from ..evo.genops import EvoException
-from ..fi2pop.utils import (GaussianEstimator, create_new_pool,
+from ..fi2pop.utils import (create_new_pool,
                             prepare_dataset, subdivide_solutions)
 from ..hullbuilder import HullBuilder
 from ..lsystem.lsystem import LSystem
 from ..lsystem.solution import CandidateSolution
 from ..lsystem.structure_maker import LLStructureMaker
-from ..nn.estimators import MLPEstimator, QuantileEstimator, train_estimator
+from ..nn.estimators import GaussianEstimator, MLPEstimator, QuantileEstimator, train_estimator
 from ..structure import Structure
 from .behaviors import BehaviorCharacterization
 from .bin import MAPBin
