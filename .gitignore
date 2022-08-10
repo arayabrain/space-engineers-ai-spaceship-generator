@@ -8,3 +8,5 @@ block_definitions.json
 *.pyc
 *.pkl
 icmap-elites/estimators_perf.log
+cppn-system/*
+custom-tests/*
