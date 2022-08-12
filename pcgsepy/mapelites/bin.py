@@ -1,12 +1,12 @@
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
-
-from ..config import BIN_POP_SIZE
-from ..lsystem.solution import CandidateSolution
+from pcgsepy.config import BIN_POP_SIZE
+from pcgsepy.lsystem.solution import CandidateSolution
 
 
 class MAPBin:
+    __slots__ = ['_feasible', '_infeasible', 'bin_idx', 'bin_size']
 
     def __init__(self,
                  bin_idx: Tuple[int, int],
@@ -30,8 +30,16 @@ class MAPBin:
 
     def non_empty(self,
                   pop: str) -> bool:
+        """Check if the bin is not empty for the given population.
+
+        Args:
+            pop (str): The population to check for.
+
+        Returns:
+            bool: Whether the bin is empty.
+        """
         return len(self._feasible if pop == 'feasible' else self._infeasible) > 0
-    
+
     def _reduce_pop(self,
                     pop: List[CandidateSolution]) -> List[CandidateSolution]:
         """Cull the population within this bin.
@@ -68,15 +76,14 @@ class MAPBin:
         """Age the bin.
 
         Args:
-            diff (int, optional): Value used to modify the bin's age. Defaults to -1.
+            diff (int, optional): Value used to modify the bin's age. Defaults to `-1`.
         """
         for pop in [self._feasible, self._infeasible]:
             for cs in pop:
                 cs.age += diff
 
     def remove_old(self):
-        """Remove old solutions. Old solutions are solutions with an age `<=0`.
-        """
+        """Remove old solutions. Old solutions are solutions with an age `<=0`."""
         to_rem_f = [x for x in self._feasible if x.age <= 0]
         for cs in to_rem_f:
             self._feasible.remove(cs)
@@ -92,11 +99,11 @@ class MAPBin:
 
         Args:
             metric (str): The metric name.
-            use_mean (bool, optional): Whether to compute the metric over the population or just the elite. Defaults to True.
-            population (str, optional): Which population to compute the metric on. Defaults to 'feasible'.
+            use_mean (bool, optional): Whether to compute the metric over the population or just the elite. Defaults to `True`.
+            population (str, optional): Which population to compute the metric on. Defaults to `'feasible'`.
 
         Raises:
-            NotImplementedError: Exception raised if the metric is not recognized.
+            NotImplementedError: Raised if the metric is not recognized.
 
         Returns:
             float: The value of the metric.
@@ -113,17 +120,19 @@ class MAPBin:
             raise NotImplementedError(f'Unrecognized metric {metric}')
 
     def get_elite(self,
-                  population: str = 'feasible') -> CandidateSolution:
+                  population: str = 'feasible',
+                  always_max: bool = True) -> CandidateSolution:
         """Get the elite of the selected population.
 
         Args:
-            population (str, optional): The population.. Defaults to 'feasible'.
+            population (str, optional): The population. Defaults to `'feasible'`.
+            always_max (bool): Whether to select based on highest fitness. Defaults to `True`.
 
         Returns:
             CandidateSolution: The elite solution.
         """
         pop = self._feasible if population == 'feasible' else self._infeasible
-        get_max = True #if population == 'feasible' else False
+        get_max = always_max or population == 'feasible'
         return sorted(pop, key=lambda x: x.c_fitness, reverse=get_max)[0]
 
     def toggle_module_mutability(self,
@@ -137,27 +146,20 @@ class MAPBin:
             for cs in pop:
                 cs.hls_mod[module]['mutable'] = not cs.hls_mod[module]['mutable']
 
-    def len(self,
-            pop: str) -> int:
-        if pop == 'feasible':
-            return len(self._feasible)
-        elif pop == 'infeasible':
-            return len(self._infeasible)
-        else:
-            raise NotImplementedError(f'Unrecognized population {pop}')
-    
     def to_json(self) -> Dict[str, Any]:
         return {
             'feasible': [cs.to_json() for cs in self._feasible],
             'infeasible': [cs.to_json() for cs in self._infeasible],
             'bin_idx': list(self.bin_idx),
             'bin_size': list(self.bin_size)
-            }
-    
+        }
+
     @staticmethod
     def from_json(my_args: Dict[str, Any]) -> 'MAPBin':
         mb = MAPBin(bin_idx=tuple(my_args['bin_idx']),
                     bin_size=tuple(my_args['bin_size']))
-        mb._feasible = [CandidateSolution.from_json(cs) for cs in my_args['feasible']]
-        mb._infeasible = [CandidateSolution.from_json(cs) for cs in my_args['infeasible']]
+        mb._feasible = [CandidateSolution.from_json(
+            cs) for cs in my_args['feasible']]
+        mb._infeasible = [CandidateSolution.from_json(
+            cs) for cs in my_args['infeasible']]
         return mb

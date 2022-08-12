@@ -1,9 +1,7 @@
 from typing import Any, Dict, Tuple
 
-import numpy as np
-
-from ..common.vecs import Vec
-from ..lsystem.solution import CandidateSolution
+from pcgsepy.common.vecs import Vec
+from pcgsepy.lsystem.solution import CandidateSolution
 
 
 class BehaviorCharacterization:
@@ -32,7 +30,7 @@ class BehaviorCharacterization:
             'bounds': list(self.bounds),
             'f': self.f.__name__
         }
-    
+
     @staticmethod
     def from_json(my_args: Dict[str, Any]) -> 'BehaviorCharacterization':
         return BehaviorCharacterization(name=my_args['name'],
@@ -49,8 +47,7 @@ def mame(cs: CandidateSolution) -> float:
     Returns:
         float: The value of this behavior characterization.
     """
-    volume = cs.content.as_grid_array.shape
-    largest_axis, medium_axis, _ = reversed(sorted(list(volume)))
+    largest_axis, medium_axis, _ = reversed(sorted(list(cs.content.as_grid_array.shape)))
     return largest_axis / medium_axis
 
 
@@ -63,8 +60,7 @@ def mami(cs: CandidateSolution) -> float:
     Returns:
         float: The value of this behavior characterization.
     """
-    volume = cs.content.as_grid_array.shape
-    largest_axis, _, smallest_axis = reversed(sorted(list(volume)))
+    largest_axis, _, smallest_axis = reversed(sorted(list(cs.content.as_grid_array.shape)))
     return largest_axis / smallest_axis
 
 
@@ -77,9 +73,9 @@ def avg_ma(cs: CandidateSolution) -> float:
     Returns:
         float: The value of this behavior characterization.
     """
-    volume = cs.content.as_grid_array.shape
-    largest_axis, medium_axis, smallest_axis = reversed(sorted(list(volume)))
+    largest_axis, medium_axis, smallest_axis = reversed(sorted(list(cs.content.as_grid_array.shape)))
     return ((largest_axis / medium_axis) + (largest_axis / smallest_axis)) / 2
+
 
 # TODO: This function should be optimized if possible.
 def symmetry(cs: CandidateSolution):

@@ -4,9 +4,8 @@ import numpy as np
 import torch as th
 import torch.nn.functional as F
 from pcgsepy.config import EPSILON_F, RESCALE_INFEAS_FITNESS
-from sklearn.gaussian_process import GaussianProcessRegressor
-
 from pcgsepy.lsystem.solution import CandidateSolution
+from sklearn.gaussian_process import GaussianProcessRegressor
 
 
 def quantile_loss(predicted: th.Tensor,

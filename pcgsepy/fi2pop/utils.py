@@ -116,4 +116,5 @@ def reduce_population(population: List[CandidateSolution],
     Returns:
         List[CandidateSolution]: The ordered and culled population.
     """
-    return population.sort(key=lambda x: x.c_fitness, reverse=not minimize)[:to]
+    population.sort(key=lambda x: x.c_fitness, reverse=not minimize)
+    return population[:to]

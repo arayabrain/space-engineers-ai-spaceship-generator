@@ -1,4 +1,4 @@
-# PCGSEPy
+# 🚀 Space Engineers AI Spaceship Generator 🚀
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Lines of code](https://img.shields.io/tokei/lines/github/arayabrain/space-engineers-research)
 ![GitHub issues](https://img.shields.io/github/issues-raw/arayabrain/space-engineers-research)
@@ -9,6 +9,12 @@
 A collection of research code for the Space Engineers PCG project developed under the GoodAI research grant.
 
 ## Installation
+Create the executable file by running the `build_main_webapp.bat` file inside the `user-study` folder. The executable file (`Space Engineers PCG.exe`) will be created in the `user-study\dist` folder.
+
+## How to use the webapp
+_TODO: write this section of the README._
+
+## Development
 Install the `PCGSEPy` library by first installing the requirements:
 ```
 pip install -r requirements.txt
@@ -26,7 +32,6 @@ pip install -e .
 - `user-study`: this directory contains additional code used in the user study.
 
 For more information, refer to the `README`s in each directory.
-
 
 ## Publications
 This library was used in the following publications:

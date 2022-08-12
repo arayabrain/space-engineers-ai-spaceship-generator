@@ -1,16 +1,15 @@
-from doctest import UnexpectedException
 import warnings
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
-from sklearn.preprocessing import scale
 from pcgsepy.config import BETA_A, BETA_B, CONTEXT_IDXS, CS_MAX_AGE
 from pcgsepy.mapelites.bin import MAPBin
 from pcgsepy.mapelites.buffer import Buffer, mean_merge
-from sklearn.linear_model import LinearRegression
 from scipy.stats import boltzmann
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import scale
 
 
 def diversity_builder(bins: 'np.ndarray[MAPBin]',
@@ -42,8 +41,6 @@ def diversity_builder(bins: 'np.ndarray[MAPBin]',
 
 class Emitter(ABC):
     def __init__(self) -> None:
-        """Abstract class for Emitters.
-        """
         super().__init__()
         self.name = 'abstract-emitter'
         self.requires_init = False
@@ -54,17 +51,6 @@ class Emitter(ABC):
     @abstractmethod
     def pick_bin(self,
                  bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
-        """Abstract method for choosing a bin amongst multiple valid bins.
-
-        Args:
-            bins (List[MAPBin]): The list of valid bins.
-
-        Raises:
-            NotImplementedError: This method is abstract and must be overridden.
-
-        Returns:
-            MAPBin: The chosen bin.
-        """
         raise NotImplementedError(f'The {self.name} must override the `pick_bin` method!')
     
     def init_emitter(self,
@@ -86,8 +72,7 @@ class Emitter(ABC):
 
 class RandomEmitter(Emitter):
     def __init__(self) -> None:
-        """The random emitter class.
-        """
+        """Create a random emitter class."""
         super().__init__()
         self.name = 'random-emitter'
     
@@ -101,7 +86,7 @@ class RandomEmitter(Emitter):
         Returns:
             MAPBin: The randomly picked bin.
         """
-        bins = [b for b in bins.flatten().tolist() if len(b._feasible) > 0 or len(b._infeasible) > 0]
+        bins = [b for b in bins.flatten().tolist() if b.non_empty(pop='feasible') or b.non_empty(pop='infeasible')]
         fcs, ics = 0, 0
         selected = []
         while fcs < 2 or ics < 2:
@@ -135,8 +120,7 @@ class RandomEmitter(Emitter):
 
 class OptimisingEmitter(Emitter):
     def __init__(self) -> None:
-        """The optimising emitter.
-        """
+        """Create an optimising emitter."""
         super().__init__()
         self.name = 'optimising-emitter'
     
@@ -150,7 +134,7 @@ class OptimisingEmitter(Emitter):
         Returns:
             MAPBin: The selected bin.
         """
-        bins = [b for b in bins.flatten().tolist() if len(b._feasible) > 0 or len(b._infeasible) > 0]
+        bins = [b for b in bins.flatten().tolist() if b.non_empty(pop='feasible') or b.non_empty(pop='infeasible')]
         sorted_bins = sorted(bins, key=lambda x: x.get_metric(metric='fitness', use_mean=True, population='feasible'), reverse=True)
         fcs, ics = 0, 0
         selected = []
@@ -185,8 +169,7 @@ class OptimisingEmitter(Emitter):
 
 class OptimisingEmitterV2(Emitter):
     def __init__(self) -> None:
-        """The optimising emitter.
-        """
+        """Create an optimising emitter (population-based)."""
         super().__init__()
         self.name = 'optimising-emitter-v2'
     
@@ -200,7 +183,7 @@ class OptimisingEmitterV2(Emitter):
         Returns:
             MAPBin: The selected bin.
         """
-        bins = [b for b in bins.flatten().tolist() if len(b._feasible) > 0 or len(b._infeasible) > 0]
+        bins = [b for b in bins.flatten().tolist() if b.non_empty(pop='feasible') or b.non_empty(pop='infeasible')]
         sorted_bins_f = sorted(bins, key=lambda x: x.get_metric(metric='fitness', use_mean=True, population='feasible'), reverse=True)
         sorted_bins_i = sorted(bins, key=lambda x: x.get_metric(metric='fitness', use_mean=True, population='infeasible'), reverse=True)
         fcs, ics = 0, 0
@@ -238,8 +221,7 @@ class OptimisingEmitterV2(Emitter):
 
 class GreedyEmitter(Emitter):
     def __init__(self) -> None:
-        """The random emitter class.
-        """
+        """Create a greedy emitter."""
         super().__init__()
         self.name = 'greedy-emitter'
         self.requires_pre = True
@@ -285,6 +267,11 @@ class GreedyEmitter(Emitter):
 class HumanPrefMatrixEmitter(Emitter):
     def __init__(self,
                  decay: float = 1e-2) -> None:
+        """Create a human preference-matrix emitter.
+
+        Args:
+            decay (float, optional): The preference decay. Defaults to `1e-2`.
+        """
         super().__init__()
         self.name = 'human-preference-matrix-emitter'
         self.requires_init = True
@@ -301,6 +288,11 @@ class HumanPrefMatrixEmitter(Emitter):
     
     def _build_pref_matrix(self,
                            bins: 'np.ndarray[MAPBin]') -> None:
+        """Build the preference matrix.
+
+        Args:
+            bins (np.ndarray[MAPBin]): The MAP-Elites bins.
+        """
         self._prefs = np.zeros(shape=bins.shape)
         for i in range(bins.shape[0]):
             for j in range(bins.shape[1]):
