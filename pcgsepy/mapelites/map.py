@@ -5,32 +5,34 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch as th
 from joblib import Parallel, delayed
+from pcgsepy.common.vecs import Orientation, Vec
+from pcgsepy.config import (ALIGNMENT_INTERVAL, BIN_POP_SIZE, CS_MAX_AGE,
+                            EPSILON_F, MAX_X_SIZE, MAX_Y_SIZE, MAX_Z_SIZE,
+                            N_ITERATIONS, N_RETRIES, POP_SIZE)
+from pcgsepy.evo.fitness import (Fitness, box_filling_fitness,
+                                 func_blocks_fitness, mame_fitness,
+                                 mami_fitness)
+from pcgsepy.evo.genops import EvoException
+from pcgsepy.fi2pop.utils import create_new_pool, subdivide_solutions
+from pcgsepy.hullbuilder import HullBuilder
 from pcgsepy.lsystem.constraints import ConstraintLevel
+from pcgsepy.lsystem.lsystem import LSystem
+from pcgsepy.lsystem.solution import CandidateSolution
+from pcgsepy.lsystem.structure_maker import LLStructureMaker
 from pcgsepy.mapelites.bandit import EpsilonGreedyAgent
+from pcgsepy.mapelites.behaviors import BehaviorCharacterization
+from pcgsepy.mapelites.bin import MAPBin
 from pcgsepy.mapelites.buffer import Buffer, EmptyBufferException
 from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, Emitter,
                                         HumanPrefMatrixEmitter, RandomEmitter,
                                         emitters, get_emitter_by_str)
-from pcgsepy.nn.estimators import QuantileEstimator
+from pcgsepy.nn.estimators import (GaussianEstimator, MLPEstimator,
+                                   QuantileEstimator, prepare_dataset,
+                                   train_estimator)
+from pcgsepy.structure import Structure
 from tqdm import trange
 from typing_extensions import Self
 
-from ..common.vecs import Orientation, Vec
-from ..config import (ALIGNMENT_INTERVAL, BIN_POP_SIZE, CS_MAX_AGE, EPSILON_F,
-                      MAX_X_SIZE, MAX_Y_SIZE, MAX_Z_SIZE, N_ITERATIONS,
-                      N_RETRIES, POP_SIZE)
-from ..evo.fitness import (Fitness, box_filling_fitness, func_blocks_fitness,
-                           mame_fitness, mami_fitness)
-from ..evo.genops import EvoException
-from ..fi2pop.utils import (create_new_pool, subdivide_solutions)
-from ..hullbuilder import HullBuilder
-from ..lsystem.lsystem import LSystem
-from ..lsystem.solution import CandidateSolution
-from ..lsystem.structure_maker import LLStructureMaker
-from ..nn.estimators import GaussianEstimator, MLPEstimator, QuantileEstimator, train_estimator, prepare_dataset
-from ..structure import Structure
-from .behaviors import BehaviorCharacterization
-from .bin import MAPBin
 
 # TODO: move this in HullBuilder if possible
 def enforce_symmetry(structure: Structure,
