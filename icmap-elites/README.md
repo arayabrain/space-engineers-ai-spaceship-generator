@@ -2,7 +2,7 @@
 
 An Interactive Constrained MAP-Elites system. The scripts and notebooks in this directory are used for the IC MAP-Elites experiment presented in
 ```
-Gallotta, Roberto, Kai Arulkumaran and Lisa B. Soros. “Surrogate Infeasible Fitness Acquirement FI-2Pop for Procedural Content Generation.” ArXiv abs/2205.05834 (2022): 4 pag.
+Gallotta, Roberto, Kai Arulkumaran, and L. B. Soros. ‘Surrogate Infeasible Fitness Acquirement FI-2Pop for Procedural Content Generation’. In 2022 IEEE Conference on Games (CoG), ?-?, CASIA, Beijing, China, 2022. 10.48550/arXiv.2205.05834.
 ```
 
 ## Notebooks
