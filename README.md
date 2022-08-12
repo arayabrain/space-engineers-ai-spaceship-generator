@@ -1,10 +1,10 @@
 # 🚀 Space Engineers AI Spaceship Generator 🚀
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![Lines of code](https://img.shields.io/tokei/lines/github/arayabrain/space-engineers-research)
-![GitHub issues](https://img.shields.io/github/issues-raw/arayabrain/space-engineers-research)
-![GitHub forks](https://img.shields.io/github/forks/arayabrain/space-engineers-research?style=social)
-![GitHub Repo stars](https://img.shields.io/github/stars/arayabrain/space-engineers-research?style=social)
-![GitHub last commit](https://img.shields.io/github/last-commit/arayabrain/space-engineers-research)
+![Lines of code](https://img.shields.io/tokei/lines/github/arayabrain/space-engineers-ai-spaceship-generator)
+![GitHub issues](https://img.shields.io/github/issues-raw/arayabrain/space-engineers-ai-spaceship-generator)
+![GitHub forks](https://img.shields.io/github/forks/arayabrain/space-engineers-ai-spaceship-generator?style=social)
+![GitHub Repo stars](https://img.shields.io/github/stars/arayabrain/space-engineers-ai-spaceship-generator?style=social)
+![GitHub last commit](https://img.shields.io/github/last-commit/arayabrain/space-engineers-ai-spaceship-generator)
 
 A collection of research code for the Space Engineers PCG project developed under the GoodAI research grant.
 
