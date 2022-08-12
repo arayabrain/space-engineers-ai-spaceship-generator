@@ -2,8 +2,7 @@ from enum import IntEnum, auto
 from typing import Any, Callable, Dict
 
 from pcgsepy.lsystem.constraints_funcs import *
-
-from .solution import CandidateSolution
+from pcgsepy.lsystem.solution import CandidateSolution
 
 
 constraint_funcs = {
@@ -41,10 +40,10 @@ class ConstraintHandler:
         self.extra_args = extra_args
 
     def __repr__(self) -> str:
-        return f'Constraint {self.name} ({self.level.name}) at {self.when.name}'
+        return str(self.__dict__)
 
     def __str__(self) -> str:
-        return self.__repr__()
+        return f'Constraint {self.name} ({self.level.name}) at {self.when.name}'
 
     def __eq__(self, other):
         return str(self) == str(other)
@@ -62,7 +61,7 @@ class ConstraintHandler:
             'constraint': self.constraint.__name__,
             'extra_args': self.extra_args
         }
-    
+
     @staticmethod
     def from_json(my_args: Dict[str, Any]) -> 'ConstraintHandler':
         return ConstraintHandler(name=my_args['name'],

@@ -68,29 +68,41 @@ class Block:
         self.orientation_up = orientation_up.value
         self.position = position
         self.definition_id = block_definitions[self.block_type]['definition_id']
-        self.cube_size = block_definitions[self.block_type]['cube_size']
-        self.size = Vec.from_json(block_definitions[self.block_type]['size'])
-        self.mass = float(block_definitions[self.block_type]['mass'])
-        self.mountpoints = [MountPoint(face=v['Normal'],
-                                       start=v['Start'],
-                                       end=v['End'],
-                                       exclusion_mask=v['ExclusionMask'],
-                                       properties_mask=v['PropertiesMask'],
-                                       block_size=self.scaled_size) for v in block_definitions[self.block_type]['mountpoints']]
-
+    
     @cached_property
-    def scaled_size(self) -> float:
+    def cube_size(self) -> float:
+        return block_definitions[self.block_type]['cube_size']
+    
+    @cached_property
+    def size(self) -> Vec:
+        return Vec.from_json(block_definitions[self.block_type]['size'])
+    
+    @cached_property
+    def mass(self) -> float:
+        return float(block_definitions[self.block_type]['mass'])
+    
+    @cached_property
+    def scaled_size(self) -> Vec:
         return self.size.scale(_blocks_sizes[self.cube_size])
 
     @cached_property
     def volume(self) -> float:
         return self.scaled_size.bbox()
+    
+    @cached_property
+    def mountpoints(self) -> List[MountPoint]:
+        return [MountPoint(face=v['Normal'],
+                           start=v['Start'],
+                           end=v['End'],
+                           exclusion_mask=v['ExclusionMask'],
+                           properties_mask=v['PropertiesMask'],
+                           block_size=self.scaled_size) for v in block_definitions[self.block_type]['mountpoints']]
 
     def __str__(self) -> str:
         return f'{self.block_type} at {self.position}; OF {self.orientation_forward}; OU {self.orientation_up}'
 
     def __repr__(self) -> str:
-        return str(self.__dict__)
+        return str(self)
 
     def duplicate(self,
                   new_pos: Vec) -> "Block":
@@ -115,6 +127,9 @@ class IntersectionException(Exception):
 
 
 class Structure:
+    __slots__ = ['origin_coords', 'orientation_forward', 'orientation_up', 'grid_size', '_blocks',
+                 '_has_intersections', '_scaled_arr', '_arr']
+    
     def __init__(self, origin: Vec,
                  orientation_forward: Vec,
                  orientation_up: Vec,
@@ -133,27 +148,31 @@ class Structure:
         self.grid_size = grid_size
 
         self._blocks: Dict[Tuple(int, int, int), Block] = {}
+        self._has_intersections: bool = None
+        self._scaled_arr: npt.NDArray[np.uint32] = None
+        self._arr: npt.NDArray[np.uint32] = None
 
     def add_block(self,
                   block: Block,
-                  grid_position: Tuple[int, int, int],
-                  exit_on_duplicates: bool = False) -> None:
+                  grid_position: Tuple[int, int, int]) -> None:
         """Add a block to the structure.
 
         Args:
             block (Block): The block to add.
-        grid_position (Tuple[int, int, int]): The position in the grid at which the block is placed. Obtained from `Vec.to_tuple()`.
-        exit_on_duplicates (bool): Flag to check for existing blocks when adding new ones. May raise an `IntersectionException`.
+            grid_position (Tuple[int, int, int]): The position in the grid at which the block is placed. Obtained from `Vec.to_tuple()`.
+            exit_on_duplicates (bool): Flag to check for existing blocks when adding new ones. May raise an `IntersectionException`.
 
         Raises:
             IntersectionException: Raised if an intersection with another block occurrs.
         """
         i, j, k = grid_position
         block.position = Vec.v3i(i, j, k)
-        if exit_on_duplicates and (i, j, k) in self._blocks.keys():
-            raise IntersectionException
+        
+        if grid_position in self._blocks.keys():
+            self._has_intersections = True
+        
         self._blocks[(i, j, k)] = block
-
+    
     @property
     def _max_dims(self) -> Tuple[int, int, int]:
         """Compute the maximum dimension of the Structure.
@@ -196,12 +215,14 @@ class Structure:
         Returns:
             npt.NDArray[np.uint32]: The 3D NumPy array.
         """
-        arr = np.zeros(shape=Vec.from_tuple(self._max_dims).add(v=self.grid_size).as_tuple(), dtype=np.uint32)
-        for i, j, k in self._blocks.keys():
-            block = self._blocks[(i, j, k)]
-            r = block.scaled_size
-            arr[i:i + r.x, j:j + r.y, k:k + r.z] = list(block_definitions.keys()).index(block.block_type) + 1
-        return arr
+        if self._scaled_arr is None:
+            self._scaled_arr = np.zeros(shape=Vec.from_tuple(self._max_dims).add(v=self.grid_size).as_tuple(), dtype=np.uint32)
+            for (i, j, k), block in self._blocks.items():
+                r = block.scaled_size
+                if np.sum(self._scaled_arr[i:i + r.x, j:j + r.y, k:k + r.z]) != 0:
+                    self._has_intersections = True
+                self._scaled_arr[i:i + r.x, j:j + r.y, k:k + r.z] = list(block_definitions.keys()).index(block.block_type) + 1
+        return self._scaled_arr
 
     @property
     def as_grid_array(self) -> npt.NDArray[np.uint32]:
@@ -211,12 +232,36 @@ class Structure:
         Returns:
             npt.NDArray[np.uint32]: The 3D NumPy grid-sized array.
         """
-        arr = np.zeros(shape=Vec.from_tuple(self._max_dims).scale(v=1 / self.grid_size).to_veci().add(v=1).as_tuple(), dtype=np.uint32)
-        for coords, block in self._blocks.items():
-            idx = Vec.from_tuple(coords).scale(v=1 / self.grid_size).to_veci().as_tuple()
-            arr[idx] = list(block_definitions.keys()).index(block.block_type) + 1
-        return arr
+        if self._arr is None:
+            self._arr = np.zeros(shape=Vec.from_tuple(self._max_dims).scale(v=1 / self.grid_size).to_veci().add(v=1).as_tuple(), dtype=np.uint32)
+            for r, block in self._blocks.items():
+                r = Vec.from_tuple(r).scale(v=1 / self.grid_size).to_veci().as_tuple()
+                if np.sum(self._arr[r]) != 0:
+                    self._has_intersections = True
+                self._arr[r] = list(block_definitions.keys()).index(block.block_type) + 1
+        return self._arr
 
+    @property
+    def has_intersections(self) -> bool:
+        """Check if the Structure contains an intersection between blocks.
+
+        Returns:
+            bool: Whether there is an intersection.
+        """
+        if self._has_intersections is None:
+            _ = self.as_array
+            if self._has_intersections is None:
+                self._has_intersections = False
+        return self._has_intersections
+    
+    @property
+    def total_volume(self) -> float:
+        return self.grid_size * grid_to_coords * sum([b.volume for b in self._blocks.values()])
+    
+    @property
+    def mass(self) -> float:
+        return np.round(sum([b.mass for b in self._blocks.values()]), 2)
+    
     def sanify(self) -> None:
         """Correct the structure's blocks to be >=0 on every axis."""
         min_x, min_y, min_z = self._min_dims
@@ -227,6 +272,8 @@ class Structure:
             block.position = self.origin_coords.sum(new_pos)
             updated_blocks[new_pos.as_tuple()] = block
         self._blocks = updated_blocks
+        self._scaled_arr = None
+        self._arr = None
 
     def update(self, origin: Vec,
                orientation_forward: Vec,

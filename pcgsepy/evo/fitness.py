@@ -28,92 +28,79 @@ x = np.linspace(0, 10, int(10 / 0.005))
 mami_max = float(np.max(mami_es.evaluate(x)))
 
 
-def bounding_box_fitness(cs: CandidateSolution,
-                         extra_args: Dict[str, Any]) -> float:
+def bounding_box_fitness(cs: CandidateSolution) -> float:
     """Measure how close the structure fits in the bounding box.
     Penalizes in both ways.
     Normalized in [0,1].
 
     Args:
         cs (CandidateSolution): The candidate solution.
-        extra_args (Dict[str, Any]): Extra arguments.
 
     Returns:
         float: The fitness value.
     """
-    x, y, z = cs.content.as_array().shape
+    x, y, z = cs.content.as_array.shape
     f = np.clip((BBOX_X - abs(BBOX_X - x)) / BBOX_X, 0, 1)
     f += np.clip((BBOX_Y - abs(BBOX_Y - y)) / BBOX_Y, 0, 1)
     f += np.clip((BBOX_Z - abs(BBOX_Z - z)) / BBOX_Z, 0, 1)
     return f[0] / 3
 
 
-def box_filling_fitness(cs: CandidateSolution,
-                        extra_args: Dict[str, Any]) -> float:
+def box_filling_fitness(cs: CandidateSolution) -> float:
     """Measures how much of the total volume is filled with blocks.
     Normalized in [0,1].
 
     Args:
         cs (CandidateSolution): The candidate solution.
-        extra_args (Dict[str, Any]): Extra arguments.
 
     Returns:
         float: The fitness value.
     """
-    return tovo_es.evaluate(sum([b.volume for b in cs.content._blocks.values()]) / math.prod(cs.content.as_array().shape))[0] / tovo_max
+    return tovo_es.evaluate(sum([b.volume for b in cs.content._blocks.values()]) / math.prod(cs.content.as_array.shape))[0] / tovo_max
 
 
-def func_blocks_fitness(cs: CandidateSolution,
-                        extra_args: Dict[str, Any]) -> float:
+def func_blocks_fitness(cs: CandidateSolution) -> float:
     """Measures how much of the total blocks is functional blocks.
     Normalized in [0,1].
 
     Args:
         cs (CandidateSolution): The candidate solution.
-        extra_args (Dict[str, Any]): Extra arguments.
 
     Returns:
         float: The fitness value.
     """
     fu, to = 0., 0.
     for b in cs.content._blocks.values():
-        fu += b.volume if not b.block_type.startswith(
-            'MyObjectBuilder_CubeBlock_') else 0
+        fu += b.volume if not b.block_type.startswith('MyObjectBuilder_CubeBlock_') else 0
         to += b.volume
     return futo_es.evaluate(fu / to)[0] / futo_max
 
 
-def mame_fitness(cs: CandidateSolution,
-                 extra_args: Dict[str, Any]) -> float:
+def mame_fitness(cs: CandidateSolution) -> float:
     """Measures the proportions of the largest and medium axis.
     Normalized in [0,1].
 
     Args:
         cs (CandidateSolution): The candidate solution.
-        extra_args (Dict[str, Any]): Extra arguments.
 
     Returns:
         float: The fitness value.
     """
-    largest_axis, medium_axis, _ = reversed(
-        sorted(list(cs.content.as_array().shape)))
+    largest_axis, medium_axis, _ = reversed(sorted(list(cs.content.as_array.shape)))
     return mame_es.evaluate(largest_axis / medium_axis)[0] / mame_max
 
 
-def mami_fitness(cs: CandidateSolution,
-                 extra_args: Dict[str, Any]) -> float:
+def mami_fitness(cs: CandidateSolution) -> float:
     """Measures the proportions of the largest and smallest axis.
     Normalized in [0,1]
 
     Args:
         cs (CandidateSolution): The candidate solution.
-        extra_args (Dict[str, Any]): Extra arguments.
 
     Returns:
         float: The fitness value.
     """
-    largest_axis, _, smallest_axis = reversed(
-        sorted(list(cs.content.as_array().shape)))
+    largest_axis, _, smallest_axis = reversed(sorted(list(cs.content.as_array.shape)))
     return mami_es.evaluate(largest_axis / smallest_axis)[0] / mami_max
 
 
@@ -144,10 +131,8 @@ class Fitness:
         return f'Fitness {self.name} (in {self.bounds})'
 
     def __call__(self,
-                 cs: CandidateSolution,
-                 extra_args: Dict[str, Any]) -> float:
-        return self.f(cs=cs,
-                      extra_args=extra_args)
+                 cs: CandidateSolution) -> float:
+        return self.f(cs=cs)
 
     def to_json(self) -> Dict[str, Any]:
         return {

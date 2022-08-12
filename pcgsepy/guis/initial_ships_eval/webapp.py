@@ -279,7 +279,7 @@ def general_callback(slider_value, prev_n_clicks, next_n_clicks,
                                                     }))
     # create content plot...
     hull_builder.add_external_hull(structure=current_spaceship.content)
-    content = current_spaceship.content.as_grid_array()
+    content = current_spaceship.content.as_grid_array
     arr = np.nonzero(content)
     x, y, z = arr
     cs = [content[i, j, k] for i, j, k in zip(x, y, z)]
@@ -301,7 +301,7 @@ def general_callback(slider_value, prev_n_clicks, next_n_clicks,
                       plot_bgcolor='rgba(0,0,0,0)')
     
     spaceship_properties = [
-        dcc.Markdown(children=f'**Size**: {current_spaceship.content.as_grid_array().shape}',
+        dcc.Markdown(children=f'**Size**: {current_spaceship.content.as_grid_array.shape}',
                      className='properties-text'),
         dcc.Markdown(children=f'**Number of blocks**: {current_spaceship.n_blocks}',
                      className='properties-text')        

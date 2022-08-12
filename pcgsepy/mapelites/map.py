@@ -22,13 +22,12 @@ from ..config import (ALIGNMENT_INTERVAL, BIN_POP_SIZE, CS_MAX_AGE, EPSILON_F,
 from ..evo.fitness import (Fitness, box_filling_fitness, func_blocks_fitness,
                            mame_fitness, mami_fitness)
 from ..evo.genops import EvoException
-from ..fi2pop.utils import (create_new_pool,
-                            prepare_dataset, subdivide_solutions)
+from ..fi2pop.utils import (create_new_pool, subdivide_solutions)
 from ..hullbuilder import HullBuilder
 from ..lsystem.lsystem import LSystem
 from ..lsystem.solution import CandidateSolution
 from ..lsystem.structure_maker import LLStructureMaker
-from ..nn.estimators import GaussianEstimator, MLPEstimator, QuantileEstimator, train_estimator
+from ..nn.estimators import GaussianEstimator, MLPEstimator, QuantileEstimator, train_estimator, prepare_dataset
 from ..structure import Structure
 from .behaviors import BehaviorCharacterization
 from .bin import MAPBin
@@ -291,7 +290,7 @@ class MAPElites:
                         with th.no_grad():
                             # set fitness to (3,) array (min, median, max)
                             cs.fitness = self.estimator(th.tensor(cs.representation).float().unsqueeze(0)).numpy()[0]
-                            return cs.fitness[self.infeas_fitness_idx]  # set c_itness to median by default
+                            return cs.fitness[self.infeas_fitness_idx]  # set c_fitness to median by default
                     else:
                         cs.fitness = [EPSILON_F, EPSILON_F, EPSILON_F]
                         return cs.fitness[self.infeas_fitness_idx]
@@ -315,19 +314,14 @@ class MAPElites:
             for i in iterations:
                 solutions = self.lsystem.apply_rules(starting_strings=['head', 'body', 'tail'],
                                                      iterations=[1, N_ITERATIONS, 1],
-                                                     create_structures=False,
+                                                     create_structures=True,
                                                      make_graph=False)
                 subdivide_solutions(lcs=solutions,
                                     lsystem=self.lsystem)
                 for cs in solutions:
-                    if cs._content is None:
-                        cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
-                                                    extra_args={
-                                                        'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                        }))
                     if cs.is_feasible and len(feasible_pop) < pops_size and cs not in feasible_pop:
                         if self.hull_builder is not None:
-                                self.hull_builder.add_external_hull(structure=cs._content)
+                            self.hull_builder.add_external_hull(structure=cs._content)
                         cs.c_fitness = self.compute_fitness(cs=cs,
                                                             extra_args={
                                                                 'alphabet': self.lsystem.ll_solver.atoms_alphabet
@@ -336,8 +330,6 @@ class MAPElites:
                         cs.age = CS_MAX_AGE
                         feasible_pop.append(cs)
                     elif not cs.is_feasible and len(infeasible_pop) < pops_size and cs not in feasible_pop:
-                        if self.hull_builder is not None:
-                                self.hull_builder.add_external_hull(structure=cs._content)
                         cs.c_fitness = self.compute_fitness(cs=cs,
                                                             extra_args={
                                                                 'alphabet': self.lsystem.ll_solver.atoms_alphabet
@@ -504,17 +496,18 @@ class MAPElites:
                                                generation=gen,
                                                n_individuals=BIN_POP_SIZE,
                                                minimize=minimize)
+                    
+                    # set and low-level strings
+                    new_pool = list(map(lambda cs: self.lsystem._add_ll_strings(cs=cs), new_pool))
+                    new_pool = list(map(lambda cs: self.lsystem._set_structure(cs=cs, make_graph=False), new_pool))
+                    
                     subdivide_solutions(lcs=new_pool,
                                         lsystem=self.lsystem)
-                    for cs in new_pool:
-                        if cs._content is None:
-                            cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
-                                                            extra_args={
-                                                                'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                                                }))
-                        # add hull
-                        if self.hull_builder is not None:
+                    # add hull
+                    if self.hull_builder is not None:
+                        for cs in new_pool:
                             self.hull_builder.add_external_hull(cs.content)
+                    # assign fitness
                     generated.extend(Parallel(n_jobs=-1, prefer="threads")(delayed(self._assign_fitness)(cs) for cs in new_pool))
                 except EvoException:
                     pass
@@ -577,7 +570,7 @@ class MAPElites:
             self._age_bins(diff=1)
 
     def _interactive_step(self,
-                          bin_idxs: List[Tuple[int, int]],
+                          bin_idxs: List[List[int]],
                           gen: int = 0) -> None:
         """Applies an interactive step.
 
@@ -585,8 +578,9 @@ class MAPElites:
             bin_idxs (List[Tuple[int, int]]): The indexes of the bins selected.
             gen (int, optional): The current number of generations. Defaults to 0.
         """
+        bin_idxs = [tuple(b) for b in bin_idxs]
         self._age_bins()
-        chosen_bins = [self.bins[bin_idx[0], bin_idx[1]] for bin_idx in bin_idxs]
+        chosen_bins = [self.bins[bin_idx] for bin_idx in bin_idxs]
         f_pop, i_pop = [], []
         for chosen_bin in chosen_bins:
             if self.enforce_qnt:
@@ -601,11 +595,11 @@ class MAPElites:
             # keep track of expanded indexes only if they have also been selected
             expanded_idxs = set(bin_idxs) - set(expanded_idxs)
             if expanded_idxs:
-                for i, (m, n) in enumerate(expanded_idxs):
-                    expanded_idxs.append((m + i + 1, n + i))
-                    expanded_idxs.append((m + i, n + i + 1))
-                    expanded_idxs.append((m + i + 1, n + i + 1))
-            expanded_idxs = set(expanded_idxs) - set(bin_idxs)
+                for i, (m, n) in enumerate(list(expanded_idxs)):
+                    expanded_idxs.add((m + i + 1, n + i))
+                    expanded_idxs.add((m + i, n + i + 1))
+                    expanded_idxs.add((m + i + 1, n + i + 1))
+            expanded_idxs = list(expanded_idxs - set(bin_idxs))
         else:
             self._age_bins(diff=1)
             expanded_idxs = []
@@ -900,16 +894,14 @@ class MAPElites:
                 for pop in [b._feasible, b._infeasible]:
                     for cs in pop:
                         cs._content = None
-                        cs.set_content(get_structure(string=self.lsystem.hl_to_ll(cs=cs).string,
-                                                        extra_args={
-                                                            'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                                            }))
-                        if self.hull_builder is not None:
-                            self.hull_builder.add_external_hull(structure=cs.content)
-                        if kwargs.get('sym_axis', None) is not None:
-                            enforce_symmetry(structure=cs.content,
-                                             axis=kwargs.get('sym_axis', None),
-                                             upper=kwargs.get('sym_upper', None))
+                        cs = self.lsystem._set_structure(cs=self.lsystem._add_ll_strings(cs=cs), make_graph=False)
+                        if cs.is_feasible:
+                            if self.hull_builder is not None:
+                                self.hull_builder.add_external_hull(structure=cs.content)
+                            if kwargs.get('sym_axis', None) is not None:
+                                enforce_symmetry(structure=cs.content,
+                                                axis=kwargs.get('sym_axis', None),
+                                                upper=kwargs.get('sym_upper', None))
                             
     
     def to_json(self) -> Dict[str, Any]:

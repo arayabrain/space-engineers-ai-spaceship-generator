@@ -77,7 +77,7 @@ def get_default_lsystem(used_ll_blocks: List[str]) -> LSystem:
                        for k in hl_atoms})
     # create the low-level alphabet
     ll_alphabet = {k: v for k, v in common_alphabet.items()}
-    ll_alphabet.update({k: {"action": AtomAction.PLACE, "args": []}
+    ll_alphabet.update({k: {"action": AtomAction.PLACE, "args": [k]}
                        for k in used_ll_blocks})
     # create the rulesets
     hl_rules = RuleMaker(ruleset='hlrules').get_rules()

@@ -49,7 +49,7 @@ def mame(cs: CandidateSolution) -> float:
     Returns:
         float: The value of this behavior characterization.
     """
-    volume = cs.content.as_grid_array().shape
+    volume = cs.content.as_grid_array.shape
     largest_axis, medium_axis, _ = reversed(sorted(list(volume)))
     return largest_axis / medium_axis
 
@@ -63,7 +63,7 @@ def mami(cs: CandidateSolution) -> float:
     Returns:
         float: The value of this behavior characterization.
     """
-    volume = cs.content.as_grid_array().shape
+    volume = cs.content.as_grid_array.shape
     largest_axis, _, smallest_axis = reversed(sorted(list(volume)))
     return largest_axis / smallest_axis
 
@@ -77,7 +77,7 @@ def avg_ma(cs: CandidateSolution) -> float:
     Returns:
         float: The value of this behavior characterization.
     """
-    volume = cs.content.as_grid_array().shape
+    volume = cs.content.as_grid_array.shape
     largest_axis, medium_axis, smallest_axis = reversed(sorted(list(volume)))
     return ((largest_axis / medium_axis) + (largest_axis / smallest_axis)) / 2
 

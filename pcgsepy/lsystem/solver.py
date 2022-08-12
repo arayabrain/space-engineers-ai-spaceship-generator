@@ -52,9 +52,6 @@ class LSolver:
         for lev in sat.keys():
             for c in self.constraints:
                 if c.when == when and c.level == lev:
-                    if c.needs_ll and self.translator and cs.ll_string == '':
-                        cs.ll_string = self.translator.transform(string=cs.string)
-                        cs.ll_string = LLParser(rules=self.ll_rules).expand(string=cs.ll_string)
                     s = c.constraint(cs=cs,
                                      extra_args=c.extra_args)
                     logging.getLogger('base-logger').debug(msg=f'\t{c}:\t{s}')

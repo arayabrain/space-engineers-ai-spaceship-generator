@@ -1,28 +1,38 @@
+import re
 from abc import ABC, abstractmethod
+from typing import Any, Dict, List
+
 import numpy as np
-from random import random, randint
-from typing import Any, Dict, List, Optional
-
+from pcgsepy.config import PL_HIGH, PL_LOW
 from pcgsepy.lsystem.actions import Rotations
-
-from ..config import PL_LOW, PL_HIGH
-from .rules import StochasticRules
+from pcgsepy.lsystem.rules import StochasticRules
 
 
 class LParser(ABC):
-
     def __init__(self,
                  rules: StochasticRules):
+        """Create a parser.
+
+        Args:
+            rules (StochasticRules): The set of expansion rules.
+        """
         self.rules = rules
 
     @abstractmethod
     def expand(self,
                string: str) -> str:
+        """Expand a string using the parser rules.
+
+        Args:
+            string (str): The string to expand.
+
+        Returns:
+            str: The expanded string.
+        """
         pass
 
 
 class HLParser(LParser):
-
     def expand(self,
                string: str) -> str:
         i = 0
@@ -162,7 +172,7 @@ class HLtoMLTranslator:
                 if a != ']' and atoms_list[i + 1]['atom'] == '[':
                     last_parents.append(a)
                 if a == ']' and atoms_list[i + 1].get('n', None) is not None:
-                    last_parents.pop(-1)                
+                    last_parents.pop(-1)
 
         return new_string
 
@@ -226,7 +236,6 @@ class HLtoMLTranslator:
 
 
 class LLParser(LParser):
-
     def expand(self,
                string: str) -> str:
         i = 0
@@ -239,77 +248,3 @@ class LLParser(LParser):
                     break
             i += 1
         return string
-
-
-class TreeNode:
-
-    def __init__(self,
-                 name: str,
-                 param: Optional[int] = None,
-                 parent: Optional['TreeNode'] = None):
-        self.name = name
-        self.param = param
-        self.parent = parent
-        self.childs = []
-
-    def __str__(self) -> str:
-        s = self.name
-        s += f'({self.param})' if self.param else ''
-        s += ''.join([
-            f'[{c}]' if c.name.startswith('Rot') else str(c)
-            for c in self.childs
-        ])
-        return s
-
-    def __repr__(self) -> str:
-        return f'{self.name}({self.param if self.param else ""}):{len(self.childs)}'
-
-    def __eq__(self, other: 'TreeNode') -> bool:
-        return str(self) == str(other)
-
-    def pick_random_subnode(self,
-                            p: float,
-                            has_n: bool = False) -> Optional['TreeNode']:
-        r = random() > p
-        if (r and not has_n and self.param is None) or (r and has_n and
-                                                        self.param is not None):
-            return self
-        else:
-            if self.childs:
-                return self.childs[randint(0,
-                                           len(self.childs) -
-                                           1)].pick_random_subnode(p=p,
-                                                                   has_n=has_n)
-            else:
-                return None
-
-    def n_mutable_childs(self) -> int:
-        n = 1 if self.param else 0
-        if self.childs:
-            return n + sum([c.n_mutable_childs() for c in self.childs])
-        else:
-            return n
-
-
-def string_to_tree(string: str,
-                   translator: HLtoMLTranslator) -> TreeNode:
-    list_string = translator._string_as_list(string)
-
-    nodes = [TreeNode(name=list_string[0]['atom'], param=list_string[0]['n'])]
-    parents = []
-
-    for i, string in enumerate(list_string[1:]):
-        if string.get('n', None) is not None or string['atom'].startswith('Rot'):
-            new_node = TreeNode(name=string['atom'],
-                                param=string.get('n', None),
-                                parent=nodes[-1])
-            nodes[-1].childs.append(new_node)
-            nodes.append(new_node)
-        elif string['atom'] == '[':
-            parents.append(nodes[-1])
-        elif string['atom'] == ']':
-            p = parents.pop(-1)
-            i = nodes.index(p)
-            nodes = nodes[:i + 1]
-
-    return nodes[0]

@@ -7,7 +7,10 @@ from ..structure import Structure
 
 
 class CandidateSolution:
-
+    __slots__ = ['string', '_content', 'age', 'b_descs', 'c_fitness', 'fitness', 'hls_mod',
+                 'is_feasible', 'll_string', 'n_feas_offspring', 'n_offspring', 'ncv',
+                 'parents', 'representation']
+    
     def __init__(self,
                  string: str,
                  content: Optional[Structure] = None):
@@ -31,7 +34,7 @@ class CandidateSolution:
         return f'{self.string}; fitness: {self.c_fitness}; is_feasible: {self.is_feasible}'
 
     def __repr__(self) -> str:
-        return str(self.__dict__)
+        return str(self)
 
     def __eq__(self,
                other: 'CandidateSolution') -> bool:
@@ -44,23 +47,31 @@ class CandidateSolution:
 
     def set_content(self,
                     content: Structure):
+        """Set the content of the solution.
+
+        Args:
+            content (Structure): The content.
+
+        Raises:
+            Exception: Raised if the solution already has a content set.
+        """
         if self._content:
             raise Exception('Structure already exists for this CandidateSolution.')
         else:
             self._content = content
 
-    @cached_property
+    @property
     def content(self) -> Structure:
         if self._content:
             return self._content
         else:
             raise NotImplementedError('Structure has not been set yet.')
     
-    @cached_property
+    @property
     def n_blocks(self) -> int:
         return len(self.content._blocks)
     
-    @cached_property
+    @property
     def size(self) -> Tuple[int, int, int]:
         return self._content._max_dims
     
@@ -93,8 +104,8 @@ class CandidateSolution:
         cs.hls_mod = my_args['hls_mod']
         cs.is_feasible = my_args['is_feasible']
         cs.ll_string = my_args['ll_string']
-        cs.n_feas_offsprings = my_args['n_feas_offsprings']
-        cs.n_offsprings = my_args['n_offsprings']
+        cs.n_feas_offspring = my_args['n_feas_offspring']
+        cs.n_offspring = my_args['n_offspring']
         cs.ncv = my_args['ncv']
         cs.parents = [CandidateSolution.from_json(args=p) for p in my_args['parents']]
         cs.representation = my_args['representation']
@@ -111,7 +122,7 @@ def string_merging(ls: List[str]) -> str:
         str: The merged string.
     """
     # any additional control on alignment etc. should be done here.
-    return ''.join(cs.string for cs in ls)
+    return ''.join(s for s in ls)
 
 
 def merge_solutions(lcs: List[CandidateSolution],

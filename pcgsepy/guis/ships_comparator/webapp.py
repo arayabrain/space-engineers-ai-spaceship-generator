@@ -282,7 +282,7 @@ def parse_contents(filename,
 
 
 def get_content_plot(spaceship: CandidateSolution) -> go.Figure:
-    content = spaceship.content.as_grid_array()
+    content = spaceship.content.as_grid_array
     arr = np.nonzero(content)
     x, y, z = arr
     cs = [content[i, j, k] for i, j, k in zip(x, y, z)]

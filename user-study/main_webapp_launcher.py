@@ -20,6 +20,11 @@ from pcgsepy.guis.main_webapp.webapp import (app, set_app_layout,
 from pcgsepy.mapelites.behaviors import (BehaviorCharacterization, avg_ma,
                                          mame, mami, symmetry)
 from pcgsepy.setup_utils import get_default_lsystem, setup_matplotlib
+from pcgsepy.mapelites.buffer import Buffer, mean_merge
+from pcgsepy.mapelites.map import MAPElites
+from pcgsepy.mapelites.emitters import ContextualBanditEmitter
+from pcgsepy.nn.estimators import MLPEstimator
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--mapelites_file", help="Location of the MAP-Elites object",
@@ -98,17 +103,28 @@ behavior_descriptors_names = [x.name for x in behavior_descriptors]
 available_mapelites = ['mapelites_random.json',
                        'mapelites_prefmatrix.json', 'mapelites_contbandit.json']
 
-if args.mapelites_file:
-    with open(args.mapelites_file, 'r') as f:
-        mapelites = json_loads(f.read())
-else:
-    mapelites_file = random.choice(available_mapelites)
-    with open(mapelites_file, 'r') as f:
-        mapelites = json_loads(f.read())
+# if args.mapelites_file:
+#     with open(args.mapelites_file, 'r') as f:
+#         mapelites = json_loads(f.read())
+# else:
+#     mapelites_file = random.choice(available_mapelites)
+#     with open(mapelites_file, 'r') as f:
+#         mapelites = json_loads(f.read())
+
+buffer = Buffer(merge_method=mean_merge)
+mapelites = MAPElites(lsystem=lsystem,
+                      feasible_fitnesses=feasible_fitnesses,
+                      estimator=MLPEstimator(xshape=len(feasible_fitnesses),
+                                             yshape=1),
+                      buffer=buffer,
+                      behavior_descriptors=behavior_descriptors,
+                      n_bins=(8,8),
+                      emitter=ContextualBanditEmitter())
 
 set_callback_props(mapelites=mapelites)
 
 set_app_layout(behavior_descriptors_names=behavior_descriptors_names,
+               mapelites=mapelites,
                dev_mode=args.dev_mode)
 
 serve(app.server,

@@ -1,10 +1,12 @@
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 import torch as th
 import torch.nn.functional as F
-from pcgsepy.config import EPSILON_F
+from pcgsepy.config import EPSILON_F, RESCALE_INFEAS_FITNESS
 from sklearn.gaussian_process import GaussianProcessRegressor
+
+from pcgsepy.lsystem.solution import CandidateSolution
 
 
 def quantile_loss(predicted: th.Tensor,
@@ -245,6 +247,27 @@ class MLPEstimator(th.nn.Module):
         mlpe.load_state_dict(eval(my_args['model_params']))
         mlpe.load_state_dict(eval(my_args['optimizer']))
         return mlpe
+
+
+def prepare_dataset(f_pop: List[CandidateSolution]) -> Tuple[List[List[float]]]:
+    """Prepare the dataset for the estimator.
+
+    Args:
+        f_pop (List[CandidateSolution]): The Feasible population.
+
+    Returns:
+        Tuple[List[List[float]]]: Inputs and labels to use during training.
+    """
+    xs, ys = [], []
+    for cs in f_pop:
+        y = cs.c_fitness
+        for parent in cs.parents:
+            if not parent.is_feasible:
+                x = parent.representation
+                parent.n_feas_offspring += 1
+                xs.append(x)
+                ys.append(y if not RESCALE_INFEAS_FITNESS else y * (EPSILON_F + (parent.n_feas_offspring / parent.n_offspring)))
+    return xs, ys
 
 
 def train_estimator(estimator: Union[MLPEstimator, QuantileEstimator],

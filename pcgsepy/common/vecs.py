@@ -158,10 +158,7 @@ class Vec:
         Returns:
             Union[npt.NDArray[np.int32], npt.NDArray[np.float32]]: The vector as NumPy array.
         """
-        if self.z is not None:
-            return np.asarray([self.x, self.y, self.z])
-        else:
-            return np.asarray([self.x, self.y])
+        return np.asarray([self.x, self.y]) if self.z is None else np.asarray([self.x, self.y, self.z])
 
     def as_tuple(self) -> Union[Tuple[int, int], Tuple[int, int, int]]:
         """Convert the vector to a tuple.
@@ -169,10 +166,7 @@ class Vec:
         Returns:
             Union[Tuple[int, int], Tuple[int, int, int]]: The vector as tuple.
         """
-        if self.z is not None:
-            return (self.x, self.y, self.z)
-        else:
-            return (self.x, self.y)
+        return (self.x, self.y) if self.z is None else (self.x, self.y, self.z)
 
     def to_veci(self) -> 'Vec':
         """Convert the current vector to int type.
@@ -182,7 +176,7 @@ class Vec:
         """
         return Vec(x=np.rint(self.x).astype(np.int32),
                    y=np.rint(self.y).astype(np.int32),
-                   z=np.rint(self.z).astype(np.int32) if self.z else None)
+                   z=np.rint(self.z).astype(np.int32) if self.z is not None else None)
 
     def round(self,
               n: int = 1) -> 'Vec':
@@ -196,7 +190,7 @@ class Vec:
         """
         return Vec(x=np.round(self.x, n),
                    y=np.round(self.y, n),
-                   z=np.round(self.z, n))
+                   z=np.round(self.z, n) if self.z is not None else None)
     
     @cached_property
     def max(self) -> Union[int, float]:
@@ -224,7 +218,7 @@ class Vec:
         """
         return Vec(x=abs(self.x),
                    y=abs(self.y),
-                   z=abs(self.z) if self.z else None)
+                   z=abs(self.z) if self.z is not None else None)
 
     def normalize(self) -> "Vec":
         """Normalize the vector (sum of elements equals to 1).
@@ -235,7 +229,7 @@ class Vec:
         m = self.max()
         return Vec(x=self.x / m,
                    y=self.y / m,
-                   z=self.z / m if self.z else None)
+                   z=self.z / m if self.z is not None else None)
 
     def invert(self) -> "Vec":
         """Compute the inverse value of the vector.
@@ -245,7 +239,7 @@ class Vec:
         """
         return Vec(x=1 / self.x,
                    y=1 / self.y,
-                   z=1 / self.z if self.z else None)
+                   z=1 / self.z if self.z is not None else None)
 
     def bbox(self,
              ignore_zero=True) -> Union[float, int]:
@@ -280,7 +274,7 @@ class Vec:
         """
         return Vec(x=self.x + v,
                    y=self.y + v,
-                   z=self.z + v if self.z else None)
+                   z=self.z + v if self.z is not None else None)
     
     def sum(self,
             other: "Vec") -> "Vec":
@@ -357,7 +351,7 @@ class Vec:
         """
         return Vec(x=self.x * v,
                    y=self.y * v,
-                   z=self.z * v if self.z else None)
+                   z=self.z * v if self.z is not None else None)
 
     def opposite(self) -> "Vec":
         """Invert the direction along all dimensions.

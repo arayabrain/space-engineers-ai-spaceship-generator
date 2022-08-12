@@ -1,13 +1,12 @@
-from typing import List, Tuple
+from typing import List
 
-from ..config import (EPSILON_F, GEN_PATIENCE, MAX_STRING_LEN, POP_SIZE,
-                      RESCALE_INFEAS_FITNESS)
-from ..evo.genops import (EvoException, crossover, mutate,
-                          roulette_wheel_selection)
-from ..lsystem.constraints import ConstraintLevel, ConstraintTime
-from ..lsystem.lsystem import LSystem
-from ..lsystem.parser import LLParser
-from ..lsystem.solution import CandidateSolution
+from pcgsepy.config import GEN_PATIENCE, MAX_STRING_LEN, POP_SIZE
+from pcgsepy.evo.genops import (EvoException, crossover, mutate,
+                                roulette_wheel_selection)
+from pcgsepy.lsystem.constraints import ConstraintLevel, ConstraintTime
+from pcgsepy.lsystem.lsystem import LSystem
+from pcgsepy.lsystem.solution import CandidateSolution
+from pcgsepy.structure import IntersectionException
 
 
 def subdivide_solutions(lcs: List[CandidateSolution],
@@ -21,30 +20,29 @@ def subdivide_solutions(lcs: List[CandidateSolution],
     """
     lsystem.hl_solver.set_constraints(cs=lsystem.all_hl_constraints)
     lsystem.ll_solver.set_constraints(cs=lsystem.all_ll_constraints)
-    too_big_cs = []
+    removable = []
     for i, cs in enumerate(lcs):
         try:
             for t in [ConstraintTime.DURING, ConstraintTime.END]:
                 sat = lsystem.hl_solver._check_constraints(cs=cs,
-                                                        when=t,
-                                                        keep_track=True)
+                                                           when=t,
+                                                           keep_track=True)
                 cs.is_feasible &= sat[ConstraintLevel.HARD_CONSTRAINT][0]
                 cs.ncv += sat[ConstraintLevel.HARD_CONSTRAINT][1]
-                cs.ncv += sat[ConstraintLevel.SOFT_CONSTRAINT][1]            
+                cs.ncv += sat[ConstraintLevel.SOFT_CONSTRAINT][1]
             if cs.is_feasible:
-                if cs.ll_string == '':
-                    ml_string = lsystem.hl_solver.translator.transform(string=cs.string)
-                    cs.ll_string = LLParser(rules=lsystem.hl_solver.ll_rules).expand(string=ml_string)
                 for t in [ConstraintTime.DURING, ConstraintTime.END]:
                     sat = lsystem.ll_solver._check_constraints(cs=cs,
-                                                            when=t,
-                                                            keep_track=True)
+                                                               when=t,
+                                                               keep_track=True)
                     cs.is_feasible &= sat[ConstraintLevel.HARD_CONSTRAINT][0]
                     cs.ncv += sat[ConstraintLevel.HARD_CONSTRAINT][1]
                     cs.ncv += sat[ConstraintLevel.SOFT_CONSTRAINT][1]
-        except Exception:
-            too_big_cs.append(i)
-    for i in list(reversed(too_big_cs)):
+        except IntersectionException:
+            pass
+        except MemoryError:
+            removable.append(i)
+    for i in list(reversed(removable)):
         lcs.pop(i)
 
 
@@ -92,15 +90,15 @@ def create_new_pool(population: List[CandidateSolution],
                     except EvoException:
                         pass
                     if o not in pool:
-                        pool.append(o)       
+                        pool.append(o)
         else:
-            raise EvoException('Picked same parents, this should never happen.')
+            raise EvoException(
+                'Picked same parents, this should never happen.')
         if len(pool) == prev_len_pool:
             patience -= 1
         else:
             patience = GEN_PATIENCE
         if patience == 0:
-            # print(f'New Pool creation ran out of patience (current pool size: {len(pool)}.')
             break
     return pool
 
@@ -118,27 +116,4 @@ def reduce_population(population: List[CandidateSolution],
     Returns:
         List[CandidateSolution]: The ordered and culled population.
     """
-    population.sort(key=lambda x: x.c_fitness,
-                    reverse=not minimize)
-    return population[:to]
-
-
-def prepare_dataset(f_pop: List[CandidateSolution]) -> Tuple[List[List[float]]]:
-    """Prepare the dataset for the estimator.
-
-    Args:
-        f_pop (List[CandidateSolution]): The Feasible population.
-
-    Returns:
-        Tuple[List[List[float]]]: Inputs and labels to use during training.
-    """
-    xs, ys = [], []
-    for cs in f_pop:
-        y = cs.c_fitness
-        for parent in cs.parents:
-            if not parent.is_feasible:
-                x = parent.representation
-                parent.n_feas_offspring += 1
-                xs.append(x)
-                ys.append(y if not RESCALE_INFEAS_FITNESS else y * (EPSILON_F + (parent.n_feas_offspring / parent.n_offspring)))
-    return xs, ys
+    return population.sort(key=lambda x: x.c_fitness, reverse=not minimize)[:to]
