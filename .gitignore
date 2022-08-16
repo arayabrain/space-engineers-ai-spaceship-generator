@@ -3,7 +3,6 @@ __pycache__/*
 .virtual_documents/*
 .vscode/*
 *.jupyterlab-workspace
-*.pkl
 *.pyc
 block_definitions.json
 cppn-system/*
