@@ -220,8 +220,7 @@ class MAPElites:
                 if isinstance(self.estimator, GaussianEstimator):
                     return self.estimator.predict(x=np.asarray(cs.fitness)) if self.estimator.is_trained else EPSILON_F
                 elif isinstance(self.estimator, MLPEstimator):
-                    if self.estimator.is_trained:
-                        return self.estimator.predict(cs.representation) if self.estimator.is_trained else EPSILON_F
+                    return self.estimator.predict(cs.representation) if self.estimator.is_trained else EPSILON_F
                 elif isinstance(self.estimator, QuantileEstimator):
                     if self.estimator.is_trained:
                         # set fitness to (3,) array (min, median, max)
@@ -583,8 +582,8 @@ class MAPElites:
         for chosen_bin in chosen_bins:
             if self.enforce_qnt:
                 assert chosen_bin in self._valid_bins(), f'Bin at {chosen_bin.bin_idx} is not a valid bin.'
-            f_pop.extend(*chosen_bin._feasible)
-            i_pop.extend(*chosen_bin._infeasible)
+            f_pop.extend(chosen_bin._feasible)
+            i_pop.extend(chosen_bin._infeasible)
         generated = self._step(populations=[f_pop, i_pop],
                                gen=gen)
         if generated:
@@ -655,7 +654,7 @@ class MAPElites:
                 self._check_res_trigger()
             if self.emitter is not None and self.emitter.requires_post:
                 self.emitter.post_step(bins=self.bins)
-            if bandit is not None:
+            if self.agent is not None:
                 self.agent.reward_bandit(bandit=bandit,
                                          reward=sum([f(self) for f in self.agent_rewards]))
 

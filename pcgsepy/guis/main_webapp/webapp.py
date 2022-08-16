@@ -694,8 +694,8 @@ def _apply_step(mapelites: MAPElites,
         if valid:
             logging.getLogger('webapp').info(msg=f'Started step {gen_counter + 1}...')
             step_progress = 0
-            mapelites._interactive_step(bin_idxs=selected_bins,
-                                        gen=gen_counter)
+            mapelites.interactive_step(bin_idxs=selected_bins,
+                                       gen=gen_counter)
             step_progress += perc_step
             logging.getLogger('webapp').info(msg=f'Completed step {gen_counter + 1} (created {mapelites.n_new_solutions} solutions); running {N_EMITTER_STEPS} additional emitter steps if available...')
             mapelites.n_new_solutions = 0
@@ -1078,8 +1078,9 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                 selected_bins = [[i, j]]
             cs_string = cs_size = cs_n_blocks = cs_age = cs_vol = cs_mass = ''
             if len(selected_bins) > 0:
-                elite = current_mapelites.get_elite(bin_idx=_switch([selected_bins[-1]])[0],
-                                            pop='feasible' if pop_name == 'Feasible' else 'infeasible')
+                elite = get_elite(mapelites=current_mapelites,
+                                  bin_idx=_switch([selected_bins[-1]])[0],
+                                  pop='feasible' if pop_name == 'Feasible' else 'infeasible')
                 cs_string = elite.string
                 cs_size = f'Spaceship size: {elite.size} m'
                 cs_n_blocks = f'Number of blocks: {elite.n_blocks}'

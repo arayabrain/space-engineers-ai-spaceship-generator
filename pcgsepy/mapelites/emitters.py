@@ -572,8 +572,8 @@ class ContextualBanditEmitter(Emitter):
         selected_bins = []
         while fcs < 2 or ics < 2:
             b = bins[sorted_bins[i][0], sorted_bins[i][1]]
-            fcs += b.len('feasible')
-            ics += b.len('infeasible')
+            fcs += len(b._feasible)
+            ics += len(b._infeasible)
             selected_bins.append(b)
             i += 1
         return selected_bins
@@ -745,8 +745,8 @@ class PreferenceBanditEmitter(Emitter):
         selected_bins = []
         while fcs < 2 or ics < 2:
             b = bins[sorted_bins[i][0], sorted_bins[i][1]]
-            fcs += b.len('feasible')
-            ics += b.len('infeasible')
+            fcs += len(b._feasible)
+            ics += len(b._infeasible)
             selected_bins.append(b)
             i += 1
         return selected_bins

@@ -120,13 +120,13 @@ class LSystemModule:
         self.hlsolver.set_constraints(cs=self.hl_constraints)
         self.llsolver.set_constraints(cs=self.ll_constraints)
         logging.getLogger('base-logger').info(f'[{self.name}] Started high level solving...')
-        hl_solutions = self.get_hl_solutions(starting_string=starting_string,
-                                             iterations=iterations)
+        hl_solutions = self._get_hl_solutions(starting_string=starting_string,
+                                              iterations=iterations)
         logging.getLogger('base-logger').debug(f'[{self.name}] Converting HL strings to ML...')
-        ml_strings = self.get_ml_strings([cs.string for cs in hl_solutions])
+        ml_strings = self._get_ml_strings([cs.string for cs in hl_solutions])
         logging.getLogger('base-logger').info(f'[{self.name}] Started low level solving...')
-        _, to_keep = self.get_ll_solutions([CandidateSolution(string=s,
-                                                              content=hl_cs._content) for s, hl_cs in zip(ml_strings, hl_solutions)])
+        _, to_keep = self._get_ll_solutions([CandidateSolution(string=s,
+                                                               content=hl_cs._content) for s, hl_cs in zip(ml_strings, hl_solutions)])
         hl_solutions = [x for x, k in zip(hl_solutions, to_keep) if k]
         return hl_solutions
 

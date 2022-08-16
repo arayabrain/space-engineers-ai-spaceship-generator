@@ -67,7 +67,7 @@ class StochasticRules:
             assert np.isclose(p, 1.), f'Probability must sum to 1: found {p} for `{lhs}`.'
 
     def __str__(self) -> str:
-        return '\n'.join([f'{k} {p} {o}' for (k, (o, p)) in self._rules.items()])
+        return '\n'.join(['\n'.join([f'{k} {p} {o}' for (o, p) in zip(os, ps)]) for (k, (os, ps)) in self._rules.items()])
 
     def to_json(self) -> Dict[str, Any]:
         return {
