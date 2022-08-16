@@ -1,5 +1,4 @@
 import base64
-from glob import glob
 import json
 import logging
 import os
@@ -68,6 +67,7 @@ block_to_colour = {
     'Window1x1Flat': '#fffff0',
     'LargeBlockLight_1corner': '#fffaf0'
 }
+gdev_mode: bool = False
 gen_counter: int = 0
 selected_bins: List[Tuple[int, int]] = []
 exp_n: int = 0
@@ -149,6 +149,9 @@ def set_app_layout(behavior_descriptors_names,
     global current_mapelites
     global rngseed
     global consent_ok
+    global gdev_mode
+    
+    gdev_mode = dev_mode
     
     description_str, help_str = '', ''
     with open('./assets/description.md', 'r') as f:
@@ -199,7 +202,7 @@ Do you consent to the data collection?""")),
             dcc.Markdown(children=description_str,
                          className='page-description'),
         ],
-            className='header')
+                      className='header')
     
     footer = html.Div(children=[
             html.H4(children='Help',
@@ -207,7 +210,7 @@ Do you consent to the data collection?""")),
             dcc.Markdown(help_str,
                          className='page-description')
         ],
-            className='footer')
+                      className='footer')
     
     mapelites_heatmap = html.Div(children=[
         dcc.Graph(id="heatmap-plot",
@@ -965,6 +968,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                      pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_reset, n_clicks_sub, weights,
                      b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation):
     content_dl = None
+    global gdev_mode
     global current_mapelites
     global gen_counter
     global my_emitterslist
@@ -1155,8 +1159,9 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                     with open('./assets/thumb.png', 'rb') as f:
                         thumbnail_img = f.read()
                     zf.writestr('thumb.png', thumbnail_img)
-                    elite = current_mapelites.get_elite(bin_idx=_switch([selected_bins[-1]])[0],
-                                            pop='feasible' if pop_name == 'Feasible' else 'infeasible')
+                    elite = get_elite(mapelites=current_mapelites,
+                                      bin_idx=_switch([selected_bins[-1]])[0],
+                                      pop='feasible' if pop_name == 'Feasible' else 'infeasible')
                     zf.writestr('bp.sbc', convert_structure_to_xml(structure=elite.content, name=f'My Spaceship ({rngseed}) (exp{exp_n})'))
                     zf.writestr(f'spaceship_{rngseed}_exp{exp_n}', cs_string)
             content_dl = dcc.send_bytes(write_archive, f'MySpaceship_{rngseed}_exp{exp_n}.zip')
@@ -1165,8 +1170,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                 curr_heatmap = go.Figure(data=[])
                 selected_bins = []
                 curr_content = _get_elite_content(mapelites=current_mapelites,
-                                                bin_idx=None,
-                                                pop=None)
+                                                  bin_idx=None,
+                                                  pop=None)
                 cs_string = cs_size = cs_n_blocks = cs_age = cs_vol = cs_mass = ''
                 if consent_ok:
                     content_dl = dict(content=json.dumps({
@@ -1234,4 +1239,4 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                     str_prefix='Valid bins are:',
                                     filter_out_empty=False)
     
-    return curr_heatmap, curr_content, valid_bins_str, f'Current generation: {gen_counter}', str(current_mapelites.lsystem.hl_solver.parser.rules), selected_bins_str, cs_string, cs_size, cs_n_blocks,  cs_age, cs_vol, cs_mass, gen_counter < N_GENS_ALLOWED, gen_counter >= N_GENS_ALLOWED, content_dl, pop_name, metric_name, b0, b1, symm_axis
+    return curr_heatmap, curr_content, valid_bins_str, f'Current generation: {gen_counter}', str(current_mapelites.lsystem.hl_solver.parser.rules), selected_bins_str, cs_string, cs_size, cs_n_blocks,  cs_age, cs_vol, cs_mass, not gdev_mode and gen_counter < N_GENS_ALLOWED, not gdev_mode and gen_counter >= N_GENS_ALLOWED, content_dl, pop_name, metric_name, b0, b1, symm_axis

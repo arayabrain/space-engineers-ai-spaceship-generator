@@ -300,7 +300,7 @@ class HullBuilder:
         ordered_ends = [Vec(x=max(start.x, end.x), y=max(start.y, end.y), z=max(start.z, end.z)) for (start, end) in zip(starts, ends)]
         ordered_starts = [Vec(x=min(start.x, end.x), y=min(start.y, end.y), z=min(start.z, end.z)) for (start, end) in zip(starts, ends)]
         
-        planes = [end.diff(start).vol(ignore_zero=False) for start, end in zip(ordered_starts, ordered_ends)]
+        planes = [end.diff(start).bbox(ignore_zero=False) for start, end in zip(ordered_starts, ordered_ends)]
         
         return ordered_starts, ordered_ends, planes
     
@@ -341,7 +341,7 @@ class HullBuilder:
                 face = Vec(x=block.scaled_size.x if rot_direction.x == 0 else 0,
                            y=block.scaled_size.y if rot_direction.y == 0 else 0,
                            z=block.scaled_size.z if rot_direction.z == 0 else 0)
-                return True, face.vol(ignore_zero=False)
+                return True, face.bbox(ignore_zero=False)
         else:
             if mp1 == []:
                 return False, 0

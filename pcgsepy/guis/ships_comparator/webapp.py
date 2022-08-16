@@ -25,6 +25,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import ALL, dcc, html
 from dash.dependencies import Input, Output, State
+import dash_bootstrap_components as dbc
 from pcgsepy.evo.fitness import (Fitness, box_filling_fitness,
                                  func_blocks_fitness, mame_fitness,
                                  mami_fitness)
@@ -37,6 +38,7 @@ from pcgsepy.mapelites.emitters import *
 from pcgsepy.mapelites.emitters import (ContextualBanditEmitter,
                                         HumanPrefMatrixEmitter, RandomEmitter)
 from pcgsepy.setup_utils import get_default_lsystem
+from pcgsepy.common.api_call import block_definitions
 
 used_ll_blocks = [
     'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerInv',
@@ -60,7 +62,7 @@ expander.initialize(rules=lsystem.hl_solver.parser.rules)
 
 hull_builder = HullBuilder(erosion_type='bin',
                            apply_erosion=True,
-                           apply_smoothing=False)
+                           apply_smoothing=True)
 
 emitters = ['Random', 'Preference Matrix', 'Contextual Bandit']
 
@@ -94,17 +96,54 @@ def _get_colour_mapping(block_types: List[str]) -> Dict[str, str]:
 
 
 app = dash.Dash(__name__,
-                title='Spasceships comparator',
-                external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
+                title='SE ICMAP-Elites (Evaluator)',
+                external_stylesheets=[dbc.themes.DARKLY],
                 assets_folder=resource_path("assets"),
                 update_title=None)
+
+
+def get_content_div(content_n: int,
+                    tot_content: int) -> html.Div:
+    w = 100 // tot_content
+    return html.Div(children=[
+        # title
+        html.Div(children=[
+            html.H1(children=f'Spaceship from Experiment {content_n + 1}',
+                    style={'text-align': 'center'})
+            ]),
+        html.Br(),
+        # spaceship content display + properties
+        # CONTENT PLOT
+        html.Div(children=[
+            dcc.Graph(id=f"spaceship-{content_n + 1}-content",
+                      figure=px.scatter_3d(x=np.zeros(0, dtype=object),
+                                           y=np.zeros(0, dtype=object),
+                                           z=np.zeros(0, dtype=object),
+                                           title='',
+                                           template='plotly_dark')),
+            ],
+                className='content-div',
+                style={'width': '100%'}),
+        html.Div(children=[
+            dcc.Slider(min=1,
+                       max=tot_content, 
+                       step=1,
+                       value=1,
+                       id=f'spaceship-{content_n + 1}-slider',
+                       marks=None,
+                       tooltip={"placement": "bottom",
+                                "always_visible": True}),
+            ],
+                style={'width': '60%', 'margin': '0 auto'})
+        ],
+                        style={'width': f'{w}%'})
 
 
 def set_app_layout():
     description_str, help_str = '', ''
 
     curr_dir = pathlib.Path(__file__).parent.resolve()
-
+    
     with open(curr_dir.joinpath('assets/description.md'), 'r') as f:
         description_str = f.read()
     with open(curr_dir.joinpath('assets/help.md'), 'r') as f:
@@ -112,160 +151,75 @@ def set_app_layout():
         
     encoded_image = base64.b64encode(open(curr_dir.joinpath('assets/ref_spaceships_lowres.png'), 'rb').read())
 
-    app.layout = html.Div(children=[
-        # HEADER
-        html.Div(children=[
-            html.H1(children='🚀Space Engineers🚀 Spaceships comparator',
-                    className='title'),
-            dcc.Markdown(children=description_str,
-                         className='page-description'),
+    header = html.Div(children=[
+        html.H1(children='🚀Space Engineers🚀 IC MAP-Elites (Evluator)',
+                className='title'),
+        dcc.Markdown(children=description_str,
+                     className='page-description'),
         ],
-            className='header'),
+                      className='header')
+    
+    footer = html.Div(children=[
+        html.H4(children='Help',
+                className='title'),
+        dcc.Markdown(help_str,
+                     className='page-description'),
+        html.Div(html.Img(src='data:image/png;base64,{}'.format(encoded_image.decode())),
+                 style={'display': 'flex', 'flex-direction': 'row', 'justify-content': 'center'})
+        ],
+                      className='footer')
 
-        # BODY
-        html.Div(children=[
-
-            dcc.Upload(
-                id='upload-data',
-                children=html.Div([
-                    'Drag and Drop or ',
-                    html.A('Select Files')
-                ]),
-                style={
-                    'width': '60%',
-                    'height': '60px',
-                    'lineHeight': '60px',
-                    'borderWidth': '1px',
-                    'borderStyle': 'dashed',
-                    'borderRadius': '5px',
-                    'textAlign': 'center',
-                    'margin': '10px auto'
-                },
-                # Allow multiple files to be uploaded
-                multiple=True
-            ),
+    upload_component = html.Div(children=[
+        dcc.Upload(id='upload-data',
+                   children=html.Div([
+                       'Drag and Drop or ',
+                       html.A('Select Files')
+                       ]),
+                   style={
+                       'width': '60%',
+                       'height': '60px',
+                       'lineHeight': '60px',
+                       'borderWidth': '1px',
+                       'borderStyle': 'dashed',
+                       'borderRadius': '5px',
+                       'textAlign': 'center',
+                       'margin': '10px auto'
+                       },
+                   # Allow multiple files to be uploaded
+                   multiple=True
+                   )])
+    
+    content_container = html.Div(children=[get_content_div(i, len(emitters)) for i in range(len(emitters))],
+                                 style={'width': '100%', 'display': 'flex', 'flex-direction': 'row', 'justify-content': 'center'})
+    
+    eoe = html.Div(id='eoe',
+                   children=[])
+    
+    save_data = html.Div(children=[
+        dbc.Button(children='Save',
+                   id='save-btn',
+                   n_clicks=0,
+                   className='button',
+                   disabled=False),
+        dcc.Download(id='save-data')
+        ],
+                         style={'width': '100%', 'display': 'flex', 'flex-direction': 'row', 'justify-content': 'center'})
+    
+    app.layout = dbc.Container(
+        children=[
+            header,
             html.Br(),
-
-            # content plots
-            html.Div(children=[
-
-                # spaceship 1
-                html.Div(children=[
-                    # title
-                    html.Div(children=[
-                        html.H1(children='Spaceship from Experiment 1',
-                                style={'text-align': 'center'})
-                    ]),
-                    html.Br(),
-                    # spaceship content display + properties
-                    # CONTENT PLOT
-                    html.Div(children=[
-                        dcc.Graph(id="spaceship-1-content",
-                                  figure=go.Figure(data=[])),
-                    ],
-                        className='content-div',
-                        style={'width': '100%'}),
-                    html.Div(children=[
-                        dcc.Slider(1, 3, 1,
-                                   value=1,
-                                   id='spaceship-1-slider',
-                                   marks=None,
-                                   tooltip={"placement": "bottom",
-                                            "always_visible": True}),
-                    ],
-                        style={'width': '60%', 'margin': '0 auto'})
-                ],
-                    style={'width': '30%'}),
-
-                # spaceship 2
-                html.Div(children=[
-                    # title
-                    html.Div(children=[
-                        html.H1(children='Spaceship from Experiment 2',
-                                style={'text-align': 'center'})
-                    ]),
-                    html.Br(),
-                    # spaceship content display + properties
-                    # CONTENT PLOT
-                    html.Div(children=[
-                        dcc.Graph(id="spaceship-2-content",
-                                  figure=go.Figure(data=[])),
-                    ],
-                        className='content-div',
-                        style={'width': '100%'}),
-                    html.Div(children=[
-                        dcc.Slider(1, 3, 1,
-                                   value=1,
-                                   id='spaceship-2-slider',
-                                   marks=None,
-                                   tooltip={"placement": "bottom",
-                                            "always_visible": True}),
-                    ],
-                        style={'width': '60%', 'margin': '0 auto'}),
-                ],
-                    style={'width': '30%'}),
-
-                # spaceship 3
-                html.Div(children=[
-                    # title
-                    html.Div(children=[
-                        html.H1(children='Spaceship from Experiment 3',
-                                style={'text-align': 'center'})
-                    ]),
-                    html.Br(),
-                    # spaceship content display + properties
-                    # CONTENT PLOT
-                    html.Div(children=[
-                        dcc.Graph(id="spaceship-3-content",
-                                  figure=go.Figure(data=[])),
-                    ],
-                        className='content-div',
-                        style={'width': '100%'}),
-                    html.Div(children=[
-                        dcc.Slider(1, 3, 1,
-                                   value=1,
-                                   id='spaceship-3-slider',
-                                   marks=None,
-                                   tooltip={"placement": "bottom",
-                                            "always_visible": True}),
-                    ],
-                        style={'width': '60%', 'margin': '0 auto'}),
-                ],
-                    style={'width': '30%'}),
-            ],
-                style={'width': '100%', 'display': 'flex', 'flex-direction': 'row', 'justify-content': 'center'}),
-        ]),
-        html.Br(),
-        html.Div(id='eoe',
-                 children=[],
-                 style={'width': '100%', 'display': 'flex', 'flex-direction': 'row', 'justify-content': 'center'}),
-        html.Br(),
-        html.Div(children=[
-            html.Button(children='Save',
-                        id='save-btn',
-                        n_clicks=0,
-                        className='button',
-                        disabled=False),
-            dcc.Download(id='save-data')
+            upload_component,
+            html.Br(),
+            content_container,
+            html.Br(),
+            eoe,
+            html.Br(),
+            save_data,
+            html.Br(),
+            footer
         ],
-            className='button-div',
-            style={'width': '50%'}),
-        html.Br(),
-        # FOOTER
-        html.Div(children=[
-            html.H2(children='Help',
-                    className='section-title'),
-            dcc.Markdown(help_str,
-                         className='page-description'),
-            html.Div(children=[
-                html.Img(src='data:image/png;base64,{}'.format(encoded_image.decode()))
-                ],
-                     style={'display': 'flex', 'flex-direction': 'row', 'justify-content': 'center'})
-            
-        ],
-            className='footer'),
-        dcc.Store(id='rngseed', data=json.dumps(0))
-    ])
+        fluid=True)
 
 
 def parse_contents(filename,
@@ -281,11 +235,16 @@ def parse_contents(filename,
 
 
 def get_content_plot(spaceship: CandidateSolution) -> go.Figure:
+    global lsystem
+    global hull_builder
+    
+    spaceship = lsystem._set_structure(cs=lsystem._add_ll_strings(cs=spaceship))
+    hull_builder.add_external_hull(structure=spaceship.content)
     content = spaceship.content.as_grid_array
     arr = np.nonzero(content)
     x, y, z = arr
     cs = [content[i, j, k] for i, j, k in zip(x, y, z)]
-    ss = [spaceship.content._clean_label(spaceship.content.ks[v - 1]) for v in cs]
+    ss = [spaceship.content._clean_label(list(block_definitions.keys())[v - 1]) for v in cs]
     fig = px.scatter_3d(x=x,
                         y=y,
                         z=z,
@@ -297,31 +256,27 @@ def get_content_plot(spaceship: CandidateSolution) -> go.Figure:
                             'z': 'z',
                             'color': 'Block type'
                         },
-                        title='')
-    
+                        title='',
+                        template='plotly_dark')
     fig.update_traces(marker=dict(size=4,
                               line=dict(width=3,
                                         color='DarkSlateGrey')),
                       selector=dict(mode='markers'))
-    
     fig.update_scenes(
                       xaxis={'visible': False, 'showticklabels': False},
                       yaxis={'visible': False, 'showticklabels': False},
                       zaxis={'visible': False, 'showticklabels': False},
     )
-    
     camera = dict(
         up=dict(x=0, y=0, z=1),
         center=dict(x=0, y=0, z=0),
         eye=dict(x=2, y=2, z=2)
         )
-    
     fig.update_layout(scene=dict(aspectmode='data'),
                       scene_camera=camera,
                       paper_bgcolor='rgba(0,0,0,0)',
                       plot_bgcolor='rgba(0,0,0,0)',
                       showlegend=False)
-
     return fig
 
 
@@ -334,12 +289,11 @@ def get_content_plot(spaceship: CandidateSolution) -> go.Figure:
     State('spaceship-1-slider', 'value'),
     State('spaceship-2-slider', 'value'),
     State('spaceship-3-slider', 'value'),
-    State('rngseed', 'data'),
     prevent_initial_call=True,
 )
 def download_scores(n_clicks,
-                    slider1_value, slider2_value, slider3_value, rng_seed):
-    rng_seed = json.loads(rng_seed)
+                    slider1_value, slider2_value, slider3_value):
+    global rng_seed
 
     random.seed(rng_seed)
     my_emitterslist = emitters.copy()
@@ -368,19 +322,17 @@ def download_scores(n_clicks,
     Output('spaceship-1-content', 'figure'),
     Output('spaceship-2-content', 'figure'),
     Output('spaceship-3-content', 'figure'),
-    Output('rngseed', 'data'),
 
     Input('upload-data', 'contents'),
 
     State('upload-data', 'filename'),
     State('spaceship-1-content', 'figure'),
     State('spaceship-2-content', 'figure'),
-    State('spaceship-3-content', 'figure'),
-    State('rngseed', 'data')
+    State('spaceship-3-content', 'figure')
 )
 def general_callback(list_of_contents,
-                     list_of_names, spaceship_1_plot, spaceship_2_plot, spaceship_3_plot, rng_seed):
-    rng_seed = json.loads(rng_seed)
+                     list_of_names, spaceship_1_plot, spaceship_2_plot, spaceship_3_plot):
+    global rng_seed
 
     ctx = dash.callback_context
 
@@ -390,8 +342,7 @@ def general_callback(list_of_contents,
         event_trig = ctx.triggered[0]['prop_id'].split('.')[0]
 
     if event_trig == 'upload-data':
-        children = [parse_contents(n, c) for c, n in zip(
-            list_of_contents, list_of_names)]
+        children = [parse_contents(n, c) for c, n in zip(list_of_contents, list_of_names)]
         for child in children:
             rng_seed, exp_n, cs_string = child
             cs = CandidateSolution(string=cs_string)
@@ -402,4 +353,4 @@ def general_callback(list_of_contents,
             elif exp_n == 3:
                 spaceship_3_plot = get_content_plot(spaceship=cs)
 
-    return spaceship_1_plot, spaceship_2_plot, spaceship_3_plot, json.dumps(rng_seed)
+    return spaceship_1_plot, spaceship_2_plot, spaceship_3_plot
