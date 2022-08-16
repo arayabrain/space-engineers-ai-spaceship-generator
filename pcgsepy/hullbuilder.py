@@ -554,3 +554,43 @@ class HullBuilder:
                                 grid_position=block.position.as_tuple())
         
         structure.sanify()
+
+
+def enforce_symmetry(structure: Structure,
+                     axis: str = 'z',
+                     upper: bool = True,
+                     pivot_blocktype: str = 'MyObjectBuilder_Cockpit_OpenCockpitLarge') -> None:
+    def to_keep(v1: Vec,
+                v2: Vec,
+                axis: str,
+                upper: bool,
+                keep_equal: bool) -> bool:
+        if axis == 'x':
+            if upper:
+                return (v1.x > v2.x) or (keep_equal and v1.x == v2.x)
+            else:
+                return (v1.x < v2.x) or (keep_equal and v1.x == v2.x)
+        elif axis == 'y':
+            if upper:
+                return (v1.y > v2.y) or (keep_equal and v1.y == v2.y)
+            else:
+                return (v1.y < v2.y) or (keep_equal and v1.y == v2.y)
+        elif axis == 'z':
+            if upper:
+                return (v1.z > v2.z) or (keep_equal and v1.z == v2.z)
+            else:
+                return (v1.z < v2.z) or (keep_equal and v1.z == v2.z)
+    
+    midpoint = [x for x in structure._blocks.values() if x.block_type == pivot_blocktype][0].position
+    structure._blocks = {k:v for k, v in structure._blocks.items() if to_keep(v1=v.position, v2=midpoint, axis=axis, upper=upper, keep_equal=True)}
+    half = [b for b in structure._blocks.values() if to_keep(v1=b.position, v2=midpoint, axis=axis, upper=upper, keep_equal=False)]
+    for b in half:
+        if axis == 'x':
+            b.position.x = midpoint.x - (b.position.x - midpoint.x)
+        elif axis == 'y':
+            b.position.y = midpoint.y - (b.position.y - midpoint.y)
+        elif axis == 'z':
+            b.position.z = midpoint.z - (b.position.z - midpoint.z)
+        structure.add_block(block=b,
+                            grid_position=b.position.as_tuple())
+    structure.sanify()

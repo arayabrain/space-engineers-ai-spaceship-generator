@@ -36,7 +36,6 @@ from pcgsepy.mapelites.behaviors import (BehaviorCharacterization, avg_ma,
 from pcgsepy.mapelites.emitters import *
 from pcgsepy.mapelites.emitters import (ContextualBanditEmitter,
                                         HumanPrefMatrixEmitter, RandomEmitter)
-from pcgsepy.mapelites.map import get_structure
 from pcgsepy.setup_utils import get_default_lsystem
 
 used_ll_blocks = [

@@ -3,9 +3,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
-import torch as th
 from joblib import Parallel, delayed
-from pcgsepy.common.vecs import Orientation, Vec
 from pcgsepy.config import (ALIGNMENT_INTERVAL, BIN_POP_SIZE, CS_MAX_AGE,
                             EPSILON_F, MAX_X_SIZE, MAX_Y_SIZE, MAX_Z_SIZE,
                             N_ITERATIONS, N_RETRIES, POP_SIZE)
@@ -14,103 +12,54 @@ from pcgsepy.evo.fitness import (Fitness, box_filling_fitness,
                                  mami_fitness)
 from pcgsepy.evo.genops import EvoException
 from pcgsepy.fi2pop.utils import create_new_pool, subdivide_solutions
-from pcgsepy.hullbuilder import HullBuilder
+from pcgsepy.hullbuilder import HullBuilder, enforce_symmetry
 from pcgsepy.lsystem.constraints import ConstraintLevel
 from pcgsepy.lsystem.lsystem import LSystem
 from pcgsepy.lsystem.solution import CandidateSolution
-from pcgsepy.lsystem.structure_maker import LLStructureMaker
 from pcgsepy.mapelites.bandit import EpsilonGreedyAgent
 from pcgsepy.mapelites.behaviors import BehaviorCharacterization
 from pcgsepy.mapelites.bin import MAPBin
 from pcgsepy.mapelites.buffer import Buffer, EmptyBufferException
-from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, Emitter,
-                                        HumanPrefMatrixEmitter, RandomEmitter,
-                                        emitters, get_emitter_by_str)
+from pcgsepy.mapelites.emitters import (Emitter, HumanPrefMatrixEmitter,
+                                        RandomEmitter, emitters,
+                                        get_emitter_by_str)
 from pcgsepy.nn.estimators import (GaussianEstimator, MLPEstimator,
                                    QuantileEstimator, prepare_dataset,
                                    train_estimator)
-from pcgsepy.structure import Structure
 from tqdm import trange
 from typing_extensions import Self
 
 
-# TODO: move this in HullBuilder if possible
-def enforce_symmetry(structure: Structure,
-                     axis: str = 'z',
-                     upper: bool = True) -> None:
-    def to_keep(v1: Vec,
-                v2: Vec,
-                axis: str,
-                upper: bool,
-                keep_equal: bool) -> bool:
-        if axis == 'x':
-            if upper:
-                return (v1.x > v2.x) or (keep_equal and v1.x == v2.x)
-            else:
-                return (v1.x < v2.x) or (keep_equal and v1.x == v2.x)
-        elif axis == 'y':
-            if upper:
-                return (v1.y > v2.y) or (keep_equal and v1.y == v2.y)
-            else:
-                return (v1.y < v2.y) or (keep_equal and v1.y == v2.y)
-        elif axis == 'z':
-            if upper:
-                return (v1.z > v2.z) or (keep_equal and v1.z == v2.z)
-            else:
-                return (v1.z < v2.z) or (keep_equal and v1.z == v2.z)
-    
-    midpoint = [x for x in structure._blocks.values() if x.block_type == 'MyObjectBuilder_Cockpit_OpenCockpitLarge'][0].position
-    structure._blocks = {k:v for k, v in structure._blocks.items() if to_keep(v1=v.position, v2=midpoint, axis=axis, upper=upper, keep_equal=True)}
-    half = [b for b in structure._blocks.values() if to_keep(v1=b.position, v2=midpoint, axis=axis, upper=upper, keep_equal=False)]
-    for b in half:
-        if axis == 'x':
-            b.position.x = midpoint.x - (b.position.x - midpoint.x)
-        elif axis == 'y':
-            b.position.y = midpoint.y - (b.position.y - midpoint.y)
-        elif axis == 'z':
-            b.position.z = midpoint.z - (b.position.z - midpoint.z)
-        structure.add_block(block=b,
-                            grid_position=b.position.as_tuple())
-    structure.sanify()
-        
-
-def get_structure(string: str,
-                  extra_args: Dict[str, Any]):
-    base_position, orientation_forward, orientation_up = Vec.v3i(0, 0, 0), Orientation.FORWARD.value, Orientation.UP.value
-    structure = Structure(origin=base_position,
-                          orientation_forward=orientation_forward,
-                          orientation_up=orientation_up)
-    structure = LLStructureMaker(atoms_alphabet=extra_args['alphabet'],
-                                 position=base_position).fill_structure(structure=structure,
-                                                                        string=string,
-                                                                        additional_args={})
-    structure.update(origin=base_position,
-                     orientation_forward=orientation_forward,
-                     orientation_up=orientation_up)
-    return structure
-
 def coverage_reward(mapelites: 'MAPElites') -> float:
-    tot_coverage, inc_coverage = mapelites.bins.shape[0] * mapelites.bins.shape[1], 0.
-    for map_bin in mapelites.bins.flatten().tolist():
-        is_new_bin = False
-        if len(map_bin._feasible) > 0:
-            for cs in map_bin._feasible:
-                if cs.age != CS_MAX_AGE:
-                    is_new_bin = False
-        inc_coverage += 1 if is_new_bin else 0
+    """Compute the coverage reward. Coverage reward is a percentage of new bins over total possible number of bins.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+
+    Returns:
+        float: The coverage reward.
+    """
+    tot_coverage = mapelites.bins.shape[0] * mapelites.bins.shape[1]
+    inc_coverage = sum([1 if any([cs.age == CS_MAX_AGE for cs in map_bin._feasible]) else 0 for map_bin in mapelites.bins.flatten().tolist()])
     return inc_coverage / tot_coverage
 
+
 def fitness_reward(mapelites: 'MAPElites') -> float:
+    """Compute the fitness reward. Fitness reward is the percentage increase of highest current fitness compared to best fitness in the past.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+
+    Returns:
+        float: The fitness reward.
+    """
     prev_best, current_best = 0, 0
     for map_bin in mapelites.bins.flatten().tolist():
-        if len(map_bin._feasible) > 0:
-            for cs in map_bin._feasible:
-                if cs.age == CS_MAX_AGE:
-                    if cs.c_fitness > prev_best:
-                        current_best = cs.c_fitness
-                elif cs.age != CS_MAX_AGE:
-                    if cs.c_fitness > prev_best:
-                        prev_best = cs.c_fitness
+        for cs in map_bin._feasible:
+            if cs.age == CS_MAX_AGE and cs.c_fitness > prev_best:
+                current_best = cs.c_fitness
+            elif cs.age != CS_MAX_AGE and cs.c_fitness > prev_best:
+                prev_best = cs.c_fitness
     fit_diff = current_best - prev_best
     return fit_diff / prev_best
 
@@ -122,14 +71,13 @@ agent_rewards = {
 
 
 class MAPElites:
-
     def __init__(self,
                  lsystem: LSystem,
                  feasible_fitnesses: List[Fitness],
                  buffer: Buffer,
                  behavior_descriptors: Tuple[BehaviorCharacterization, BehaviorCharacterization],
                  n_bins: Tuple[int, int] = (8, 8),
-                 estimator: Optional[Union[GaussianEstimator, MLPEstimator, QuantileEstimator]] = None,  # Only MLPEstimator is currently JSON-compatible
+                 estimator: Optional[Union[GaussianEstimator, MLPEstimator, QuantileEstimator]] = None,
                  emitter: Optional[Emitter] = RandomEmitter(),
                  agent: Optional[EpsilonGreedyAgent] = None,
                  agent_rewards: Optional[List[Callable[[Self], float]]] = []):
@@ -138,72 +86,78 @@ class MAPElites:
         Args:
             lsystem (LSystem): The L-system used to expand strings.
             feasible_fitnesses (List[Fitness]): The list of fitnesses used.
+            buffer (Buffer): The data buffer.
             behavior_descriptors (Tuple[BehaviorCharacterization, BehaviorCharacterization]): The X- and Y-axis behavior descriptors.
-            n_bins (Tuple[int, int], optional): The number of X and Y bins. Defaults to (8, 8).
+            n_bins (Tuple[int, int], optional): The number of X and Y bins. Defaults to `(8, 8)`.
+            estimator (Optional[Union[GaussianEstimator, MLPEstimator, QuantileEstimator]], optional): The estimator used as fitness acquirement for the infeasible population. Defaults to `None`.
+            emitter (Optional[Emitter], optional): The emitter. Defaults to `RandomEmitter()`.
+            agent (Optional[EpsilonGreedyAgent], optional): The selection agent. Defaults to `None`.
+            agent_rewards (Optional[List[Callable[[Self], float]]], optional): The rewards for the selection agent. Defaults to `[]`.
+
+        Raises:
+            AssertionError: Raised if an invalid configuration of properties is passed.
         """
+        assert agent is not None or emitter is not None, 'MAP-Elites requires either an agent or an emitter!'
+        if agent is not None and not agent_rewards:
+            raise AssertionError(
+                f'You selected an agent but no reward functions have been provided!')
+
         self.lsystem = lsystem
-        # number of total soft constraints
-        self.nsc = [c for c in self.lsystem.all_hl_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
-        self.nsc = [c for c in self.lsystem.all_ll_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
-        self.nsc = len(self.nsc) * 0.5
         self.feasible_fitnesses = feasible_fitnesses
         self.b_descs = behavior_descriptors
         self.emitter = emitter
         self.agent = agent
         self.agent_rewards = agent_rewards
+        self.estimator = estimator
+        self.buffer = buffer
+        # number of total soft constraints
+        self.nsc = [c for c in self.lsystem.all_hl_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
+        self.nsc = [c for c in self.lsystem.all_ll_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
+        self.nsc = len(self.nsc) * 0.5
+        # behavior map properties
         self.limits = (self.b_descs[0].bounds[1] if self.b_descs[0].bounds is not None else 20,
                        self.b_descs[1].bounds[1] if self.b_descs[1].bounds is not None else 20)
         self._initial_n_bins = n_bins
         self.bin_qnt = n_bins
-        self.bin_sizes = [
-            [self.limits[0] / self.bin_qnt[0]] * n_bins[0],
-            [self.limits[1] / self.bin_qnt[1]] * n_bins[1]
-        ]
-
-        self.bins = np.empty(shape=self.bin_qnt, dtype=object)
-        for i in range(self.bin_qnt[0]):
-            for j in range(self.bin_qnt[1]):
-                self.bins[i, j] = MAPBin(bin_idx=(i, j),
-                                         bin_size=(self.bin_sizes[0][i],
-                                                   self.bin_sizes[1][j]))
+        self.bin_sizes = [[self.limits[0] / self.bin_qnt[0]] * n_bins[0], [self.limits[1] / self.bin_qnt[1]] * n_bins[1]]
+        self.bins = np.empty(shape=self.bin_qnt, dtype=MAPBin)
+        for (i, j), _ in np.ndenumerate(self.bins):
+            self.bins[i, j] = MAPBin(bin_idx=(i, j),
+                                     bin_size=(self.bin_sizes[0][i], self.bin_sizes[1][j]))
+        # enforce choosing only one bin at the time
         self.enforce_qnt = True
+        # default hull builder
         self.hull_builder = HullBuilder(erosion_type='bin',
                                         apply_erosion=True,
                                         apply_smoothing=False)
-        
-        self.estimator = estimator
-        self.buffer = buffer
-        
+        # fitness bounds
         self.max_f_fitness = sum([f.bounds[1] for f in self.feasible_fitnesses])
         self.max_i_fitness = len(self.lsystem.all_hl_constraints) if not self.estimator else 1
         self.infeas_fitness_idx = 1  # 0: min, 1: median, 2: max
-        
+        # MAP-Elites properties
         self.allow_res_increase = True
         self.allow_aging = True
-        
+        # tracking properties
         self.n_new_solutions = 0
-                
-        assert self.agent is not None or self.emitter is not None, 'MAP-Elites requires either an agent or an emitter!'
-        if self.agent is not None and not self.agent_rewards: raise AssertionError(f'You selected an agent but no reward functions have been provided!')
 
     def show_metric(self,
                     metric: str,
                     show_mean: bool = True,
                     population: str = 'feasible',
-                    save_as: str = '') -> None:
+                    save_as: Optional[str] = None) -> None:
         """Show the bin metric.
 
         Args:
             metric (str): The metric to display.
-            show_mean (bool, optional): Whether to show average metric or elite's. Defaults to True.
-            population (str, optional): Which population to show metric of. Defaults to 'feasible'.
+            show_mean (bool, optional): Whether to show average metric or elite's. Defaults to `True`.
+            population (str, optional): Which population to show metric of. Defaults to `'feasible'`.
+            save_as (str, optional): Where to save the metric plot. Defaults to `None`.
         """
         disp_map = np.zeros(shape=self.bins.shape)
-        for i in range(self.bins.shape[0]):
-            for j in range(self.bins.shape[1]):
-                disp_map[i, j] = self.bins[i, j].get_metric(metric=metric,
-                                                            use_mean=show_mean,
-                                                            population=population)
+        for (i, j), cbin in np.ndenumerate(self.bins):
+            disp_map[i, j] = cbin.get_metric(metric=metric,
+                                             use_mean=show_mean,
+                                             population=population)
         vmaxs = {
             'fitness': {
                 'feasible': self.max_f_fitness,
@@ -224,75 +178,56 @@ class MAPElites:
                    interpolation='nearest',
                    vmin=0,
                    vmax=vmaxs[metric][population])
-        plt.xticks(np.arange(self.bin_qnt[0]),
-                   np.cumsum(self.bin_sizes[0]) + self.b_descs[0].bounds[0])
-        plt.yticks(np.arange(self.bin_qnt[1]),
-                   np.cumsum(self.bin_sizes[1]) + self.b_descs[1].bounds[0])
+        plt.xticks(np.arange(self.bin_qnt[0]), np.cumsum(self.bin_sizes[0]) + self.b_descs[0].bounds[0])
+        plt.yticks(np.arange(self.bin_qnt[1]), np.cumsum(self.bin_sizes[1]) + self.b_descs[1].bounds[0])
         plt.xlabel(self.b_descs[1].name)
         plt.ylabel(self.b_descs[0].name)
-        plt.title(f'CMAP-Elites {"Avg." if show_mean else ""}{metric} ({population})')
+        plt.title(f'CMAP-Elites {"Avg. " if show_mean else ""}{metric} ({population})')
         cbar = plt.colorbar()
-        cbar.set_label(f'{"mean" if show_mean else "max"} {metric}',
-                       rotation=270)
-        if save_as != '':
-            title_part = metric + ('-avg-' if show_mean else '-top-') + population
-            plt.savefig(f'results/{save_as}-{title_part}.png', transparent=True, bbox_inches='tight')
+        cbar.set_label(
+            f'{"mean" if show_mean else "max"} {metric}', rotation=270)
+        if save_as:
+            title_part = f'{metric}{"-avg-" if show_mean else "-top-"}{population}'
+            plt.savefig(f'results/{save_as}-{title_part}.png',
+                        transparent=True, bbox_inches='tight')
         plt.show()
 
-    def _set_behavior_descriptors(self,
-                                  cs: CandidateSolution) -> None:
-        """Set the behavior descriptors of the solution.
-
-        Args:
-            cs (CandidateSolution): The candidate solution.
-        """
-        b0 = self.b_descs[0](cs)
-        b1 = self.b_descs[1](cs)
-        cs.b_descs = (b0, b1)
-
     def compute_fitness(self,
-                        cs: CandidateSolution,
-                        extra_args: Dict[str, Any]) -> float:
+                        cs: CandidateSolution) -> float:
         """Compute the fitness of the solution. 
 
         Args:
             cs (CandidateSolution): The solution.
-            extra_args (Dict[str, Any]): Additional arguments used in the fitness computation.
+
+        Raises:
+            NotImplementedError: Raised if the estimator is not recognized.
 
         Returns:
             float: The fitness value.
         """
-        if cs.fitness == []:
-            if cs.is_feasible:
-                cs.fitness = [f(cs, extra_args) for f in self.feasible_fitnesses]
-                cs.representation = cs.fitness[:]
-                x, y, z = cs.content._max_dims
-                cs.representation.extend([x / MAX_X_SIZE,
-                                          y / MAX_Y_SIZE,
-                                          z / MAX_Z_SIZE])
-            else:
-                cs.representation = [f(cs, extra_args) for f in [Fitness(name='BoxFilling', f=box_filling_fitness, bounds=(0, 1)),
-                                                                 Fitness(name='FuncionalBlocks', f=func_blocks_fitness, bounds=(0, 1)),
-                                                                 Fitness(name='MajorMediumProportions', f=mame_fitness, bounds=(0, 1)),
-                                                                 Fitness(name='MajorMinimumProportions', f=mami_fitness, bounds=(0, 1))]]
         if cs.is_feasible:
+            cs.fitness = [f(cs) for f in self.feasible_fitnesses]
+            cs.representation = cs.fitness[:]
+            x, y, z = cs.content._max_dims
+            cs.representation.extend([x / MAX_X_SIZE, y / MAX_Y_SIZE, z / MAX_Z_SIZE])
             return sum([self.feasible_fitnesses[i].weight * cs.fitness[i] for i in range(len(cs.fitness))])
         else:
+            cs.representation = [f(cs) for f in [Fitness(name='BoxFilling', f=box_filling_fitness, bounds=(0, 1)),
+                                                 Fitness(name='FuncionalBlocks', f=func_blocks_fitness, bounds=(0, 1)),
+                                                 Fitness(name='MajorMediumProportions', f=mame_fitness, bounds=(0, 1)),
+                                                 Fitness(name='MajorMinimumProportions', f=mami_fitness, bounds=(0, 1))]]
             if self.estimator is not None:
                 if isinstance(self.estimator, GaussianEstimator):
-                    return self.estimator.predict(x=np.asarray(cs.fitness))
+                    return self.estimator.predict(x=np.asarray(cs.fitness)) if self.estimator.is_trained else EPSILON_F
                 elif isinstance(self.estimator, MLPEstimator):
                     if self.estimator.is_trained:
-                        with th.no_grad():
-                            return self.estimator(th.tensor(cs.representation).float()).numpy()[0]
-                    else:
-                        return EPSILON_F
+                        return self.estimator.predict(cs.representation) if self.estimator.is_trained else EPSILON_F
                 elif isinstance(self.estimator, QuantileEstimator):
                     if self.estimator.is_trained:
-                        with th.no_grad():
-                            # set fitness to (3,) array (min, median, max)
-                            cs.fitness = self.estimator(th.tensor(cs.representation).float().unsqueeze(0)).numpy()[0]
-                            return cs.fitness[self.infeas_fitness_idx]  # set c_fitness to median by default
+                        # set fitness to (3,) array (min, median, max)
+                        cs.fitness = self.estimator.predict(cs.representation)
+                        # set c_fitness to median by default
+                        return cs.fitness[self.infeas_fitness_idx]
                     else:
                         cs.fitness = [EPSILON_F, EPSILON_F, EPSILON_F]
                         return cs.fitness[self.infeas_fitness_idx]
@@ -301,55 +236,32 @@ class MAPElites:
             else:
                 return cs.ncv
 
-    def generate_initial_populations(self,
-                                     pops_size: int = POP_SIZE,
-                                     n_retries: int = N_RETRIES) -> None:
-        """Generate the initial populations.
+    def _assign_fitness(self,
+                        cs: CandidateSolution) -> CandidateSolution:
+        """Assign the fitness to a solution.
 
         Args:
-            pops_size (int, optional): The size of the populations. Defaults to POP_SIZE.
-            n_retries (int, optional): The number of initialization retries. Defaults to N_RETRIES.
+            cs (CandidateSolution): The candidate solution.
+
+        Returns:
+            CandidateSolution: The candidate solution with fitness and BCs assigned.
         """
-        feasible_pop, infeasible_pop = [], []
-        self.lsystem.disable_sat_check()
-        with trange(n_retries, desc='Initialization ') as iterations:
-            for i in iterations:
-                solutions = self.lsystem.apply_rules(starting_strings=['head', 'body', 'tail'],
-                                                     iterations=[1, N_ITERATIONS, 1],
-                                                     create_structures=True,
-                                                     make_graph=False)
-                subdivide_solutions(lcs=solutions,
-                                    lsystem=self.lsystem)
-                for cs in solutions:
-                    if cs.is_feasible and len(feasible_pop) < pops_size and cs not in feasible_pop:
-                        if self.hull_builder is not None:
-                            self.hull_builder.add_external_hull(structure=cs._content)
-                        cs.c_fitness = self.compute_fitness(cs=cs,
-                                                            extra_args={
-                                                                'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                                            }) + (self.nsc - cs.ncv)
-                        self._set_behavior_descriptors(cs=cs)
-                        cs.age = CS_MAX_AGE
-                        feasible_pop.append(cs)
-                    elif not cs.is_feasible and len(infeasible_pop) < pops_size and cs not in feasible_pop:
-                        cs.c_fitness = self.compute_fitness(cs=cs,
-                                                            extra_args={
-                                                                'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                                            })
-                        self._set_behavior_descriptors(cs=cs)
-                        cs.age = CS_MAX_AGE
-                        infeasible_pop.append(cs)
-                iterations.set_postfix(ordered_dict={
-                    'fpop-size': f'{len(feasible_pop)}/{pops_size}',
-                    'ipop-size': f'{len(infeasible_pop)}/{pops_size}'
-                },
-                                       refresh=True)
-                if i == n_retries or (len(feasible_pop) == pops_size and len(infeasible_pop) == pops_size):
-                    break
-        self._update_bins(lcs=feasible_pop)
-        self._update_bins(lcs=infeasible_pop)
-        if self.emitter is not None and self.emitter.requires_init:
-            self.emitter.init_emitter(bins=self.bins)
+        # assign fitness
+        cs.c_fitness = self.compute_fitness(cs=cs) + ((self.nsc - cs.ncv) if cs.is_feasible else 0)
+        # assign behavior descriptors
+        self._set_behavior_descriptors(cs=cs)
+        # set age
+        cs.age = CS_MAX_AGE
+        return cs
+
+    def _set_behavior_descriptors(self,
+                                  cs: CandidateSolution) -> None:
+        """Set the behavior descriptors of the solution.
+
+        Args:
+            cs (CandidateSolution): The candidate solution.
+        """
+        cs.b_descs = (self.b_descs[0](cs), self.b_descs[1](cs))
 
     def subdivide_range(self,
                         bin_idx: Tuple[int, int]) -> None:
@@ -362,11 +274,9 @@ class MAPElites:
         i, j = bin_idx
         # get solutions in same row&col
         all_cs = []
-        for m in range(self.bins.shape[0]):
-            for n in range(self.bins.shape[1]):
-                if m == i or n == j:
-                    all_cs.extend(self.bins[m, n]._feasible)
-                    all_cs.extend(self.bins[m, n]._infeasible)
+        for (m, n), cbin in np.ndenumerate(self.bins):
+            if m == i or n == j:
+                all_cs.extend([*cbin._feasible, *cbin._infeasible])
         # update bin sizes
         v_i, v_j = self.bin_sizes[0][i], self.bin_sizes[1][j]
         self.bin_sizes[0][i] = v_i / 2
@@ -376,25 +286,24 @@ class MAPElites:
         # update bin quantity
         self.bin_qnt = (self.bin_qnt[0] + 1, self.bin_qnt[1] + 1)
         # create new bin map
-        new_bins = np.empty(shape=self.bin_qnt, dtype=object)
+        new_bins = np.empty(shape=self.bin_qnt, dtype=MAPBin)
         # copy over unaffected bins
         new_bins[:i, :j] = self.bins[:i, :j]
         new_bins[:i, (j+2):] = self.bins[:i, (j+1):]
         new_bins[(i+2):, :j] = self.bins[(i+1):, :j]
         new_bins[(i+2):, (j+2):] = self.bins[(i+1):, (j+1):]
         # populate newly created bins
-        for m in range(new_bins.shape[0]):
-            for n in range(new_bins.shape[1]):
-                if m == i or m == i + 1 or n == j or n == j + 1:
-                    new_bins[m, n] = MAPBin(bin_idx=(m, n),
-                                            bin_size=(self.bin_sizes[0][m],
-                                                      self.bin_sizes[1][n]))
+        for (m, n), _ in np.ndenumerate(self.bins):
+            if m == i or m == i + 1 or n == j or n == j + 1:
+                new_bins[m, n] = MAPBin(bin_idx=(m, n),
+                                        bin_size=(self.bin_sizes[0][m],
+                                                  self.bin_sizes[1][n]))
                 new_bins[m, n].bin_idx = (m, n)
         # assign new bin map
         self.bins = new_bins
         # assign solutions to bins
         self._update_bins(lcs=all_cs)
-        if type(self.emitter) is HumanPrefMatrixEmitter:
+        if isinstance(self.emitter, HumanPrefMatrixEmitter):
             self.emitter._increase_preferences_res(idx=bin_idx)
 
     def _update_bins(self,
@@ -408,12 +317,8 @@ class MAPElites:
         bc1 = np.cumsum([0] + self.bin_sizes[1][:-1]) + self.b_descs[1].bounds[0]
         for cs in lcs:
             b0, b1 = cs.b_descs
-            i = np.digitize(x=[b0],
-                            bins=bc0,
-                            right=False)[0] - 1
-            j = np.digitize(x=[b1],
-                            bins=bc1,
-                            right=False)[0] - 1
+            i = np.digitize(x=[b0], bins=bc0, right=False)[0] - 1
+            j = np.digitize(x=[b1], bins=bc1, right=False)[0] - 1
             self.bins[i, j].insert_cs(cs)
             self.bins[i, j].remove_old()
 
@@ -422,273 +327,52 @@ class MAPElites:
         """Age all bins.
 
         Args:
-            diff (int, optional): The quantity to age for. Defaults to -1.
+            diff (int, optional): The quantity to age for. Defaults to `-1`.
         """
         if self.allow_aging:
-            for i in range(self.bins.shape[0]):
-                for j in range(self.bins.shape[1]):
-                    cbin = self.bins[i, j]
-                    cbin.age(diff=diff)
+            for (_, _), cbin in np.ndenumerate(self.bins):
+                cbin.age(diff=diff)
 
     def _valid_bins(self) -> List[MAPBin]:
-        """Get all the valid bins.
-        A valid bin is a bin with at least 1 Feasible solution and 1 Infeasible solution.
+        """Get all the valid bins. A valid bin is a bin with at least 2 Feasible solution and 2 Infeasible solution.
 
         Returns:
             List[MAPBin]: The list of valid bins.
         """
-        valid_bins = []
-        for i in range(self.bins.shape[0]):
-            for j in range(self.bins.shape[1]):
-                cbin = self.bins[i, j]
-                if len(cbin._feasible) > 1 and len(cbin._infeasible) > 1:
-                    valid_bins.append(cbin)
-        return valid_bins
+        return [cbin for (_, _), cbin in np.ndenumerate(self.bins) if len(cbin._feasible) > 1 and len(cbin._infeasible) > 1]
 
     def _check_res_trigger(self) -> List[Tuple[int, int]]:
+        """Trigger a resolution increase if at least 1 bin has reached full population capacity for both Feasible and Infeasible populations.
+
+        Returns:
+            List[Tuple[int, int]]: The indices of bins that were subdivided.
         """
-        Trigger a resolution increase if at least 1 bin has reached full
-        population capacity for both Feasible and Infeasible populations.
-        """
-        to_increase_res = []
         if self.allow_res_increase:
-            for i in range(self.bins.shape[0]):
-                for j in range(self.bins.shape[1]):
-                    cbin = self.bins[i, j]
-                    if len(cbin._feasible) >= BIN_POP_SIZE and len(cbin._infeasible) >= BIN_POP_SIZE:
-                        to_increase_res.append((i, j))
-            if to_increase_res:
-                for bin_idx in to_increase_res:
-                    self.subdivide_range(bin_idx=bin_idx)
-        return to_increase_res
+            to_increase_res = [cbin.bin_idx for (_, _), cbin in np.ndenumerate(self.bins) if len(cbin._feasible) >= BIN_POP_SIZE and len(cbin._infeasible) >= BIN_POP_SIZE]
+            for bin_idx in reversed(to_increase_res):
+                self.subdivide_range(bin_idx=bin_idx)
+            return to_increase_res
+        return []
 
-    def _assign_fitness(self,
-                        cs: CandidateSolution) -> CandidateSolution:
-        # assign fitness
-        cs.c_fitness = self.compute_fitness(cs=cs,
-                                            extra_args={
-                                                'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                            })
-        if cs.is_feasible:
-            cs.c_fitness += (self.nsc - cs.ncv)
-        # assign behavior descriptors
-        self._set_behavior_descriptors(cs=cs)
-        # set age
-        cs.age = CS_MAX_AGE
-        return cs    
-    
-    def _step(self,
-              populations: List[List[CandidateSolution]],
-              gen: int) -> List[CandidateSolution]:
-        """Apply a single step of modified FI2Pop.
+    def _process_expanded_idxs(self,
+                               expanded_idxs: List[Tuple[int, int]],
+                               selected_idxs: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
+        """Process the indices of expanded bins and filter out expanded bins that were not selected.
 
         Args:
-            populations (List[List[CandidateSolution]]): The Feasible and Infeasible populations.
-            gen (int): The current generation number.
+            expanded_idxs (List[Tuple[int, int]]): The indices of expanded bins.
+            selected_idxs (List[Tuple[int, int]]): The indices of selected bins.
 
         Returns:
-            List[CandidateSolution]: The list of new solutions.
-        """      
-        generated = []
-        for pop in populations:
-            if len(pop) > 0:
-                try:
-                    minimize = False if pop[0].is_feasible else False if self.estimator is not None else True
-                    new_pool = create_new_pool(population=pop,
-                                               generation=gen,
-                                               n_individuals=BIN_POP_SIZE,
-                                               minimize=minimize)
-                    
-                    # set and low-level strings
-                    new_pool = list(map(lambda cs: self.lsystem._add_ll_strings(cs=cs), new_pool))
-                    new_pool = list(map(lambda cs: self.lsystem._set_structure(cs=cs, make_graph=False), new_pool))
-                    
-                    subdivide_solutions(lcs=new_pool,
-                                        lsystem=self.lsystem)
-                    # add hull
-                    if self.hull_builder is not None:
-                        for cs in new_pool:
-                            self.hull_builder.add_external_hull(cs.content)
-                    # assign fitness
-                    generated.extend(Parallel(n_jobs=-1, prefer="threads")(delayed(self._assign_fitness)(cs) for cs in new_pool))
-                except EvoException:
-                    pass
-        
-        if self.estimator is not None:
-            # subdivide for estimator/
-            f_pop = [x for x in generated if x.is_feasible]
-            # Prepare dataset for estimator
-            xs, ys = prepare_dataset(f_pop=f_pop)
-            for x, y in zip(xs, ys):
-                self.buffer.insert(x=x,
-                                    y=y / self.max_f_fitness)
-            # If possible, train estimator
-            try:
-                xs, ys = self.buffer.get()
-                if isinstance(self.estimator, GaussianEstimator):
-                    self.estimator.fit(x=xs,
-                                        y=ys)
-                elif isinstance(self.estimator, MLPEstimator) or isinstance(self.estimator, QuantileEstimator):
-                    train_estimator(self.estimator,
-                                    xs=xs,
-                                    ys=ys)
-                else:
-                    raise NotImplementedError(f'Unrecognized estimator type {type(self.estimator)}.')
-            except EmptyBufferException:
-                pass
-            
-            if self.estimator.is_trained and gen % ALIGNMENT_INTERVAL == 0:
-                # Reassign previous infeasible fitnesses
-                for i in range(self.bins.shape[0]):
-                    for j in range(self.bins.shape[1]):
-                        for cs in self.bins[i, j]._infeasible:
-                            if cs.age > ALIGNMENT_INTERVAL:
-                                cs.c_fitness = self.compute_fitness(cs=cs,
-                                                                    extra_args={
-                                                                        'alphabet': self.lsystem.ll_solver.atoms_alphabet
-                                                                        })
-        self.n_new_solutions += len(generated)
-        return generated
-
-    def rand_step(self,
-                  gen: int = 0) -> None:
-        """Apply a random step.
-
-        Args:
-            gen (int, optional): The current number of generations. Defaults to 0.
+            List[Tuple[int, int]]: The processed indices of expanded bins.
         """
-        # trigger aging of solution
-        self._age_bins()
-        # pick random bin
-        rnd_bin = random.choice(self._valid_bins())
-        f_pop = rnd_bin._feasible
-        i_pop = rnd_bin._infeasible
-        generated = self._step(populations=[f_pop, i_pop],
-                               gen=gen)
-        if generated:
-            self._update_bins(lcs=generated)
-            self._check_res_trigger()
-        else:
-            self._age_bins(diff=1)
-
-    def _interactive_step(self,
-                          bin_idxs: List[List[int]],
-                          gen: int = 0) -> None:
-        """Applies an interactive step.
-
-        Args:
-            bin_idxs (List[Tuple[int, int]]): The indexes of the bins selected.
-            gen (int, optional): The current number of generations. Defaults to 0.
-        """
-        bin_idxs = [tuple(b) for b in bin_idxs]
-        self._age_bins()
-        chosen_bins = [self.bins[bin_idx] for bin_idx in bin_idxs]
-        f_pop, i_pop = [], []
-        for chosen_bin in chosen_bins:
-            if self.enforce_qnt:
-                assert chosen_bin in self._valid_bins(), f'Bin at {chosen_bin.bin_idx} is not a valid bin.'
-            f_pop += chosen_bin._feasible
-            i_pop += chosen_bin._infeasible
-        generated = self._step(populations=[f_pop, i_pop],
-                               gen=gen)
-        if generated:
-            self._update_bins(lcs=generated)
-            expanded_idxs = self._check_res_trigger()
-            # keep track of expanded indexes only if they have also been selected
-            expanded_idxs = set(bin_idxs) - set(expanded_idxs)
-            if expanded_idxs:
-                for i, (m, n) in enumerate(list(expanded_idxs)):
-                    expanded_idxs.add((m + i + 1, n + i))
-                    expanded_idxs.add((m + i, n + i + 1))
-                    expanded_idxs.add((m + i + 1, n + i + 1))
-            expanded_idxs = list(expanded_idxs - set(bin_idxs))
-        else:
-            self._age_bins(diff=1)
-            expanded_idxs = []
-        if self.emitter is not None and self.emitter.requires_pre:
-            self.emitter.pre_step(bins=self.bins,
-                                  selected_idxs=bin_idxs,
-                                  expanded_idxs=expanded_idxs)
-
-    def interactive_mode(self,
-                         n_steps: int = 10) -> None:
-        """Start an interactive evolution session. Bins choice is done via `input`.
-
-        Args:
-            n_steps (int, optional): The number of steps to evolve for. Defaults to 10.
-        """
-        for n in range(n_steps):
-            print(f'### STEP {n+1}/{n_steps} ###')
-            valid_bins = self._valid_bins()
-            list_valid_bins = '\n-' + '\n-'.join([str(x.bin_idx) for x in valid_bins])
-            print(f'Valid bins are: {list_valid_bins}')
-            chosen_bin = None
-            while chosen_bin is None:
-                choice = input('Enter valid bin to evolve: ')
-                choice = choice.replace(' ', '').split(',')
-                selected = self.bins[int(choice[0]), int(choice[1])]
-                if selected in valid_bins:
-                    chosen_bin = selected
-                else:
-                    print('Chosen bin is not amongst valid bins.')
-            self._interactive_step(bin_idxs=[chosen_bin.bin_idx],
-                                   gen=n)
-
-    def reset(self,
-              lcs: Optional[List[CandidateSolution]] = None) -> None:
-        """Reset the current MAP-Elites.
-
-        Args:
-            lcs (Optional[List[CandidateSolution]], optional): If provided, the solutions are assigned to the new MAP-Elites. Defaults to None.
-        """
-        self.bin_qnt = self._initial_n_bins
-        self.bin_sizes = [
-            [self.limits[0] / self.bin_qnt[0]] * self._initial_n_bins[0],
-            [self.limits[1] / self.bin_qnt[1]] * self._initial_n_bins[1]
-        ]
-
-        self.bins = np.empty(shape=self.bin_qnt, dtype=object)
-        for i in range(self.bin_qnt[0]):
-            for j in range(self.bin_qnt[1]):
-                self.bins[i, j] = MAPBin(bin_idx=(i, j),
-                                         bin_size=(self.bin_sizes[0][i],
-                                                   self.bin_sizes[1][j]))
-
-        if self.estimator is not None:
-            if isinstance(self.estimator, MLPEstimator):
-                self.estimator = MLPEstimator(xshape=self.estimator.xshape,
-                                            yshape=self.estimator.yshape)
-            elif isinstance(self.estimator, QuantileEstimator):
-                self.estimator = QuantileEstimator(xshape=self.estimator.xshape,
-                                                   yshape=self.estimator.yshape)
-        self.buffer.clear()
-
-        if self.emitter is not None:
-            self.emitter.reset()
-        
-        if lcs is not None:
-            self._update_bins(lcs=lcs)
-            if self.emitter is not None and self.emitter.requires_init:
-                self.emitter.init_emitter(bins=self.bins)
-            self._check_res_trigger()
-        else:
-            self.generate_initial_populations()
-
-    def get_elite(self,
-                  bin_idx: Tuple[int, int],
-                  pop: str) -> CandidateSolution:
-        """Get the elite solution at the selected bin.
-
-        Args:
-            bin_idx (Tuple[int, int]): The index of the bin.
-            pop (str): The population.
-
-        Returns:
-            CandidateSolution: The elite solution.
-        """
-        i, j = bin_idx
-        chosen_bin = self.bins[i, j]
-        return chosen_bin.get_elite(population=pop)
+        expanded_idxs = set(selected_idxs) - set(expanded_idxs)
+        if expanded_idxs:
+            for i, (m, n) in enumerate(list(expanded_idxs)):
+                expanded_idxs.add((m + i + 1, n + i))
+                expanded_idxs.add((m + i, n + i + 1))
+                expanded_idxs.add((m + i + 1, n + i + 1))
+        return list(expanded_idxs - set(selected_idxs))
 
     def update_behavior_descriptors(self,
                                     bs: Tuple[BehaviorCharacterization]) -> None:
@@ -701,10 +385,8 @@ class MAPElites:
         self.limits = (self.b_descs[0].bounds[1] if self.b_descs[0].bounds is not None else 20,
                        self.b_descs[1].bounds[1] if self.b_descs[1].bounds is not None else 20)
         lcs = []
-        for i in range(self.bins.shape[0]):
-            for j in range(self.bins.shape[1]):
-                lcs.extend(self.bins[i, j]._feasible)
-                lcs.extend(self.bins[i, j]._infeasible)
+        for (_, _), cbin in np.ndenumerate(self.bins):
+            lcs.extend([*cbin._feasible, *cbin._infeasible])
             Parallel(n_jobs=-1, prefer="threads")(delayed(self._set_behavior_descriptors)(cs) for cs in lcs)
         self.reset(lcs=lcs)
 
@@ -716,9 +398,8 @@ class MAPElites:
             module (str): The module's name.
         """
         # toggle module's mutability in the solution
-        for i in range(self.bins.shape[0]):
-            for j in range(self.bins.shape[1]):
-                self.bins[i, j].toggle_module_mutability(module=module)
+        for (_, _), cbin in np.ndenumerate(self.bins):
+            cbin.toggle_module_mutability(module=module)
         # toggle module's mutability within the L-system
         ms = [x.name for x in self.lsystem.modules]
         self.lsystem.modules[ms.index(module)].active = not self.lsystem.modules[ms.index(module)].active
@@ -735,53 +416,227 @@ class MAPElites:
         for w, f in zip(weights, self.feasible_fitnesses):
             f.weight = w
         # update solutions fitnesses
-        for i in range(self.bins.shape[0]):
-            for j in range(self.bins.shape[1]):
-                for cs in self.bins[i, j]._feasible:
-                    cs.c_fitness = sum([self.feasible_fitnesses[i].weight * cs.fitness[i] for i in range(len(cs.fitness))])
-                    cs.c_fitness += (self.nsc - cs.ncv)
+        for (_, _), cbin in np.ndenumerate(self.bins):
+            for cs in cbin._feasible:
+                cs.c_fitness = sum([self.feasible_fitnesses[i].weight * cs.fitness[i] for i in range(len(cs.fitness))]) + (self.nsc - cs.ncv)
 
-    def compute_bandit_reward(self) -> float:
-        return sum([f(self) for f in self.agent_rewards])
-    
+    def reassign_all_content(self, **kwargs) -> None:
+        """Reassign all content to the solutions"""
+        for (_, _), cbin in np.ndenumerate(self.bins):
+            for pop in [cbin._feasible, cbin._infeasible]:
+                for cs in pop:
+                    cs._content = None
+                    cs = self.lsystem._set_structure(cs=self.lsystem._add_ll_strings(cs=cs),
+                                                     make_graph=False)
+                    if cs.is_feasible:
+                        if self.hull_builder is not None:
+                            self.hull_builder.add_external_hull(structure=cs.content)
+                        if kwargs.get('sym_axis', None) is not None:
+                            enforce_symmetry(structure=cs.content,
+                                             axis=kwargs.get('sym_axis', None),
+                                             upper=kwargs.get('sym_upper', None))
+
+    def generate_initial_populations(self,
+                                     pops_size: int = POP_SIZE,
+                                     n_retries: int = N_RETRIES) -> None:
+        """Generate the initial populations.
+
+        Args:
+            pops_size (int, optional): The size of the populations. Defaults to `POP_SIZE`.
+            n_retries (int, optional): The number of initialization retries. Defaults to `N_RETRIES`.
+        """
+        # create populations
+        feasible_pop, infeasible_pop = [], []
+        self.lsystem.disable_sat_check()
+        with trange(n_retries, desc='Initialization ') as iterations:
+            for i in iterations:
+                solutions = self.lsystem.apply_rules(starting_strings=['head', 'body', 'tail'],
+                                                     iterations=[1, N_ITERATIONS, 1],
+                                                     create_structures=True,
+                                                     make_graph=False)
+                subdivide_solutions(lcs=solutions,
+                                    lsystem=self.lsystem)
+                for cs in solutions:
+                    if cs.is_feasible and len(feasible_pop) < pops_size and cs not in feasible_pop:
+                        if self.hull_builder is not None:
+                            self.hull_builder.add_external_hull(structure=cs._content)
+                        feasible_pop.append(self._assign_fitness(cs=cs))
+                    elif not cs.is_feasible and len(infeasible_pop) < pops_size and cs not in feasible_pop:
+                        infeasible_pop.append(self._assign_fitness(cs=cs))
+                iterations.set_postfix(ordered_dict={
+                    'fpop-size': f'{len(feasible_pop)}/{pops_size}',
+                    'ipop-size': f'{len(infeasible_pop)}/{pops_size}'
+                },
+                                       refresh=True)
+                if i == n_retries or (len(feasible_pop) == pops_size and len(infeasible_pop) == pops_size):
+                    break
+        # assign solutions to respective bins
+        self._update_bins(lcs=[*feasible_pop, *infeasible_pop])
+        # if required, initialize the emitter
+        if self.emitter is not None and self.emitter.requires_init:
+            self.emitter.init_emitter(bins=self.bins)
+
+    def _step(self,
+              populations: List[List[CandidateSolution]],
+              gen: int) -> List[CandidateSolution]:
+        """Apply a single step of modified FI2Pop.
+
+        Args:
+            populations (List[List[CandidateSolution]]): The Feasible and Infeasible populations.
+            gen (int): The current generation number.
+
+        Raises:
+            NotImplementedError: Raised if the estimator is unrecognized.
+
+        Returns:
+            List[CandidateSolution]: The new solutions.
+        """
+        # generate solutions from both populations
+        generated = []
+        for pop in populations:
+            if len(pop) > 0:
+                try:
+                    minimize = False if pop[0].is_feasible else False if self.estimator is not None else True
+                    new_pool = create_new_pool(population=pop,
+                                               generation=gen,
+                                               n_individuals=BIN_POP_SIZE,
+                                               minimize=minimize)
+                    # set low-level strings and structures
+                    new_pool = list(
+                        map(lambda cs: self.lsystem._add_ll_strings(cs=cs), new_pool))
+                    new_pool = list(map(lambda cs: self.lsystem._set_structure(cs=cs,
+                                                                               make_graph=False), new_pool))
+                    subdivide_solutions(lcs=new_pool,
+                                        lsystem=self.lsystem)
+                    # add hull
+                    if self.hull_builder is not None:
+                        for cs in new_pool:
+                            self.hull_builder.add_external_hull(cs.content)
+                    # assign fitness
+                    generated.extend(Parallel(n_jobs=-1, prefer="threads")(delayed(self._assign_fitness)(cs) for cs in new_pool))
+                # evoexceptions are ignored, though it is possible to get stuck here
+                except EvoException:
+                    pass
+        # if possible, train the estimator for fitness acquirement
+        if self.estimator is not None:
+            # Prepare dataset for estimator
+            xs, ys = prepare_dataset(
+                f_pop=[x for x in generated if x.is_feasible])
+            for x, y in zip(xs, ys):
+                self.buffer.insert(x=x,
+                                   y=y / self.max_f_fitness)
+            # check if we can train the estimator
+            try:
+                xs, ys = self.buffer.get()
+                if isinstance(self.estimator, GaussianEstimator):
+                    self.estimator.fit(xs=xs, ys=ys)
+                elif isinstance(self.estimator, MLPEstimator) or isinstance(self.estimator, QuantileEstimator):
+                    train_estimator(self.estimator, xs=xs, ys=ys)
+                else:
+                    raise NotImplementedError(f'Unrecognized estimator type {type(self.estimator)}.')
+            # we skip training altogether if we don't have datapoints
+            except EmptyBufferException:
+                pass
+            # realignment check
+            if self.estimator.is_trained and gen % ALIGNMENT_INTERVAL == 0:
+                # Reassign previous infeasible fitnesses
+                for (_, _), cbin in np.ndenumerate(self.bins):
+                    for cs in cbin._infeasible:
+                        if cs.age > ALIGNMENT_INTERVAL:
+                            cs.c_fitness = self.compute_fitness(cs=cs)
+        # metrics tracking
+        self.n_new_solutions += len(generated)
+        return generated
+
+    def rand_step(self,
+                  gen: int = 0) -> None:
+        """Apply a random step.
+
+        Args:
+            gen (int, optional): The current number of generations. Defaults to 0.
+        """
+        # trigger aging of solution
+        self._age_bins()
+        # pick random bin
+        rnd_bin = random.choice(self._valid_bins())
+        generated = self._step(populations=[rnd_bin._feasible, rnd_bin._infeasible],
+                               gen=gen)
+        if generated:
+            self._update_bins(lcs=generated)
+            self._check_res_trigger()
+        else:
+            self._age_bins(diff=1)
+
+    def interactive_step(self,
+                         bin_idxs: List[List[int]],
+                         gen: int = 0) -> None:
+        """Applies an interactive step.
+
+        Args:
+            bin_idxs (List[Tuple[int, int]]): The indexes of the bins selected.
+            gen (int, optional): The current number of generations. Defaults to `0`.
+        """
+        self._age_bins()
+        bin_idxs = [tuple(b) for b in bin_idxs]
+        chosen_bins = [self.bins[bin_idx] for bin_idx in bin_idxs]
+        f_pop, i_pop = [], []
+        for chosen_bin in chosen_bins:
+            if self.enforce_qnt:
+                assert chosen_bin in self._valid_bins(), f'Bin at {chosen_bin.bin_idx} is not a valid bin.'
+            f_pop.extend(*chosen_bin._feasible)
+            i_pop.extend(*chosen_bin._infeasible)
+        generated = self._step(populations=[f_pop, i_pop],
+                               gen=gen)
+        if generated:
+            self._update_bins(lcs=generated)
+            expanded_idxs = self._check_res_trigger()
+            # keep track of expanded indexes only if they have also been selected
+            expanded_idxs = self._process_expanded_idxs(expanded_idxs=expanded_idxs,
+                                                        selected_idxs=bin_idxs)
+        else:
+            self._age_bins(diff=1)
+            expanded_idxs = []
+        if self.emitter is not None and self.emitter.requires_pre:
+            self.emitter.pre_step(bins=self.bins,
+                                  selected_idxs=bin_idxs,
+                                  expanded_idxs=expanded_idxs)
+
     def emitter_step(self,
                      gen: int = 0) -> None:
         """Apply a step according to the emitter.
 
         Args:
-            gen (int, optional): The current generation number. Defaults to 0.
+            gen (int, optional): The current generation number. Defaults to `0`.
+
+        Raises:
+            AssertionError: Raised if there is no MultiArmed Bandit Agent or Emitter set in MAP-Elites.
+            NotImplementedError: Raised if the merge method specified in the bandit action is unrecognized.
+            NotImplementedError: Raised if the emitter output is not in the expected data format.
         """
-        emitter, bandit = None, None
-        if self.emitter is not None:
-            emitter = self.emitter
-        elif self.agent is not None:
-            if type(self.agent) is EpsilonGreedyAgent:
-                # get bandit
-                bandit = self.agent.choose_bandit()
-                emitter_str, method_str = bandit.action.split(';')
-                # set emitter
-                emitter = get_emitter_by_str(emitter=emitter_str)
-                # set merge method
-                if method_str == 'max':
-                    self.infeas_fitness_idx = 0
-                elif method_str == 'median':
-                    self.infeas_fitness_idx = 1
-                elif method_str == 'min':
-                    self.infeas_fitness_idx = 2
-                else:
-                    raise NotImplementedError(f'Unrecognized merge method from bandit action: {method_str}')
-                # update existing solution's fitness
-                for i in range(self.bins.shape[0]):
-                    for j in range(self.bins.shape[1]):
-                        for cs in self.bins[i, j]._infeasible:
-                            cs.c_fitness = cs.fitness[self.infeas_fitness_idx]
-            elif type(self.agent) is ContextualBanditEmitter:
-                pass
-        else:
-            raise NotImplementedError('MAP-Elites requires either a fixed emitter or a MultiArmed Bandit Agent, but neither were provided.')
-        selected_bins = emitter.pick_bin(bins=self.bins)
+        assert self.agent or self.emitter, 'MAP-Elites requires either a fixed emitter or a MultiArmed Bandit Agent, but neither were provided.'
+        if self.agent is not None:
+            # get bandit
+            bandit = self.agent.choose_bandit()
+            emitter_str, method_str = bandit.action.split(';')
+            # set emitter
+            self.emitter = get_emitter_by_str(emitter=emitter_str)
+            # set merge method
+            if method_str == 'max':
+                self.infeas_fitness_idx = 0
+            elif method_str == 'median':
+                self.infeas_fitness_idx = 1
+            elif method_str == 'min':
+                self.infeas_fitness_idx = 2
+            else:
+                raise NotImplementedError(f'Unrecognized merge method from bandit action: {method_str}')
+            # update existing solution's fitness
+            for (_, _), cbin in np.ndenumerate(self.bins):
+                for cs in cbin._infeasible:
+                    cs.c_fitness = cs.fitness[self.infeas_fitness_idx]
+        selected_bins = self.emitter.pick_bin(bins=self.bins)
         if selected_bins:
             fpop, ipop = [], []
+            # TODO: this could be handled better
             if isinstance(selected_bins[0], MAPBin):
                 for selected_bin in selected_bins:
                     fpop.extend(selected_bin._feasible)
@@ -793,119 +648,51 @@ class MAPElites:
                     ipop.extend(selected_bin._infeasible)
             else:
                 raise NotImplementedError(f'Unrecognized emitter output: {selected_bins}.')
-            # print(f'Emitter picked a total of {len(fpop)} feasible and {len(ipop)} infeasible solutions ({len(selected_bins)}).')
             generated = self._step(populations=[fpop, ipop],
-                                gen=gen)
+                                   gen=gen)
             if generated:
                 self._update_bins(lcs=generated)
                 self._check_res_trigger()
             if self.emitter is not None and self.emitter.requires_post:
                 self.emitter.post_step(bins=self.bins)
             if bandit is not None:
-                r = self.compute_bandit_reward()
                 self.agent.reward_bandit(bandit=bandit,
-                                        reward=r)
-    
-    def get_coverage(self,
-                     pop: str) -> Tuple[int, int]:
-        """Get the grid coverage.
+                                         reward=sum([f(self) for f in self.agent_rewards]))
+
+    def reset(self,
+              lcs: Optional[List[CandidateSolution]] = None) -> None:
+        """Reset the current MAP-Elites.
 
         Args:
-            pop (str): The population.
-
-        Returns:
-            Tuple[int, int]: The number of non-empty bins and the total number of bins.
+            lcs (Optional[List[CandidateSolution]], optional): If provided, the solutions are assigned to the new MAP-Elites. Defaults to `None`.
         """
-        c, t = 0, 0
-        for i in range(self.bins.shape[0]):
-            for j in range(self.bins.shape[1]):
-                if self.bins[i, j].non_empty(pop=pop):
-                    c += 1
-                t += 1
-        return c, t
-    
-    def get_fitness_metrics(self,
-                            pop: str) -> Tuple[int, int]:
-        """Get the fitness metrics of a population.
+        # reset MAP-Elites properties
+        self.bin_qnt = self._initial_n_bins
+        self.bin_sizes = [[self.limits[0] / self.bin_qnt[0]] * self._initial_n_bins[0],
+                          [self.limits[1] / self.bin_qnt[1]] * self._initial_n_bins[1]]
+        self.bins = np.empty(shape=self.bin_qnt, dtype=MAPBin)
+        for (i, j), _ in np.ndenumerate(self.bins):
+            self.bins[i, j] = MAPBin(bin_idx=(i, j),
+                                     bin_size=(self.bin_sizes[0][i], self.bin_sizes[1][j]))
+        if self.estimator is not None:
+            if isinstance(self.estimator, MLPEstimator):
+                self.estimator = MLPEstimator(xshape=self.estimator.xshape,
+                                              yshape=self.estimator.yshape)
+            elif isinstance(self.estimator, QuantileEstimator):
+                self.estimator = QuantileEstimator(xshape=self.estimator.xshape,
+                                                   yshape=self.estimator.yshape)
+        self.buffer.clear()
+        if self.emitter is not None:
+            self.emitter.reset()
+        # assign solutions if provided
+        if lcs is not None:
+            self._update_bins(lcs=lcs)
+            self._check_res_trigger()
+            if self.emitter is not None and self.emitter.requires_init:
+                self.emitter.init_emitter(bins=self.bins)
+        else:
+            self.generate_initial_populations()
 
-        Args:
-            pop (str): The population.
-
-        Returns:
-            Tuple[int, int]: The top and mean fitness.
-        """
-        fs = []
-        for i in range(self.bins.shape[0]):
-            for j in range(self.bins.shape[1]):
-                p = self.bins[i, j]._feasible if pop == 'feasible' else self.bins[i, j]._infeasible
-                for cs in p:
-                    fs.append(cs.c_fitness)
-        top = np.max(fs)
-        if pop == 'infeasible' and self.estimator is None:
-            top = np.min(fs)
-        return top, np.average(fs)
-
-    def get_qdscore(self,
-                    pop: str) -> float:
-        qd = 0
-        for i in range(self.bins.shape[0]):
-            for j in range(self.bins.shape[1]):
-                if self.bins[i, j].non_empty(pop=pop):
-                    qd += self.bins[i, j].get_elite(population=pop).c_fitness
-        return qd
-    
-    def get_new_feas_with_unfeas_parents(self):
-        n_new = 0
-        total = 0
-        for i in range(self.bins.shape[0]):
-            for j in range(self.bins.shape[1]):
-                for cs in self.bins[i, j]._feasible:
-                    if cs.age == CS_MAX_AGE:
-                        if cs.parents:
-                            if not cs.parents[0].is_feasible:
-                                n_new += 1
-                                total += 1
-                                break
-                for cs in self.bins[i, j]._infeasible:
-                    if cs.age == CS_MAX_AGE:
-                        total += 1
-        return n_new, total
-    
-    def get_random_elite(self,
-                         pop: str) -> CandidateSolution:
-        nonempty = []
-        for i in range(self.bins.shape[0]):
-            for j in range(self.bins.shape[1]):
-                if self.bins[i, j].non_empty(pop=pop):
-                    nonempty.append(self.bins[i, j])
-        return np.random.choice(nonempty).get_elite(population=pop)
-
-    def count_solutions(self,
-                        ignore_age_zero: bool = True):
-        n_solutions = 0
-        for i in range(self.bins.shape[0]):
-            for j in range(self.bins.shape[1]):
-                n_solutions += np.sum([1  if x.age != 0 else (1 if ignore_age_zero else 0) for x in self.bins[i, j]._feasible])
-                n_solutions += np.sum([1  if x.age != 0 else (1 if ignore_age_zero else 0) for x in self.bins[i, j]._infeasible])
-        return int(n_solutions)
-    
-    def reassign_all_content(self, **kwargs) -> None:
-        for i in range(self.bins.shape[0]):
-            for j in range(self.bins.shape[1]):
-                b = self.bins[i, j]
-                for pop in [b._feasible, b._infeasible]:
-                    for cs in pop:
-                        cs._content = None
-                        cs = self.lsystem._set_structure(cs=self.lsystem._add_ll_strings(cs=cs), make_graph=False)
-                        if cs.is_feasible:
-                            if self.hull_builder is not None:
-                                self.hull_builder.add_external_hull(structure=cs.content)
-                            if kwargs.get('sym_axis', None) is not None:
-                                enforce_symmetry(structure=cs.content,
-                                                axis=kwargs.get('sym_axis', None),
-                                                upper=kwargs.get('sym_upper', None))
-                            
-    
     def to_json(self) -> Dict[str, Any]:
         return {
             'lsystem': self.lsystem.to_json(),
@@ -923,13 +710,15 @@ class MAPElites:
             'allow_res_increase': self.allow_res_increase,
             'allow_aging': self.allow_aging,
         }
-    
+
     @staticmethod
     def from_json(my_args: Dict[str, Any]) -> 'MAPElites':
         me = MAPElites(lsystem=LSystem.from_json(my_args['lsystem']),
-                       feasible_fitnesses=[Fitness.from_json(f) for f in my_args['feasible_fitnesses']],
+                       feasible_fitnesses=[Fitness.from_json(
+                           f) for f in my_args['feasible_fitnesses']],
                        buffer=Buffer.from_json(my_args['buffer']),
-                       behavior_descriptors=tuple([BehaviorCharacterization.from_json(bc) for bc in my_args['b_descs']]),
+                       behavior_descriptors=tuple(
+                           [BehaviorCharacterization.from_json(bc) for bc in my_args['b_descs']]),
                        n_bins=tuple(my_args['bin_qnt']),
                        estimator=None,
                        emitter=RandomEmitter(),
@@ -940,11 +729,141 @@ class MAPElites:
         me.allow_res_increase = my_args['allow_res_increase']
         me.allow_aging = my_args['allow_aging']
         if my_args['emitter']:
-            me.emitter = emitters[my_args['emitter']['name']].from_json(my_args['emitter'])
+            me.emitter = emitters[my_args['emitter']
+                                  ['name']].from_json(my_args['emitter'])
         if my_args['estimator']:
             me.estimator = MLPEstimator.from_json(my_args['estimator'])
         if my_args['agent']:
             me.agent = EpsilonGreedyAgent.from_json(my_args['agent'])
-            me.agent_rewards = [agent_rewards[ar] for ar in my_args['agent_rewards']]
-        me.bins = np.asarray([MAPBin.from_json(mb) for mb in my_args['bins']]).reshape(me.bin_qnt)
+            me.agent_rewards = [agent_rewards[ar]
+                                for ar in my_args['agent_rewards']]
+        me.bins = np.asarray([MAPBin.from_json(mb)
+                             for mb in my_args['bins']]).reshape(me.bin_qnt)
         return me
+
+    # This method is deprecated and was used during initial debugging. Source is kept jsut in case.
+    # def interactive_mode(self,
+    #                      n_steps: int = 10) -> None:
+    #     """Start an interactive evolution session. Bins choice is done via `input`.
+
+    #     Args:
+    #         n_steps (int, optional): The number of steps to evolve for. Defaults to 10.
+    #     """
+    #     for n in range(n_steps):
+    #         print(f'### STEP {n+1}/{n_steps} ###')
+    #         valid_bins = self._valid_bins()
+    #         list_valid_bins = '\n-' + '\n-'.join([str(x.bin_idx) for x in valid_bins])
+    #         print(f'Valid bins are: {list_valid_bins}')
+    #         chosen_bin = None
+    #         while chosen_bin is None:
+    #             choice = input('Enter valid bin to evolve: ')
+    #             choice = choice.replace(' ', '').split(',')
+    #             selected = self.bins[int(choice[0]), int(choice[1])]
+    #             if selected in valid_bins:
+    #                 chosen_bin = selected
+    #             else:
+    #                 print('Chosen bin is not amongst valid bins.')
+    #         self._interactive_step(bin_idxs=[chosen_bin.bin_idx],
+    #                                gen=n)
+
+
+def get_elite(mapelites: MAPElites,
+              bin_idx: Tuple[int, int],
+              pop: str) -> CandidateSolution:
+    """Get the elite solution at the selected bin.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+        bin_idx (Tuple[int, int]): The index of the bin.
+        pop (str): The population.
+
+    Returns:
+        CandidateSolution: The elite solution.
+    """
+    return mapelites.bins[bin_idx].get_elite(population=pop)
+
+
+def get_coverage(mapelites: MAPElites,
+                 pop: str) -> Tuple[int, int]:
+    """Get the grid coverage.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+        pop (str): The population.
+
+    Returns:
+        Tuple[int, int]: The number of non-empty bins and the total number of bins.
+    """
+    t = mapelites.bins.shape[0] * mapelites.bins.shape[1]
+    c = sum([1 if cbin.non_empty(pop=pop) else 0 for (_, _), cbin in np.ndenumerate(mapelites.bins)])
+    return c, t
+
+
+def get_fitness_metrics(mapelites: MAPElites,
+                        pop: str) -> Tuple[int, int]:
+    """Get the fitness metrics of a population.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+        pop (str): The population.
+
+    Returns:
+        Tuple[int, int]: The top and mean fitness.
+    """
+    fs = []
+    for (_, _), cbin in np.ndenumerate(mapelites.bins):
+        for cs in cbin._feasible if pop == 'feasible' else cbin._infeasible:
+            fs.append(cs.c_fitness)
+    top = min(fs) if pop == 'infeasible' and mapelites.estimator is None else max(fs)
+    return top, np.average(fs)
+
+
+def get_qdscore(mapelites: MAPElites,
+                pop: str) -> float:
+    """Get the Quality-Diversity-Score for the selected population. The QD-Score is computed as the sum of the fitness of the elite solution in each bin.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+        pop (str): The population.
+
+    Returns:
+        float: The QD-Score.
+    """
+    return sum([cbin.get_elite(population=pop).c_fitness if cbin.non_empty(pop=pop) else 0 for (_, _), cbin in np.ndenumerate(mapelites.bins)])
+
+
+def get_new_feas_with_unfeas_parents(mapelites: MAPElites) -> Tuple[int, int]:
+    """Get the number of new feasible solutions with infeasible parents and the total number of new solutions.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+
+    Returns:
+        Tuple[int, int]: The number of new solutions with infeasible parents and the total number of new solutions
+    """
+    n_new = 0
+    total = 0
+    for (_, _), cbin in np.ndenumerate(mapelites.bins):
+        for cs in cbin._feasible:
+            if cs.age == CS_MAX_AGE and cs.parents and not cs.parents[0].is_feasible:
+                n_new += 1
+                total += 1
+                break
+        for cs in cbin._infeasible:
+            if cs.age == CS_MAX_AGE:
+                total += 1
+    return n_new, total
+
+
+def get_random_elite(mapelites: MAPElites,
+                     pop: str) -> CandidateSolution:
+    """Get a random elite for the selected population.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+        pop (str): The population.
+
+    Returns:
+        CandidateSolution: The random elite.
+    """
+    return np.random.choice([cbin for (_, _), cbin in np.ndenumerate(mapelites.bins) if cbin.non_empty(pop=pop)]).get_elite(population=pop)

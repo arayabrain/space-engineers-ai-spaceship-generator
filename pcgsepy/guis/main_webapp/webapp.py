@@ -27,7 +27,7 @@ from pcgsepy.mapelites.bin import MAPBin
 from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, GreedyEmitter,
                                         HumanEmitter, HumanPrefMatrixEmitter,
                                         PreferenceBanditEmitter, RandomEmitter)
-from pcgsepy.mapelites.map import MAPElites
+from pcgsepy.mapelites.map import MAPElites, get_elite
 from pcgsepy.common.api_call import block_definitions
 from tqdm import trange
 
@@ -632,8 +632,9 @@ def _get_elite_content(mapelites: MAPElites,
                        pop: List[CandidateSolution]) -> go.Scatter3d:
     if bin_idx is not None:
         # get elite content
-        elite = mapelites.get_elite(bin_idx=bin_idx,
-                                    pop=pop)
+        elite = get_elite(mapelites=mapelites,
+                          bin_idx=bin_idx,
+                          pop=pop)
         structure = elite.content
         content = structure.as_grid_array
         arr = np.nonzero(content)

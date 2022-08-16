@@ -74,6 +74,11 @@ class QuantileEstimator(th.nn.Module):
         out = th.cat((yq1, yq2, yq3), dim=1)
         return th.sigmoid(out)
 
+    def predict(self,
+                x: np.ndarray) -> float:
+         with th.no_grad():
+             return self.forward(th.tensor(x).float().unsqueeze(0)).numpy()[0]
+    
     def save(self,
              fname: str):
         """Save the current model to file.
@@ -137,9 +142,9 @@ class GaussianEstimator:
         self.is_trained = False
     
     def fit(self,
-            X: np.ndarray,
-            y: np.ndarray) -> None:
-        self.gpr.fit(X, y)
+            xs: np.ndarray,
+            ys: np.ndarray) -> None:
+        self.gpr.fit(xs, ys)
         self.is_trained = True
     
     def predict(self,
@@ -202,6 +207,11 @@ class MLPEstimator(th.nn.Module):
         out = F.elu(self.l3(out))
         return th.clamp(out, EPSILON_F, 1)
 
+    def predict(self,
+                x: np.ndarray) -> float:
+         with th.no_grad():
+             return self.forward(th.tensor(x).float()).numpy()[0]
+    
     def save(self,
              fname: str):
         """Save the current model to file.
