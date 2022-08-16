@@ -1,4 +1,5 @@
 import base64
+from glob import glob
 import json
 import logging
 import os
@@ -75,6 +76,7 @@ time_elapsed = []
 n_spaceships_inspected = []
 current_mapelites = None
 step_progress = -1
+consent_ok = None
 # TODO: create these
 my_emitterslist = ['mapelites_random.json',
                    'mapelites_prefmatrix.json',
@@ -146,6 +148,7 @@ def set_app_layout(behavior_descriptors_names,
     
     global current_mapelites
     global rngseed
+    global consent_ok
     
     description_str, help_str = '', ''
     with open('./assets/description.md', 'r') as f:
@@ -163,6 +166,32 @@ def set_app_layout(behavior_descriptors_names,
     current_mapelites = mapelites
     
     logging.getLogger('webapp').info(msg=f'Your ID is {str(rngseed).zfill(3)}; please remember this!')
+    
+    logging.getLogger('webapp').info(f'Consent was {consent_ok}')
+    
+    consent_dialog = dbc.Modal([
+            dbc.ModalHeader(dbc.ModalTitle("Consent form"), close_button=False),
+            dbc.ModalBody(dcc.Markdown("""This application can collect anonymous user data used for research purposes as expressed in [the application documentation](https://github.com/arayabrain/space-engineers-ai-spaceship-generator).
+
+The data collected does not contain any personally identifiable information (such as age, gender, etc...): only data related to the interaction with the application (_number of spaceships evaluated_) and the application performance on your machine (_time elapsed_) are collected.
+                                       
+Do you consent to the data collection?""")),
+            dbc.ModalFooter(children=[
+                dbc.Button("Yes",
+                           id="consent-yes",
+                           className="ms-auto",
+                           n_clicks=0),
+                dbc.Button("No",
+                           id="consent-no",
+                           className="ms-auto",
+                           n_clicks=0)
+                ])
+            ],
+        id="consent-modal",
+        centered=True,
+        backdrop="static",
+        keyboard=False,
+        is_open=consent_ok is None)
     
     header = html.Div(children=[
             html.H1(children='🚀Space Engineers🚀 IC MAP-Elites',
@@ -455,6 +484,7 @@ def set_app_layout(behavior_descriptors_names,
     
     app.layout = dbc.Container(
         children=[
+            consent_dialog,
             header,
             html.Br(),
             dbc.Row(children=[
@@ -479,6 +509,17 @@ def set_app_layout(behavior_descriptors_names,
             ],
         fluid=True)
 
+
+@app.callback(
+    Output("consent-modal", "is_open"),
+    [Input("consent-yes", "n_clicks"),
+     Input("consent-no", "n_clicks")],
+    prevent_initial_call=True
+)
+def set_consent(n_y, n_n):
+    global consent_ok
+    consent_ok = True if n_y else False if n_n else None
+    return False
 
 @app.callback(Output('console-out', 'value'),
               Input('interval1', 'n_intervals'))
@@ -930,6 +971,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
     global selected_bins
     global exp_n
     global rngseed
+    global consent_ok
     global n_spaceships_inspected
     global time_elapsed
     
@@ -953,15 +995,15 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                           pop_name=pop_name,
                                           metric_name=metric_name,
                                           method_name=method_name)
+            if consent_ok:
+                n_spaceships_inspected[-1].append(1)  # new generation of last experiment
             
-            n_spaceships_inspected[-1].append(1)  # new generation of last experiment
-            
-            if time_elapsed == []:  # first generation of first experiment
-                time_elapsed.append([elapsed])
-            elif time_elapsed[-1] == []:  # first generation of latest experiment
-                time_elapsed[-1] = [elapsed]
-            else:  # latest generation of latest experiment
-                time_elapsed[-1].append(elapsed)
+                if time_elapsed == []:  # first generation of first experiment
+                    time_elapsed.append([elapsed])
+                elif time_elapsed[-1] == []:  # first generation of latest experiment
+                    time_elapsed[-1] = [elapsed]
+                else:  # latest generation of latest experiment
+                    time_elapsed[-1].append(elapsed)
             
     elif event_trig == 'reset-btn':
         res = _apply_reset(mapelites=current_mapelites)
@@ -972,15 +1014,16 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                           metric_name=metric_name,
                                           method_name=method_name)
             
-            if n_spaceships_inspected == []:
-                n_spaceships_inspected.append([0])
-            else:
-                n_spaceships_inspected[-1] = [[0]]
-            
-            if time_elapsed == []:
-                time_elapsed.append([])
-            else:
-                time_elapsed[-1] = [[]]   
+            if consent_ok:
+                if n_spaceships_inspected == []:
+                    n_spaceships_inspected.append([0])
+                else:
+                    n_spaceships_inspected[-1] = [[0]]
+                
+                if time_elapsed == []:
+                    time_elapsed.append([])
+                else:
+                    time_elapsed[-1] = [[]]
     elif event_trig in ['bc0-Major-axis_Medium-axis', 'bc0-Major-axis_Smallest-axis', 'bc0-Average-Proportions', 'bc0-Symmetry']:
         b0 = event_trig.replace('bc0-', '').replace('_', ' / ').replace('-', ' ')
         res = _apply_bc_change(bcs=(b0, b1),
@@ -1064,10 +1107,11 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                               bin_idx=(j, i),
                                               pop='feasible' if pop_name == 'Feasible' else 'infeasible')
             
-            if n_spaceships_inspected == []:  # first experiment
-                n_spaceships_inspected.append([1])  # one spaceship selected in the first generation
-            else:
-                n_spaceships_inspected[-1][-1] += 1  # update latest generation of the latest experiment
+            if consent_ok:
+                if n_spaceships_inspected == []:  # first experiment
+                    n_spaceships_inspected.append([1])  # one spaceship selected in the first generation
+                else:
+                    n_spaceships_inspected[-1][-1] += 1  # update latest generation of the latest experiment
             
             if not current_mapelites.enforce_qnt and selected_bins != []:
                 if [i, j] not in selected_bins:
@@ -1124,11 +1168,14 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                                 bin_idx=None,
                                                 pop=None)
                 cs_string = cs_size = cs_n_blocks = cs_age = cs_vol = cs_mass = ''
-                content_dl = dict(content=json.dumps({
-                    'time_elapsed': time_elapsed,
-                    'n_interactions': n_spaceships_inspected
-                    }),
-                                  filename=f'user_metrics_{rngseed}')   
+                if consent_ok:
+                    content_dl = dict(content=json.dumps({
+                        'time_elapsed': time_elapsed,
+                        'n_interactions': n_spaceships_inspected
+                        }),
+                                    filename=f'user_metrics_{rngseed}')
+                else:
+                    content_dl = None 
                 logging.getLogger('webapp').info(f'Reached end of all experiments! Please go back to the questionnaire to continue the evaluation.')
             else:
                 logging.getLogger('webapp').info(msg=f'Reached end of experiment {exp_n}! Loading the next experiment...')
@@ -1145,8 +1192,9 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                                 bin_idx=None,
                                                 pop=None)
                 cs_string = cs_size = cs_n_blocks = cs_age = cs_vol = cs_mass = ''
-                n_spaceships_inspected.append([1])  # first generation of new experiment
-                time_elapsed.append([])  # first generation of new experiment
+                if consent_ok:
+                    n_spaceships_inspected.append([1])  # first generation of new experiment
+                    time_elapsed.append([])  # first generation of new experiment
                 logging.getLogger('webapp').info(msg='Next experiment loaded. Please fill out the questionnaire before continuing.')
     elif event_trig == 'popdownload-btn':
         content_dl = dict(content=json.dumps([b.to_json() for b in current_mapelites.bins.flatten().tolist()]),

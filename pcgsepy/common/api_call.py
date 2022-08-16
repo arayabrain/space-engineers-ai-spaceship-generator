@@ -71,7 +71,7 @@ def call_api(host: str = HOST,
 if not os.path.exists('./block_definitions.json'):
     # poll API for block definition ids
     jsons = [generate_json(method="Definitions.BlockDefinitions")]
-    res = call_api(jsons=jsons)[0]
+    res = call_api(jsons=jsons)
     block_definitions = {}
     for v in res['result']:
         block_definitions['_'.join([v['DefinitionId']['Id'],
@@ -96,7 +96,7 @@ def get_base_values() -> Tuple[Vec, Vec, Vec]:
     Returns:
         Tuple[Vec, Vec, Vec]: The data as tuple of `Vec`s
     """
-    obs = call_api(jsons=[generate_json(method="Observer.Observe")])[0]
+    obs = call_api(jsons=[generate_json(method="Observer.Observe")])
     return Vec.from_json(obs['result']['Position']), Vec.from_json(obs['result']['OrientationForward']), Vec.from_json(obs['result']['Camera']['OrientationUp'])
 
 
