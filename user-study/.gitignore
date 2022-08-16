@@ -3,5 +3,4 @@
 *.spec
 build/*
 dist/*
-estimators/*
 plots/*
