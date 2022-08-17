@@ -36,7 +36,7 @@ def generate_json(method: str,
     }
 
 
-def compactify_jsons(jsons: List[Dict[str, Any]]) -> List[str]:
+def compactify_jsons(jsons: List[Dict[str, Any]]) -> str:
     """Compactify JSON data. Removes any space in the JSOn and uses no indentation.
 
     Args:

@@ -120,6 +120,7 @@ mapelites = MAPElites(lsystem=lsystem,
                       behavior_descriptors=behavior_descriptors,
                       n_bins=(8,8),
                       emitter=ContextualBanditEmitter())
+mapelites.generate_initial_populations()
 
 set_callback_props(mapelites=mapelites)
 

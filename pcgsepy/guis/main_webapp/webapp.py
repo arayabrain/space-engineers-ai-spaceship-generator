@@ -5,6 +5,7 @@ import os
 import random
 import sys
 from datetime import datetime
+from turtle import back
 from typing import Dict, List, Optional, Tuple
 from zipfile import ZipFile
 import time
@@ -95,7 +96,7 @@ def resource_path(relative_path):
 
 
 app = dash.Dash(__name__,
-                title='SE ICMAP-Elites',
+                title='Spaceships Generator',
                 # external_stylesheets=[dbc.themes.CYBORG],
                 external_stylesheets=[dbc.themes.DARKLY],
                 # external_stylesheets=[dbc.themes.FLATLY],
@@ -153,9 +154,6 @@ def set_app_layout(behavior_descriptors_names,
     
     gdev_mode = dev_mode
     
-    description_str, help_str = '', ''
-    with open('./assets/description.md', 'r') as f:
-        description_str = f.read()
     help_file = './assets/help_dev.md' if dev_mode else './assets/help_user.md'
     with open(help_file, 'r') as f:
         help_str = f.read()
@@ -199,21 +197,23 @@ You can use the application without agreeing to the privacy policy; in such case
         keyboard=False,
         is_open=consent_ok is None)
     
-    header = html.Div(children=[
-            html.H1(children='🚀Space Engineers🚀 IC MAP-Elites',
-                    className='title'),
-            dcc.Markdown(children=description_str,
-                         className='page-description'),
-        ],
-                      className='header')
-    
-    footer = html.Div(children=[
-            html.H4(children='Help',
-                    className='title'),
-            dcc.Markdown(help_str,
-                         className='page-description')
-        ],
-                      className='footer')
+    help_modal = dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle("Help"), close_button=True),
+        dbc.ModalBody(dcc.Markdown(help_str))
+    ],
+                           id='help-modal',
+                           centered=True,
+                           backdrop='static',
+                           is_open=False)
+
+    header = dbc.Row(children=[
+                dbc.Col(html.H1(children='🚀Space Engineers Spaceships Generator🚀',
+                                className='title'), width={'size': 10, 'offset': 1}),
+                dbc.Col(dbc.Button('Show help',
+                                   id='help-btn',
+                                   color='info'), align='center', width=1)
+    ],
+                     className='header')
     
     mapelites_heatmap = html.Div(children=[
         dcc.Graph(id="heatmap-plot",
@@ -257,7 +257,7 @@ You can use the application without agreeing to the privacy policy; in such case
     
     content_properties = html.Div(
         children=[
-            html.H6('Content properties',
+            html.H6('Spaceship properties',
                     className='section-title'),
             html.Div(children=[
                 html.P(children='',
@@ -265,17 +265,9 @@ You can use the application without agreeing to the privacy policy; in such case
                 html.P(children='',
                        id='spaceship-n-blocks'),
                 html.P(children='',
-                       id='spaceship-age'),
-                html.P(children='',
                        id='spaceship-total-volume'),
                 html.P(children='',
                        id='spaceship-mass'),
-                html.P(children='Content string: '),
-                dbc.Textarea(id='content-string',
-                             value='',
-                             contentEditable=False,
-                             disabled=True,
-                             class_name='content-string-area'),
                 html.Div(children=[
                     dbc.Button('Download content',
                                id='download-btn',
@@ -284,6 +276,14 @@ You can use the application without agreeing to the privacy policy; in such case
                     ])
                 ])
             ])
+    
+    if dev_mode:
+        content_properties.children.insert(len(content_properties.children) - 2, html.P(children='Content string: '))
+        content_properties.children.insert(len(content_properties.children) - 2,  dbc.Textarea(id='content-string',
+                                                                                               value='',
+                                                                                               contentEditable=False,
+                                                                                               disabled=True,
+                                                                                               class_name='content-string-area'))
     
     experiment_settings = html.Div(
         children=[
@@ -488,33 +488,89 @@ You can use the application without agreeing to the privacy policy; in such case
                          className='log-area')
             ])
     
-    app.layout = dbc.Container(
-        children=[
-            consent_dialog,
-            header,
-            html.Br(),
-            dbc.Row(children=[
-                dbc.Col(mapelites_heatmap, width=3),
-                dbc.Col(content_plot, width=7),
-                dbc.Col(content_properties, width=2)],
-                    align="center"),
-            dbc.Row(children=[
-                dbc.Col(mapelites_controls, width=3),
-                dbc.Col(experiment_settings, width=4),
-                dbc.Col(experiment_controls, width=3),
-                dbc.Col(rules, width=2)],
-                    align="start"),
-            dbc.Row(children=[
-                dbc.Col(progress, width={'size': 4, 'offset': 4},
-                        className='spacer')]),
-            dbc.Row(children=[
-                dbc.Col(log, width={'size': 4, 'offset': 4})],
-                    align="end"),
-            html.Br(),
-            footer
-            ],
-        fluid=True)
+    if dev_mode:
+        app.layout = dbc.Container(
+            children=[
+                consent_dialog,
+                header,
+                help_modal,
+                html.Br(),
+                dbc.Row(children=[
+                    dbc.Col(mapelites_heatmap, width=3),
+                    dbc.Col(content_plot, width=7),
+                    dbc.Col(content_properties, width=2)],
+                        align="center"),
+                dbc.Row(children=[
+                    dbc.Col(mapelites_controls, width=3),
+                    dbc.Col(experiment_settings, width=4),
+                    dbc.Col(experiment_controls, width=3),
+                    dbc.Col(rules, width=2)],
+                        align="start"),
+                dbc.Row(children=[
+                    dbc.Col(progress, width={'size': 4, 'offset': 4},
+                            className='spacer')]),
+                dbc.Row(children=[
+                    dbc.Col(log, width={'size': 4, 'offset': 4})],
+                        align="end"),
+                
+                html.Div(id='hidden-div',
+                         children=[],
+                         style={'visibility': 'hidden', 'height': '0px'})
+                ],
+            fluid=True)
+    else:
+        app.layout = dbc.Container(
+            children=[
+                consent_dialog,
+                header,
+                help_modal,
+                html.Br(),
+                dbc.Row(children=[
+                    dbc.Col(mapelites_heatmap, width=3),
+                    dbc.Col(content_plot, width=7),
+                    dbc.Col(content_properties, width=2)],
+                        align="center"),
+                dbc.Row(children=[
+                    dbc.Col(progress, width={'size': 4, 'offset': 4},
+                            className='spacer')]),
+                dbc.Row(children=[
+                    dbc.Col(experiment_settings, width=4),
+                    dbc.Col(experiment_controls, width=4),
+                    dbc.Col(log, width=4)],
+                        align="start"),
+                
+                # add other components but hide them so Dash doesn't throw errors
+                html.Div(id='hidden-div',
+                         children=[
+                             mapelites_controls,
+                             rules,
+                             dbc.Textarea(id='content-string',
+                                          value='')
+                             ],
+                         style={'visibility': 'hidden', 'height': '0px'})
+                ],
+            fluid=True)
 
+app.clientside_callback(
+    """
+    function(clicks) {
+        if (clicks) {
+            window.open("https://docs.google.com/forms/d/1GqV_CDYjqPCVJ4bmfmQvHCFwM1HzAItnlUqkGS_XpTw/prefill", "_blank");
+            return 0;
+        }
+    }
+    """,
+    Output("hidden-div", "n_clicks"),  # super hacky but Dash leaves me no choice
+    Input("consent-yes", "n_clicks")
+)
+
+@app.callback(
+    Output("help-modal", "is_open"),
+    Input("help-btn", "n_clicks"),
+    prevent_initial_call=True
+)
+def show_help(n):
+    return True
 
 @app.callback(
     Output("consent-modal", "is_open"),
@@ -524,9 +580,11 @@ You can use the application without agreeing to the privacy policy; in such case
 )
 def set_consent(n_y, n_n):
     global consent_ok
+    global current_mapelites
+    
     consent_ok = True if n_y else False if n_n else None
     if n_y:
-        logging.getLogger('webapp').info(msg=f'Thank you for participating in the user study! Please visit GOOGLE_FORM_URL before continuing!')
+        logging.getLogger('webapp').info(msg=f'Thank you for participating in the user study! Please visit GOOGLE_FORM_URL before continuing!')       
     return False
 
 @app.callback(Output('console-out', 'value'),
@@ -618,11 +676,10 @@ def _build_heatmap(mapelites: MAPElites,
             else:
                 text[-1].append(s)
     # plot
-    x_labels = np.cumsum([0] + mapelites.bin_sizes[0]
-                         [:-1]) + mapelites.b_descs[0].bounds[0]
-    y_labels = np.cumsum([0] + mapelites.bin_sizes[1]
-                         [:-1]) + mapelites.b_descs[1].bounds[0]
-    title = f'{pop_name} population {metric_name.lower()} ({"Average" if use_mean else "Elite"})'
+    x_labels = np.cumsum([0] + mapelites.bin_sizes[0][:-1]) + mapelites.b_descs[0].bounds[0]
+    y_labels = np.cumsum([0] + mapelites.bin_sizes[1][:-1]) + mapelites.b_descs[1].bounds[0]
+    # title = f'{pop_name} population {metric_name.lower()} ({"Average" if use_mean else "Elite"})'
+    title = 'Spaceships population'
     heatmap = go.Figure(
         data=go.Heatmap(
             z=disp_map,
@@ -634,7 +691,8 @@ def _build_heatmap(mapelites: MAPElites,
             colorscale=hm_callback_props['metric'][metric_name]['colorscale'],
             text=text,
             texttemplate="%{text}",
-            textfont={"color": 'rgba(238, 238, 238, 1.)'}
+            textfont={"color": 'rgba(238, 238, 238, 1.)'},
+            colorbar={"title": {"text": "Fitness", "side": "right"}, 'orientation': 'v'}
             ))
     heatmap.update_xaxes(title=dict(text=mapelites.b_descs[0].name))
     heatmap.update_yaxes(title=dict(text=mapelites.b_descs[1].name))
@@ -651,19 +709,13 @@ def _build_heatmap(mapelites: MAPElites,
                           selector=dict(type='heatmap'))
     heatmap.update_layout(
         xaxis={
-            # 'tickmode': 'linear',
-            # 'tick0': 0,
-            # 'dtick': mapelites.bin_sizes[0],
             'tickvals': x_labels
         },
         yaxis={
-            # 'tickmode': 'linear',
-            # 'tick0': 0,
-            # 'dtick': mapelites.bin_sizes[1],
             'tickvals': y_labels
-        }
+        },
     )
-
+    
     return heatmap
 
 
@@ -684,6 +736,7 @@ def _get_elite_content(mapelites: MAPElites,
         elite = get_elite(mapelites=mapelites,
                           bin_idx=bin_idx,
                           pop=pop)
+        
         structure = elite.content
         content = structure.as_grid_array
         arr = np.nonzero(content)
@@ -696,25 +749,46 @@ def _get_elite_content(mapelites: MAPElites,
                             color=ss,
                             color_discrete_map=_get_colour_mapping(ss),
                             labels={
-                                'x': 'x',
-                                'y': 'y',
-                                'z': 'z',
+                                'x': '',
+                                'y': '',
+                                'z': '',
                                 'color': 'Block type'
                             },
-                            title='Last clicked elite content',
+                            title='Selected spaceship',
                             template='plotly_dark')
+        
+        fig.update_layout(
+            scene=dict(
+                xaxis={
+                    'tickmode': 'array',
+                    'tickvals': [i for i in np.unique(x)],
+                    'ticktext': [structure.grid_size * i for i in np.unique(x)],
+                },
+                yaxis={
+                    'tickmode': 'array',
+                    'tickvals': [i for i in np.unique(y)],
+                    'ticktext': [structure.grid_size * i for i in np.unique(y)],
+                },
+                zaxis={
+                    'tickmode': 'array',
+                    'tickvals': [i for i in np.unique(z)],
+                    'ticktext': [structure.grid_size * i for i in np.unique(z)],
+                }
+            )
+        )
+        
     else:
         fig = px.scatter_3d(x=np.zeros(0, dtype=object),
                             y=np.zeros(0, dtype=object),
                             z=np.zeros(0, dtype=object),
-                            title='Last clicked elite content',
+                            title='Selected spaceship',
                             template='plotly_dark')
     
     fig.update_traces(marker=dict(size=4,
                               line=dict(width=3,
                                         color='DarkSlateGrey')),
                       selector=dict(mode='markers'))
-    
+        
     camera = dict(
         up=dict(x=0, y=0, z=1),
         center=dict(x=0, y=0, z=0),
@@ -907,7 +981,6 @@ def download_mapelites(n_clicks):
               Output('content-string', 'value'),
               Output('spaceship-size', 'children'),
               Output('spaceship-n-blocks', 'children'),
-              Output('spaceship-age', 'children'),
               Output('spaceship-total-volume', 'children'),
               Output('spaceship-mass', 'children'),
               Output('download-btn', 'disabled'),
@@ -925,7 +998,6 @@ def download_mapelites(n_clicks):
               State('content-string', 'value'),
               State('spaceship-size', 'children'),
               State('spaceship-n-blocks', 'children'),
-              State('spaceship-age', 'children'),
               State('spaceship-total-volume', 'children'),
               State('spaceship-mass', 'children'),
               State('population-dropdown', 'label'),
@@ -969,7 +1041,7 @@ def download_mapelites(n_clicks):
               Input('symmetry-z', 'n_clicks'),
               Input('symmetry-radio', 'value'),
               )
-def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n_blocks, cs_age, cs_vol, cs_mass, pop_name, metric_name, b0, b1, symm_axis,
+def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n_blocks, cs_vol, cs_mass, pop_name, metric_name, b0, b1, symm_axis,
                      pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_reset, n_clicks_sub, weights,
                      b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation):
     content_dl = None
@@ -1105,7 +1177,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
         curr_content = _get_elite_content(mapelites=current_mapelites,
                                           bin_idx=None,
                                           pop=None)
-        cs_string = cs_size = cs_n_blocks = cs_age = cs_vol = cs_mass  = ''
+        cs_string = cs_size = cs_n_blocks = cs_vol = cs_mass  = ''
         logging.getLogger('webapp').info(msg=f'Symmetry enforcement completed.')
     elif event_trig == 'heatmap-plot' or event_trig == 'population_dropdown':
         i, j = _from_bc_to_idx(bcs=(clickData['points'][0]['x'],
@@ -1129,7 +1201,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                     selected_bins.remove([i, j])
             else:
                 selected_bins = [[i, j]]
-            cs_string = cs_size = cs_n_blocks = cs_age = cs_vol = cs_mass = ''
+            cs_string = cs_size = cs_n_blocks = cs_vol = cs_mass = ''
             if len(selected_bins) > 0:
                 elite = get_elite(mapelites=current_mapelites,
                                   bin_idx=_switch([selected_bins[-1]])[0],
@@ -1137,7 +1209,6 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                 cs_string = elite.string
                 cs_size = f'Spaceship size: {elite.size} m'
                 cs_n_blocks = f'Number of blocks: {elite.n_blocks}'
-                cs_age = f'Spaceship age: {CS_MAX_AGE - elite.age}'
                 cs_vol = f'Occupied volume: {elite.content.total_volume} m³'
                 cs_mass = f'Spaceship mass: {elite.content.mass} Kg'
         else:
@@ -1152,12 +1223,12 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
         curr_content = _get_elite_content(mapelites=current_mapelites,
                                           bin_idx=None,
                                           pop=None)
-        cs_string = cs_size = cs_n_blocks = cs_age = cs_vol = cs_mass = ''
+        cs_string = cs_size = cs_n_blocks = cs_vol = cs_mass = ''
     elif event_trig == 'emitter-dropdown':
         _ = _apply_emitter_change(mapelites=current_mapelites,
                                   emitter_name=emitter_name)
     elif event_trig == 'download-btn':
-        if cs_string != '':
+        if cs_string != '':  # TODO: change this to check for selected bin
             exp_n += 1
             def write_archive(bytes_io):
                 with ZipFile(bytes_io, mode="w") as zf:
@@ -1177,7 +1248,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                 curr_content = _get_elite_content(mapelites=current_mapelites,
                                                   bin_idx=None,
                                                   pop=None)
-                cs_string = cs_size = cs_n_blocks = cs_age = cs_vol = cs_mass = ''
+                cs_string = cs_size = cs_n_blocks = cs_vol = cs_mass = ''
                 if consent_ok:
                     content_dl = dict(content=json.dumps({
                         'time_elapsed': time_elapsed,
@@ -1201,7 +1272,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                 curr_content = _get_elite_content(mapelites=current_mapelites,
                                                 bin_idx=None,
                                                 pop=None)
-                cs_string = cs_size = cs_n_blocks = cs_age = cs_vol = cs_mass = ''
+                cs_string = cs_size = cs_n_blocks = cs_vol = cs_mass = ''
                 if consent_ok:
                     n_spaceships_inspected.append([1])  # first generation of new experiment
                     time_elapsed.append([])  # first generation of new experiment
@@ -1244,4 +1315,4 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                     str_prefix='Valid bins are:',
                                     filter_out_empty=False)
     
-    return curr_heatmap, curr_content, valid_bins_str, f'Current generation: {gen_counter}', str(current_mapelites.lsystem.hl_solver.parser.rules), selected_bins_str, cs_string, cs_size, cs_n_blocks,  cs_age, cs_vol, cs_mass, not gdev_mode and gen_counter < N_GENS_ALLOWED, not gdev_mode and gen_counter >= N_GENS_ALLOWED, content_dl, pop_name, metric_name, b0, b1, symm_axis
+    return curr_heatmap, curr_content, valid_bins_str, f'Current generation: {gen_counter}', str(current_mapelites.lsystem.hl_solver.parser.rules), selected_bins_str, cs_string, cs_size, cs_n_blocks, cs_vol, cs_mass, not gdev_mode and gen_counter < N_GENS_ALLOWED, not gdev_mode and gen_counter >= N_GENS_ALLOWED, content_dl, pop_name, metric_name, b0, b1, symm_axis
