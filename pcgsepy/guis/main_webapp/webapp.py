@@ -170,24 +170,27 @@ def set_app_layout(behavior_descriptors_names,
     
     logging.getLogger('webapp').info(msg=f'Your ID is {str(rngseed).zfill(3)}; please remember this!')
     
-    logging.getLogger('webapp').info(f'Consent was {consent_ok}')
-    
     consent_dialog = dbc.Modal([
-            dbc.ModalHeader(dbc.ModalTitle("Consent form"), close_button=False),
-            dbc.ModalBody(dcc.Markdown("""This application can collect anonymous user data used for research purposes as expressed in [the application documentation](https://github.com/arayabrain/space-engineers-ai-spaceship-generator).
-
-The data collected does not contain any personally identifiable information (such as age, gender, etc...): only data related to the interaction with the application (_number of spaceships evaluated_) and the application performance on your machine (_time elapsed_) are collected.
-                                       
-Do you consent to the data collection?""")),
+            dbc.ModalHeader(dbc.ModalTitle("Privacy policy"), close_button=False),
+            dbc.ModalBody(children=[dcc.Markdown("""If you agree, we will share your usage statistics for scientific purposes with [Araya Inc.](https://www.araya.org/en/), who developed the Spaceship AI Generator with the help of GoodAI.
+We would like to understand your level of engagement with the generator and ask you for feedback in a Google form questionnaire in order to further improve the application.
+You can use the application without agreeing to the privacy policy; in such case, we will not be collecting your usage statistics and you will not be prompted for feedback."""),
+                                    dcc.Markdown("Do you agree with the privacy policy?",
+                                                 style={'text-align': 'center'})
+                                    ]),
             dbc.ModalFooter(children=[
-                dbc.Button("Yes",
-                           id="consent-yes",
-                           className="ms-auto",
-                           n_clicks=0),
                 dbc.Button("No",
                            id="consent-no",
+                           color="danger",
                            className="ms-auto",
-                           n_clicks=0)
+                           n_clicks=0,
+                           style={'width': '49%'}),
+                dbc.Button("Yes",
+                           id="consent-yes",
+                           color="success",
+                           className="ms-auto",
+                           n_clicks=0,
+                           style={'width': '49%'})
                 ])
             ],
         id="consent-modal",
@@ -522,6 +525,8 @@ Do you consent to the data collection?""")),
 def set_consent(n_y, n_n):
     global consent_ok
     consent_ok = True if n_y else False if n_n else None
+    if n_y:
+        logging.getLogger('webapp').info(msg=f'Thank you for participating in the user study! Please visit GOOGLE_FORM_URL before continuing!')
     return False
 
 @app.callback(Output('console-out', 'value'),
