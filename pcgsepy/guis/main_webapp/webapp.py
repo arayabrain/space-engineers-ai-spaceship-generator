@@ -174,18 +174,24 @@ def set_callback_props(mapelites: MAPElites):
         'Elite': False
     }
 
-def get_properties_table(cs: Optional[CandidateSolution] = None) -> str:
+def get_properties_table(cs: Optional[CandidateSolution] = None) -> dbc.Table:
     size = cs.size if cs else '-' 
     nblocks = cs.n_blocks if cs else '-'
     vol = cs.content.total_volume if cs else '-'
     mass = cs.content.mass if cs else '-'
     
-    return f"""|  Spaceship size  	| {size}   	|
-|:----------------:	|:--:	|
-| Number of blocks 	| {nblocks}  	|
-| Occupied volume  	| {vol} m³ 	|
-| Spaceship mass   	| {mass} Kg 	|"""
-
+    table_header = [
+        html.Thead(html.Tr([html.Th("Property"), html.Th("Value")]))
+        ]
+    table_body = [html.Tbody([
+        html.Tr([html.Td("Spaceship size"), html.Td(size)]),
+        html.Tr([html.Td("Number of blocks"), html.Td(nblocks)]),
+        html.Tr([html.Td("Occupied volume"), html.Td(vol)]),
+        html.Tr([html.Td("Spaceship mass"), html.Td(mass)]),
+    ])]
+    
+    return table_header + table_body
+    
 def set_app_layout(behavior_descriptors_names,
                    mapelites: Optional[MAPElites] = None,
                    dev_mode: bool = True):
@@ -304,8 +310,13 @@ You can use the application without agreeing to the privacy policy; in such case
         children=[
             html.H6('Spaceship properties',
                     className='section-title'),
-            dcc.Markdown(get_properties_table(),
-                         id='spaceship-properties'),
+            dbc.Table(children=get_properties_table(),
+                      id='spaceship-properties',
+                      bordered=True,
+                      dark=True,
+                      hover=True,
+                      responsive=True,
+                      striped=True),
             html.Div(children=[
                 dbc.Button('Download content',
                             id='download-btn',
@@ -1191,7 +1202,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         curr_content = _get_elite_content(mapelites=current_mapelites,
                                           bin_idx=None,
                                           pop=None)
-        cs_string = cs_size = cs_n_blocks = cs_vol = cs_mass  = ''
+        cs_string = ''
+        cs_properties = get_properties_table()
         logging.getLogger('webapp').info(msg=f'Symmetry enforcement completed.')
     elif event_trig == 'heatmap-plot' or event_trig == 'population_dropdown':
         i, j = _from_bc_to_idx(bcs=(clickData['points'][0]['x'],
