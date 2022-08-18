@@ -266,9 +266,24 @@ You can use the application without agreeing to the privacy policy; in such case
     ],
                      className='header')
     
+    no_bins_selected_modal = dbc.Modal(children=[
+        dbc.ModalHeader(dbc.ModalTitle("Error"), close_button=True),
+        dbc.ModalBody('You must choose a spaceship from the grid on the left before evolving it!'),
+        dbc.ModalFooter(children=[dbc.Button("Understood",
+                                             id="nbs-err-btn",
+                                             color="primary",
+                                             className="ms-auto",
+                                             n_clicks=0)]),
+        ],
+                                       id='nbs-err-modal',
+                                       centered=True,
+                                       backdrop='static',
+                                       is_open=False)
+    
     mapelites_heatmap = html.Div(children=[
         dcc.Graph(id="heatmap-plot",
-                  figure=go.Figure(data=[]))
+                  figure=go.Figure(data=[]),
+                  config={'scrollZoom': True})
         ])
     
     mapelites_controls = html.Div(
@@ -375,6 +390,7 @@ You can use the application without agreeing to the privacy policy; in such case
                               inline=True,
                               switch=True)
                 ],
+                           style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
                            className="mb-3"),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Fitness weights:'),
@@ -396,6 +412,7 @@ You can use the application without agreeing to the privacy policy; in such case
                         ]) for i, f in enumerate(current_mapelites.feasible_fitnesses)
                     ])
                 ],
+                           #style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
                            className="mb-3"),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Select emitter:'),
@@ -429,6 +446,7 @@ You can use the application without agreeing to the privacy policy; in such case
                         ],
                         value='Upper')
                 ],
+                           #style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
                            className="mb-3"),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Save/load population:'),
@@ -451,7 +469,7 @@ You can use the application without agreeing to the privacy policy; in such case
             html.Br(),
             dbc.Row(dbc.Col(children=[
                 dbc.Button(id='step-btn',
-                           children='Apply step',
+                           children='Evolve spaceship',
                            className='button-fullsize')
                 ],
                     className='spacer',
@@ -462,6 +480,7 @@ You can use the application without agreeing to the privacy policy; in such case
                            className='button-fullsize')
                 ],
                     className='spacer',
+                    style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
                     width={'size': 4, 'offset':4})),
             dbc.Row(dbc.Col(children=[
                 dbc.Button(id='selection-btn',
@@ -469,6 +488,7 @@ You can use the application without agreeing to the privacy policy; in such case
                            className='button-fullsize')
                 ],
                     className='spacer',
+                    style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
                     width={'size': 4, 'offset':4})),
             dbc.Row(dbc.Col(children=[
                 dbc.Button(id='reset-btn',
@@ -512,7 +532,7 @@ You can use the application without agreeing to the privacy policy; in such case
     
     progress = html.Div(
         children=[
-            dbc.Label('Step progress: '),
+            dbc.Label('Evolution progress: '),
             dbc.Progress(id="step-progress",
                          color='info',
                          striped=True,
@@ -542,6 +562,7 @@ You can use the application without agreeing to the privacy policy; in such case
                 consent_dialog,
                 header,
                 help_modal,
+                no_bins_selected_modal,
                 html.Br(),
                 dbc.Row(children=[
                     dbc.Col(mapelites_heatmap, width=3),
@@ -572,6 +593,7 @@ You can use the application without agreeing to the privacy policy; in such case
                 consent_dialog,
                 header,
                 help_modal,
+                no_bins_selected_modal,
                 html.Br(),
                 dbc.Row(children=[
                     dbc.Col(mapelites_heatmap, width=3),
@@ -703,7 +725,7 @@ def _build_heatmap(mapelites: MAPElites,
                                                 use_mean=use_mean,
                                                 population=population)
             disp_map[i, j] = v
-            s = str((j, i)) if (i, j) in valid_bins else ''
+            s = '▣' if (i, j) in valid_bins else ''
             if j == 0:
                 text.append([s])
             else:
@@ -783,7 +805,7 @@ def _get_elite_content(mapelites: MAPElites,
                             color_discrete_map=_get_colour_mapping(ss),
                             labels={
                                 'x': '',
-                                'y': '',
+                                'y': 'm',
                                 'z': '',
                                 'color': 'Block type'
                             },
@@ -791,7 +813,7 @@ def _get_elite_content(mapelites: MAPElites,
                             template='plotly_dark')
         
         ux, uy, uz = np.unique(x), np.unique(y), np.unique(z)
-        ptg = .25
+        ptg = .2
         show_x = [v for i, v in enumerate(ux) if i % (1 / ptg) == 0]
         show_y = [v for i, v in enumerate(uy) if i % (1 / ptg) == 0]
         show_z = [v for i, v in enumerate(uz) if i % (1 / ptg) == 0]
@@ -831,7 +853,7 @@ def _get_elite_content(mapelites: MAPElites,
     camera = dict(
         up=dict(x=0, y=0, z=1),
         center=dict(x=0, y=0, z=0),
-        eye=dict(x=2, y=2, z=2)
+        eye=dict(x=1, y=1, z=.75)
         )
     
     fig.update_layout(scene=dict(aspectmode='data'),
@@ -847,31 +869,30 @@ def _apply_step(mapelites: MAPElites,
     global step_progress
     perc_step = 100 / (1 + N_EMITTER_STEPS)
     
-    if len(selected_bins) > 0:
-        valid = True
-        if mapelites.enforce_qnt:
-            valid_bins = [list(x.bin_idx) for x in mapelites._valid_bins()]
-            for bin_idx in selected_bins:
-                valid &= bin_idx in valid_bins
-        if valid:
-            logging.getLogger('webapp').info(msg=f'Started step {gen_counter + 1}...')
-            step_progress = 0
-            mapelites.interactive_step(bin_idxs=selected_bins,
-                                       gen=gen_counter)
-            step_progress += perc_step
-            logging.getLogger('webapp').info(msg=f'Completed step {gen_counter + 1} (created {mapelites.n_new_solutions} solutions); running {N_EMITTER_STEPS} additional emitter steps if available...')
-            mapelites.n_new_solutions = 0
-            with trange(N_EMITTER_STEPS, desc='Emitter steps: ') as iterations:
-                for _ in iterations:
-                    mapelites.emitter_step(gen=gen_counter)
-                    step_progress += perc_step
-            logging.getLogger('webapp').info(msg=f'Emitter step(s) completed (created {mapelites.n_new_solutions} solutions).')
-            mapelites.n_new_solutions = 0
-            step_progress = -1
-            return True
-        else:
-            logging.getLogger('webapp').info(msg='Step not applied: invalid bin(s) selected.')
-            return False
+    valid = True
+    if mapelites.enforce_qnt:
+        valid_bins = [list(x.bin_idx) for x in mapelites._valid_bins()]
+        for bin_idx in selected_bins:
+            valid &= bin_idx in valid_bins
+    if valid:
+        logging.getLogger('webapp').info(msg=f'Started step {gen_counter + 1}...')
+        step_progress = 0
+        mapelites.interactive_step(bin_idxs=selected_bins,
+                                    gen=gen_counter)
+        step_progress += perc_step
+        logging.getLogger('webapp').info(msg=f'Completed step {gen_counter + 1} (created {mapelites.n_new_solutions} solutions); running {N_EMITTER_STEPS} additional emitter steps if available...')
+        mapelites.n_new_solutions = 0
+        with trange(N_EMITTER_STEPS, desc='Emitter steps: ') as iterations:
+            for _ in iterations:
+                mapelites.emitter_step(gen=gen_counter)
+                step_progress += perc_step
+        logging.getLogger('webapp').info(msg=f'Emitter step(s) completed (created {mapelites.n_new_solutions} solutions).')
+        mapelites.n_new_solutions = 0
+        step_progress = -1
+        return True
+    else:
+        logging.getLogger('webapp').info(msg='Step not applied: invalid bin(s) selected.')
+        return False
 
 
 def _apply_reset(mapelites: MAPElites) -> bool:
@@ -1028,6 +1049,7 @@ def download_mapelites(n_clicks):
               Output('b1-dropdown', 'label'),
               Output('symmetry-dropdown', 'label'),
               Output("consent-modal", "is_open"),
+              Output("nbs-err-modal", "is_open"),
               
               State('heatmap-plot', 'figure'),
               State('hl-rules', 'value'),
@@ -1076,12 +1098,13 @@ def download_mapelites(n_clicks):
               Input('symmetry-z', 'n_clicks'),
               Input('symmetry-radio', 'value'),
               Input("consent-yes", "n_clicks"),
-              Input("consent-no", "n_clicks")
+              Input("consent-no", "n_clicks"),
+              Input("nbs-err-btn", "n_clicks")
               )
 def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, privacy_modal_show,
                      pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_reset, n_clicks_sub, weights,
                      b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn,
-                     emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no):
+                     emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn):
     content_dl = None
     global gdev_mode
     global current_mapelites
@@ -1094,6 +1117,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     global n_spaceships_inspected
     global time_elapsed
     
+    nbs_err_modal_show = False
     
     ctx = dash.callback_context
 
@@ -1103,20 +1127,24 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         event_trig = ctx.triggered[0]['prop_id'].split('.')[0]
 
     if event_trig == 'step-btn':
-        s = time.perf_counter()
-        res = _apply_step(mapelites=current_mapelites,
-                          selected_bins=[[x[1], x[0]] for x in selected_bins],
-                          gen_counter=gen_counter)
-        if res:
-            elapsed = time.perf_counter() - s
-            gen_counter += 1
-            curr_heatmap = _build_heatmap(mapelites=current_mapelites,
-                                          pop_name=pop_name,
-                                          metric_name=metric_name,
-                                          method_name=method_name)
-            if consent_ok:
-                n_spaceships_inspected.add(1)
-                time_elapsed.add(elapsed)
+        if len(selected_bins) > 0:
+            s = time.perf_counter()
+            res = _apply_step(mapelites=current_mapelites,
+                            selected_bins=[[x[1], x[0]] for x in selected_bins],
+                            gen_counter=gen_counter)
+            if res:
+                elapsed = time.perf_counter() - s
+                gen_counter += 1
+                curr_heatmap = _build_heatmap(mapelites=current_mapelites,
+                                            pop_name=pop_name,
+                                            metric_name=metric_name,
+                                            method_name=method_name)
+                if consent_ok:
+                    n_spaceships_inspected.add(1)
+                    time_elapsed.add(elapsed)
+        else:
+            logging.getLogger('webapp').info(msg=f'Step not applied: no bin(s) selected.')
+            nbs_err_modal_show = True
             
     elif event_trig == 'reset-btn':
         res = _apply_reset(mapelites=current_mapelites)
@@ -1210,9 +1238,11 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                                     clickData['points'][0]['y']),
                                mapelites=current_mapelites)
         if current_mapelites.bins[j, i].non_empty(pop='feasible' if pop_name == 'Feasible' else 'infeasible'):
-            curr_content = _get_elite_content(mapelites=current_mapelites,
-                                              bin_idx=(j, i),
-                                              pop='feasible' if pop_name == 'Feasible' else 'infeasible')
+            
+            if (j, i) in [b.bin_idx for b in current_mapelites._valid_bins()]:
+                curr_content = _get_elite_content(mapelites=current_mapelites,
+                                                bin_idx=(j, i),
+                                                pop='feasible' if pop_name == 'Feasible' else 'infeasible')
             
             if consent_ok:
                 n_spaceships_inspected.add(1)
@@ -1255,8 +1285,12 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
             exp_n += 1
             def write_archive(bytes_io):
                 with ZipFile(bytes_io, mode="w") as zf:
-                    with open('./assets/thumb.png', 'rb') as f:
-                        thumbnail_img = f.read()
+                    # with open('./assets/thumb.png', 'rb') as f:
+                    #     thumbnail_img = f.read()
+                    curr_content = _get_elite_content(mapelites=current_mapelites,
+                                                      bin_idx=tuple(_switch([selected_bins[-1]])[0]),
+                                                      pop='feasible')
+                    thumbnail_img = curr_content.to_image(format="png")
                     zf.writestr('thumb.png', thumbnail_img)
                     elite = get_elite(mapelites=current_mapelites,
                                       bin_idx=_switch([selected_bins[-1]])[0],
@@ -1362,6 +1396,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                                         pop_name=pop_name,
                                         metric_name=metric_name,
                                         method_name=method_name)
+    elif event_trig == 'nbs-err-btn':
+        nbs_err_modal_show = False
     elif event_trig is None:
         curr_heatmap = _build_heatmap(mapelites=current_mapelites,
                                     pop_name=pop_name,
@@ -1401,6 +1437,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     #   ('b1-dropdown', 'label'),
     #   ('symmetry-dropdown', 'label'),
     #   ("consent-modal", "is_open"),
+    #   ("nbs-err-modal", "is_open")
     return curr_heatmap,\
         curr_content,\
         valid_bins_str,\
@@ -1417,4 +1454,5 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         b0,\
         b1,\
         symm_axis,\
-        privacy_modal_show
+        privacy_modal_show,\
+        nbs_err_modal_show
