@@ -129,8 +129,8 @@ def resource_path(relative_path):
 
 app = dash.Dash(__name__,
                 title='Spaceships Generator',
-                external_stylesheets=[dbc.themes.CYBORG],
-                # external_stylesheets=[dbc.themes.DARKLY],
+                # external_stylesheets=[dbc.themes.CYBORG],
+                external_stylesheets=[dbc.themes.DARKLY],
                 # external_stylesheets=[dbc.themes.FLATLY],
                 # external_stylesheets=[dbc.themes.LUMEN],
                 # external_stylesheets=[dbc.themes.MORPH],
@@ -174,6 +174,17 @@ def set_callback_props(mapelites: MAPElites):
         'Elite': False
     }
 
+def get_properties_table(cs: Optional[CandidateSolution] = None) -> str:
+    size = cs.size if cs else '-' 
+    nblocks = cs.n_blocks if cs else '-'
+    vol = cs.content.total_volume if cs else '-'
+    mass = cs.content.mass if cs else '-'
+    
+    return f"""|  Spaceship size  	| {size}   	|
+|:----------------:	|:--:	|
+| Number of blocks 	| {nblocks}  	|
+| Occupied volume  	| {vol} m³ 	|
+| Spaceship mass   	| {mass} Kg 	|"""
 
 def set_app_layout(behavior_descriptors_names,
                    mapelites: Optional[MAPElites] = None,
@@ -293,21 +304,13 @@ You can use the application without agreeing to the privacy policy; in such case
         children=[
             html.H6('Spaceship properties',
                     className='section-title'),
+            dcc.Markdown(get_properties_table(),
+                         id='spaceship-properties'),
             html.Div(children=[
-                html.P(children='',
-                       id='spaceship-size'),
-                html.P(children='',
-                       id='spaceship-n-blocks'),
-                html.P(children='',
-                       id='spaceship-total-volume'),
-                html.P(children='',
-                       id='spaceship-mass'),
-                html.Div(children=[
-                    dbc.Button('Download content',
-                               id='download-btn',
-                               disabled=True),
-                    dcc.Download(id='download-content')
-                    ])
+                dbc.Button('Download content',
+                            id='download-btn',
+                            disabled=True),
+                dcc.Download(id='download-content')
                 ])
             ])
     
@@ -1004,10 +1007,7 @@ def download_mapelites(n_clicks):
               Output('hl-rules', 'value'),
               Output('selected-bin', 'children'),
               Output('content-string', 'value'),
-              Output('spaceship-size', 'children'),
-              Output('spaceship-n-blocks', 'children'),
-              Output('spaceship-total-volume', 'children'),
-              Output('spaceship-mass', 'children'),
+              Output('spaceship-properties', 'children'),
               Output('download-btn', 'disabled'),
               Output('step-btn', 'disabled'),
               Output("download-content", "data"),
@@ -1022,10 +1022,7 @@ def download_mapelites(n_clicks):
               State('hl-rules', 'value'),
               State('content-plot', 'figure'),
               State('content-string', 'value'),
-              State('spaceship-size', 'children'),
-              State('spaceship-n-blocks', 'children'),
-              State('spaceship-total-volume', 'children'),
-              State('spaceship-mass', 'children'),
+              State('spaceship-properties', 'children'),
               State('population-dropdown', 'label'),
               State('metric-dropdown', 'label'),
               State('b0-dropdown', 'label'),
@@ -1070,7 +1067,7 @@ def download_mapelites(n_clicks):
               Input("consent-yes", "n_clicks"),
               Input("consent-no", "n_clicks")
               )
-def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n_blocks, cs_vol, cs_mass, pop_name, metric_name, b0, b1, symm_axis, privacy_modal_show,
+def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, privacy_modal_show,
                      pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_reset, n_clicks_sub, weights,
                      b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn,
                      emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no):
@@ -1215,16 +1212,14 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                     selected_bins.remove([i, j])
             else:
                 selected_bins = [[i, j]]
-            cs_string = cs_size = cs_n_blocks = cs_vol = cs_mass = ''
+            cs_string = ''
+            cs_properties = get_properties_table()
             if len(selected_bins) > 0:
                 elite = get_elite(mapelites=current_mapelites,
                                   bin_idx=_switch([selected_bins[-1]])[0],
                                   pop='feasible' if pop_name == 'Feasible' else 'infeasible')
                 cs_string = elite.string
-                cs_size = f'Spaceship size: {elite.size} m'
-                cs_n_blocks = f'Number of blocks: {elite.n_blocks}'
-                cs_vol = f'Occupied volume: {elite.content.total_volume} m³'
-                cs_mass = f'Spaceship mass: {elite.content.mass} Kg'
+                cs_properties = get_properties_table(cs=elite)
         else:
             logging.getLogger('webapp').info(msg=f'Empty bin selected ({i}, {j}).')
     elif event_trig == 'selection-btn':
@@ -1237,7 +1232,9 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
         curr_content = _get_elite_content(mapelites=current_mapelites,
                                           bin_idx=None,
                                           pop=None)
-        cs_string = cs_size = cs_n_blocks = cs_vol = cs_mass = ''
+        
+        cs_string = ''
+        cs_properties = get_properties_table()
     elif event_trig == 'emitter-dropdown':
         _ = _apply_emitter_change(mapelites=current_mapelites,
                                   emitter_name=emitter_name)
@@ -1262,7 +1259,9 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                 curr_content = _get_elite_content(mapelites=current_mapelites,
                                                   bin_idx=None,
                                                   pop=None)
-                cs_string = cs_size = cs_n_blocks = cs_vol = cs_mass = ''
+                
+                cs_string = ''
+                cs_properties = get_properties_table()
                 if consent_ok:
                     content_dl = dict(content=json.dumps({
                         'time_elapsed': time_elapsed.get_averages(),
@@ -1310,7 +1309,9 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                 curr_content = _get_elite_content(mapelites=current_mapelites,
                                                   bin_idx=None,
                                                   pop=None)
-                cs_string = cs_size = cs_n_blocks = cs_vol = cs_mass = ''
+                
+                cs_string = ''
+                cs_properties = get_properties_table()
                 logging.getLogger('webapp').info(msg='Next experiment loaded. Please fill out the questionnaire before continuing.')
     elif event_trig == 'popdownload-btn':
         content_dl = dict(content=json.dumps([b.to_json() for b in current_mapelites.bins.flatten().tolist()]),
@@ -1378,10 +1379,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
     #   ('hl-rules', 'value'),
     #   ('selected-bin', 'children'),
     #   ('content-string', 'value'),
-    #   ('spaceship-size', 'children'),
-    #   ('spaceship-n-blocks', 'children'),
-    #   ('spaceship-total-volume', 'children'),
-    #   ('spaceship-mass', 'children'),
+    #   ('spaceship-properties', 'children'),
     #   ('download-btn', 'disabled'),
     #   ('step-btn', 'disabled'),
     #   ("download-content", "data"),
@@ -1397,10 +1395,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
         f'Current generation: {gen_counter}',\
         str(current_mapelites.lsystem.hl_solver.parser.rules),\
         selected_bins_str,\
-        cs_string, cs_size,\
-        cs_n_blocks,\
-        cs_vol,\
-        cs_mass,\
+        cs_string,\
+        cs_properties,\
         not gdev_mode and gen_counter < N_GENS_ALLOWED,\
         not gdev_mode and gen_counter >= N_GENS_ALLOWED,\
         content_dl,\
