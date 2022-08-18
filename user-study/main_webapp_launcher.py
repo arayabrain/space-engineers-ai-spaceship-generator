@@ -9,6 +9,7 @@ if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
 
 import argparse
 import random
+import webbrowser
 
 from pcgsepy.common.jsonifier import json_loads
 from pcgsepy.evo.fitness import (Fitness, box_filling_fitness,
@@ -128,7 +129,9 @@ set_app_layout(behavior_descriptors_names=behavior_descriptors_names,
                mapelites=mapelites,
                dev_mode=args.dev_mode)
 
+webapp_url = f'http://{args.host}:{args.port}/'
 print(f'Serving webapp on http://{args.host}:{args.port}/...')
+webbrowser.open_new(webapp_url)
 
 serve(app.server,
       threads=16,
