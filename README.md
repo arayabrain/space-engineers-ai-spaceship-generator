@@ -49,9 +49,6 @@ For more information, refer to the `README`s in each directory.
 
 ## Publications
 This library was used in the following publications:
-```
-Roberto Gallotta, Kai Arulkumaran, and L. B. Soros. 2022. Evolving spaceships with a hybrid L-system constrained optimisation evolutionary algorithm. In Proceedings of the Genetic and Evolutionary Computation Conference Companion (GECCO '22). Association for Computing Machinery, New York, NY, USA, 711–714. https://doi.org/10.1145/3520304.3528775
-```
-```
-Gallotta, Roberto, Kai Arulkumaran, and L. B. Soros. ‘Surrogate Infeasible Fitness Acquirement FI-2Pop for Procedural Content Generation’. In 2022 IEEE Conference on Games (CoG), ?-?, CASIA, Beijing, China, 2022. 10.48550/arXiv.2205.05834.
-```
+> Roberto Gallotta, Kai Arulkumaran, and L. B. Soros. 2022. Evolving spaceships with a hybrid L-system constrained optimisation evolutionary algorithm. In Proceedings of the Genetic and Evolutionary Computation Conference Companion (GECCO '22). Association for Computing Machinery, New York, NY, USA, 711–714. https://doi.org/10.1145/3520304.3528775
+
+> Gallotta, Roberto, Kai Arulkumaran, and L. B. Soros. ‘Surrogate Infeasible Fitness Acquirement FI-2Pop for Procedural Content Generation’. In 2022 IEEE Conference on Games (CoG), ?-?, CASIA, Beijing, China, 2022. 10.48550/arXiv.2205.05834.
