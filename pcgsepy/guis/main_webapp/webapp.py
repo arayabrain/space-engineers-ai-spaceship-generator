@@ -204,12 +204,14 @@ You can use the application without agreeing to the privacy policy; in such case
                            id='help-modal',
                            centered=True,
                            backdrop='static',
-                           is_open=False)
+                           is_open=False,
+                           scrollable=True,
+                           size='lg')
 
     header = dbc.Row(children=[
                 dbc.Col(html.H1(children='🚀Space Engineers Spaceships Generator🚀',
                                 className='title'), width={'size': 10, 'offset': 1}),
-                dbc.Col(dbc.Button('Show help',
+                dbc.Col(dbc.Button('Help',
                                    id='help-btn',
                                    color='info'), align='center', width=1)
     ],
@@ -555,7 +557,7 @@ app.clientside_callback(
     """
     function(clicks) {
         if (clicks) {
-            window.open("https://docs.google.com/forms/d/1GqV_CDYjqPCVJ4bmfmQvHCFwM1HzAItnlUqkGS_XpTw/prefill", "_blank");
+            window.open("https://forms.gle/gsuajDXUNocZvDzn9", "_blank");
             return 0;
         }
     }
@@ -584,7 +586,7 @@ def set_consent(n_y, n_n):
     
     consent_ok = True if n_y else False if n_n else None
     if n_y:
-        logging.getLogger('webapp').info(msg=f'Thank you for participating in the user study! Please visit GOOGLE_FORM_URL before continuing!')       
+        logging.getLogger('webapp').info(msg=f'Thank you for participating in the user study!')       
     return False
 
 @app.callback(Output('console-out', 'value'),
@@ -757,22 +759,28 @@ def _get_elite_content(mapelites: MAPElites,
                             title='Selected spaceship',
                             template='plotly_dark')
         
+        ux, uy, uz = np.unique(x), np.unique(y), np.unique(z)
+        ptg = .25
+        show_x = [v for i, v in enumerate(ux) if i % (1 / ptg) == 0]
+        show_y = [v for i, v in enumerate(uy) if i % (1 / ptg) == 0]
+        show_z = [v for i, v in enumerate(uz) if i % (1 / ptg) == 0]
+        
         fig.update_layout(
             scene=dict(
                 xaxis={
                     'tickmode': 'array',
-                    'tickvals': [i for i in np.unique(x)],
-                    'ticktext': [structure.grid_size * i for i in np.unique(x)],
+                    'tickvals': show_x,
+                    'ticktext': [structure.grid_size * i for i in show_x],
                 },
                 yaxis={
                     'tickmode': 'array',
-                    'tickvals': [i for i in np.unique(y)],
-                    'ticktext': [structure.grid_size * i for i in np.unique(y)],
+                    'tickvals': show_y,
+                    'ticktext': [structure.grid_size * i for i in show_y],
                 },
                 zaxis={
                     'tickmode': 'array',
-                    'tickvals': [i for i in np.unique(z)],
-                    'ticktext': [structure.grid_size * i for i in np.unique(z)],
+                    'tickvals': show_z,
+                    'ticktext': [structure.grid_size * i for i in show_z],
                 }
             )
         )

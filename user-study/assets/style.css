@@ -32,3 +32,6 @@
 .spacer {
     margin-top: 1%;
 }
+html, body {
+    overflow: hidden;
+}
