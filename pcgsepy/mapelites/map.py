@@ -292,7 +292,7 @@ class MAPElites:
         new_bins[(i+2):, :j] = self.bins[(i+1):, :j]
         new_bins[(i+2):, (j+2):] = self.bins[(i+1):, (j+1):]
         # populate newly created bins
-        for (m, n), _ in np.ndenumerate(self.bins):
+        for (m, n), _ in np.ndenumerate(new_bins):
             if m == i or m == i + 1 or n == j or n == j + 1:
                 new_bins[m, n] = MAPBin(bin_idx=(m, n),
                                         bin_size=(self.bin_sizes[0][m],

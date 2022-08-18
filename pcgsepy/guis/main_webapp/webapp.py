@@ -1,22 +1,23 @@
+from abc import ABC
 import base64
 import json
 import logging
 import os
 import random
 import sys
-from datetime import datetime
-from turtle import back
-from typing import Dict, List, Optional, Tuple
-from zipfile import ZipFile
 import time
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
+from zipfile import ZipFile
 
 import dash
+import dash_bootstrap_components as dbc
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from dash import ALL, dcc, html
 from dash.dependencies import Input, Output, State
-import dash_bootstrap_components as dbc
+from pcgsepy.common.api_call import block_definitions
 from pcgsepy.common.jsonifier import json_dumps, json_loads
 from pcgsepy.config import (BIN_POP_SIZE, CS_MAX_AGE, N_EMITTER_STEPS,
                             N_GENS_ALLOWED)
@@ -29,10 +30,8 @@ from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, GreedyEmitter,
                                         HumanEmitter, HumanPrefMatrixEmitter,
                                         PreferenceBanditEmitter, RandomEmitter)
 from pcgsepy.mapelites.map import MAPElites, get_elite
-from pcgsepy.common.api_call import block_definitions
-from tqdm import trange
-
 from pcgsepy.xml_conversion import convert_structure_to_xml
+from tqdm import trange
 
 
 class DashLoggerHandler(logging.StreamHandler):
@@ -50,6 +49,41 @@ logger = logging.getLogger('webapp')
 logger.setLevel(logging.DEBUG)
 dashLoggerHandler = DashLoggerHandler()
 logger.addHandler(dashLoggerHandler)
+
+
+class Metric:
+    def __init__(self,
+                 multiple_values: bool = False) -> None:
+        self.current_generation: int = 0
+        self.multiple_values = multiple_values
+        self.history: Dict[int, List[Any]] = {
+            self.current_generation: [] if multiple_values else 0
+        }
+    
+    def add(self,
+            value: Any):
+        if self.multiple_values:
+            self.history[self.current_generation].append(value)
+        else:
+            self.history[self.current_generation] += value
+    
+    def reset(self):
+        if self.multiple_values:
+            self.history[self.current_generation] = []
+        else:
+            self.history[self.current_generation] = 0
+    
+    def new_generation(self):
+        self.current_generation += 1
+        self.reset()
+    
+    def get_averages(self) -> List[Any]:
+        return [np.mean(l) for l in self.history.values()]
+
+
+n_spaceships_inspected = Metric()
+time_elapsed = Metric(multiple_values=True)
+
 
 hm_callback_props = {}
 block_to_colour = {
@@ -73,8 +107,6 @@ gen_counter: int = 0
 selected_bins: List[Tuple[int, int]] = []
 exp_n: int = 0
 rngseed: int = 42
-time_elapsed = []
-n_spaceships_inspected = []
 current_mapelites = None
 step_progress = -1
 consent_ok = None
@@ -97,8 +129,8 @@ def resource_path(relative_path):
 
 app = dash.Dash(__name__,
                 title='Spaceships Generator',
-                # external_stylesheets=[dbc.themes.CYBORG],
-                external_stylesheets=[dbc.themes.DARKLY],
+                external_stylesheets=[dbc.themes.CYBORG],
+                # external_stylesheets=[dbc.themes.DARKLY],
                 # external_stylesheets=[dbc.themes.FLATLY],
                 # external_stylesheets=[dbc.themes.LUMEN],
                 # external_stylesheets=[dbc.themes.MORPH],
@@ -574,21 +606,6 @@ app.clientside_callback(
 def show_help(n):
     return True
 
-@app.callback(
-    Output("consent-modal", "is_open"),
-    [Input("consent-yes", "n_clicks"),
-     Input("consent-no", "n_clicks")],
-    prevent_initial_call=True
-)
-def set_consent(n_y, n_n):
-    global consent_ok
-    global current_mapelites
-    
-    consent_ok = True if n_y else False if n_n else None
-    if n_y:
-        logging.getLogger('webapp').info(msg=f'Thank you for participating in the user study!')       
-    return False
-
 @app.callback(Output('console-out', 'value'),
               Input('interval1', 'n_intervals'))
 def update_output(n):
@@ -999,7 +1016,8 @@ def download_mapelites(n_clicks):
               Output('b0-dropdown', 'label'),
               Output('b1-dropdown', 'label'),
               Output('symmetry-dropdown', 'label'),
-    
+              Output("consent-modal", "is_open"),
+              
               State('heatmap-plot', 'figure'),
               State('hl-rules', 'value'),
               State('content-plot', 'figure'),
@@ -1013,7 +1031,7 @@ def download_mapelites(n_clicks):
               State('b0-dropdown', 'label'),
               State('b1-dropdown', 'label'),
               State('symmetry-dropdown', 'label'),
-              
+              State("consent-modal", "is_open"),
               
               Input('population-feasible', 'n_clicks'),
               Input('population-infeasible', 'n_clicks'),
@@ -1039,6 +1057,7 @@ def download_mapelites(n_clicks):
               Input('heatmap-plot', 'clickData'),
               Input('selection-btn', 'n_clicks'),
               Input('selection-clr-btn', 'n_clicks'),
+              
               Input('emitter-dropdown', 'label'),
               Input("download-btn", "n_clicks"),
               Input('popdownload-btn', 'n_clicks'),
@@ -1048,10 +1067,13 @@ def download_mapelites(n_clicks):
               Input('symmetry-y', 'n_clicks'),
               Input('symmetry-z', 'n_clicks'),
               Input('symmetry-radio', 'value'),
+              Input("consent-yes", "n_clicks"),
+              Input("consent-no", "n_clicks")
               )
-def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n_blocks, cs_vol, cs_mass, pop_name, metric_name, b0, b1, symm_axis,
+def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n_blocks, cs_vol, cs_mass, pop_name, metric_name, b0, b1, symm_axis, privacy_modal_show,
                      pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_reset, n_clicks_sub, weights,
-                     b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation):
+                     b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn,
+                     emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no):
     content_dl = None
     global gdev_mode
     global current_mapelites
@@ -1085,14 +1107,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                           metric_name=metric_name,
                                           method_name=method_name)
             if consent_ok:
-                n_spaceships_inspected[-1].append(1)  # new generation of last experiment
-            
-                if time_elapsed == []:  # first generation of first experiment
-                    time_elapsed.append([elapsed])
-                elif time_elapsed[-1] == []:  # first generation of latest experiment
-                    time_elapsed[-1] = [elapsed]
-                else:  # latest generation of latest experiment
-                    time_elapsed[-1].append(elapsed)
+                n_spaceships_inspected.add(1)
+                time_elapsed.add(elapsed)
             
     elif event_trig == 'reset-btn':
         res = _apply_reset(mapelites=current_mapelites)
@@ -1104,15 +1120,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                           method_name=method_name)
             
             if consent_ok:
-                if n_spaceships_inspected == []:
-                    n_spaceships_inspected.append([0])
-                else:
-                    n_spaceships_inspected[-1] = [[0]]
-                
-                if time_elapsed == []:
-                    time_elapsed.append([])
-                else:
-                    time_elapsed[-1] = [[]]
+                n_spaceships_inspected.reset()
+                time_elapsed.reset()
     elif event_trig in ['bc0-Major-axis_Medium-axis', 'bc0-Major-axis_Smallest-axis', 'bc0-Average-Proportions', 'bc0-Symmetry']:
         b0 = event_trig.replace('bc0-', '').replace('_', ' / ').replace('-', ' ')
         res = _apply_bc_change(bcs=(b0, b1),
@@ -1122,7 +1131,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                           pop_name=pop_name,
                                           metric_name=metric_name,
                                           method_name=method_name)
-    elif event_trig in ['bc1-Major-axis_Medium-axis', 'bc1-Major-axis_Smallest-axis', 'bc1Average-Proportions', 'bc1-Symmetry']:
+    elif event_trig in ['bc1-Major-axis_Medium-axis', 'bc1-Major-axis_Smallest-axis', 'bc1-Average-Proportions', 'bc1-Symmetry']:
         b1 = event_trig.replace('bc1-', '').replace('_', ' / ').replace('-', ' ')
         res = _apply_bc_change(bcs=(b0, b1),
                                mapelites=current_mapelites)
@@ -1197,10 +1206,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                               pop='feasible' if pop_name == 'Feasible' else 'infeasible')
             
             if consent_ok:
-                if n_spaceships_inspected == []:  # first experiment
-                    n_spaceships_inspected.append([1])  # one spaceship selected in the first generation
-                else:
-                    n_spaceships_inspected[-1][-1] += 1  # update latest generation of the latest experiment
+                n_spaceships_inspected.add(1)
             
             if not current_mapelites.enforce_qnt and selected_bins != []:
                 if [i, j] not in selected_bins:
@@ -1259,31 +1265,52 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                 cs_string = cs_size = cs_n_blocks = cs_vol = cs_mass = ''
                 if consent_ok:
                     content_dl = dict(content=json.dumps({
-                        'time_elapsed': time_elapsed,
-                        'n_interactions': n_spaceships_inspected
+                        'time_elapsed': time_elapsed.get_averages(),
+                        'n_interactions': n_spaceships_inspected.get_averages()
                         }),
                                     filename=f'user_metrics_{rngseed}')
                 else:
                     content_dl = None 
                 logging.getLogger('webapp').info(f'Reached end of all experiments! Please go back to the questionnaire to continue the evaluation.')
+                title = 'Spaceships population'
+                curr_heatmap = go.Figure(
+                    data=go.Heatmap(
+                        z=np.zeros(0, dtype=object),
+                        x=np.zeros(0, dtype=object),
+                        y=np.zeros(0, dtype=object),
+                        hoverongaps=False,
+                        ))
+                curr_heatmap.update_layout(title=dict(text=title),
+                                           autosize=False,
+                                           clickmode='event+select',
+                                           paper_bgcolor='rgba(0,0,0,0)',
+                                           plot_bgcolor='rgba(0,0,0,0)',
+                                           template='plotly_dark')                
             else:
                 logging.getLogger('webapp').info(msg=f'Reached end of experiment {exp_n}! Loading the next experiment...')
                 gen_counter = 0
-                # with open(my_emitterslist[exp_n], 'r') as f:
-                #     current_mapelites = json_loads(f.read())
-                current_mapelites.reset(lcs=[])
+                
+                if consent_ok:
+                    # with open(my_emitterslist[exp_n], 'r') as f:
+                    #     current_mapelites = json_loads(f.read())
+                    logging.getLogger('webapp').info(msg='Initializing population; this may take a while...')
+                    current_mapelites.reset()
+                    logging.getLogger('webapp').info(msg='Initialization completed.')
+                    n_spaceships_inspected.new_generation()
+                    time_elapsed.new_generation()
+                else:
+                    logging.getLogger('webapp').info(msg='Initializing a new population; this may take a while...')
+                    current_mapelites.reset()
+                    logging.getLogger('webapp').info(msg='Initialization completed.')
                 curr_heatmap = _build_heatmap(mapelites=current_mapelites,
                                               pop_name=pop_name,
                                               metric_name=metric_name,
                                               method_name=method_name)
                 selected_bins = []
                 curr_content = _get_elite_content(mapelites=current_mapelites,
-                                                bin_idx=None,
-                                                pop=None)
+                                                  bin_idx=None,
+                                                  pop=None)
                 cs_string = cs_size = cs_n_blocks = cs_vol = cs_mass = ''
-                if consent_ok:
-                    n_spaceships_inspected.append([1])  # first generation of new experiment
-                    time_elapsed.append([])  # first generation of new experiment
                 logging.getLogger('webapp').info(msg='Next experiment loaded. Please fill out the questionnaire before continuing.')
     elif event_trig == 'popdownload-btn':
         content_dl = dict(content=json.dumps([b.to_json() for b in current_mapelites.bins.flatten().tolist()]),
@@ -1301,6 +1328,27 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                     pop_name=pop_name,
                                     metric_name=metric_name,
                                     method_name=method_name)
+    elif event_trig == 'consent-yes' or event_trig == 'consent-no':
+        consent_ok = True if nclicks_yes else False if nclicks_no else None
+        if nclicks_yes:
+            logging.getLogger('webapp').info(msg=f'Thank you for participating in the user study! Please do not refresh the page.')
+            # TODO: this should load the first mapelites JSON
+            # with open(my_emitterslist[exp_n], 'r') as f:
+            #     current_mapelites = json_loads(f.read())
+            logging.getLogger('webapp').info(msg='Initializing population; this may take a while...')
+            current_mapelites.reset()
+            logging.getLogger('webapp').info(msg='Initialization completed.')
+        else:
+            logging.getLogger('webapp').info(msg=f'No user data will be collected during this session. Please do not refresh the page.')
+            logging.getLogger('webapp').info(msg='Initializing population; this may take a while...')
+            current_mapelites.reset()
+            logging.getLogger('webapp').info(msg='Initialization completed.')
+        privacy_modal_show = False
+        gen_counter = 0
+        curr_heatmap = _build_heatmap(mapelites=current_mapelites,
+                                        pop_name=pop_name,
+                                        metric_name=metric_name,
+                                        method_name=method_name)
     elif event_trig is None:
         curr_heatmap = _build_heatmap(mapelites=current_mapelites,
                                     pop_name=pop_name,
@@ -1323,4 +1371,42 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_size, cs_n
                                     str_prefix='Valid bins are:',
                                     filter_out_empty=False)
     
-    return curr_heatmap, curr_content, valid_bins_str, f'Current generation: {gen_counter}', str(current_mapelites.lsystem.hl_solver.parser.rules), selected_bins_str, cs_string, cs_size, cs_n_blocks, cs_vol, cs_mass, not gdev_mode and gen_counter < N_GENS_ALLOWED, not gdev_mode and gen_counter >= N_GENS_ALLOWED, content_dl, pop_name, metric_name, b0, b1, symm_axis
+    #   ('heatmap-plot', 'figure'),
+    #   ('content-plot', 'figure'),
+    #   ('valid-bins', 'children'),
+    #   ('gen-display', 'children'),
+    #   ('hl-rules', 'value'),
+    #   ('selected-bin', 'children'),
+    #   ('content-string', 'value'),
+    #   ('spaceship-size', 'children'),
+    #   ('spaceship-n-blocks', 'children'),
+    #   ('spaceship-total-volume', 'children'),
+    #   ('spaceship-mass', 'children'),
+    #   ('download-btn', 'disabled'),
+    #   ('step-btn', 'disabled'),
+    #   ("download-content", "data"),
+    #   ('population-dropdown', 'label'),
+    #   ('metric-dropdown', 'label'),
+    #   ('b0-dropdown', 'label'),
+    #   ('b1-dropdown', 'label'),
+    #   ('symmetry-dropdown', 'label'),
+    #   ("consent-modal", "is_open"),
+    return curr_heatmap,\
+        curr_content,\
+        valid_bins_str,\
+        f'Current generation: {gen_counter}',\
+        str(current_mapelites.lsystem.hl_solver.parser.rules),\
+        selected_bins_str,\
+        cs_string, cs_size,\
+        cs_n_blocks,\
+        cs_vol,\
+        cs_mass,\
+        not gdev_mode and gen_counter < N_GENS_ALLOWED,\
+        not gdev_mode and gen_counter >= N_GENS_ALLOWED,\
+        content_dl,\
+        pop_name,\
+        metric_name,\
+        b0,\
+        b1,\
+        symm_axis,\
+        privacy_modal_show

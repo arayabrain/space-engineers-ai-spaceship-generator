@@ -120,13 +120,15 @@ mapelites = MAPElites(lsystem=lsystem,
                       behavior_descriptors=behavior_descriptors,
                       n_bins=(8,8),
                       emitter=ContextualBanditEmitter())
-mapelites.generate_initial_populations()
+# mapelites.generate_initial_populations()
 
 set_callback_props(mapelites=mapelites)
 
 set_app_layout(behavior_descriptors_names=behavior_descriptors_names,
                mapelites=mapelites,
                dev_mode=args.dev_mode)
+
+print(f'Serving webapp on http://{args.host}:{args.port}/...')
 
 serve(app.server,
       threads=16,
