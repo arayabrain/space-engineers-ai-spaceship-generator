@@ -9,6 +9,7 @@ import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from zipfile import ZipFile
+import uuid
 
 import dash
 import dash_bootstrap_components as dbc
@@ -175,19 +176,20 @@ def set_callback_props(mapelites: MAPElites):
     }
 
 def get_properties_table(cs: Optional[CandidateSolution] = None) -> dbc.Table:
-    size = cs.size if cs else '-' 
+    size = str(cs.size) if cs else '-' 
     nblocks = cs.n_blocks if cs else '-'
     vol = cs.content.total_volume if cs else '-'
     mass = cs.content.mass if cs else '-'
     
     table_header = [
-        html.Thead(html.Tr([html.Th("Property"), html.Th("Value")]))
+        html.Thead(html.Tr([html.Th("Property", style={'text-align': 'center'}),
+                            html.Th("Value", style={'text-align': 'center'})]))
         ]
     table_body = [html.Tbody([
-        html.Tr([html.Td("Spaceship size"), html.Td(size)]),
-        html.Tr([html.Td("Number of blocks"), html.Td(nblocks)]),
-        html.Tr([html.Td("Occupied volume"), html.Td(vol)]),
-        html.Tr([html.Td("Spaceship mass"), html.Td(mass)]),
+        html.Tr([html.Td("Spaceship size"), html.Td(size, style={'text-align': 'center'})]),
+        html.Tr([html.Td("Number of blocks"), html.Td(nblocks, style={'text-align': 'center'})]),
+        html.Tr([html.Td("Occupied volume"), html.Td(f'{vol} m³', style={'text-align': 'center'})]),
+        html.Tr([html.Td("Spaceship mass"), html.Td(f'{mass} Kg', style={'text-align': 'center'})]),
     ])]
     
     return table_header + table_body
@@ -207,7 +209,8 @@ def set_app_layout(behavior_descriptors_names,
     with open(help_file, 'r') as f:
         help_str = f.read()
     
-    rngseed = random.randint(0, 128)
+    # rngseed = random.randint(0, 128)
+    rngseed = uuid.uuid4().int
     if mapelites is None:
         random.seed(rngseed)
         random.shuffle(my_emitterslist)
@@ -247,10 +250,10 @@ You can use the application without agreeing to the privacy policy; in such case
         is_open=consent_ok is None)
     
     help_modal = dbc.Modal([
-        dbc.ModalHeader(dbc.ModalTitle("Help"), close_button=True),
+        dbc.ModalHeader(dbc.ModalTitle("Info"), close_button=True),
         dbc.ModalBody(dcc.Markdown(help_str))
     ],
-                           id='help-modal',
+                           id='info-modal',
                            centered=True,
                            backdrop='static',
                            is_open=False,
@@ -260,8 +263,8 @@ You can use the application without agreeing to the privacy policy; in such case
     header = dbc.Row(children=[
                 dbc.Col(html.H1(children='🚀Space Engineers Spaceships Generator🚀',
                                 className='title'), width={'size': 10, 'offset': 1}),
-                dbc.Col(dbc.Button('Help',
-                                   id='help-btn',
+                dbc.Col(dbc.Button('Info',
+                                   id='info-btn',
                                    color='info'), align='center', width=1)
     ],
                      className='header')
@@ -283,7 +286,10 @@ You can use the application without agreeing to the privacy policy; in such case
     mapelites_heatmap = html.Div(children=[
         dcc.Graph(id="heatmap-plot",
                   figure=go.Figure(data=[]),
-                  config={'scrollZoom': True})
+                  config={
+                      'displayModeBar': False,
+                      'displaylogo': False, 
+                      'scrollZoom': True})
         ])
     
     mapelites_controls = html.Div(
@@ -318,7 +324,10 @@ You can use the application without agreeing to the privacy policy; in such case
     
     content_plot = html.Div(children=[
         dcc.Graph(id="content-plot",
-                  figure=go.Figure(data=[])),
+                  figure=go.Figure(data=[]),
+                  config={
+                      'displayModeBar': False,
+                      'displaylogo': False}),
         ])
     
     content_properties = html.Div(
@@ -381,7 +390,8 @@ You can use the application without agreeing to the privacy policy; in such case
                                  ],
                              id='b1-dropdown')
                 ],
-                           className="mb-3"),
+                           className="mb-3",
+                           style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Toggle L-system modules:'),
                 dbc.Checklist(id='lsystem-modules',
@@ -412,7 +422,7 @@ You can use the application without agreeing to the privacy policy; in such case
                         ]) for i, f in enumerate(current_mapelites.feasible_fitnesses)
                     ])
                 ],
-                           #style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
+                           style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
                            className="mb-3"),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Select emitter:'),
@@ -446,7 +456,7 @@ You can use the application without agreeing to the privacy policy; in such case
                         ],
                         value='Upper')
                 ],
-                           #style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
+                           style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
                            className="mb-3"),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Save/load population:'),
@@ -469,7 +479,7 @@ You can use the application without agreeing to the privacy policy; in such case
             html.Br(),
             dbc.Row(dbc.Col(children=[
                 dbc.Button(id='step-btn',
-                           children='Evolve spaceship',
+                           children='Evolve from spaceship',
                            className='button-fullsize')
                 ],
                     className='spacer',
@@ -635,8 +645,8 @@ app.clientside_callback(
 )
 
 @app.callback(
-    Output("help-modal", "is_open"),
-    Input("help-btn", "n_clicks"),
+    Output("info-modal", "is_open"),
+    Input("info-btn", "n_clicks"),
     prevent_initial_call=True
 )
 def show_help(n):
@@ -754,6 +764,7 @@ def _build_heatmap(mapelites: MAPElites,
     heatmap.update_coloraxes(colorbar_title_text=metric_name)
     heatmap.update_layout(title=dict(text=title),
                           autosize=False,
+                          dragmode='pan',
                           clickmode='event+select',
                           paper_bgcolor='rgba(0,0,0,0)',
                           plot_bgcolor='rgba(0,0,0,0)',
@@ -853,7 +864,7 @@ def _get_elite_content(mapelites: MAPElites,
     camera = dict(
         up=dict(x=0, y=0, z=1),
         center=dict(x=0, y=0, z=0),
-        eye=dict(x=1, y=1, z=.75)
+        eye=dict(x=2, y=2, z=2)
         )
     
     fig.update_layout(scene=dict(aspectmode='data'),
@@ -1244,24 +1255,24 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                                                 bin_idx=(j, i),
                                                 pop='feasible' if pop_name == 'Feasible' else 'infeasible')
             
-            if consent_ok:
-                n_spaceships_inspected.add(1)
-            
-            if not current_mapelites.enforce_qnt and selected_bins != []:
-                if [i, j] not in selected_bins:
-                    selected_bins.append([i, j])
+                if consent_ok:
+                    n_spaceships_inspected.add(1)
+                
+                if not current_mapelites.enforce_qnt and selected_bins != []:
+                    if [i, j] not in selected_bins:
+                        selected_bins.append([i, j])
+                    else:
+                        selected_bins.remove([i, j])
                 else:
-                    selected_bins.remove([i, j])
-            else:
-                selected_bins = [[i, j]]
-            cs_string = ''
-            cs_properties = get_properties_table()
-            if len(selected_bins) > 0:
-                elite = get_elite(mapelites=current_mapelites,
-                                  bin_idx=_switch([selected_bins[-1]])[0],
-                                  pop='feasible' if pop_name == 'Feasible' else 'infeasible')
-                cs_string = elite.string
-                cs_properties = get_properties_table(cs=elite)
+                    selected_bins = [[i, j]]
+                cs_string = ''
+                cs_properties = get_properties_table()
+                if len(selected_bins) > 0:
+                    elite = get_elite(mapelites=current_mapelites,
+                                    bin_idx=_switch([selected_bins[-1]])[0],
+                                    pop='feasible' if pop_name == 'Feasible' else 'infeasible')
+                    cs_string = elite.string
+                    cs_properties = get_properties_table(cs=elite)
         else:
             logging.getLogger('webapp').info(msg=f'Empty bin selected ({i}, {j}).')
     elif event_trig == 'selection-btn':
@@ -1281,7 +1292,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         _ = _apply_emitter_change(mapelites=current_mapelites,
                                   emitter_name=emitter_name)
     elif event_trig == 'download-btn':
-        if cs_string != '':  # TODO: change this to check for selected bin
+        if cs_string != '':  # TODO: rework this to allow download at any moment
             exp_n += 1
             def write_archive(bytes_io):
                 with ZipFile(bytes_io, mode="w") as zf:

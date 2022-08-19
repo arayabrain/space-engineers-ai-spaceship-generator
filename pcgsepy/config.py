@@ -69,6 +69,8 @@ EPSILON_F = config['MAPELITES'].getfloat('epsilon_fitness')
 ALIGNMENT_INTERVAL = config['MAPELITES'].getint('alignment_interval')
 # rescale infeasible fitness with reporduction probability
 RESCALE_INFEAS_FITNESS = config['MAPELITES'].getboolean('rescale_infeas_fitness')
+# minimum subdivision percentage of a bin
+BIN_SMALLEST_PERC = config['MAPELITES'].getfloat('bin_min_resolution')
 
 # number of experiments to run
 N_RUNS = config['EXPERIMENT'].getint('n_runs')

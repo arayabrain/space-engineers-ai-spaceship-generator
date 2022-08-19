@@ -1,16 +1,17 @@
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-from pcgsepy.config import BIN_POP_SIZE
+from pcgsepy.config import BIN_POP_SIZE, BIN_SMALLEST_PERC
 from pcgsepy.lsystem.solution import CandidateSolution
 
 
 class MAPBin:
-    __slots__ = ['_feasible', '_infeasible', 'bin_idx', 'bin_size']
+    __slots__ = ['_feasible', '_infeasible', 'bin_idx', 'bin_size', 'bin_initial_size']
 
     def __init__(self,
                  bin_idx: Tuple[int, int],
-                 bin_size: Tuple[float, float]):
+                 bin_size: Tuple[float, float],
+                 bin_initial_size: Optional[Tuple[float, float]]):
         """Create a 2D bin object.
 
         Args:
@@ -21,12 +22,29 @@ class MAPBin:
         self._infeasible = []
         self.bin_idx = bin_idx
         self.bin_size = bin_size
+        self.bin_initial_size = bin_initial_size if bin_initial_size else bin_size
 
     def __str__(self) -> str:
         return f'Bin {self.bin_idx}, {self.bin_size} w/ {len(self._feasible)}f and {len(self._infeasible)}i cs'
 
     def __repr__(self) -> str:
         return str(self)
+    
+    @property
+    def subdividable(self) -> bool:
+        """Check if the bin can be subdivided. Use this method when locally increasing resolution of the behavioral map.
+
+        Returns:
+            bool: Whether the bin can be subdivided.
+        """
+        bs0, bs1 = self.bin_size
+        bis0, bis1 = self.bin_initial_size
+        ms0 = bis0 * BIN_SMALLEST_PERC
+        ms1 = bis1 * BIN_SMALLEST_PERC
+        bs0 /= 2
+        bs1 /= 2
+        return bs0 >= ms0 and bs1 >= ms1
+        
 
     def non_empty(self,
                   pop: str) -> bool:

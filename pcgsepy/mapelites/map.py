@@ -296,7 +296,8 @@ class MAPElites:
             if m == i or m == i + 1 or n == j or n == j + 1:
                 new_bins[m, n] = MAPBin(bin_idx=(m, n),
                                         bin_size=(self.bin_sizes[0][m],
-                                                  self.bin_sizes[1][n]))
+                                                  self.bin_sizes[1][n]),
+                                        bin_initial_size=(v_i, v_j))
                 new_bins[m, n].bin_idx = (m, n)
         # assign new bin map
         self.bins = new_bins
@@ -347,7 +348,7 @@ class MAPElites:
             List[Tuple[int, int]]: The indices of bins that were subdivided.
         """
         if self.allow_res_increase:
-            to_increase_res = [cbin.bin_idx for (_, _), cbin in np.ndenumerate(self.bins) if len(cbin._feasible) >= BIN_POP_SIZE and len(cbin._infeasible) >= BIN_POP_SIZE]
+            to_increase_res = [cbin.bin_idx for (_, _), cbin in np.ndenumerate(self.bins) if len(cbin._feasible) >= BIN_POP_SIZE and len(cbin._infeasible) >= BIN_POP_SIZE and cbin.subdividable]
             for bin_idx in reversed(to_increase_res):
                 self.subdivide_range(bin_idx=bin_idx)
             return to_increase_res

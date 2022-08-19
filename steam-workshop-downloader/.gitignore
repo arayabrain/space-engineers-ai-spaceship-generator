@@ -2,3 +2,4 @@
 content/*
 downloads/*
 private
+*.sbc
