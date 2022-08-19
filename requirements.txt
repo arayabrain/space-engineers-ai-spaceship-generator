@@ -15,3 +15,4 @@ statsmodels
 steamctl
 torch
 tqdm
+waitress

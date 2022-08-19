@@ -27,6 +27,7 @@ setup(
         "sklearn >= 0.0",
         "steamctl >= 0.9.1",
         "torch >= 1.11.0",
-        "tqdm >= 4.64.0"
+        "tqdm >= 4.64.0",
+        "waitress >= 2.1.2"
     ],
 )
