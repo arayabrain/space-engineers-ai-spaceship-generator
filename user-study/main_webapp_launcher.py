@@ -4,8 +4,6 @@ import sys
 
 from waitress import serve
 
-from pcgsepy.config import BIN_N
-
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     os.chdir(sys._MEIPASS)
 
@@ -14,6 +12,7 @@ import random
 import webbrowser
 
 from pcgsepy.common.jsonifier import json_loads
+from pcgsepy.config import BIN_N
 from pcgsepy.evo.fitness import (Fitness, box_filling_fitness,
                                  func_blocks_fitness, mame_fitness,
                                  mami_fitness)
