@@ -19,6 +19,8 @@ import pathlib
 import random
 from typing import Dict, List
 
+from dash import ALL
+
 import dash
 import numpy as np
 import plotly.express as px
@@ -64,7 +66,7 @@ hull_builder = HullBuilder(erosion_type='bin',
                            apply_erosion=True,
                            apply_smoothing=True)
 
-emitters = ['Random', 'Preference Matrix', 'Contextual Bandit']
+emitters = ['Human', 'Random', 'Greedy', 'Contextual Bandit']
 
 block_to_colour = {
     # colours from https://developer.mozilla.org/en-US/docs/Web/CSS/color_value
@@ -93,10 +95,8 @@ def _get_colour_mapping(block_types: List[str]) -> Dict[str, str]:
     return colour_map
 
 
-
-
 app = dash.Dash(__name__,
-                title='SE ICMAP-Elites (Evaluator)',
+                title='Spaceships Ranker',
                 external_stylesheets=[dbc.themes.DARKLY],
                 assets_folder=resource_path("assets"),
                 update_title=None)
@@ -115,12 +115,15 @@ def get_content_div(content_n: int,
         # spaceship content display + properties
         # CONTENT PLOT
         html.Div(children=[
-            dcc.Graph(id=f"spaceship-{content_n + 1}-content",
+            dcc.Graph(id={'type': "spaceship-content", 'index': content_n},
                       figure=px.scatter_3d(x=np.zeros(0, dtype=object),
                                            y=np.zeros(0, dtype=object),
                                            z=np.zeros(0, dtype=object),
                                            title='',
-                                           template='plotly_dark')),
+                                           template='plotly_dark'),
+                      config={
+                          'displayModeBar': False,
+                          'displaylogo': False}),
             ],
                 className='content-div',
                 style={'width': '100%'}),
@@ -129,7 +132,7 @@ def get_content_div(content_n: int,
                        max=tot_content, 
                        step=1,
                        value=1,
-                       id=f'spaceship-{content_n + 1}-slider',
+                       id={'type': "spaceship-slider", 'index': content_n},
                        marks=None,
                        tooltip={"placement": "bottom",
                                 "always_visible": True}),
@@ -140,35 +143,54 @@ def get_content_div(content_n: int,
 
 
 def set_app_layout():
-    description_str, help_str = '', ''
 
-    curr_dir = pathlib.Path(__file__).parent.resolve()
+    with open(('./assets/help.md'), 'r') as f:
+        info_str = f.read()
+    info_modal = dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle("Info"), close_button=True),
+        dbc.ModalBody(dcc.Markdown(info_str))
+    ],
+                           id='info-modal',
+                           centered=True,
+                           backdrop='static',
+                           is_open=False,
+                           scrollable=True,
+                           size='lg')
     
-    with open(curr_dir.joinpath('assets/description.md'), 'r') as f:
-        description_str = f.read()
-    with open(curr_dir.joinpath('assets/help.md'), 'r') as f:
-        help_str = f.read()
+    err_modal = dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle("❌ Error ❌"), close_button=True),
+        dbc.ModalBody(dcc.Markdown("""All scores must be different!
+                                   
+Please assign different scores for each spaceship before saving."""))
+    ],
+                           id='err-modal',
+                           centered=True,
+                           backdrop='static',
+                           is_open=False,
+                           scrollable=True)
+    
+    ok_modal = dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle("✔️ Success ✔️"), close_button=True),
+        dbc.ModalBody(dcc.Markdown("""All rankings assigned!
+                                   
+Please proceed to the next section of the Google Form to complete the questionnaire."""))
+    ],
+                           id='ok-modal',
+                           centered=True,
+                           backdrop='static',
+                           is_open=False,
+                           scrollable=True)
         
-    encoded_image = base64.b64encode(open(curr_dir.joinpath('assets/ref_spaceships_lowres.png'), 'rb').read())
-
-    header = html.Div(children=[
-        html.H1(children='🚀Space Engineers🚀 IC MAP-Elites (Evluator)',
-                className='title'),
-        dcc.Markdown(children=description_str,
-                     className='page-description'),
-        ],
-                      className='header')
-    
-    footer = html.Div(children=[
-        html.H4(children='Help',
-                className='title'),
-        dcc.Markdown(help_str,
-                     className='page-description'),
-        html.Div(html.Img(src='data:image/png;base64,{}'.format(encoded_image.decode())),
-                 style={'display': 'flex', 'flex-direction': 'row', 'justify-content': 'center'})
-        ],
-                      className='footer')
-
+    header = dbc.Row(children=[
+                dbc.Col(html.H1(children='🚀Space Engineers Spaceships Ranker🚀',
+                                className='title'), width={'size': 10, 'offset': 1}),
+                dbc.Col(children=[dbc.Button('Info',
+                                             id='info-btn',
+                                             color='info')],
+                        align='center', width=1)
+    ],
+                     className='header')
+        
     upload_component = html.Div(children=[
         dcc.Upload(id='upload-data',
                    children=html.Div([
@@ -192,41 +214,46 @@ def set_app_layout():
     content_container = html.Div(children=[get_content_div(i, len(emitters)) for i in range(len(emitters))],
                                  style={'width': '100%', 'display': 'flex', 'flex-direction': 'row', 'justify-content': 'center'})
     
-    eoe = html.Div(id='eoe',
-                   children=[])
-    
-    save_data = html.Div(children=[
-        dbc.Button(children='Save',
-                   id='save-btn',
-                   n_clicks=0,
-                   className='button',
-                   disabled=False),
-        dcc.Download(id='save-data')
-        ],
-                         style={'width': '100%', 'display': 'flex', 'flex-direction': 'row', 'justify-content': 'center'})
+    save_data = dbc.Row(children=[
+        dbc.Col(children=[dbc.Button(children='Save',
+                                     id='save-btn',
+                                     n_clicks=0,
+                                     className='button',
+                                     disabled=False,
+                                     color="primary"),
+                          dcc.Download(id='save-data')],
+                align='center', width={'size': 1, 'offset': 6})])
     
     app.layout = dbc.Container(
         children=[
+            info_modal,
+            err_modal,
+            ok_modal,
             header,
             html.Br(),
             upload_component,
             html.Br(),
             content_container,
             html.Br(),
-            eoe,
-            html.Br(),
             save_data,
-            html.Br(),
-            footer
         ],
         fluid=True)
+
+
+@app.callback(
+    Output("info-modal", "is_open"),
+    Input("info-btn", "n_clicks"),
+    prevent_initial_call=True
+)
+def show_webapp_info(n):
+    return True
 
 
 def parse_contents(filename,
                    contents):
     _, rngseed, exp_n = filename.split('_')
     rngseed = int(rngseed)
-    exp_n = int(exp_n.replace('exp', '').replace('.txt', ''))
+    exp_n = int(exp_n.replace('exp', ''))
 
     _, content_string = contents.split(',')
     cs_string = base64.b64decode(content_string).decode(encoding='utf-8')
@@ -251,22 +278,44 @@ def get_content_plot(spaceship: CandidateSolution) -> go.Figure:
                         color=ss,
                         color_discrete_map=_get_colour_mapping(ss),
                         labels={
-                            'x': 'x',
-                            'y': 'y',
-                            'z': 'z',
+                            'x': '',
+                            'y': 'm',
+                            'z': '',
                             'color': 'Block type'
                         },
                         title='',
                         template='plotly_dark')
+    
+    ux, uy, uz = np.unique(x), np.unique(y), np.unique(z)
+    ptg = .2
+    show_x = [v for i, v in enumerate(ux) if i % (1 / ptg) == 0]
+    show_y = [v for i, v in enumerate(uy) if i % (1 / ptg) == 0]
+    show_z = [v for i, v in enumerate(uz) if i % (1 / ptg) == 0]
+    
+    fig.update_layout(
+        scene=dict(
+            xaxis={
+                'tickmode': 'array',
+                'tickvals': show_x,
+                'ticktext': [spaceship.content.grid_size * i for i in show_x],
+            },
+            yaxis={
+                'tickmode': 'array',
+                'tickvals': show_y,
+                'ticktext': [spaceship.content.grid_size * i for i in show_y],
+            },
+            zaxis={
+                'tickmode': 'array',
+                'tickvals': show_z,
+                'ticktext': [spaceship.content.grid_size * i for i in show_z],
+            }
+        )
+    )
+    
     fig.update_traces(marker=dict(size=4,
                               line=dict(width=3,
                                         color='DarkSlateGrey')),
                       selector=dict(mode='markers'))
-    fig.update_scenes(
-                      xaxis={'visible': False, 'showticklabels': False},
-                      yaxis={'visible': False, 'showticklabels': False},
-                      zaxis={'visible': False, 'showticklabels': False},
-    )
     camera = dict(
         up=dict(x=0, y=0, z=1),
         center=dict(x=0, y=0, z=0),
@@ -282,56 +331,39 @@ def get_content_plot(spaceship: CandidateSolution) -> go.Figure:
 
 @app.callback(
     Output("save-data", "data"),
-    Output('eoe', "children"),
+    Output('err-modal', "is_open"),
+    Output('ok-modal', "is_open"),
 
     Input("save-btn", "n_clicks"),
 
-    State('spaceship-1-slider', 'value'),
-    State('spaceship-2-slider', 'value'),
-    State('spaceship-3-slider', 'value'),
-    prevent_initial_call=True,
+    State({'type': 'spaceship-slider', 'index': ALL}, 'value'),
+    prevent_initial_call=True
 )
 def download_scores(n_clicks,
-                    slider1_value, slider2_value, slider3_value):
+                    sliders):
     global rng_seed
 
     random.seed(rng_seed)
     my_emitterslist = emitters.copy()
     random.shuffle(my_emitterslist)
 
-    res = {emitter: v for emitter, v in zip(
-        my_emitterslist, [slider1_value, slider2_value, slider3_value])}
+    res = {emitter: v for emitter, v in zip(my_emitterslist, sliders)}
 
-    eoe = dcc.Markdown('''
-                       #### This concludes the experiment
-                       
-                       Please proceed to the next section of the Google Form to complete the questionnaire.
-                       ''')
-
-    if slider1_value != slider2_value and slider1_value != slider3_value and slider2_value != slider3_value:
-        return dict(content=str(res), filename=f'{str(rng_seed).zfill(3)}_res.json'), eoe
+    if len(set(sliders)) == len(sliders):
+        return dict(content=str(res), filename=f'{str(rng_seed)}_res.json'), False, True
     else:
-        return None, dcc.Markdown('''
-                                  #### All scores must be different!
-                                  
-                                  Please assign different scores for each spaceship before saving.
-                                  ''')
+        return None, True, False
 
 
 @app.callback(
-    Output('spaceship-1-content', 'figure'),
-    Output('spaceship-2-content', 'figure'),
-    Output('spaceship-3-content', 'figure'),
+    Output({'type': 'spaceship-content', 'index': ALL}, 'figure'),
 
     Input('upload-data', 'contents'),
 
     State('upload-data', 'filename'),
-    State('spaceship-1-content', 'figure'),
-    State('spaceship-2-content', 'figure'),
-    State('spaceship-3-content', 'figure')
+    State({'type': 'spaceship-content', 'index': ALL}, 'figure')
 )
-def general_callback(list_of_contents,
-                     list_of_names, spaceship_1_plot, spaceship_2_plot, spaceship_3_plot):
+def general_callback(list_of_contents, list_of_names, spaceship_plot):
     global rng_seed
 
     ctx = dash.callback_context
@@ -342,15 +374,11 @@ def general_callback(list_of_contents,
         event_trig = ctx.triggered[0]['prop_id'].split('.')[0]
 
     if event_trig == 'upload-data':
+        
         children = [parse_contents(n, c) for c, n in zip(list_of_contents, list_of_names)]
         for child in children:
             rng_seed, exp_n, cs_string = child
             cs = CandidateSolution(string=cs_string)
-            if exp_n == 1:
-                spaceship_1_plot = get_content_plot(spaceship=cs)
-            elif exp_n == 2:
-                spaceship_2_plot = get_content_plot(spaceship=cs)
-            elif exp_n == 3:
-                spaceship_3_plot = get_content_plot(spaceship=cs)
+            spaceship_plot[exp_n]  = get_content_plot(spaceship=cs)
 
-    return spaceship_1_plot, spaceship_2_plot, spaceship_3_plot
+    return spaceship_plot

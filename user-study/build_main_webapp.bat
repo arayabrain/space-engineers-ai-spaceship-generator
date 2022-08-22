@@ -2,10 +2,10 @@ pyinstaller main_webapp_launcher.py ^
 	--clean ^
 	--onefile ^
 	--noconfirm ^
-	--name "Space Engineers PCG" ^
-	--icon assets\favicon.ico ^
+	--name "Spaceships Generator" ^
+	--icon assets\main_webapp\favicon.ico ^
 	--add-data "./estimators;estimators" ^
-	--add-data "./assets;assets" ^
+	--add-data "./assets/main_webapp;assets" ^
 	--add-data "./block_definitions.json;." ^
 	--add-data "./common_atoms.json;." ^
 	--add-data "./configs.ini;." ^

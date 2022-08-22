@@ -90,6 +90,11 @@ class Block:
         return self.scaled_size.bbox()
     
     @cached_property
+    def center(self) -> Vec:
+        # TODO: wait for Hovi confirmation
+        return self.scaled_size.scale(v=0.5)
+    
+    @cached_property
     def mountpoints(self) -> List[MountPoint]:
         return [MountPoint(face=v['Normal'],
                            start=v['Start'],

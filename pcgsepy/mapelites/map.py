@@ -430,12 +430,12 @@ class MAPElites:
                                              upper=kwargs.get('sym_upper', None))
 
     def generate_initial_populations(self,
-                                     pops_size: int = POP_SIZE,
+                                     pop_size: int = POP_SIZE,
                                      n_retries: int = N_RETRIES) -> None:
         """Generate the initial populations.
 
         Args:
-            pops_size (int, optional): The size of the populations. Defaults to `POP_SIZE`.
+            pop_size (int, optional): The size of the populations. Defaults to `POP_SIZE`.
             n_retries (int, optional): The number of initialization retries. Defaults to `N_RETRIES`.
         """
         # create populations
@@ -450,18 +450,18 @@ class MAPElites:
                 subdivide_solutions(lcs=solutions,
                                     lsystem=self.lsystem)
                 for cs in solutions:
-                    if cs.is_feasible and len(feasible_pop) < pops_size and cs not in feasible_pop:
+                    if cs.is_feasible and len(feasible_pop) < pop_size and cs not in feasible_pop:
                         if self.hull_builder is not None:
                             self.hull_builder.add_external_hull(structure=cs._content)
                         feasible_pop.append(self._assign_fitness(cs=cs))
-                    elif not cs.is_feasible and len(infeasible_pop) < pops_size and cs not in feasible_pop:
+                    elif not cs.is_feasible and len(infeasible_pop) < pop_size and cs not in feasible_pop:
                         infeasible_pop.append(self._assign_fitness(cs=cs))
                 iterations.set_postfix(ordered_dict={
-                    'fpop-size': f'{len(feasible_pop)}/{pops_size}',
-                    'ipop-size': f'{len(infeasible_pop)}/{pops_size}'
+                    'fpop-size': f'{len(feasible_pop)}/{pop_size}',
+                    'ipop-size': f'{len(infeasible_pop)}/{pop_size}'
                 },
                                        refresh=True)
-                if i == n_retries or (len(feasible_pop) == pops_size and len(infeasible_pop) == pops_size):
+                if i == n_retries or (len(feasible_pop) == pop_size and len(infeasible_pop) == pop_size):
                     break
         # assign solutions to respective bins
         self._update_bins(lcs=[*feasible_pop, *infeasible_pop])

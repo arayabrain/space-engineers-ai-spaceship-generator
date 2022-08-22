@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Tuple, Union
 
+import ast
 import numpy as np
 import torch as th
 import torch.nn.functional as F
@@ -120,8 +121,8 @@ class QuantileEstimator(th.nn.Module):
         qe = QuantileEstimator(xhsape=my_args['xshape'],
                                  yshape=my_args['yshape'])
         qe.is_trained = my_args['is_trained']
-        qe.load_state_dict(eval(my_args['model_params']))
-        qe.load_state_dict(eval(my_args['optimizer']))
+        qe.load_state_dict(ast.literal_eval(my_args['model_params']))
+        qe.load_state_dict(ast.literal_eval(my_args['optimizer']))
         return qe
 
 
@@ -253,8 +254,8 @@ class MLPEstimator(th.nn.Module):
         mlpe = MLPEstimator(xhsape=my_args['xshape'],
                             yshape=my_args['yshape'])
         mlpe.is_trained = my_args['is_trained']
-        mlpe.load_state_dict(eval(my_args['model_params']))
-        mlpe.load_state_dict(eval(my_args['optimizer']))
+        mlpe.load_state_dict(ast.literal_eval(my_args['model_params']))
+        mlpe.load_state_dict(ast.literal_eval(my_args['optimizer']))
         return mlpe
 
 

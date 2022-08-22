@@ -601,7 +601,7 @@ class ContextualBanditEmitter(Emitter):
             'diversity_weight': self.diversity_weight,
             'fitted': self._fitted,
             
-            'estimator_params': self._estimator.get_params(),
+            'estimator_params': self._estimator.get_params() if self._fitted else None,
             'estimator_coefs': self._estimator.coef_.tolist() if self._fitted else None,
             'estimator_intercept': np.asarray(self._estimator.intercept_).tolist() if self._fitted else None,
             
@@ -625,7 +625,8 @@ class ContextualBanditEmitter(Emitter):
         re._fitted = my_args['fitted']
         
         re._estimator = LinearRegression()
-        re._estimator.set_params(my_args['estimator_params'])
+        if my_args['estimator_params'] is not None:
+            re._estimator.set_params(my_args['estimator_params'])
         if my_args['estimator_coefs'] is not None:
             re._estimator.coef_ = np.asarray(my_args['estimator_coefs'])
         if my_args['estimator_intercept'] is not None:

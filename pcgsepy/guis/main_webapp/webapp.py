@@ -112,9 +112,9 @@ current_mapelites = None
 step_progress = -1
 consent_ok = None
 # TODO: create these
-my_emitterslist = ['mapelites_random.json',
-                   'mapelites_prefmatrix.json',
-                   'mapelites_prefbandit.json',
+my_emitterslist = ['mapelites_human.json',
+                   'mapelites_random.json',
+                   'mapelites_greedy.json',
                    'mapelites_contbandit.json']
 
 
