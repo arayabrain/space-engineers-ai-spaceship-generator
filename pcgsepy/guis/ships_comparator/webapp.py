@@ -222,7 +222,7 @@ Please proceed to the next section of the Google Form to complete the questionna
                                      disabled=False,
                                      color="primary"),
                           dcc.Download(id='save-data')],
-                align='center', width={'size': 1, 'offset': 6})])
+                align='center', width=12)])
     
     app.layout = dbc.Container(
         children=[
