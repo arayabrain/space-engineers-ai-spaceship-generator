@@ -11,7 +11,7 @@ class MAPBin:
     def __init__(self,
                  bin_idx: Tuple[int, int],
                  bin_size: Tuple[float, float],
-                 bin_initial_size: Optional[Tuple[float, float]]):
+                 bin_initial_size: Optional[Tuple[float, float]] = None):
         """Create a 2D bin object.
 
         Args:

@@ -57,6 +57,8 @@ MAX_Z_SIZE = config['MAPELITES'].getint('max_z_size')
 
 # number of solutions per bin
 BIN_POP_SIZE = config['MAPELITES'].getint('bin_population')
+BIN_N = config['MAPELITES'].get('bin_n').split(',')
+BIN_N = (int(x) for x in BIN_N)
 # maximum age of solutions
 CS_MAX_AGE = config['MAPELITES'].getint('max_age')
 # PCA dimensions

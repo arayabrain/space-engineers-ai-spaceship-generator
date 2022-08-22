@@ -13,7 +13,7 @@ setup(
     long_description='This package provides methods and classes to run a Procedural Content Generation task in the videogame Space Engineers.',
     install_requires=[
         "bs4 >= 0.0.1",
-        "dash >= 2.3.1",
+        "dash >= 2.4.0",
         "dash-bootstrap-components >= 1.2.1",
         "dash-core-components >= 2.0.0",
         "dash-html-components >= 2.0.0",

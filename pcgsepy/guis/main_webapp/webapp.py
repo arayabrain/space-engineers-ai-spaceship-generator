@@ -175,6 +175,7 @@ def set_callback_props(mapelites: MAPElites):
         'Elite': False
     }
 
+
 def get_properties_table(cs: Optional[CandidateSolution] = None) -> dbc.Table:
     size = str(cs.size) if cs else '-' 
     nblocks = cs.n_blocks if cs else '-'
@@ -193,7 +194,8 @@ def get_properties_table(cs: Optional[CandidateSolution] = None) -> dbc.Table:
     ])]
     
     return table_header + table_body
-    
+   
+ 
 def set_app_layout(behavior_descriptors_names,
                    mapelites: Optional[MAPElites] = None,
                    dev_mode: bool = True):
@@ -205,9 +207,17 @@ def set_app_layout(behavior_descriptors_names,
     
     gdev_mode = dev_mode
     
-    help_file = './assets/help_dev.md' if dev_mode else './assets/help_user.md'
-    with open(help_file, 'r') as f:
-        help_str = f.read()
+    webapp_info_file = './assets/help_dev.md' if dev_mode else './assets/webapp_info.md'
+    with open(webapp_info_file, 'r') as f:
+        webapp_info_str = f.read()
+        
+    algo_info_file = './assets/algo_info.md'
+    with open(algo_info_file, 'r') as f:
+        algo_info_str = f.read()
+    
+    quickstart_info_file = './assets/quickstart.md'
+    with open(quickstart_info_file, 'r', encoding='utf-8') as f:
+        quickstart_info_str = f.read()
     
     # rngseed = random.randint(0, 128)
     rngseed = uuid.uuid4().int
@@ -218,7 +228,7 @@ def set_app_layout(behavior_descriptors_names,
             mapelites = json_loads(f.read())
     current_mapelites = mapelites
     
-    logging.getLogger('webapp').info(msg=f'Your ID is {str(rngseed).zfill(3)}; please remember this!')
+    logging.getLogger('webapp').info(msg=f'Your ID is {str(rngseed).zfill(3)}.')
     
     consent_dialog = dbc.Modal([
             dbc.ModalHeader(dbc.ModalTitle("Privacy policy"), close_button=False),
@@ -249,11 +259,35 @@ You can use the application without agreeing to the privacy policy; in such case
         keyboard=False,
         is_open=consent_ok is None)
     
-    help_modal = dbc.Modal([
-        dbc.ModalHeader(dbc.ModalTitle("Info"), close_button=True),
-        dbc.ModalBody(dcc.Markdown(help_str))
+    webapp_info_modal = dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle("Webapp Info"), close_button=True),
+        dbc.ModalBody(dcc.Markdown(webapp_info_str))
     ],
-                           id='info-modal',
+                           id='webapp-info-modal',
+                           centered=True,
+                           backdrop='static',
+                           is_open=False,
+                           scrollable=True,
+                           size='lg')
+    
+    algo_info_modal = dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle("AI Info"), close_button=True),
+        dbc.ModalBody(dcc.Markdown(algo_info_str,
+                                   mathjax=True))
+    ],
+                           id='algo-info-modal',
+                           centered=True,
+                           backdrop='static',
+                           is_open=False,
+                           scrollable=True,
+                           size='lg')
+    
+    quickstart_modal = dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle("Quickstart"), close_button=True),
+        dbc.ModalBody(dcc.Markdown(quickstart_info_str,
+                                   link_target="_blank"))
+    ],
+                           id='quickstart-modal',
                            centered=True,
                            backdrop='static',
                            is_open=False,
@@ -262,10 +296,15 @@ You can use the application without agreeing to the privacy policy; in such case
 
     header = dbc.Row(children=[
                 dbc.Col(html.H1(children='🚀Space Engineers Spaceships Generator🚀',
-                                className='title'), width={'size': 10, 'offset': 1}),
-                dbc.Col(dbc.Button('Info',
-                                   id='info-btn',
-                                   color='info'), align='center', width=1)
+                                className='title'), width={'size': 8, 'offset': 2}),
+                dbc.Col(children=[dbc.Button('Webapp Info',
+                                             id='webapp-info-btn',
+                                             color='info')],
+                        align='center', width=1),
+                dbc.Col(children=[dbc.Button('AI Info',
+                                             id='ai-info-btn',
+                                             color='info')],
+                        align='center', width=1)
     ],
                      className='header')
     
@@ -282,6 +321,22 @@ You can use the application without agreeing to the privacy policy; in such case
                                        centered=True,
                                        backdrop='static',
                                        is_open=False)
+    
+    exp_progress = html.Div(
+        children=[
+            dbc.Label(f'Current iteration:'),
+            dbc.Progress(id="gen-progress",
+                         color='success',
+                         striped=False,
+                         animated=False),
+            html.Br(),
+            dbc.Label(f'Spaceships generation progress:'),
+            dbc.Progress(id="exp-progress",
+                         color='success',
+                         striped=False,
+                         animated=False),
+        ],
+        id='exp-progress-div')
     
     mapelites_heatmap = html.Div(children=[
         dcc.Graph(id="heatmap-plot",
@@ -345,7 +400,8 @@ You can use the application without agreeing to the privacy policy; in such case
                 dbc.Button('Download content',
                             id='download-btn',
                             disabled=True),
-                dcc.Download(id='download-content')
+                dcc.Download(id='download-content'),
+                dcc.Download(id='download-metrics')
                 ])
             ])
     
@@ -470,7 +526,8 @@ You can use the application without agreeing to the privacy policy; in such case
                 ],
                            className="mb-3",
                            style={'content-visibility': 'hidden' if not dev_mode else 'visible'})
-            ])
+            ],
+        style={'content-visibility': 'hidden' if not dev_mode else 'visible'})
     
     experiment_controls = html.Div(
         children=[
@@ -542,6 +599,7 @@ You can use the application without agreeing to the privacy policy; in such case
     
     progress = html.Div(
         children=[
+            html.Br(),
             dbc.Label('Evolution progress: '),
             dbc.Progress(id="step-progress",
                          color='info',
@@ -571,7 +629,9 @@ You can use the application without agreeing to the privacy policy; in such case
             children=[
                 consent_dialog,
                 header,
-                help_modal,
+                webapp_info_modal,
+                algo_info_modal,
+                quickstart_modal,
                 no_bins_selected_modal,
                 html.Br(),
                 dbc.Row(children=[
@@ -602,7 +662,9 @@ You can use the application without agreeing to the privacy policy; in such case
             children=[
                 consent_dialog,
                 header,
-                help_modal,
+                webapp_info_modal,
+                algo_info_modal,
+                quickstart_modal,
                 no_bins_selected_modal,
                 html.Br(),
                 dbc.Row(children=[
@@ -611,10 +673,10 @@ You can use the application without agreeing to the privacy policy; in such case
                     dbc.Col(content_properties, width=2)],
                         align="center"),
                 dbc.Row(children=[
-                    dbc.Col(progress, width={'size': 4, 'offset': 4},
-                            className='spacer')]),
-                dbc.Row(children=[
-                    dbc.Col(experiment_settings, width=4),
+                    dbc.Col(children=[exp_progress,
+                                      progress,
+                                      experiment_settings],
+                            width=4),
                     dbc.Col(experiment_controls, width=4),
                     dbc.Col(log, width=4)],
                         align="start"),
@@ -631,6 +693,7 @@ You can use the application without agreeing to the privacy policy; in such case
                 ],
             fluid=True)
 
+
 app.clientside_callback(
     """
     function(clicks) {
@@ -644,18 +707,30 @@ app.clientside_callback(
     Input("consent-yes", "n_clicks")
 )
 
+
 @app.callback(
-    Output("info-modal", "is_open"),
-    Input("info-btn", "n_clicks"),
+    Output("webapp-info-modal", "is_open"),
+    Input("webapp-info-btn", "n_clicks"),
     prevent_initial_call=True
 )
-def show_help(n):
+def show_webapp_info(n):
     return True
+
+
+@app.callback(
+    Output("algo-info-modal", "is_open"),
+    Input("ai-info-btn", "n_clicks"),
+    prevent_initial_call=True
+)
+def show_algo_info(n):
+    return True
+
 
 @app.callback(Output('console-out', 'value'),
               Input('interval1', 'n_intervals'))
 def update_output(n):
     return ('\n'.join(dashLoggerHandler.queue))
+
 
 @app.callback(
     [Output("step-progress", "value"),
@@ -663,8 +738,28 @@ def update_output(n):
      Output('step-progress-div', 'style')],
     [Input("interval1", "n_intervals")],
 )
-def update_progress(n):
+def update_progress(n):  
     return step_progress, f"{step_progress}%", {'content-visibility': 'visible' if 0 <= step_progress <= 100 else 'hidden'}
+
+
+@app.callback(
+    [Output("gen-progress", "value"),
+     Output("gen-progress", "label")],
+    [Input("interval1", "n_intervals")],
+)
+def update_gen_progress(n):
+    val = 100 * ((gen_counter) / N_GENS_ALLOWED)
+    return val, f"{gen_counter} / {N_GENS_ALLOWED}"
+
+
+@app.callback(
+    [Output("exp-progress", "value"),
+     Output("exp-progress", "label")],
+    [Input("interval1", "n_intervals")],
+)
+def update_exp_progress(n):
+    val = 100 * ((1 + exp_n) / len(my_emitterslist))
+    return val, f"{exp_n + 1} / {len(my_emitterslist)}"
 
 
 def _from_bc_to_idx(bcs: Tuple[float, float],
@@ -679,6 +774,20 @@ def _from_bc_to_idx(bcs: Tuple[float, float],
                               [:-1]) + mapelites.b_descs[1].bounds[0],
                     right=False)[0] - 1
     return (i, j)
+
+
+@app.callback(
+    Output("download-mapelites", "data"),
+    Input("download-mapelites-btn", "n_clicks"),
+    prevent_initial_call=True,
+)
+def download_mapelites(n_clicks):
+    global current_mapelites
+    global gen_counter
+    
+    t = datetime.now().strftime("%Y%m%d%H%M%S")
+    fname = f'{t}_mapelites_{current_mapelites.emitter.name}_gen{str(gen_counter).zfill(2)}'
+    return dict(content=json_dumps(current_mapelites), filename=f'{fname}.json')
 
 
 def _switch(ls: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
@@ -722,11 +831,11 @@ def _build_heatmap(mapelites: MAPElites,
                    pop_name: str,
                    metric_name: str,
                    method_name: str) -> go.Figure:
-    valid_bins = [x.bin_idx for x in mapelites._valid_bins()]    
+    valid_bins = [x.bin_idx for x in mapelites._valid_bins()]
     metric = hm_callback_props['metric'][metric_name]
     use_mean = hm_callback_props['method'][method_name]
     population = hm_callback_props['pop'][pop_name]
-    # build hotmap
+    # build heatmap
     disp_map = np.zeros(shape=mapelites.bins.shape)
     text = []
     for i in range(mapelites.bins.shape[0]):
@@ -882,7 +991,7 @@ def _apply_step(mapelites: MAPElites,
     
     valid = True
     if mapelites.enforce_qnt:
-        valid_bins = [list(x.bin_idx) for x in mapelites._valid_bins()]
+        valid_bins = [x.bin_idx for x in mapelites._valid_bins()]
         for bin_idx in selected_bins:
             valid &= bin_idx in valid_bins
     if valid:
@@ -1029,19 +1138,6 @@ def _apply_emitter_change(mapelites: MAPElites,
         logging.getLogger('webapp').info(msg=f'Unrecognized emitter type {emitter_name}')
         return False
 
-@app.callback(
-    Output("download-mapelites", "data"),
-    Input("download-mapelites-btn", "n_clicks"),
-    prevent_initial_call=True,
-)
-def download_mapelites(n_clicks):
-    global current_mapelites
-    global gen_counter
-    
-    t = datetime.now().strftime("%Y%m%d%H%M%S")
-    fname = f'{t}_mapelites_{current_mapelites.emitter.name}_gen{str(gen_counter).zfill(2)}'
-    return dict(content=json_dumps(current_mapelites), filename=f'{fname}.json')
-
 
 @app.callback(Output('heatmap-plot', 'figure'),
               Output('content-plot', 'figure'),
@@ -1054,12 +1150,14 @@ def download_mapelites(n_clicks):
               Output('download-btn', 'disabled'),
               Output('step-btn', 'disabled'),
               Output("download-content", "data"),
+              Output("download-metrics", "data"),
               Output('population-dropdown', 'label'),
               Output('metric-dropdown', 'label'),
               Output('b0-dropdown', 'label'),
               Output('b1-dropdown', 'label'),
               Output('symmetry-dropdown', 'label'),
               Output("consent-modal", "is_open"),
+              Output("quickstart-modal", "is_open"),
               Output("nbs-err-modal", "is_open"),
               
               State('heatmap-plot', 'figure'),
@@ -1073,6 +1171,7 @@ def download_mapelites(n_clicks):
               State('b1-dropdown', 'label'),
               State('symmetry-dropdown', 'label'),
               State("consent-modal", "is_open"),
+              State("quickstart-modal", "is_open"),
               
               Input('population-feasible', 'n_clicks'),
               Input('population-infeasible', 'n_clicks'),
@@ -1112,7 +1211,7 @@ def download_mapelites(n_clicks):
               Input("consent-no", "n_clicks"),
               Input("nbs-err-btn", "n_clicks")
               )
-def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, privacy_modal_show,
+def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, privacy_modal_show, qs_modal_show,
                      pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_reset, n_clicks_sub, weights,
                      b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn,
                      emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn):
@@ -1128,6 +1227,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     global n_spaceships_inspected
     global time_elapsed
     
+    metrics_dl = None
     nbs_err_modal_show = False
     
     ctx = dash.callback_context
@@ -1141,8 +1241,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         if len(selected_bins) > 0:
             s = time.perf_counter()
             res = _apply_step(mapelites=current_mapelites,
-                            selected_bins=[[x[1], x[0]] for x in selected_bins],
-                            gen_counter=gen_counter)
+                              selected_bins=[(x[1], x[0]) for x in selected_bins],
+                              gen_counter=gen_counter)
             if res:
                 elapsed = time.perf_counter() - s
                 gen_counter += 1
@@ -1249,28 +1349,25 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                                     clickData['points'][0]['y']),
                                mapelites=current_mapelites)
         if current_mapelites.bins[j, i].non_empty(pop='feasible' if pop_name == 'Feasible' else 'infeasible'):
-            
             if (j, i) in [b.bin_idx for b in current_mapelites._valid_bins()]:
                 curr_content = _get_elite_content(mapelites=current_mapelites,
                                                 bin_idx=(j, i),
                                                 pop='feasible' if pop_name == 'Feasible' else 'infeasible')
-            
                 if consent_ok:
                     n_spaceships_inspected.add(1)
-                
                 if not current_mapelites.enforce_qnt and selected_bins != []:
-                    if [i, j] not in selected_bins:
-                        selected_bins.append([i, j])
+                    if (i, j) not in selected_bins:
+                        selected_bins.append((i, j))
                     else:
-                        selected_bins.remove([i, j])
+                        selected_bins.remove((i, j))
                 else:
-                    selected_bins = [[i, j]]
+                    selected_bins = [(i, j)]
                 cs_string = ''
                 cs_properties = get_properties_table()
                 if len(selected_bins) > 0:
                     elite = get_elite(mapelites=current_mapelites,
-                                    bin_idx=_switch([selected_bins[-1]])[0],
-                                    pop='feasible' if pop_name == 'Feasible' else 'infeasible')
+                                      bin_idx=_switch([selected_bins[-1]])[0],
+                                      pop='feasible' if pop_name == 'Feasible' else 'infeasible')
                     cs_string = elite.string
                     cs_properties = get_properties_table(cs=elite)
         else:
@@ -1292,8 +1389,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         _ = _apply_emitter_change(mapelites=current_mapelites,
                                   emitter_name=emitter_name)
     elif event_trig == 'download-btn':
-        if cs_string != '':  # TODO: rework this to allow download at any moment
-            exp_n += 1
+        if cs_string != '':
+            
             def write_archive(bytes_io):
                 with ZipFile(bytes_io, mode="w") as zf:
                     # with open('./assets/thumb.png', 'rb') as f:
@@ -1308,68 +1405,73 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                                       pop='feasible' if pop_name == 'Feasible' else 'infeasible')
                     zf.writestr('bp.sbc', convert_structure_to_xml(structure=elite.content, name=f'My Spaceship ({rngseed}) (exp{exp_n})'))
                     zf.writestr(f'spaceship_{rngseed}_exp{exp_n}', cs_string)
-            content_dl = dcc.send_bytes(write_archive, f'MySpaceship_{rngseed}_exp{exp_n}.zip')
+            
+            content_dl = dcc.send_bytes(write_archive, f'MySpaceship_{rngseed}_exp{exp_n}_gen{gen_counter}.zip')         
             logging.getLogger('webapp').info(f'Your selected spaceship will be downloaded shortly.')
-            if exp_n >= len(my_emitterslist):
-                curr_heatmap = go.Figure(data=[])
-                selected_bins = []
-                curr_content = _get_elite_content(mapelites=current_mapelites,
-                                                  bin_idx=None,
-                                                  pop=None)
-                
-                cs_string = ''
-                cs_properties = get_properties_table()
-                if consent_ok:
-                    content_dl = dict(content=json.dumps({
-                        'time_elapsed': time_elapsed.get_averages(),
-                        'n_interactions': n_spaceships_inspected.get_averages()
-                        }),
-                                    filename=f'user_metrics_{rngseed}')
+            
+            # end of experiment
+            if gen_counter == N_GENS_ALLOWED:
+                exp_n += 1
+                if exp_n >= len(my_emitterslist):
+                    curr_heatmap = go.Figure(data=[])
+                    selected_bins = []
+                    curr_content = _get_elite_content(mapelites=current_mapelites,
+                                                    bin_idx=None,
+                                                    pop=None)
+                    
+                    cs_string = ''
+                    cs_properties = get_properties_table()
+                    if consent_ok:
+                        metrics_dl = dict(content=json.dumps({
+                            'time_elapsed': time_elapsed.get_averages(),
+                            'n_interactions': n_spaceships_inspected.get_averages()
+                            }),
+                                        filename=f'user_metrics_{rngseed}')
+                    else:
+                        metrics_dl = None 
+                    logging.getLogger('webapp').info(f'Reached end of all experiments! Please go back to the questionnaire to continue the evaluation.')
+                    title = 'Spaceships population'
+                    curr_heatmap = go.Figure(
+                        data=go.Heatmap(
+                            z=np.zeros(0, dtype=object),
+                            x=np.zeros(0, dtype=object),
+                            y=np.zeros(0, dtype=object),
+                            hoverongaps=False,
+                            ))
+                    curr_heatmap.update_layout(title=dict(text=title),
+                                            autosize=False,
+                                            clickmode='event+select',
+                                            paper_bgcolor='rgba(0,0,0,0)',
+                                            plot_bgcolor='rgba(0,0,0,0)',
+                                            template='plotly_dark')                
                 else:
-                    content_dl = None 
-                logging.getLogger('webapp').info(f'Reached end of all experiments! Please go back to the questionnaire to continue the evaluation.')
-                title = 'Spaceships population'
-                curr_heatmap = go.Figure(
-                    data=go.Heatmap(
-                        z=np.zeros(0, dtype=object),
-                        x=np.zeros(0, dtype=object),
-                        y=np.zeros(0, dtype=object),
-                        hoverongaps=False,
-                        ))
-                curr_heatmap.update_layout(title=dict(text=title),
-                                           autosize=False,
-                                           clickmode='event+select',
-                                           paper_bgcolor='rgba(0,0,0,0)',
-                                           plot_bgcolor='rgba(0,0,0,0)',
-                                           template='plotly_dark')                
-            else:
-                logging.getLogger('webapp').info(msg=f'Reached end of experiment {exp_n}! Loading the next experiment...')
-                gen_counter = 0
-                
-                if consent_ok:
-                    # with open(my_emitterslist[exp_n], 'r') as f:
-                    #     current_mapelites = json_loads(f.read())
-                    logging.getLogger('webapp').info(msg='Initializing population; this may take a while...')
-                    current_mapelites.reset()
-                    logging.getLogger('webapp').info(msg='Initialization completed.')
-                    n_spaceships_inspected.new_generation()
-                    time_elapsed.new_generation()
-                else:
-                    logging.getLogger('webapp').info(msg='Initializing a new population; this may take a while...')
-                    current_mapelites.reset()
-                    logging.getLogger('webapp').info(msg='Initialization completed.')
-                curr_heatmap = _build_heatmap(mapelites=current_mapelites,
-                                              pop_name=pop_name,
-                                              metric_name=metric_name,
-                                              method_name=method_name)
-                selected_bins = []
-                curr_content = _get_elite_content(mapelites=current_mapelites,
-                                                  bin_idx=None,
-                                                  pop=None)
-                
-                cs_string = ''
-                cs_properties = get_properties_table()
-                logging.getLogger('webapp').info(msg='Next experiment loaded. Please fill out the questionnaire before continuing.')
+                    logging.getLogger('webapp').info(msg=f'Reached end of experiment {exp_n}! Loading the next experiment...')
+                    gen_counter = 0
+                    
+                    if consent_ok:
+                        # with open(my_emitterslist[exp_n], 'r') as f:
+                        #     current_mapelites = json_loads(f.read())
+                        logging.getLogger('webapp').info(msg='Initializing population; this may take a while...')
+                        current_mapelites.reset()
+                        logging.getLogger('webapp').info(msg='Initialization completed.')
+                        n_spaceships_inspected.new_generation()
+                        time_elapsed.new_generation()
+                    else:
+                        logging.getLogger('webapp').info(msg='Initializing a new population; this may take a while...')
+                        current_mapelites.reset()
+                        logging.getLogger('webapp').info(msg='Initialization completed.')
+                    curr_heatmap = _build_heatmap(mapelites=current_mapelites,
+                                                pop_name=pop_name,
+                                                metric_name=metric_name,
+                                                method_name=method_name)
+                    selected_bins = []
+                    curr_content = _get_elite_content(mapelites=current_mapelites,
+                                                    bin_idx=None,
+                                                    pop=None)
+                    
+                    cs_string = ''
+                    cs_properties = get_properties_table()
+                    logging.getLogger('webapp').info(msg='Next experiment loaded. Please fill out the questionnaire before continuing.')
     elif event_trig == 'popdownload-btn':
         content_dl = dict(content=json.dumps([b.to_json() for b in current_mapelites.bins.flatten().tolist()]),
                           filename=f'population_{rngseed}_exp{exp_n}.json')
@@ -1402,6 +1504,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
             current_mapelites.reset()
             logging.getLogger('webapp').info(msg='Initialization completed.')
         privacy_modal_show = False
+        qs_modal_show = True
         gen_counter = 0
         curr_heatmap = _build_heatmap(mapelites=current_mapelites,
                                         pop_name=pop_name,
@@ -1442,12 +1545,14 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     #   ('download-btn', 'disabled'),
     #   ('step-btn', 'disabled'),
     #   ("download-content", "data"),
+    #   ("download-metrics", "data"),
     #   ('population-dropdown', 'label'),
     #   ('metric-dropdown', 'label'),
     #   ('b0-dropdown', 'label'),
     #   ('b1-dropdown', 'label'),
     #   ('symmetry-dropdown', 'label'),
     #   ("consent-modal", "is_open"),
+    #   ("quickstart-modal", "is_open"),
     #   ("nbs-err-modal", "is_open")
     return curr_heatmap,\
         curr_content,\
@@ -1457,13 +1562,15 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         selected_bins_str,\
         cs_string,\
         cs_properties,\
-        not gdev_mode and gen_counter < N_GENS_ALLOWED,\
+        False,\
         not gdev_mode and gen_counter >= N_GENS_ALLOWED,\
         content_dl,\
+        metrics_dl,\
         pop_name,\
         metric_name,\
         b0,\
         b1,\
         symm_axis,\
         privacy_modal_show,\
+        qs_modal_show,\
         nbs_err_modal_show

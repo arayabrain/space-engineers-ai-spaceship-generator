@@ -271,11 +271,10 @@ class MAPElites:
             bin_idx (Tuple[int, int]): The index of the bin.
         """
         i, j = bin_idx
-        # get solutions in same row&col
+        # get solutions
         all_cs = []
-        for (m, n), cbin in np.ndenumerate(self.bins):
-            if m == i or n == j:
-                all_cs.extend([*cbin._feasible, *cbin._infeasible])
+        for (_, _), cbin in np.ndenumerate(self.bins):
+            all_cs.extend([*cbin._feasible, *cbin._infeasible])
         # update bin sizes
         v_i, v_j = self.bin_sizes[0][i], self.bin_sizes[1][j]
         self.bin_sizes[0][i] = v_i / 2
@@ -285,20 +284,13 @@ class MAPElites:
         # update bin quantity
         self.bin_qnt = (self.bin_qnt[0] + 1, self.bin_qnt[1] + 1)
         # create new bin map
-        new_bins = np.empty(shape=self.bin_qnt, dtype=MAPBin)
-        # copy over unaffected bins
-        new_bins[:i, :j] = self.bins[:i, :j]
-        new_bins[:i, (j+2):] = self.bins[:i, (j+1):]
-        new_bins[(i+2):, :j] = self.bins[(i+1):, :j]
-        new_bins[(i+2):, (j+2):] = self.bins[(i+1):, (j+1):]
+        new_bins = np.empty(shape=self.bin_qnt, dtype=MAPBin)        
         # populate newly created bins
         for (m, n), _ in np.ndenumerate(new_bins):
-            if m == i or m == i + 1 or n == j or n == j + 1:
-                new_bins[m, n] = MAPBin(bin_idx=(m, n),
-                                        bin_size=(self.bin_sizes[0][m],
-                                                  self.bin_sizes[1][n]),
-                                        bin_initial_size=(v_i, v_j))
-                new_bins[m, n].bin_idx = (m, n)
+            new_bins[m, n] = MAPBin(bin_idx=(m, n),
+                                    bin_size=(self.bin_sizes[0][m],
+                                              self.bin_sizes[1][n]),
+                                    bin_initial_size=(v_i, v_j))
         # assign new bin map
         self.bins = new_bins
         # assign solutions to bins
@@ -320,7 +312,8 @@ class MAPElites:
             i = np.digitize(x=[b0], bins=bc0, right=False)[0] - 1
             j = np.digitize(x=[b1], bins=bc1, right=False)[0] - 1
             self.bins[i, j].insert_cs(cs)
-            self.bins[i, j].remove_old()
+        for (_, _), b in np.ndenumerate(self.bins):
+            b.remove_old()
 
     def _age_bins(self,
                   diff: int = -1) -> None:

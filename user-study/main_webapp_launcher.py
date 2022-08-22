@@ -4,6 +4,8 @@ import sys
 
 from waitress import serve
 
+from pcgsepy.config import BIN_N
+
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     os.chdir(sys._MEIPASS)
 
@@ -119,7 +121,7 @@ mapelites = MAPElites(lsystem=lsystem,
                                              yshape=1),
                       buffer=buffer,
                       behavior_descriptors=behavior_descriptors,
-                      n_bins=(8,8),
+                      n_bins=BIN_N,
                       emitter=ContextualBanditEmitter())
 # mapelites.generate_initial_populations()
 
