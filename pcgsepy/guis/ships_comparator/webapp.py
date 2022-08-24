@@ -19,7 +19,7 @@ import pathlib
 import random
 from typing import Dict, List
 
-from dash import ALL
+from dash import ALL, MATCH
 
 import dash
 import numpy as np
@@ -41,6 +41,7 @@ from pcgsepy.mapelites.emitters import (ContextualBanditEmitter,
                                         HumanPrefMatrixEmitter, RandomEmitter)
 from pcgsepy.setup_utils import get_default_lsystem
 from pcgsepy.common.api_call import block_definitions
+from pcgsepy.guis.ships_comparator.modals_msgs import scores_different_error, rankings_assigned
 
 used_ll_blocks = [
     'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerInv',
@@ -67,6 +68,7 @@ hull_builder = HullBuilder(erosion_type='bin',
                            apply_smoothing=True)
 
 emitters = ['Human', 'Random', 'Greedy', 'Contextual Bandit']
+progress = -1
 
 block_to_colour = {
     # colours from https://developer.mozilla.org/en-US/docs/Web/CSS/color_value
@@ -108,7 +110,7 @@ def get_content_div(content_n: int,
     return html.Div(children=[
         # title
         html.Div(children=[
-            html.H1(children=f'Spaceship from Experiment {content_n + 1}',
+            html.H1(children=f'Spaceship {chr(ord("A") + content_n)}',
                     style={'text-align': 'center'})
             ]),
         html.Br(),
@@ -127,24 +129,28 @@ def get_content_div(content_n: int,
             ],
                 className='content-div',
                 style={'width': '100%'}),
-        html.Div(children=[
-            dcc.Slider(min=1,
-                       max=tot_content, 
-                       step=1,
-                       value=1,
-                       id={'type': "spaceship-slider", 'index': content_n},
-                       marks=None,
-                       tooltip={"placement": "bottom",
-                                "always_visible": True}),
-            ],
-                style={'width': '60%', 'margin': '0 auto'})
         ],
                         style={'width': f'{w}%'})
 
 
-def set_app_layout():
+def get_rankings_div(tot_content: int) -> html.Div:
+    all_rankings = [html.Div(children=[
+        dbc.Row(children=[
+            dbc.Col(dbc.Label(f"Spaceship in {i + 1}{['st', 'nd', 'rd', 'th'][i] if i < 4 else 'th'} place:"),
+                    width={'offset': 5, 'size': 1}),
+            dbc.Col(dbc.DropdownMenu(label='A',
+                                     children=[dbc.DropdownMenuItem(f'{chr(ord("A") + j)}',
+                                                                    id={'type': "spaceship-ranking", 'index': (i * tot_content) + j}) for j in range(tot_content)],
+                                     id={'type': "ranking-dropdown", 'index': i}),
+                    width=1,
+                    align='start')]),
+        html.Br()]) for i in range(tot_content)]
+    return html.Div(children=all_rankings,
+                    id='ranking-div')
 
-    with open(('./assets/help.md'), 'r') as f:
+
+def set_app_layout():
+    with open('./assets/help.md', 'r', encoding='utf-8') as f:
         info_str = f.read()
     info_modal = dbc.Modal([
         dbc.ModalHeader(dbc.ModalTitle("Info"), close_button=True),
@@ -159,9 +165,7 @@ def set_app_layout():
     
     err_modal = dbc.Modal([
         dbc.ModalHeader(dbc.ModalTitle("❌ Error ❌"), close_button=True),
-        dbc.ModalBody(dcc.Markdown("""All scores must be different!
-                                   
-Please assign different scores for each spaceship before saving."""))
+        dbc.ModalBody(dcc.Markdown(scores_different_error))
     ],
                            id='err-modal',
                            centered=True,
@@ -171,9 +175,7 @@ Please assign different scores for each spaceship before saving."""))
     
     ok_modal = dbc.Modal([
         dbc.ModalHeader(dbc.ModalTitle("✔️ Success ✔️"), close_button=True),
-        dbc.ModalBody(dcc.Markdown("""All rankings assigned!
-                                   
-Please proceed to the next section of the Google Form to complete the questionnaire."""))
+        dbc.ModalBody(dcc.Markdown(rankings_assigned))
     ],
                            id='ok-modal',
                            centered=True,
@@ -211,18 +213,33 @@ Please proceed to the next section of the Google Form to complete the questionna
                    multiple=True
                    )])
     
+    upload_progress = html.Div(
+        children=[
+            html.Br(),
+            dbc.Label('Uploading progress: '),
+            dbc.Progress(id="upload-progress",
+                         color='info',
+                         striped=True,
+                         animated=True)
+        ],
+        id='upload-progress-div',
+        style={'content-visibility': 'visible' if 0 <= progress <= 100 else 'hidden'})
+    
     content_container = html.Div(children=[get_content_div(i, len(emitters)) for i in range(len(emitters))],
                                  style={'width': '100%', 'display': 'flex', 'flex-direction': 'row', 'justify-content': 'center'})
+    
+    ranking_div = get_rankings_div(tot_content=len(emitters))
     
     save_data = dbc.Row(children=[
         dbc.Col(children=[dbc.Button(children='Save',
                                      id='save-btn',
                                      n_clicks=0,
-                                     className='button',
                                      disabled=False,
-                                     color="primary"),
+                                     color="primary",
+                                     size="lg",
+                                     className="me-1"),
                           dcc.Download(id='save-data')],
-                align='center', width=12)])
+                align='center', width={'offset': 6, 'size': 1})])
     
     app.layout = dbc.Container(
         children=[
@@ -233,9 +250,16 @@ Please proceed to the next section of the Google Form to complete the questionna
             html.Br(),
             upload_component,
             html.Br(),
+            upload_progress,
+            html.Br(),
             content_container,
             html.Br(),
+            ranking_div,
+            html.Br(),
             save_data,
+            dcc.Interval(id='interval',
+                         interval=1 * 1000,
+                         n_intervals=0),
         ],
         fluid=True)
 
@@ -247,6 +271,33 @@ Please proceed to the next section of the Google Form to complete the questionna
 )
 def show_webapp_info(n):
     return True
+
+
+@app.callback(
+    [Output("upload-progress", "value"),
+     Output("upload-progress", "label"),
+     Output('upload-progress-div', 'style')],
+    [Input("interval", "n_intervals")],
+)
+def update_progress(n):  
+    return progress, f"{progress}%", {'content-visibility': 'visible' if 0 <= progress <= 100 else 'hidden'}
+
+
+
+@app.callback(
+    Output({'type': 'ranking-dropdown', 'index': ALL}, "label"),
+    Output({'type': 'spaceship-ranking', 'index': ALL}, "n_clicks"),
+    State({'type': 'ranking-dropdown', 'index': ALL}, "label"),
+    Input({'type': 'spaceship-ranking', 'index': ALL}, "n_clicks"),
+    prevent_initial_call=True
+)
+def update_dropdown_value(labels: List[str],
+                          vs: List[Optional[int]]):
+    # super hacky but Dash's pattern matching fails in this case
+    label_changed = vs.index(1) // len(labels)
+    new_label = chr(ord("A") + (vs.index(1) % len(labels)))
+    labels[label_changed] = new_label
+    return labels, [None] * len(vs)
 
 
 def parse_contents(filename,
@@ -336,20 +387,18 @@ def get_content_plot(spaceship: CandidateSolution) -> go.Figure:
 
     Input("save-btn", "n_clicks"),
 
-    State({'type': 'spaceship-slider', 'index': ALL}, 'value'),
+    State({'type': 'ranking-dropdown', 'index': ALL}, "label"),
     prevent_initial_call=True
 )
 def download_scores(n_clicks,
-                    sliders):
+                    rankings):
     global rng_seed
 
     random.seed(rng_seed)
     my_emitterslist = emitters.copy()
     random.shuffle(my_emitterslist)
-
-    res = {emitter: v for emitter, v in zip(my_emitterslist, sliders)}
-
-    if len(set(sliders)) == len(sliders):
+    res = {emitter: ord(v) - ord('A') + 1 for emitter, v in zip(my_emitterslist, rankings)}
+    if len(set(rankings)) == len(rankings):
         return dict(content=str(res), filename=f'{str(rng_seed)}_res.json'), False, True
     else:
         return None, True, False
@@ -357,14 +406,17 @@ def download_scores(n_clicks,
 
 @app.callback(
     Output({'type': 'spaceship-content', 'index': ALL}, 'figure'),
-
+    Output('upload-data', 'contents'),
+    Output('upload-data', 'filename'),
+    
     Input('upload-data', 'contents'),
 
     State('upload-data', 'filename'),
-    State({'type': 'spaceship-content', 'index': ALL}, 'figure')
+    State({'type': 'spaceship-content', 'index': ALL}, 'figure'),
 )
 def general_callback(list_of_contents, list_of_names, spaceship_plot):
     global rng_seed
+    global progress
 
     ctx = dash.callback_context
 
@@ -374,11 +426,13 @@ def general_callback(list_of_contents, list_of_names, spaceship_plot):
         event_trig = ctx.triggered[0]['prop_id'].split('.')[0]
 
     if event_trig == 'upload-data':
-        
         children = [parse_contents(n, c) for c, n in zip(list_of_contents, list_of_names)]
+        progress = 0
         for child in children:
+            progress += 100 / len(children)
             rng_seed, exp_n, cs_string = child
             cs = CandidateSolution(string=cs_string)
             spaceship_plot[exp_n]  = get_content_plot(spaceship=cs)
+        progress = -1
 
-    return spaceship_plot
+    return spaceship_plot, '', ''
