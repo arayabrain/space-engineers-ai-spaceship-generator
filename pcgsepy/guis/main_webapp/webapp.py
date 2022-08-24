@@ -1,4 +1,5 @@
 import base64
+from cmath import exp
 import json
 import logging
 import os
@@ -31,7 +32,7 @@ from pcgsepy.lsystem.solution import CandidateSolution
 from pcgsepy.mapelites.behaviors import (BehaviorCharacterization, avg_ma,
                                          mame, mami, symmetry)
 from pcgsepy.mapelites.bin import MAPBin
-from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, GreedyEmitter,
+from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, Emitter, GreedyEmitter,
                                         HumanEmitter, HumanPrefMatrixEmitter,
                                         PreferenceBanditEmitter, RandomEmitter)
 from pcgsepy.mapelites.map import MAPElites, get_elite
@@ -88,6 +89,55 @@ class Metric:
 
 n_spaceships_inspected = Metric()
 time_elapsed = Metric(multiple_values=True)
+
+
+# setup_matplotlib(larger_fonts=False)
+# used_ll_blocks = [
+#     'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerInv',
+#     'MyObjectBuilder_CubeBlock_LargeBlockArmorCorner',
+#     'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope',
+#     'MyObjectBuilder_CubeBlock_LargeBlockArmorBlock',
+#     'MyObjectBuilder_Gyro_LargeBlockGyro',
+#     'MyObjectBuilder_Reactor_LargeBlockSmallGenerator',
+#     'MyObjectBuilder_CargoContainer_LargeBlockSmallContainer',
+#     'MyObjectBuilder_Cockpit_OpenCockpitLarge',
+#     'MyObjectBuilder_Thrust_LargeBlockSmallThrust',
+#     'MyObjectBuilder_InteriorLight_SmallLight',
+#     'MyObjectBuilder_CubeBlock_Window1x1Slope',
+#     'MyObjectBuilder_CubeBlock_Window1x1Flat',
+#     'MyObjectBuilder_InteriorLight_LargeBlockLight_1corner'
+# ]
+# lsystem = get_default_lsystem(used_ll_blocks=used_ll_blocks)
+# expander.initialize(rules=lsystem.hl_solver.parser.rules)
+# feasible_fitnesses = [
+#     Fitness(name='BoxFilling',
+#             f=box_filling_fitness,
+#             bounds=(0, 1)),
+#     Fitness(name='FuncionalBlocks',
+#             f=func_blocks_fitness,
+#             bounds=(0, 1)),
+#     Fitness(name='MajorMediumProportions',
+#             f=mame_fitness,
+#             bounds=(0, 1)),
+#     Fitness(name='MajorMinimumProportions',
+#             f=mami_fitness,
+#             bounds=(0, 1))
+# ]
+
+# behavior_descriptors = [
+#     BehaviorCharacterization(name='Major axis / Medium axis',
+#                              func=mame,
+#                              bounds=(0, 10)),
+#     BehaviorCharacterization(name='Major axis / Smallest axis',
+#                              func=mami,
+#                              bounds=(0, 20)),
+#     BehaviorCharacterization(name='Average Proportions',
+#                              func=avg_ma,
+#                              bounds=(0, 20)),
+#     BehaviorCharacterization(name='Symmetry',
+#                              func=symmetry,
+#                              bounds=(0, 1))
+# ]
 
 
 hm_callback_props = {}
@@ -226,11 +276,8 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
         quickstart_info_str = f.read()
     
     rngseed = uuid.uuid4().int
-    if mapelites is None:
-        random.seed(rngseed)
-        random.shuffle(my_emitterslist)
-        with open(my_emitterslist[0], 'r') as f:
-            mapelites = json_loads(f.read())
+    random.seed(rngseed)
+    random.shuffle(my_emitterslist)
     current_mapelites = mapelites
     
     logging.getLogger('webapp').info(msg=f'Your ID is {rngseed}.')
@@ -1153,7 +1200,22 @@ def _apply_fitness_reweight(mapelites: MAPElites,
 def _apply_bin_selection_toggle(mapelites: MAPElites) -> bool:
     mapelites.enforce_qnt = not mapelites.enforce_qnt
     logging.getLogger('webapp').info(msg=f'MAP-Elites single bin selection set to {mapelites.enforce_qnt}.')
+
+
+def _get_emitter(exp_n: int) -> Emitter:
+    curr_emitter = my_emitterslist[exp_n].replace('.json', '').split('_')[1]
+    if curr_emitter == 'human':
+        return HumanEmitter()
+    elif curr_emitter == 'random':
+        return RandomEmitter
+    elif curr_emitter == 'greedy':
+        return GreedyEmitter
+    elif curr_emitter == 'contbandit':
+        return ContextualBanditEmitter()
+    else:
+        raise ValueError(f'Unexpected emitter type: {curr_emitter} (from "{my_emitterslist[exp_n]}"')
     
+ 
     
 def _apply_emitter_change(mapelites: MAPElites,
                           emitter_name: str) -> bool:
@@ -1445,26 +1507,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         _ = _apply_emitter_change(mapelites=current_mapelites,
                                   emitter_name=emitter_name)
     elif event_trig == 'download-btn':
-        if cs_string != '':
-            
-            # def write_archive(bytes_io):
-            #     with ZipFile(bytes_io, mode="w") as zf:
-            #         # with open('./assets/thumb.png', 'rb') as f:
-            #         #     thumbnail_img = f.read()
-            #         curr_content = _get_elite_content(mapelites=current_mapelites,
-            #                                           bin_idx=tuple(_switch([selected_bins[-1]])[0]),
-            #                                           pop='feasible')
-            #         thumbnail_img = curr_content.to_image(format="png")
-            #         zf.writestr('thumb.png', thumbnail_img)
-            #         elite = get_elite(mapelites=current_mapelites,
-            #                           bin_idx=_switch([selected_bins[-1]])[0],
-            #                           pop='feasible' if pop_name == 'Feasible' else 'infeasible')
-            #         zf.writestr('bp.sbc', convert_structure_to_xml(structure=elite.content, name=f'My Spaceship ({rngseed}) (exp{exp_n})'))
-            #         zf.writestr(f'spaceship_{rngseed}_exp{exp_n}', cs_string)
-            
-            # content_dl = dcc.send_bytes(write_archive, f'MySpaceship_{rngseed}_exp{exp_n}_gen{gen_counter}.zip')         
-            # logging.getLogger('webapp').info(f'Your selected spaceship will be downloaded shortly.')
-            
+        if cs_string != '':            
             # end of experiment
             if gen_counter == N_GENS_ALLOWED:
                 exp_n += 1
@@ -1505,11 +1548,10 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                     gen_counter = 0
                     
                     if consent_ok:
-                        # with open(my_emitterslist[exp_n], 'r') as f:
-                        #     current_mapelites = json_loads(f.read())
-                        logging.getLogger('webapp').info(msg='Initializing population; this may take a while...')
-                        current_mapelites.reset()
-                        logging.getLogger('webapp').info(msg='Initialization completed.')
+                        logging.getLogger('webapp').info(msg='Loading next population...')
+                        current_mapelites.reset(lcs=[])
+                        current_mapelites.load_population(filename=my_emitterslist[exp_n])
+                        logging.getLogger('webapp').info(msg='Next population loaded.')
                         n_spaceships_inspected.new_generation()
                         time_elapsed.new_generation()
                     else:
@@ -1533,7 +1575,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                           filename=f'population_{rngseed}_exp{exp_n}_{current_mapelites.emitter.name}.json')
     elif event_trig == 'popupload-data':
         _, upload_contents = upload_contents.split(',')
-        upload_contents = base64.b64decode(upload_contents).decode()
+        upload_contents = base64.b64decode(upload_contents).decode()        
         all_bins = np.asarray([MAPBin.from_json(x) for x in json.loads(upload_contents)])
         current_mapelites.reset(lcs=[])
         all_bins = all_bins.reshape(current_mapelites.bin_qnt)
@@ -1548,12 +1590,10 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         consent_ok = True if nclicks_yes else False if nclicks_no else None
         if nclicks_yes:
             logging.getLogger('webapp').info(msg=f'Thank you for participating in the user study! Please do not refresh the page.')
-            # TODO: this should load the first mapelites JSON
-            # with open(my_emitterslist[exp_n], 'r') as f:
-            #     current_mapelites = json_loads(f.read())
-            logging.getLogger('webapp').info(msg='Initializing population; this may take a while...')
-            current_mapelites.reset()
-            logging.getLogger('webapp').info(msg='Initialization completed.')
+            logging.getLogger('webapp').info(msg='Loading population...')
+            current_mapelites.reset(lcs=[])
+            current_mapelites.load_population(filename=my_emitterslist[exp_n])
+            logging.getLogger('webapp').info(msg='Population loaded.')
         else:
             logging.getLogger('webapp').info(msg=f'No user data will be collected during this session. Please do not refresh the page.')
             logging.getLogger('webapp').info(msg='Initializing population; this may take a while...')

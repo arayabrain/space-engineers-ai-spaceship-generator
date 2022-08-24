@@ -24,7 +24,7 @@ from pcgsepy.mapelites.behaviors import (BehaviorCharacterization, avg_ma,
 from pcgsepy.setup_utils import get_default_lsystem, setup_matplotlib
 from pcgsepy.mapelites.buffer import Buffer, mean_merge
 from pcgsepy.mapelites.map import MAPElites
-from pcgsepy.mapelites.emitters import ContextualBanditEmitter
+from pcgsepy.mapelites.emitters import ContextualBanditEmitter, HumanEmitter
 from pcgsepy.nn.estimators import MLPEstimator
 
 
@@ -100,19 +100,6 @@ behavior_descriptors = [
                              bounds=(0, 1))
 ]
 
-behavior_descriptors_names = [x.name for x in behavior_descriptors]
-
-available_mapelites = ['mapelites_random.json',
-                       'mapelites_prefmatrix.json', 'mapelites_contbandit.json']
-
-# if args.mapelites_file:
-#     with open(args.mapelites_file, 'r') as f:
-#         mapelites = json_loads(f.read())
-# else:
-#     mapelites_file = random.choice(available_mapelites)
-#     with open(mapelites_file, 'r') as f:
-#         mapelites = json_loads(f.read())
-
 buffer = Buffer(merge_method=mean_merge)
 mapelites = MAPElites(lsystem=lsystem,
                       feasible_fitnesses=feasible_fitnesses,
@@ -121,13 +108,11 @@ mapelites = MAPElites(lsystem=lsystem,
                       buffer=buffer,
                       behavior_descriptors=behavior_descriptors,
                       n_bins=BIN_N,
-                      emitter=ContextualBanditEmitter())
-# mapelites.generate_initial_populations()
+                      emitter=HumanEmitter())
 
 set_callback_props(mapelites=mapelites)
 
-set_app_layout(behavior_descriptors_names=behavior_descriptors_names,
-               mapelites=mapelites,
+set_app_layout(mapelites=mapelites,
                dev_mode=args.dev_mode)
 
 webapp_url = f'http://{args.host}:{args.port}/'

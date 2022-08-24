@@ -78,7 +78,6 @@ class CandidateSolution:
     def to_json(self) -> Dict[str, Any]:
         return {
             'string': self.string,
-            
             'age': self.age,
             'b_descs': self.b_descs,
             'c_fitness': self.c_fitness,
@@ -86,8 +85,8 @@ class CandidateSolution:
             'hls_mod': self.hls_mod,
             'is_feasible': self.is_feasible,
             'll_string': self.ll_string,
-            'n_feas_offsprings': self.n_feas_offspring,
-            'n_offsprings': self.n_offspring,
+            'n_feas_offspring': self.n_feas_offspring,
+            'n_offspring': self.n_offspring,
             'ncv': self.ncv,
             'parents': [p.to_json() for p in self.parents],
             'representation': self.representation

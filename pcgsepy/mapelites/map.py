@@ -4,6 +4,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 from joblib import Parallel, delayed
+from pcgsepy.common.jsonifier import json_dumps, json_loads
 from pcgsepy.config import (ALIGNMENT_INTERVAL, BIN_POP_SIZE, CS_MAX_AGE,
                             EPSILON_F, MAX_X_SIZE, MAX_Y_SIZE, MAX_Z_SIZE,
                             N_ITERATIONS, N_RETRIES, POP_SIZE)
@@ -495,8 +496,7 @@ class MAPElites:
                                                n_individuals=BIN_POP_SIZE,
                                                minimize=minimize)
                     # set low-level strings and structures
-                    new_pool = list(
-                        map(lambda cs: self.lsystem._add_ll_strings(cs=cs), new_pool))
+                    new_pool = list(map(lambda cs: self.lsystem._add_ll_strings(cs=cs), new_pool))
                     new_pool = list(map(lambda cs: self.lsystem._set_structure(cs=cs,
                                                                                make_graph=False), new_pool))
                     subdivide_solutions(lcs=new_pool,
@@ -686,6 +686,30 @@ class MAPElites:
         else:
             self.generate_initial_populations()
 
+    def save_population(self,
+                        filename: str = './population.pop') -> None:
+        all_cs = []
+        for (_, _), b in np.ndenumerate(self.bins):
+            for cs in [*b._feasible, *b._infeasible]:
+                all_cs.append(cs.to_json())
+        with open(filename, 'w') as f:
+            f.write(json_dumps(all_cs))
+       
+    def load_population(self,
+                        filename: str = './population.pop') -> None:
+        all_cs = []
+        with open(filename, 'r') as f:
+            all_cs = [CandidateSolution.from_json(x) for x in json_loads(f.read())]
+        # set content for feasible cs
+        feas_cs = [cs for cs in all_cs if cs.is_feasible]
+        feas_cs = list(map(lambda cs: self.lsystem._set_structure(cs=cs, make_graph=False), feas_cs))
+        # add hull
+        if self.hull_builder is not None:
+            for cs in feas_cs:
+                self.hull_builder.add_external_hull(cs.content)
+        # add to population
+        self._update_bins(lcs=all_cs)
+    
     def to_json(self) -> Dict[str, Any]:
         return {
             'lsystem': self.lsystem.to_json(),
