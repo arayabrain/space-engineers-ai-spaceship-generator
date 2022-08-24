@@ -4,19 +4,19 @@ Here it is possible to change the data that is being visualized in the MAP-Elite
 
 It is possible to visualize behavior characteristics for both the feasible and infeasible population. It is possible to plot either the Fitness, the Age, and the Coverage metric for all solutions. Additionally, it is possible to plot metrics for only the elite or the bin population.
 
-By selecting a bin in the MAP-Elites plot, the elite content will be displayed in the content plot (right) and the content properties (spaceship size, number of blocks used, and string representation) will be shown next to it. Additionally, the spaceship(s) can be downloaded by clicking the "DOWNLOAD CONTENT" button.
+By selecting a bin in the MAP-Elites plot, the elite content will be displayed in the content plot (right) and the content properties (spaceship size, number of blocks used, and string representation) will be shown next to it. Additionally, the selected spaceship can be downloaded by clicking the "DOWNLOAD CONTENT" button **only** at the end of the experiment.
 
 ###### Experiment settings & control
 Here there are both information on the experiment and buttons that allow the user to interact with the evolution procedure.
 
 In particular:
-* **Experiment settings** shows the bins that are valid for evolution, the current generation, and the bins selected by the user. There are also different controls that the user can modify:
+- **Experiment settings** shows the bins that are valid for evolution, the current generation, and the bins selected by the user. There are also different controls that the user can modify:
     - **Choose feature descriptors (X, Y)**: here you can select which behaviour characteristics to use in MAP-Elites.
     - **Toggle L-system modules**: here you can select which parts of the spaceship are allowed to mutate.
     - **Control fitness weights**: here you can choose how much impact each metric has on the overall fitness. Slider values go from 0.0 to 1.0, and the MAP-Elites preview is updated accordingly.
     - **Select emitter**: here you can select which emitter to use during the experiment. Note that changing the emitter will create a new one, so all emitter data collected thus far will be lost!
 
-* **Experiment controls** is comprised of different buttons:
+- **Experiment controls** is comprised of different buttons:
     - **APPLY STEP**: Executes a step of FI-2Pop with the selected bin(s) populations. If no bin is selected, or if the selected bin(s) is invalid, an error is thrown and no step is executed.
     - **INITIALIZE/RESET**: Either initializes the entire population of solutions (if empty) or resets it.
     - **CLEAR SELECTION**: Clears the selected bin(s).

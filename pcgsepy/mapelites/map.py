@@ -700,15 +700,16 @@ class MAPElites:
         all_cs = []
         with open(filename, 'r') as f:
             all_cs = [CandidateSolution.from_json(x) for x in json_loads(f.read())]
-        # set content for feasible cs
-        feas_cs = [cs for cs in all_cs if cs.is_feasible]
-        feas_cs = list(map(lambda cs: self.lsystem._set_structure(cs=cs, make_graph=False), feas_cs))
-        # add hull
-        if self.hull_builder is not None:
-            for cs in feas_cs:
-                self.hull_builder.add_external_hull(cs.content)
+        # set content
+        all_cs = list(map(lambda cs: self.lsystem._set_structure(cs=cs, make_graph=False), all_cs))
         # add to population
         self._update_bins(lcs=all_cs)
+        # add hull only to feas elites
+        if self.hull_builder is not None:
+            for (_, _), b in np.ndenumerate(self.bins):
+                if b.non_empty(pop='feasible'):
+                    e = b.get_elite()
+                    self.hull_builder.add_external_hull(e.content)
     
     def to_json(self) -> Dict[str, Any]:
         return {

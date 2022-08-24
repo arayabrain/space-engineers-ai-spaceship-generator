@@ -90,56 +90,6 @@ class Metric:
 n_spaceships_inspected = Metric()
 time_elapsed = Metric(multiple_values=True)
 
-
-# setup_matplotlib(larger_fonts=False)
-# used_ll_blocks = [
-#     'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerInv',
-#     'MyObjectBuilder_CubeBlock_LargeBlockArmorCorner',
-#     'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope',
-#     'MyObjectBuilder_CubeBlock_LargeBlockArmorBlock',
-#     'MyObjectBuilder_Gyro_LargeBlockGyro',
-#     'MyObjectBuilder_Reactor_LargeBlockSmallGenerator',
-#     'MyObjectBuilder_CargoContainer_LargeBlockSmallContainer',
-#     'MyObjectBuilder_Cockpit_OpenCockpitLarge',
-#     'MyObjectBuilder_Thrust_LargeBlockSmallThrust',
-#     'MyObjectBuilder_InteriorLight_SmallLight',
-#     'MyObjectBuilder_CubeBlock_Window1x1Slope',
-#     'MyObjectBuilder_CubeBlock_Window1x1Flat',
-#     'MyObjectBuilder_InteriorLight_LargeBlockLight_1corner'
-# ]
-# lsystem = get_default_lsystem(used_ll_blocks=used_ll_blocks)
-# expander.initialize(rules=lsystem.hl_solver.parser.rules)
-# feasible_fitnesses = [
-#     Fitness(name='BoxFilling',
-#             f=box_filling_fitness,
-#             bounds=(0, 1)),
-#     Fitness(name='FuncionalBlocks',
-#             f=func_blocks_fitness,
-#             bounds=(0, 1)),
-#     Fitness(name='MajorMediumProportions',
-#             f=mame_fitness,
-#             bounds=(0, 1)),
-#     Fitness(name='MajorMinimumProportions',
-#             f=mami_fitness,
-#             bounds=(0, 1))
-# ]
-
-# behavior_descriptors = [
-#     BehaviorCharacterization(name='Major axis / Medium axis',
-#                              func=mame,
-#                              bounds=(0, 10)),
-#     BehaviorCharacterization(name='Major axis / Smallest axis',
-#                              func=mami,
-#                              bounds=(0, 20)),
-#     BehaviorCharacterization(name='Average Proportions',
-#                              func=avg_ma,
-#                              bounds=(0, 20)),
-#     BehaviorCharacterization(name='Symmetry',
-#                              func=symmetry,
-#                              bounds=(0, 1))
-# ]
-
-
 hm_callback_props = {}
 block_to_colour = {
     # colours from https://developer.mozilla.org/en-US/docs/Web/CSS/color_value
@@ -166,7 +116,6 @@ current_mapelites: Optional[MAPElites] = None
 step_progress: int = -1
 consent_ok: Optional[bool] = None
 user_study_mode: bool = True
-# TODO: create these
 my_emitterslist: List[str] = ['mapelites_human.json',
                               'mapelites_random.json',
                               'mapelites_greedy.json',
@@ -249,6 +198,20 @@ def get_properties_table(cs: Optional[CandidateSolution] = None) -> dbc.Table:
     ])]
     
     return table_header + table_body
+
+
+def _get_emitter(exp_n: int) -> Emitter:
+    curr_emitter = my_emitterslist[exp_n].replace('.json', '').split('_')[1]
+    if curr_emitter == 'human':
+        return HumanEmitter()
+    elif curr_emitter == 'random':
+        return RandomEmitter()
+    elif curr_emitter == 'greedy':
+        return GreedyEmitter()
+    elif curr_emitter == 'contbandit':
+        return ContextualBanditEmitter()
+    else:
+        raise ValueError(f'Unexpected emitter type: {curr_emitter} (from "{my_emitterslist[exp_n]}"')
    
  
 def set_app_layout(mapelites: Optional[MAPElites] = None,
@@ -279,6 +242,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     random.seed(rngseed)
     random.shuffle(my_emitterslist)
     current_mapelites = mapelites
+    current_mapelites.emitter = _get_emitter(exp_n=0)
     
     logging.getLogger('webapp').info(msg=f'Your ID is {rngseed}.')
     
@@ -872,13 +836,13 @@ def download_content(n):
             # with open('./assets/thumb.png', 'rb') as f:
             #     thumbnail_img = f.read()
             curr_content = _get_elite_content(mapelites=current_mapelites,
-                                                bin_idx=tuple(_switch([selected_bins[-1]])[0]),
-                                                pop='feasible')
+                                              bin_idx=_switch([selected_bins[-1]])[0],
+                                              pop='feasible')
             thumbnail_img = curr_content.to_image(format="png")
             zf.writestr('thumb.png', thumbnail_img)
             elite = get_elite(mapelites=current_mapelites,
-                                bin_idx=_switch([selected_bins[-1]])[0],
-                                pop='feasible')
+                              bin_idx=_switch([selected_bins[-1]])[0],
+                              pop='feasible')
             zf.writestr('bp.sbc', convert_structure_to_xml(structure=elite.content, name=f'My Spaceship ({rngseed}) (exp{exp_n})'))
             zf.writestr(f'spaceship_{rngseed}_exp{exp_n}', elite.string)
     logging.getLogger('webapp').info(f'Your selected spaceship will be downloaded shortly.')
@@ -905,9 +869,9 @@ def format_bins(mapelites: MAPElites,
     bins_list: List[MAPBin] = [mapelites.bins[j, i] if do_switch else mapelites.bins[i, j] for (i, j) in bins_idx_list]
     sel_bins_str = f'{str_prefix}'
     for b in bins_list:
+        i, j = b.bin_idx
         if filter_out_empty:
             if b.non_empty(pop='feasible') or b.non_empty(pop='infeasible'):
-                i, j = b.bin_idx
                 i, j = (j, i) if do_switch else (i, j)
                 bc1 = np.sum([mbin.bin_size[0] for mbin in mapelites.bins[:i, j]])
                 bc2 = np.sum([mbin.bin_size[1] for mbin in mapelites.bins[i, :j]])
@@ -915,7 +879,6 @@ def format_bins(mapelites: MAPElites,
             elif b.bin_idx in bins_idx_list:
                 bins_idx_list.remove((i, j))
         else:
-            i, j = b.bin_idx
             bc1 = np.sum([mbin.bin_size[0] for mbin in mapelites.bins[:i, j]])
             bc2 = np.sum([mbin.bin_size[1] for mbin in mapelites.bins[i, :j]])
             sel_bins_str += f' {(i, j)} [{bc1}:{bc2}];'
@@ -999,7 +962,7 @@ def _get_colour_mapping(block_types: List[str]) -> Dict[str, str]:
 
 
 def _get_elite_content(mapelites: MAPElites,
-                       bin_idx: Tuple[int, int],
+                       bin_idx: Optional[Tuple[int, int]],
                        pop: List[CandidateSolution]) -> go.Scatter3d:
     if bin_idx is not None:
         # get elite content
@@ -1199,22 +1162,7 @@ def _apply_fitness_reweight(mapelites: MAPElites,
 
 def _apply_bin_selection_toggle(mapelites: MAPElites) -> bool:
     mapelites.enforce_qnt = not mapelites.enforce_qnt
-    logging.getLogger('webapp').info(msg=f'MAP-Elites single bin selection set to {mapelites.enforce_qnt}.')
-
-
-def _get_emitter(exp_n: int) -> Emitter:
-    curr_emitter = my_emitterslist[exp_n].replace('.json', '').split('_')[1]
-    if curr_emitter == 'human':
-        return HumanEmitter()
-    elif curr_emitter == 'random':
-        return RandomEmitter
-    elif curr_emitter == 'greedy':
-        return GreedyEmitter
-    elif curr_emitter == 'contbandit':
-        return ContextualBanditEmitter()
-    else:
-        raise ValueError(f'Unexpected emitter type: {curr_emitter} (from "{my_emitterslist[exp_n]}"')
-    
+    logging.getLogger('webapp').info(msg=f'MAP-Elites single bin selection set to {mapelites.enforce_qnt}.')    
  
     
 def _apply_emitter_change(mapelites: MAPElites,
@@ -1367,8 +1315,10 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                 # remove preview and properties if last selected bin is now invalid
                 lb = selected_bins[-1]
                 lb = (lb[1], lb[0])
-                if lb not in current_mapelites._valid_bins():
-                    curr_content = go.Figure(data=[])
+                if lb not in [b.bin_idx for b in current_mapelites._valid_bins()]:
+                    curr_content = _get_elite_content(mapelites=current_mapelites,
+                                                      bin_idx=None,
+                                                      pop=[])
                     cs_string = ''
                     cs_properties = get_properties_table()
         else:
@@ -1507,12 +1457,20 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         _ = _apply_emitter_change(mapelites=current_mapelites,
                                   emitter_name=emitter_name)
     elif event_trig == 'download-btn':
+        # small delay to allow download to get the elite solution without errors
+        time.sleep(2)
         if cs_string != '':            
             # end of experiment
             if gen_counter == N_GENS_ALLOWED:
                 exp_n += 1
                 if exp_n >= len(my_emitterslist):
-                    curr_heatmap = go.Figure(data=[])
+                    curr_heatmap = go.Figure(
+                        data=go.Heatmap(
+                            z=np.zeros(0, dtype=object),
+                            x=np.zeros(0, dtype=object),
+                            y=np.zeros(0, dtype=object),
+                            hoverongaps=False,
+                            ))
                     selected_bins = []
                     curr_content = _get_elite_content(mapelites=current_mapelites,
                                                     bin_idx=None,

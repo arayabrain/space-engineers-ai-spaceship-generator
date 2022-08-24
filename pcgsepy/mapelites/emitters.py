@@ -67,7 +67,7 @@ class Emitter(ABC):
     
     @abstractmethod
     def reset(self) -> None:
-        raise NotImplementedError(f'The {self.name} must override the `post_step` method!')
+        raise NotImplementedError(f'The {self.name} must override the `reset` method!')
 
 
 class RandomEmitter(Emitter):
@@ -814,7 +814,7 @@ class PreferenceBanditEmitter(Emitter):
 class HumanEmitter(Emitter):
     def __init__(self) -> None:
         super().__init__()
-        self.name = 'preference-bandit-emitter'
+        self.name = 'human-emitter'
     
     def pick_bin(self, bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
         return []

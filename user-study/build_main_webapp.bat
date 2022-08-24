@@ -12,7 +12,7 @@ pyinstaller main_webapp_launcher.py ^
 	--add-data "./hl_atoms.json;." ^
 	--add-data "./hlrules;." ^
 	--add-data "./llrules;." ^
-	--add-data "./mapelites_contbandit.json;." ^
-	--add-data "./mapelites_prefbandit.json;." ^
-	--add-data "./mapelites_prefmatrix.json;." ^
-	--add-data "./mapelites_random.json;."
+	--add-data "./mapelites_human.json;." ^
+	--add-data "./mapelites_random.json;." ^
+	--add-data "./mapelites_greedy.json;." ^
+	--add-data "./mapelites_contbandit.json;."
