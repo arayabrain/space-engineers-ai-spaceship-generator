@@ -134,11 +134,7 @@ def resource_path(relative_path):
 
 app = dash.Dash(__name__,
                 title='Spaceships Generator',
-                # external_stylesheets=[dbc.themes.CYBORG],
                 external_stylesheets=[dbc.themes.DARKLY],
-                # external_stylesheets=[dbc.themes.FLATLY],
-                # external_stylesheets=[dbc.themes.LUMEN],
-                # external_stylesheets=[dbc.themes.MORPH],
                 assets_folder=resource_path("assets"),
                 update_title=None)
 
@@ -225,6 +221,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     
     gdev_mode = dev_mode
     user_study_mode = not gdev_mode
+    consent_ok = False if gdev_mode else None
     
     webapp_info_file = './assets/help_dev.md' if dev_mode else './assets/webapp_info.md'
     with open(webapp_info_file, 'r', encoding='utf-8') as f:
@@ -363,19 +360,21 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     
     exp_progress = html.Div(
         children=[
-            dbc.Label(f'Current iteration:'),
-            dbc.Progress(id="gen-progress",
-                         color='success',
-                         striped=False,
-                         animated=False),
+            html.Div([
+                dbc.Label(f'Current iteration:'),
+                dbc.Progress(id="gen-progress",
+                             color='success',
+                             striped=False,
+                             animated=False)]),
             html.Br(),
-            dbc.Label(f'Spaceships generation progress:'),
-            dbc.Progress(id="exp-progress",
-                         color='success',
-                         striped=False,
-                         animated=False),
-        ],
-        id='exp-progress-div')
+            html.Div([
+                dbc.Label(f'Spaceships generation progress:'),
+                dbc.Progress(id="exp-progress",
+                             color='success',
+                             striped=False,
+                             animated=False)],
+                     id='exp-progress-div')
+        ])
     
     mapelites_heatmap = html.Div(children=[
         dcc.Graph(id="heatmap-plot",
@@ -414,7 +413,8 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                             {'label': 'Elite', 'value': 'Elite'}
                         ],
                         value='Population')
-            ])
+            ],
+        style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {})
     
     content_plot = html.Div(children=[
         dcc.Graph(id="content-plot",
@@ -435,23 +435,25 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                       hover=True,
                       responsive=True,
                       striped=True),
+            html.Div([
+                html.P(children='Content string: '),
+                dbc.Textarea(id='content-string',
+                             value='',
+                             contentEditable=False,
+                             disabled=True,
+                             class_name='content-string-area')
+            ],
+                     style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {}),
             html.Div(children=[
-                dbc.Button('Download content',
-                            id='download-btn',
-                            disabled=True),
-                dcc.Download(id='download-content'),
-                dcc.Download(id='download-population'),
-                dcc.Download(id='download-metrics')
+                dbc.Row(
+                    dbc.Col(children=[dbc.Button('Download content',
+                                                 id='download-btn',
+                                                 disabled=True),
+                                      dcc.Download(id='download-content')],
+                            width={'size': 4, 'offset':4}),
+                    align='center')
                 ])
             ])
-    
-    if dev_mode:
-        content_properties.children.insert(len(content_properties.children) - 2, html.P(children='Content string: '))
-        content_properties.children.insert(len(content_properties.children) - 2,  dbc.Textarea(id='content-string',
-                                                                                               value='',
-                                                                                               contentEditable=False,
-                                                                                               disabled=True,
-                                                                                               class_name='content-string-area'))
     
     experiment_settings = html.Div(
         children=[
@@ -461,8 +463,6 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
             html.Div(children=[
                 html.P(children='Valid bins are: ',
                        id='valid-bins'),
-                html.P(children=f'Current generation: {gen_counter}',
-                       id='gen-display'),
                 html.P(children=f'Selected bin(s): {selected_bins}',
                        id='selected-bin')
                 ]),
@@ -487,7 +487,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                              id='b1-dropdown')
                 ],
                            className="mb-3",
-                           style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
+                           style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {}),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Toggle L-system modules:'),
                 dbc.Checklist(id='lsystem-modules',
@@ -496,7 +496,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                               inline=True,
                               switch=True)
                 ],
-                           style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
+                           style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {},
                            className="mb-3"),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Fitness weights:'),
@@ -518,7 +518,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                         ]) for i, f in enumerate(current_mapelites.feasible_fitnesses)
                     ])
                 ],
-                           style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
+                           style={'content-visibility': 'hidden', 'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {},
                            className="mb-3"),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Select emitter:'),
@@ -534,7 +534,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                              id='emitter-dropdown')
                 ],
                            className="mb-3",
-                           style={'content-visibility': 'hidden' if not dev_mode else 'visible'}),
+                           style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {}),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Enforce symmetry:'),
                 dbc.DropdownMenu(label='None',
@@ -544,7 +544,8 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                                  dbc.DropdownMenuItem('Y-axis', id='symmetry-y'),
                                  dbc.DropdownMenuItem('Z-axis', id='symmetry-z'),
                              ],
-                             id='symmetry-dropdown'),
+                             id='symmetry-dropdown',
+                             style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {}),
                 dbc.RadioItems(id='symmetry-radio',
                         options=[
                             {'label': 'Upper', 'value': 'Upper'},
@@ -552,7 +553,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                         ],
                         value='Upper')
                 ],
-                           style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
+                           style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {},
                            className="mb-3"),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Save/load population:'),
@@ -565,9 +566,9 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                     ),
                 ],
                            className="mb-3",
-                           style={'content-visibility': 'hidden' if not dev_mode else 'visible'})
+                           style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {})
             ],
-        style={'content-visibility': 'hidden' if not dev_mode else 'visible'})
+        style={'visibility': 'hidden', 'height': '0px'} if user_study_mode else {})
     
     experiment_controls = html.Div(
         children=[
@@ -579,48 +580,47 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                            children='Evolve from spaceship',
                            className='button-fullsize')
                 ],
-                    className='spacer',
                     width={'size': 4, 'offset':4})),
+            html.Br(),
             dbc.Row(dbc.Col(children=[
                 dbc.Button(id='selection-clr-btn',
                        children='Clear selection',
                            className='button-fullsize')
                 ],
-                    className='spacer',
-                    style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
+                    style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {},
                     width={'size': 4, 'offset':4})),
+            html.Br(),
             dbc.Row(dbc.Col(children=[
                 dbc.Button(id='selection-btn',
                        children='Toggle single bin selection',
                            className='button-fullsize')
                 ],
-                    className='spacer',
-                    style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
+                    style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {},
                     width={'size': 4, 'offset':4})),
+            html.Br(),
             dbc.Row(dbc.Col(children=[
                 dbc.Button(id='reset-btn',
                            children='Initialize/Reset',
                            className='button-fullsize')
                 ],
-                    className='spacer',
-                    style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
+                    style={'visibility': 'hidden', 'height': '0px'} if user_study_mode else {},
                     width={'size': 4, 'offset':4})),
+            html.Br(),
             dbc.Row(dbc.Col(children=[
                 dbc.Button(id='subdivide-btn',
                        children='Subdivide selected bin(s)',
                            className='button-fullsize')
                 ],
-                    className='spacer',
-                    style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
+                    style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {},
                     width={'size': 4, 'offset':4})),
+            html.Br(),
             dbc.Row(dbc.Col(children=[
                 dbc.Button(id='download-mapelites-btn',
                            children='Download MAP-Elites',
                            className='button-fullsize'),
                 dcc.Download(id='download-mapelites')
                 ],
-                    className='spacer',
-                    style={'content-visibility': 'hidden' if not dev_mode else 'visible'},
+                    style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {},
                     width={'size': 4, 'offset':4})),
         ])
     
@@ -632,10 +632,13 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                          value=str(current_mapelites.lsystem.hl_solver.parser.rules),
                          wrap=False,
                          className='rules-area'),
-            dbc.Button(children='Update high-level rules',
-                       id='update-rules-btn')
+            dbc.Row(
+                dbc.Col(dbc.Button(children='Update high-level rules',
+                                   id='update-rules-btn'),
+                        width={'size': 4, 'offset':4}),
+                align='center')
             ],
-        style={'content-visibility': 'hidden' if not dev_mode else 'visible'})
+        style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {})
     
     progress = html.Div(
         children=[
@@ -664,66 +667,41 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                          className='log-area')
             ])
     
-    if dev_mode:
-        app.layout = dbc.Container(
-            children=[
-                modals,
-                header,
-                html.Br(),
-                dbc.Row(children=[
-                    dbc.Col(mapelites_heatmap, width=3),
-                    dbc.Col(content_plot, width=7),
-                    dbc.Col(content_properties, width=2)],
-                        align="center"),
-                dbc.Row(children=[
-                    dbc.Col(mapelites_controls, width=3),
-                    dbc.Col(experiment_settings, width=4),
-                    dbc.Col(experiment_controls, width=3),
-                    dbc.Col(rules, width=2)],
-                        align="start"),
-                dbc.Row(children=[
-                    dbc.Col(progress, width={'size': 4, 'offset': 4},
-                            className='spacer')]),
-                dbc.Row(children=[
-                    dbc.Col(log, width={'size': 4, 'offset': 4})],
-                        align="end"),
-                
-                html.Div(id='hidden-div',
-                         children=[],
-                         style={'visibility': 'hidden', 'height': '0px'})
-                ],
-            fluid=True)
-    else:
-        app.layout = dbc.Container(
-            children=[
-                modals,
-                header,
-                html.Br(),
-                dbc.Row(children=[
-                    dbc.Col(mapelites_heatmap, width=3),
-                    dbc.Col(content_plot, width=7),
-                    dbc.Col(content_properties, width=2)],
-                        align="center"),
-                dbc.Row(children=[
-                    dbc.Col(children=[exp_progress,
-                                      progress,
-                                      experiment_settings],
-                            width=4),
-                    dbc.Col(experiment_controls, width=4),
-                    dbc.Col(log, width=4)],
-                        align="start"),
-                
-                # add other components but hide them so Dash doesn't throw errors
-                html.Div(id='hidden-div',
-                         children=[
-                             mapelites_controls,
-                             rules,
-                             dbc.Textarea(id='content-string',
-                                          value='')
-                             ],
-                         style={'visibility': 'hidden', 'height': '0px'})
-                ],
-            fluid=True)
+    app.layout = dbc.Container(
+        children=[
+            modals,
+            header,
+            html.Br(),
+            dbc.Row(children=[
+                dbc.Col(mapelites_heatmap, width=3),
+                dbc.Col(content_plot, width=7),
+                dbc.Col(content_properties, width=2)],
+                    align="center"),
+            dbc.Row(children=[
+                dbc.Col(children=[mapelites_controls,
+                                  html.Br(),
+                                  exp_progress,
+                                  html.Br(),
+                                  progress],
+                        width=3),
+                dbc.Col(children=[experiment_controls,
+                                  html.Br(),
+                                  experiment_settings],
+                        width=5),
+                dbc.Col(children=[rules,
+                                  html.Br(),
+                                  log],
+                        width=4)],
+                    align="start"),
+            
+            dcc.Download(id='download-population'),
+            dcc.Download(id='download-metrics'),
+            
+            html.Div(id='hidden-div',
+                     children=[],
+                     style={'visibility': 'hidden', 'height': '0px'})
+            ],
+        fluid=True)
 
 
 app.clientside_callback(
@@ -1214,7 +1192,6 @@ def _apply_emitter_change(mapelites: MAPElites,
 @app.callback(Output('heatmap-plot', 'figure'),
               Output('content-plot', 'figure'),
               Output('valid-bins', 'children'),
-              Output('gen-display', 'children'),
               Output('hl-rules', 'value'),
               Output('selected-bin', 'children'),
               Output('content-string', 'value'),
@@ -1605,7 +1582,6 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     #   ('heatmap-plot', 'figure'),
     #   ('content-plot', 'figure'),
     #   ('valid-bins', 'children'),
-    #   ('gen-display', 'children'),
     #   ('hl-rules', 'value'),
     #   ('selected-bin', 'children'),
     #   ('content-string', 'value'),
@@ -1625,7 +1601,6 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     return curr_heatmap,\
         curr_content,\
         valid_bins_str,\
-        f'Current generation: {gen_counter}',\
         str(current_mapelites.lsystem.hl_solver.parser.rules),\
         selected_bins_str,\
         cs_string,\
