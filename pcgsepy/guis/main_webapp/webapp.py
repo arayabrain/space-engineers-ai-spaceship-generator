@@ -1,4 +1,3 @@
-from abc import ABC
 import base64
 import json
 import logging
@@ -6,10 +5,10 @@ import os
 import random
 import sys
 import time
+import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from zipfile import ZipFile
-import uuid
 
 import dash
 import dash_bootstrap_components as dbc
@@ -22,6 +21,11 @@ from pcgsepy.common.api_call import block_definitions
 from pcgsepy.common.jsonifier import json_dumps, json_loads
 from pcgsepy.config import (BIN_POP_SIZE, CS_MAX_AGE, N_EMITTER_STEPS,
                             N_GENS_ALLOWED)
+from pcgsepy.guis.main_webapp.modals_msgs import (end_of_experiment,
+                                                  end_of_userstudy,
+                                                  no_selection_error,
+                                                  privacy_policy_body,
+                                                  privacy_policy_question)
 from pcgsepy.lsystem.rules import StochasticRules
 from pcgsepy.lsystem.solution import CandidateSolution
 from pcgsepy.mapelites.behaviors import (BehaviorCharacterization, avg_ma,
@@ -108,14 +112,15 @@ gen_counter: int = 0
 selected_bins: List[Tuple[int, int]] = []
 exp_n: int = 0
 rngseed: int = 42
-current_mapelites = None
-step_progress = -1
-consent_ok = None
+current_mapelites: Optional[MAPElites] = None
+step_progress: int = -1
+consent_ok: Optional[bool] = None
+user_study_mode: bool = True
 # TODO: create these
-my_emitterslist = ['mapelites_human.json',
-                   'mapelites_random.json',
-                   'mapelites_greedy.json',
-                   'mapelites_contbandit.json']
+my_emitterslist: List[str] = ['mapelites_human.json',
+                              'mapelites_random.json',
+                              'mapelites_greedy.json',
+                              'mapelites_contbandit.json']
 
 
 def resource_path(relative_path):
@@ -196,30 +201,30 @@ def get_properties_table(cs: Optional[CandidateSolution] = None) -> dbc.Table:
     return table_header + table_body
    
  
-def set_app_layout(behavior_descriptors_names,
-                   mapelites: Optional[MAPElites] = None,
+def set_app_layout(mapelites: Optional[MAPElites] = None,
                    dev_mode: bool = True):
     
     global current_mapelites
     global rngseed
     global consent_ok
     global gdev_mode
+    global user_study_mode
     
     gdev_mode = dev_mode
+    user_study_mode = not gdev_mode
     
     webapp_info_file = './assets/help_dev.md' if dev_mode else './assets/webapp_info.md'
-    with open(webapp_info_file, 'r') as f:
+    with open(webapp_info_file, 'r', encoding='utf-8') as f:
         webapp_info_str = f.read()
         
     algo_info_file = './assets/algo_info.md'
-    with open(algo_info_file, 'r') as f:
+    with open(algo_info_file, 'r', encoding='utf-8') as f:
         algo_info_str = f.read()
     
     quickstart_info_file = './assets/quickstart.md'
     with open(quickstart_info_file, 'r', encoding='utf-8') as f:
         quickstart_info_str = f.read()
     
-    # rngseed = random.randint(0, 128)
     rngseed = uuid.uuid4().int
     if mapelites is None:
         random.seed(rngseed)
@@ -228,14 +233,12 @@ def set_app_layout(behavior_descriptors_names,
             mapelites = json_loads(f.read())
     current_mapelites = mapelites
     
-    logging.getLogger('webapp').info(msg=f'Your ID is {str(rngseed).zfill(3)}.')
+    logging.getLogger('webapp').info(msg=f'Your ID is {rngseed}.')
     
     consent_dialog = dbc.Modal([
             dbc.ModalHeader(dbc.ModalTitle("Privacy policy"), close_button=False),
-            dbc.ModalBody(children=[dcc.Markdown("""If you agree, we will share your usage statistics for scientific purposes with [Araya Inc.](https://www.araya.org/en/), who developed the Spaceship AI Generator with the help of GoodAI.
-We would like to understand your level of engagement with the generator and ask you for feedback in a Google form questionnaire in order to further improve the application.
-You can use the application without agreeing to the privacy policy; in such case, we will not be collecting your usage statistics and you will not be prompted for feedback."""),
-                                    dcc.Markdown("Do you agree with the privacy policy?",
+            dbc.ModalBody(children=[dcc.Markdown(privacy_policy_body),
+                                    dcc.Markdown(privacy_policy_question,
                                                  style={'text-align': 'center'})
                                     ]),
             dbc.ModalFooter(children=[
@@ -294,6 +297,45 @@ You can use the application without agreeing to the privacy policy; in such case
                            scrollable=True,
                            size='lg')
 
+    no_bins_selected_modal = dbc.Modal(children=[
+        dbc.ModalHeader(dbc.ModalTitle("Error"), close_button=True),
+        dbc.ModalBody(no_selection_error),
+        dbc.ModalFooter(children=[dbc.Button("Ok",
+                                             id="nbs-err-btn",
+                                             color="primary",
+                                             className="ms-auto",
+                                             n_clicks=0)]),
+        ],
+                                       id='nbs-err-modal',
+                                       centered=True,
+                                       backdrop='static',
+                                       is_open=False)
+    
+    end_of_experiment_modal = dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle("End of generation"), close_button=True),
+        dbc.ModalBody(dcc.Markdown(end_of_experiment))
+    ],
+                           id='eoe-modal',
+                           centered=True,
+                           backdrop='static',
+                           is_open=False,
+                           scrollable=True)
+    
+    end_of_userstudy_modal = dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle("End of user study"), close_button=True),
+        dbc.ModalBody(dcc.Markdown(end_of_userstudy))
+    ],
+                           id='eous-modal',
+                           centered=True,
+                           backdrop='static',
+                           is_open=False,
+                           scrollable=True)
+    
+    modals = html.Div(children=[
+        consent_dialog, webapp_info_modal, algo_info_modal, quickstart_modal,
+        no_bins_selected_modal, end_of_experiment_modal, end_of_userstudy_modal
+    ])
+    
     header = dbc.Row(children=[
                 dbc.Col(html.H1(children='🚀Space Engineers Spaceships Generator🚀',
                                 className='title'), width={'size': 8, 'offset': 2}),
@@ -307,20 +349,6 @@ You can use the application without agreeing to the privacy policy; in such case
                         align='center', width=1)
     ],
                      className='header')
-    
-    no_bins_selected_modal = dbc.Modal(children=[
-        dbc.ModalHeader(dbc.ModalTitle("Error"), close_button=True),
-        dbc.ModalBody('You must choose a spaceship from the grid on the left before evolving it!'),
-        dbc.ModalFooter(children=[dbc.Button("Understood",
-                                             id="nbs-err-btn",
-                                             color="primary",
-                                             className="ms-auto",
-                                             n_clicks=0)]),
-        ],
-                                       id='nbs-err-modal',
-                                       centered=True,
-                                       backdrop='static',
-                                       is_open=False)
     
     exp_progress = html.Div(
         children=[
@@ -401,6 +429,7 @@ You can use the application without agreeing to the privacy policy; in such case
                             id='download-btn',
                             disabled=True),
                 dcc.Download(id='download-content'),
+                dcc.Download(id='download-population'),
                 dcc.Download(id='download-metrics')
                 ])
             ])
@@ -627,12 +656,8 @@ You can use the application without agreeing to the privacy policy; in such case
     if dev_mode:
         app.layout = dbc.Container(
             children=[
-                consent_dialog,
+                modals,
                 header,
-                webapp_info_modal,
-                algo_info_modal,
-                quickstart_modal,
-                no_bins_selected_modal,
                 html.Br(),
                 dbc.Row(children=[
                     dbc.Col(mapelites_heatmap, width=3),
@@ -660,12 +685,8 @@ You can use the application without agreeing to the privacy policy; in such case
     else:
         app.layout = dbc.Container(
             children=[
-                consent_dialog,
+                modals,
                 header,
-                webapp_info_modal,
-                algo_info_modal,
-                quickstart_modal,
-                no_bins_selected_modal,
                 html.Br(),
                 dbc.Row(children=[
                     dbc.Col(mapelites_heatmap, width=3),
@@ -788,6 +809,33 @@ def download_mapelites(n_clicks):
     t = datetime.now().strftime("%Y%m%d%H%M%S")
     fname = f'{t}_mapelites_{current_mapelites.emitter.name}_gen{str(gen_counter).zfill(2)}'
     return dict(content=json_dumps(current_mapelites), filename=f'{fname}.json')
+
+
+@app.callback(
+    Output("download-content", "data"),
+    Input("download-btn", "n_clicks"),
+    prevent_initial_call=True,
+)
+def download_content(n):
+    global selected_bins
+    global current_mapelites
+    
+    def write_archive(bytes_io):
+        with ZipFile(bytes_io, mode="w") as zf:
+            # with open('./assets/thumb.png', 'rb') as f:
+            #     thumbnail_img = f.read()
+            curr_content = _get_elite_content(mapelites=current_mapelites,
+                                                bin_idx=tuple(_switch([selected_bins[-1]])[0]),
+                                                pop='feasible')
+            thumbnail_img = curr_content.to_image(format="png")
+            zf.writestr('thumb.png', thumbnail_img)
+            elite = get_elite(mapelites=current_mapelites,
+                                bin_idx=_switch([selected_bins[-1]])[0],
+                                pop='feasible')
+            zf.writestr('bp.sbc', convert_structure_to_xml(structure=elite.content, name=f'My Spaceship ({rngseed}) (exp{exp_n})'))
+            zf.writestr(f'spaceship_{rngseed}_exp{exp_n}', elite.string)
+    logging.getLogger('webapp').info(f'Your selected spaceship will be downloaded shortly.')
+    return dcc.send_bytes(write_archive, f'MySpaceship_{rngseed}_exp{exp_n}_gen{gen_counter}.zip')    
 
 
 def _switch(ls: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
@@ -1149,7 +1197,7 @@ def _apply_emitter_change(mapelites: MAPElites,
               Output('spaceship-properties', 'children'),
               Output('download-btn', 'disabled'),
               Output('step-btn', 'disabled'),
-              Output("download-content", "data"),
+              Output("download-population", "data"),
               Output("download-metrics", "data"),
               Output('population-dropdown', 'label'),
               Output('metric-dropdown', 'label'),
@@ -1250,9 +1298,17 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                                             pop_name=pop_name,
                                             metric_name=metric_name,
                                             method_name=method_name)
+                # update metrics if user consented to privacy
                 if consent_ok:
                     n_spaceships_inspected.add(1)
                     time_elapsed.add(elapsed)
+                # remove preview and properties if last selected bin is now invalid
+                lb = selected_bins[-1]
+                lb = (lb[1], lb[0])
+                if lb not in current_mapelites._valid_bins():
+                    curr_content = go.Figure(data=[])
+                    cs_string = ''
+                    cs_properties = get_properties_table()
         else:
             logging.getLogger('webapp').info(msg=f'Step not applied: no bin(s) selected.')
             nbs_err_modal_show = True
@@ -1391,23 +1447,23 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     elif event_trig == 'download-btn':
         if cs_string != '':
             
-            def write_archive(bytes_io):
-                with ZipFile(bytes_io, mode="w") as zf:
-                    # with open('./assets/thumb.png', 'rb') as f:
-                    #     thumbnail_img = f.read()
-                    curr_content = _get_elite_content(mapelites=current_mapelites,
-                                                      bin_idx=tuple(_switch([selected_bins[-1]])[0]),
-                                                      pop='feasible')
-                    thumbnail_img = curr_content.to_image(format="png")
-                    zf.writestr('thumb.png', thumbnail_img)
-                    elite = get_elite(mapelites=current_mapelites,
-                                      bin_idx=_switch([selected_bins[-1]])[0],
-                                      pop='feasible' if pop_name == 'Feasible' else 'infeasible')
-                    zf.writestr('bp.sbc', convert_structure_to_xml(structure=elite.content, name=f'My Spaceship ({rngseed}) (exp{exp_n})'))
-                    zf.writestr(f'spaceship_{rngseed}_exp{exp_n}', cs_string)
+            # def write_archive(bytes_io):
+            #     with ZipFile(bytes_io, mode="w") as zf:
+            #         # with open('./assets/thumb.png', 'rb') as f:
+            #         #     thumbnail_img = f.read()
+            #         curr_content = _get_elite_content(mapelites=current_mapelites,
+            #                                           bin_idx=tuple(_switch([selected_bins[-1]])[0]),
+            #                                           pop='feasible')
+            #         thumbnail_img = curr_content.to_image(format="png")
+            #         zf.writestr('thumb.png', thumbnail_img)
+            #         elite = get_elite(mapelites=current_mapelites,
+            #                           bin_idx=_switch([selected_bins[-1]])[0],
+            #                           pop='feasible' if pop_name == 'Feasible' else 'infeasible')
+            #         zf.writestr('bp.sbc', convert_structure_to_xml(structure=elite.content, name=f'My Spaceship ({rngseed}) (exp{exp_n})'))
+            #         zf.writestr(f'spaceship_{rngseed}_exp{exp_n}', cs_string)
             
-            content_dl = dcc.send_bytes(write_archive, f'MySpaceship_{rngseed}_exp{exp_n}_gen{gen_counter}.zip')         
-            logging.getLogger('webapp').info(f'Your selected spaceship will be downloaded shortly.')
+            # content_dl = dcc.send_bytes(write_archive, f'MySpaceship_{rngseed}_exp{exp_n}_gen{gen_counter}.zip')         
+            # logging.getLogger('webapp').info(f'Your selected spaceship will be downloaded shortly.')
             
             # end of experiment
             if gen_counter == N_GENS_ALLOWED:
@@ -1474,7 +1530,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                     logging.getLogger('webapp').info(msg='Next experiment loaded. Please fill out the questionnaire before continuing.')
     elif event_trig == 'popdownload-btn':
         content_dl = dict(content=json.dumps([b.to_json() for b in current_mapelites.bins.flatten().tolist()]),
-                          filename=f'population_{rngseed}_exp{exp_n}.json')
+                          filename=f'population_{rngseed}_exp{exp_n}_{current_mapelites.emitter.name}.json')
     elif event_trig == 'popupload-data':
         _, upload_contents = upload_contents.split(',')
         upload_contents = base64.b64decode(upload_contents).decode()
@@ -1544,7 +1600,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     #   ('spaceship-properties', 'children'),
     #   ('download-btn', 'disabled'),
     #   ('step-btn', 'disabled'),
-    #   ("download-content", "data"),
+    #   ("download-population", "data"),
     #   ("download-metrics", "data"),
     #   ('population-dropdown', 'label'),
     #   ('metric-dropdown', 'label'),

@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 
 
 def resource_path(relative_path):
@@ -15,33 +15,26 @@ def resource_path(relative_path):
 
 import base64
 import json
-import pathlib
 import random
 from typing import Dict, List
 
-from dash import ALL, MATCH
-
 import dash
+import dash_bootstrap_components as dbc
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from dash import ALL, dcc, html
 from dash.dependencies import Input, Output, State
-import dash_bootstrap_components as dbc
-from pcgsepy.evo.fitness import (Fitness, box_filling_fitness,
-                                 func_blocks_fitness, mame_fitness,
-                                 mami_fitness)
+from pcgsepy.common.api_call import block_definitions
 from pcgsepy.evo.genops import expander
+from pcgsepy.guis.ships_comparator.modals_msgs import (rankings_assigned,
+                                                       scores_different_error)
 from pcgsepy.hullbuilder import HullBuilder
 from pcgsepy.lsystem.solution import CandidateSolution
-from pcgsepy.mapelites.behaviors import (BehaviorCharacterization, avg_ma,
-                                         mame, mami, symmetry)
 from pcgsepy.mapelites.emitters import *
 from pcgsepy.mapelites.emitters import (ContextualBanditEmitter,
                                         HumanPrefMatrixEmitter, RandomEmitter)
 from pcgsepy.setup_utils import get_default_lsystem
-from pcgsepy.common.api_call import block_definitions
-from pcgsepy.guis.ships_comparator.modals_msgs import scores_different_error, rankings_assigned
 
 used_ll_blocks = [
     'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerInv',
