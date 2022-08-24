@@ -117,9 +117,10 @@ step_progress: int = -1
 consent_ok: Optional[bool] = None
 user_study_mode: bool = True
 my_emitterslist: List[str] = ['mapelites_human.json',
-                              'mapelites_random.json',
-                              'mapelites_greedy.json',
-                              'mapelites_contbandit.json']
+                            #   'mapelites_random.json',
+                            #   'mapelites_greedy.json',
+                            #   'mapelites_contbandit.json']
+]
 
 
 def resource_path(relative_path):
@@ -583,6 +584,15 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                     width={'size': 4, 'offset':4})),
             html.Br(),
             dbc.Row(dbc.Col(children=[
+                dbc.Button(id='rand-step-btn',
+                           children='Evolve from random spaceship',
+                           className='button-fullsize')
+                ],
+                    id='rand-step-btn-div',
+                    style={'visibility': 'hidden', 'height': '0px'} if user_study_mode or gdev_mode else {},
+                    width={'size': 4, 'offset':4})),
+            html.Br(),
+            dbc.Row(dbc.Col(children=[
                 dbc.Button(id='selection-clr-btn',
                        children='Clear selection',
                            className='button-fullsize')
@@ -603,6 +613,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                            children='Initialize/Reset',
                            className='button-fullsize')
                 ],
+                    id='reset-btn-div',
                     style={'visibility': 'hidden', 'height': '0px'} if user_study_mode else {},
                     width={'size': 4, 'offset':4})),
             html.Br(),
@@ -1035,7 +1046,9 @@ def _get_elite_content(mapelites: MAPElites,
 
 def _apply_step(mapelites: MAPElites,
                 selected_bins: List[Tuple[int, int]],
-                gen_counter: int) -> bool:
+                gen_counter: int,
+                only_human: bool = False,
+                only_emitter: bool = False) -> bool:
     global step_progress
     perc_step = 100 / (1 + N_EMITTER_STEPS)
     
@@ -1047,14 +1060,16 @@ def _apply_step(mapelites: MAPElites,
     if valid:
         logging.getLogger('webapp').info(msg=f'Started step {gen_counter + 1}...')
         step_progress = 0
-        mapelites.interactive_step(bin_idxs=selected_bins,
-                                    gen=gen_counter)
+        if not only_emitter:
+            mapelites.interactive_step(bin_idxs=selected_bins,
+                                       gen=gen_counter)
         step_progress += perc_step
         logging.getLogger('webapp').info(msg=f'Completed step {gen_counter + 1} (created {mapelites.n_new_solutions} solutions); running {N_EMITTER_STEPS} additional emitter steps if available...')
         mapelites.n_new_solutions = 0
         with trange(N_EMITTER_STEPS, desc='Emitter steps: ') as iterations:
             for _ in iterations:
-                mapelites.emitter_step(gen=gen_counter)
+                if not only_human:
+                    mapelites.emitter_step(gen=gen_counter)
                 step_progress += perc_step
         logging.getLogger('webapp').info(msg=f'Emitter step(s) completed (created {mapelites.n_new_solutions} solutions).')
         mapelites.n_new_solutions = 0
@@ -1208,6 +1223,10 @@ def _apply_emitter_change(mapelites: MAPElites,
               Output("consent-modal", "is_open"),
               Output("quickstart-modal", "is_open"),
               Output("nbs-err-modal", "is_open"),
+              Output("eoe-modal", "is_open"),
+              Output("eous-modal", "is_open"),
+              Output("rand-step-btn-div", "style"),
+              Output("reset-btn-div", "style"),
               
               State('heatmap-plot', 'figure'),
               State('hl-rules', 'value'),
@@ -1221,6 +1240,10 @@ def _apply_emitter_change(mapelites: MAPElites,
               State('symmetry-dropdown', 'label'),
               State("consent-modal", "is_open"),
               State("quickstart-modal", "is_open"),
+              State("eoe-modal", "is_open"),
+              State("eous-modal", "is_open"),
+              State("rand-step-btn-div", "style"),
+              State("reset-btn-div", "style"),
               
               Input('population-feasible', 'n_clicks'),
               Input('population-infeasible', 'n_clicks'),
@@ -1229,6 +1252,7 @@ def _apply_emitter_change(mapelites: MAPElites,
               Input('metric-coverage', 'n_clicks'),
               Input('method-radio', 'value'),
               Input('step-btn', 'n_clicks'),
+              Input('rand-step-btn', 'n_clicks'),
               Input('reset-btn', 'n_clicks'),
               Input('subdivide-btn', 'n_clicks'),
               Input({'type': 'fitness-sldr', 'index': ALL}, 'value'),
@@ -1260,12 +1284,13 @@ def _apply_emitter_change(mapelites: MAPElites,
               Input("consent-no", "n_clicks"),
               Input("nbs-err-btn", "n_clicks")
               )
-def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, privacy_modal_show, qs_modal_show,
-                     pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_reset, n_clicks_sub, weights,
+def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, privacy_modal_show, qs_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style,
+                     pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights,
                      b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn,
                      emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn):
     content_dl = None
     global gdev_mode
+    global user_study_mode
     global current_mapelites
     global gen_counter
     global my_emitterslist
@@ -1286,12 +1311,14 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     else:
         event_trig = ctx.triggered[0]['prop_id'].split('.')[0]
 
-    if event_trig == 'step-btn':
+    if event_trig == 'step-btn' or event_trig == 'rand-step-btn':
         if len(selected_bins) > 0:
             s = time.perf_counter()
             res = _apply_step(mapelites=current_mapelites,
                               selected_bins=[(x[1], x[0]) for x in selected_bins],
-                              gen_counter=gen_counter)
+                              gen_counter=gen_counter,
+                              only_human=not user_study_mode,
+                              only_emitter=event_trig == 'rand-step-btn')
             if res:
                 elapsed = time.perf_counter() - s
                 gen_counter += 1
@@ -1312,6 +1339,10 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                                                       pop=[])
                     cs_string = ''
                     cs_properties = get_properties_table()
+        
+                # prompt user to download content if reached end of generations
+                if gen_counter == N_GENS_ALLOWED:
+                    eoe_modal_show = True
         else:
             logging.getLogger('webapp').info(msg=f'Step not applied: no bin(s) selected.')
             nbs_err_modal_show = True
@@ -1449,7 +1480,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                                   emitter_name=emitter_name)
     elif event_trig == 'download-btn':
         # small delay to allow download to get the elite solution without errors
-        time.sleep(2)
+        time.sleep(3)
         if cs_string != '':            
             # end of experiment
             if gen_counter == N_GENS_ALLOWED:
@@ -1478,20 +1509,19 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                     else:
                         metrics_dl = None 
                     logging.getLogger('webapp').info(f'Reached end of all experiments! Please go back to the questionnaire to continue the evaluation.')
-                    title = 'Spaceships population'
-                    curr_heatmap = go.Figure(
-                        data=go.Heatmap(
-                            z=np.zeros(0, dtype=object),
-                            x=np.zeros(0, dtype=object),
-                            y=np.zeros(0, dtype=object),
-                            hoverongaps=False,
-                            ))
-                    curr_heatmap.update_layout(title=dict(text=title),
-                                            autosize=False,
-                                            clickmode='event+select',
-                                            paper_bgcolor='rgba(0,0,0,0)',
-                                            plot_bgcolor='rgba(0,0,0,0)',
-                                            template='plotly_dark')                
+                    eous_modal_show = True
+                    user_study_mode = False
+                    current_mapelites.reset(lcs=[])
+                    current_mapelites.emitter = RandomEmitter()
+                    rand_step_btn_style, reset_btn_style = {}, {}
+                    curr_heatmap = _build_heatmap(mapelites=current_mapelites,
+                                                  pop_name='Feasible',
+                                                  metric_name='Fitness',
+                                                  method_name='Population')
+                    selected_bins = []
+                    curr_content = _get_elite_content(mapelites=current_mapelites,
+                                                      bin_idx=None,
+                                                      pop=None)
                 else:
                     logging.getLogger('webapp').info(msg=f'Reached end of experiment {exp_n}! Loading the next experiment...')
                     gen_counter = 0
@@ -1597,7 +1627,11 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     #   ('symmetry-dropdown', 'label'),
     #   ("consent-modal", "is_open"),
     #   ("quickstart-modal", "is_open"),
-    #   ("nbs-err-modal", "is_open")
+    #   ("nbs-err-modal", "is_open"),
+    #   ("eoe-modal", "is_open"),
+    #   ("eous-modal", "is_open"),
+    #   ("rand-step-btn-div", "style"),
+    #   ("reset-btn-div", "style"),
     return curr_heatmap,\
         curr_content,\
         valid_bins_str,\
@@ -1616,4 +1650,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         symm_axis,\
         privacy_modal_show,\
         qs_modal_show,\
-        nbs_err_modal_show
+        nbs_err_modal_show,\
+        eoe_modal_show,\
+        eous_modal_show,\
+        rand_step_btn_style,\
+        reset_btn_style
