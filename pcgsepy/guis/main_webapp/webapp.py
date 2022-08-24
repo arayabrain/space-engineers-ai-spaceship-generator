@@ -739,6 +739,20 @@ app.clientside_callback(
     Input("consent-yes", "n_clicks")
 )
 
+app.clientside_callback(
+    """
+    function checkTextareaHeight() {
+        var textarea = document.getElementById("console-out");
+        if(textarea.selectionStart == textarea.selectionEnd) {
+            textarea.scrollTop = textarea.scrollHeight;
+        }
+        return "";
+    }
+    """,
+    Output("hidden-div", "title"),  # super hacky but Dash leaves me no choice
+    Input("interval1", "n_intervals")
+)
+
 
 @app.callback(
     Output("webapp-info-modal", "is_open"),
