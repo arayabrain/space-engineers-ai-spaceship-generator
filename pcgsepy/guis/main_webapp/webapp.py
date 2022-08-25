@@ -117,10 +117,9 @@ step_progress: int = -1
 consent_ok: Optional[bool] = None
 user_study_mode: bool = True
 my_emitterslist: List[str] = ['mapelites_human.json',
-                            #   'mapelites_random.json',
-                            #   'mapelites_greedy.json',
-                            #   'mapelites_contbandit.json']
-]
+                              'mapelites_random.json',
+                              'mapelites_greedy.json',
+                              'mapelites_contbandit.json']
 
 
 def resource_path(relative_path):
@@ -197,7 +196,7 @@ def get_properties_table(cs: Optional[CandidateSolution] = None) -> dbc.Table:
     return table_header + table_body
 
 
-def _get_emitter(exp_n: int) -> Emitter:
+def _get_emitter() -> Emitter:
     curr_emitter = my_emitterslist[exp_n].replace('.json', '').split('_')[1]
     if curr_emitter == 'human':
         return HumanEmitter()
@@ -224,7 +223,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     user_study_mode = not gdev_mode
     consent_ok = False if gdev_mode else None
     
-    webapp_info_file = './assets/help_dev.md' if dev_mode else './assets/webapp_info.md'
+    webapp_info_file = './assets/webapp_help_dev.md' if dev_mode else './assets/webapp_info.md'
     with open(webapp_info_file, 'r', encoding='utf-8') as f:
         webapp_info_str = f.read()
         
@@ -240,7 +239,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     random.seed(rngseed)
     random.shuffle(my_emitterslist)
     current_mapelites = mapelites
-    current_mapelites.emitter = _get_emitter(exp_n=0)
+    current_mapelites.emitter = _get_emitter()
     
     logging.getLogger('webapp').info(msg=f'Your ID is {rngseed}.')
     
@@ -449,7 +448,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                 dbc.Row(
                     dbc.Col(children=[dbc.Button('Download content',
                                                  id='download-btn',
-                                                 disabled=True),
+                                                 disabled=False),
                                       dcc.Download(id='download-content')],
                             width={'size': 4, 'offset':4}),
                     align='center')
@@ -715,6 +714,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
         fluid=True)
 
 
+# clientside callback to open the Google Forms questionnaire on a new page
 app.clientside_callback(
     """
     function(clicks) {
@@ -728,6 +728,8 @@ app.clientside_callback(
     Input("consent-yes", "n_clicks")
 )
 
+
+# clientside callback to autoscroll log textarea
 app.clientside_callback(
     """
     function checkTextareaHeight() {
@@ -774,7 +776,7 @@ def update_output(n):
     [Input("interval1", "n_intervals")],
 )
 def update_progress(n):  
-    return step_progress, f"{step_progress}%", {'content-visibility': 'visible' if 0 <= step_progress <= 100 else 'hidden'}
+    return step_progress, f"{np.round(step_progress, 2)}%", {'content-visibility': 'visible' if 0 <= step_progress <= 100 else 'hidden'}
 
 
 @app.callback(
@@ -783,8 +785,11 @@ def update_progress(n):
     [Input("interval1", "n_intervals")],
 )
 def update_gen_progress(n):
-    val = 100 * ((gen_counter) / N_GENS_ALLOWED)
-    return val, f"{gen_counter} / {N_GENS_ALLOWED}"
+    if user_study_mode:
+        val = np.round(100 * ((gen_counter) / N_GENS_ALLOWED), 2)
+        return val, f"{gen_counter} / {N_GENS_ALLOWED}"
+    else:
+        return 100, f"{gen_counter}"
 
 
 @app.callback(
@@ -793,7 +798,7 @@ def update_gen_progress(n):
     [Input("interval1", "n_intervals")],
 )
 def update_exp_progress(n):
-    val = 100 * ((1 + exp_n) / len(my_emitterslist))
+    val = np.round(100 * ((1 + exp_n) / len(my_emitterslist)), 2)
     return val, f"{exp_n + 1} / {len(my_emitterslist)}"
 
 
@@ -1211,7 +1216,6 @@ def _apply_emitter_change(mapelites: MAPElites,
               Output('selected-bin', 'children'),
               Output('content-string', 'value'),
               Output('spaceship-properties', 'children'),
-              Output('download-btn', 'disabled'),
               Output('step-btn', 'disabled'),
               Output("download-population", "data"),
               Output("download-metrics", "data"),
@@ -1227,6 +1231,7 @@ def _apply_emitter_change(mapelites: MAPElites,
               Output("eous-modal", "is_open"),
               Output("rand-step-btn-div", "style"),
               Output("reset-btn-div", "style"),
+              Output("exp-progress-div", "style"),
               
               State('heatmap-plot', 'figure'),
               State('hl-rules', 'value'),
@@ -1244,6 +1249,7 @@ def _apply_emitter_change(mapelites: MAPElites,
               State("eous-modal", "is_open"),
               State("rand-step-btn-div", "style"),
               State("reset-btn-div", "style"),
+              State("exp-progress-div", "style"),
               
               Input('population-feasible', 'n_clicks'),
               Input('population-infeasible', 'n_clicks'),
@@ -1284,11 +1290,10 @@ def _apply_emitter_change(mapelites: MAPElites,
               Input("consent-no", "n_clicks"),
               Input("nbs-err-btn", "n_clicks")
               )
-def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, privacy_modal_show, qs_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style,
+def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, privacy_modal_show, qs_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style,
                      pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights,
                      b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn,
                      emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn):
-    content_dl = None
     global gdev_mode
     global user_study_mode
     global current_mapelites
@@ -1301,6 +1306,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     global n_spaceships_inspected
     global time_elapsed
     
+    content_dl = None
     metrics_dl = None
     nbs_err_modal_show = False
     
@@ -1312,13 +1318,13 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         event_trig = ctx.triggered[0]['prop_id'].split('.')[0]
 
     if event_trig == 'step-btn' or event_trig == 'rand-step-btn':
-        if len(selected_bins) > 0:
+        if len(selected_bins) > 0 or event_trig == 'rand-step-btn':
             s = time.perf_counter()
             res = _apply_step(mapelites=current_mapelites,
                               selected_bins=[(x[1], x[0]) for x in selected_bins],
                               gen_counter=gen_counter,
-                              only_human=not user_study_mode,
-                              only_emitter=event_trig == 'rand-step-btn')
+                              only_human=event_trig == 'step-btn' and not user_study_mode and not gdev_mode,
+                              only_emitter=event_trig == 'rand-step-btn' and not user_study_mode and not gdev_mode)
             if res:
                 elapsed = time.perf_counter() - s
                 gen_counter += 1
@@ -1330,18 +1336,19 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                 if consent_ok:
                     n_spaceships_inspected.add(1)
                     time_elapsed.add(elapsed)
+                if len(selected_bins) > 0:
                 # remove preview and properties if last selected bin is now invalid
-                lb = selected_bins[-1]
-                lb = (lb[1], lb[0])
-                if lb not in [b.bin_idx for b in current_mapelites._valid_bins()]:
-                    curr_content = _get_elite_content(mapelites=current_mapelites,
-                                                      bin_idx=None,
-                                                      pop=[])
-                    cs_string = ''
-                    cs_properties = get_properties_table()
+                    lb = selected_bins[-1]
+                    lb = (lb[1], lb[0])
+                    if lb not in [b.bin_idx for b in current_mapelites._valid_bins()]:
+                        curr_content = _get_elite_content(mapelites=current_mapelites,
+                                                        bin_idx=None,
+                                                        pop=[])
+                        cs_string = ''
+                        cs_properties = get_properties_table()
         
                 # prompt user to download content if reached end of generations
-                if gen_counter == N_GENS_ALLOWED:
+                if user_study_mode and gen_counter == N_GENS_ALLOWED:
                     eoe_modal_show = True
         else:
             logging.getLogger('webapp').info(msg=f'Step not applied: no bin(s) selected.')
@@ -1398,9 +1405,9 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                                       weights=weights)
         if res:
             curr_heatmap = _build_heatmap(mapelites=current_mapelites,
-                                     pop_name=pop_name,
-                                     metric_name=metric_name,
-                                     method_name=method_name)
+                                          pop_name=pop_name,
+                                          metric_name=metric_name,
+                                          method_name=method_name)
     elif event_trig in ['population-feasible', 'population-infeasible', 'metric-fitness', 'metric-age', 'metric-coverage'] or event_trig == 'method-radio':
         if event_trig == 'population-feasible':
             pop_name = 'Feasible'
@@ -1481,10 +1488,10 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     elif event_trig == 'download-btn':
         # small delay to allow download to get the elite solution without errors
         time.sleep(3)
-        if cs_string != '':            
-            # end of experiment
-            if gen_counter == N_GENS_ALLOWED:
+        if cs_string != '':
+            if user_study_mode and gen_counter == N_GENS_ALLOWED:
                 exp_n += 1
+                # check end of user study
                 if exp_n >= len(my_emitterslist):
                     curr_heatmap = go.Figure(
                         data=go.Heatmap(
@@ -1497,7 +1504,6 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                     curr_content = _get_elite_content(mapelites=current_mapelites,
                                                     bin_idx=None,
                                                     pop=None)
-                    
                     cs_string = ''
                     cs_properties = get_properties_table()
                     if consent_ok:
@@ -1507,13 +1513,14 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                             }),
                                         filename=f'user_metrics_{rngseed}')
                     else:
-                        metrics_dl = None 
+                        metrics_dl = None
                     logging.getLogger('webapp').info(f'Reached end of all experiments! Please go back to the questionnaire to continue the evaluation.')
                     eous_modal_show = True
                     user_study_mode = False
-                    current_mapelites.reset(lcs=[])
+                    logging.getLogger('webapp').info(msg='Initializing a new population; this may take a while...')
+                    current_mapelites.reset()
                     current_mapelites.emitter = RandomEmitter()
-                    rand_step_btn_style, reset_btn_style = {}, {}
+                    rand_step_btn_style, reset_btn_style, exp_progress_style = {}, {}, {'visibility': 'hidden', 'height': '0px'}
                     curr_heatmap = _build_heatmap(mapelites=current_mapelites,
                                                   pop_name='Feasible',
                                                   metric_name='Fitness',
@@ -1522,6 +1529,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                     curr_content = _get_elite_content(mapelites=current_mapelites,
                                                       bin_idx=None,
                                                       pop=None)
+                    logging.getLogger('webapp').info(msg='Initialization completed.')
                 else:
                     logging.getLogger('webapp').info(msg=f'Reached end of experiment {exp_n}! Loading the next experiment...')
                     gen_counter = 0
@@ -1533,6 +1541,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                         logging.getLogger('webapp').info(msg='Next population loaded.')
                         n_spaceships_inspected.new_generation()
                         time_elapsed.new_generation()
+                        logging.getLogger('webapp').info(msg='Next experiment loaded. Please fill out the questionnaire before continuing.')
                     else:
                         logging.getLogger('webapp').info(msg='Initializing a new population; this may take a while...')
                         current_mapelites.reset()
@@ -1545,10 +1554,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                     curr_content = _get_elite_content(mapelites=current_mapelites,
                                                     bin_idx=None,
                                                     pop=None)
-                    
                     cs_string = ''
                     cs_properties = get_properties_table()
-                    logging.getLogger('webapp').info(msg='Next experiment loaded. Please fill out the questionnaire before continuing.')
     elif event_trig == 'popdownload-btn':
         content_dl = dict(content=json.dumps([b.to_json() for b in current_mapelites.bins.flatten().tolist()]),
                           filename=f'population_{rngseed}_exp{exp_n}_{current_mapelites.emitter.name}.json')
@@ -1576,8 +1583,11 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         else:
             logging.getLogger('webapp').info(msg=f'No user data will be collected during this session. Please do not refresh the page.')
             logging.getLogger('webapp').info(msg='Initializing population; this may take a while...')
+            current_mapelites.emitter = RandomEmitter()
             current_mapelites.reset()
             logging.getLogger('webapp').info(msg='Initialization completed.')
+            user_study_mode = False
+            rand_step_btn_style, reset_btn_style, exp_progress_style = {}, {}, {'visibility': 'hidden', 'height': '0px'}
         privacy_modal_show = False
         qs_modal_show = True
         gen_counter = 0
@@ -1616,7 +1626,6 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     #   ('selected-bin', 'children'),
     #   ('content-string', 'value'),
     #   ('spaceship-properties', 'children'),
-    #   ('download-btn', 'disabled'),
     #   ('step-btn', 'disabled'),
     #   ("download-population", "data"),
     #   ("download-metrics", "data"),
@@ -1632,6 +1641,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     #   ("eous-modal", "is_open"),
     #   ("rand-step-btn-div", "style"),
     #   ("reset-btn-div", "style"),
+    #   ("exp-progress-div", "style"),
     return curr_heatmap,\
         curr_content,\
         valid_bins_str,\
@@ -1639,8 +1649,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         selected_bins_str,\
         cs_string,\
         cs_properties,\
-        False,\
-        not gdev_mode and gen_counter >= N_GENS_ALLOWED,\
+        user_study_mode and gen_counter >= N_GENS_ALLOWED,\
         content_dl,\
         metrics_dl,\
         pop_name,\
@@ -1654,4 +1663,5 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         eoe_modal_show,\
         eous_modal_show,\
         rand_step_btn_style,\
-        reset_btn_style
+        reset_btn_style,\
+        exp_progress_style
