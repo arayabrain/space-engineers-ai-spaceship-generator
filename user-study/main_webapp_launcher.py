@@ -8,10 +8,8 @@ if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     os.chdir(sys._MEIPASS)
 
 import argparse
-import random
 import webbrowser
 
-from pcgsepy.common.jsonifier import json_loads
 from pcgsepy.config import BIN_N
 from pcgsepy.evo.fitness import (Fitness, box_filling_fitness,
                                  func_blocks_fitness, mame_fitness,
@@ -24,7 +22,7 @@ from pcgsepy.mapelites.behaviors import (BehaviorCharacterization, avg_ma,
 from pcgsepy.setup_utils import get_default_lsystem, setup_matplotlib
 from pcgsepy.mapelites.buffer import Buffer, mean_merge
 from pcgsepy.mapelites.map import MAPElites
-from pcgsepy.mapelites.emitters import ContextualBanditEmitter, HumanEmitter
+from pcgsepy.mapelites.emitters import RandomEmitter
 from pcgsepy.nn.estimators import MLPEstimator
 
 
@@ -108,7 +106,7 @@ mapelites = MAPElites(lsystem=lsystem,
                       buffer=buffer,
                       behavior_descriptors=behavior_descriptors,
                       n_bins=BIN_N,
-                      emitter=HumanEmitter())
+                      emitter=RandomEmitter())
 
 set_callback_props(mapelites=mapelites)
 

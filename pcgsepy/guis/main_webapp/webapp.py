@@ -235,11 +235,13 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     with open(quickstart_info_file, 'r', encoding='utf-8') as f:
         quickstart_info_str = f.read()
     
-    rngseed = uuid.uuid4().int
-    random.seed(rngseed)
-    random.shuffle(my_emitterslist)
     current_mapelites = mapelites
-    current_mapelites.emitter = _get_emitter()
+    
+    rngseed = uuid.uuid4().int
+    if not gdev_mode:
+        random.seed(rngseed)
+        random.shuffle(my_emitterslist)
+        current_mapelites.emitter = _get_emitter()
     
     logging.getLogger('webapp').info(msg=f'Your ID is {rngseed}.')
     
@@ -373,7 +375,8 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                              color='success',
                              striped=False,
                              animated=False)],
-                     id='exp-progress-div')
+                     id='exp-progress-div',
+                     style={'visibility': 'hidden', 'height': '0px'} if gdev_mode else {})
         ])
     
     mapelites_heatmap = html.Div(children=[

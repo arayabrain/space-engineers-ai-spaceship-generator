@@ -12,7 +12,9 @@
 Research code for the Space Engineers PCG project developed under the GoodAI research grant.
 
 ## Installation
-Create the executable file by running the `build_main_webapp.bat` file inside the `user-study` folder. The executable file (`Space Engineers PCG.exe`) will be created in the `user-study\dist` folder.
+The application can be built using the provided `.bat` files placed in the `user-study` folder. The executable files will be created in the `user-study\dist` folder.
+
+You can build just the main web application (running `build_main_webapp.bat`) or also the spaceships ranker (running `build_comparator.bat`). Keep in mind that the latter is used only for the user study.
 
 ### Modifiable files
 Some files can be modified before building the application. These are:
@@ -22,11 +24,31 @@ Some files can be modified before building the application. These are:
 - `hlrules`, `llrules`: these files define the expansion rules of the underlying L-system used in the application. `hlrules` determines the tile placements when creating spaceships, whereas `llrules` determines the game blocks used in a tile. If you want to add your own tiles in the application, please follow the instructions reported in `l-system\rules-extractor.ipynb` and remember to also update the `hl_atoms.json` file.
 
 ## How to use the webapp
+All modes of the webapps have a handy "*Info*" button, but the following is a quick overview of how they work.
+
+### Main webapp - user study mode
+<p align="center">
+  <img src="media/UI_userstudy_preview.jpg" alt="ui_userstudy_preview" height="300"/>
+</p>
+This mode is used during the user study and allows only to evolve spaceships after selecting a valid bin. The user study has a predefined number of generations (iterations) allowed and spans different configurations of the MAP-Elites emitter. At the end of the user study, the application automatically switches over to `user mode`.
+
+### Main webapp - user mode
 <p align="center">
   <img src="media/UI_usermode_preview.jpg" alt="ui_usermode_preview" height="300"/>
 </p>
+In this mode, the user is allowed to evolve spaceships indefinitely, choosing between evolving from the selected bin or running multiple steps of the random emitter at once. Additionally, the user is allowed to reset the population of solutions.
 
-_TODO: write this section of the README._
+### Main webapp - developer mode
+<p align="center">
+  <img src="media/UI_devmode_preview.jpg" alt="ui_devmode_preview" height="300"/>
+</p>
+This is the most advanced mode, giving the user full access to every part of the system that can be changed during the evolution process.
+
+### Ranker webapp
+<p align="center">
+  <img src="media/UI_comparator_preview.jpg" alt="ui_comparator_preview" height="300"/>
+</p>
+This webapp is used only for the user study and allows the user to upload and rank different spaceships.
 
 ## Development
 Install the `PCGSEPy` library by first installing the requirements:
