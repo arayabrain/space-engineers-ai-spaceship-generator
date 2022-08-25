@@ -1,6 +1,7 @@
 from enum import Enum
 from functools import cached_property
 from multiprocessing.sharedctypes import Value
+from os import stat
 from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
@@ -192,6 +193,16 @@ class Vec:
                    y=np.round(self.y, n),
                    z=np.round(self.z, n) if self.z is not None else None)
     
+    def floor(self) -> "Vec":
+        """Apply the floor function to the vector.
+
+        Returns:
+            Vec: The floored vector.
+        """
+        return Vec(x=np.floor(self.x),
+                   y=np.floor(self.y),
+                   z=np.floor(self.z) if self.z is not None else None)
+    
     @cached_property
     def max(self) -> Union[int, float]:
         """Compute the largest dimension of the vector.
@@ -360,6 +371,24 @@ class Vec:
             Vec: The opposite vector.
         """
         return self.scale(v=-1)
+    
+    @property
+    def is_zero(self) -> bool:
+        return self.x == 0 and self.y == 0 and (self.z == 0 if self.z is not None else True)
+    
+    @staticmethod
+    def max(v1, v2) -> "Vec":
+        assert (v1.z is not None and v2.z is not None) or (v1.z is None and v2.z is None), f"Comparing mixed-dimension vectors: {v1}, {v2}"
+        return Vec(x=max(v1.x, v2.x),
+                   y=max(v1.y, v2.y),
+                   z=max(v1.z, v2.z) if v1.z is not None and v2.z is not None else None)
+    
+    @staticmethod
+    def min(v1, v2) -> "Vec":
+        assert (v1.z is not None and v2.z is not None) or (v1.z is None and v2.z is None), f"Comparing mixed-dimension vectors: {v1}, {v2}"
+        return Vec(x=min(v1.x, v2.x),
+                   y=min(v1.y, v2.y),
+                   z=min(v1.z, v2.z) if v1.z is not None and v2.z is not None else None)
 
 
 class Orientation(Enum):
