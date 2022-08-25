@@ -133,7 +133,7 @@ def resource_path(relative_path):
 
 
 app = dash.Dash(__name__,
-                title='Spaceships Generator',
+                title='Spaceship Generator',
                 external_stylesheets=[dbc.themes.DARKLY],
                 assets_folder=resource_path("assets"),
                 update_title=None)

@@ -12,7 +12,7 @@
 Research code for the Space Engineers PCG project developed under the GoodAI research grant.
 
 ## Installation
-The application can be built using the provided `.bat` files placed in the `user-study` folder. The executable files will be created in the `user-study\dist` folder.
+The application can be built using the provided `.bat` or `.sh` files placed in the `user-study` folder. The executable files will be created in the `user-study\dist` folder.
 
 You can build just the main web application (running `build_main_webapp.bat`) or also the spaceships ranker (running `build_comparator.bat`). Keep in mind that the latter is used only for the user study.
 
