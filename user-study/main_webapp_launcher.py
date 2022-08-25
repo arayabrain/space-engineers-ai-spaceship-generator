@@ -107,6 +107,7 @@ mapelites = MAPElites(lsystem=lsystem,
                       behavior_descriptors=behavior_descriptors,
                       n_bins=BIN_N,
                       emitter=RandomEmitter())
+mapelites.allow_aging = False
 
 set_callback_props(mapelites=mapelites)
 

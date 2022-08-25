@@ -4,7 +4,7 @@ You can use the application without agreeing to the privacy policy; in such case
 
 privacy_policy_question = "Do you agree with the privacy policy?"
 
-no_selection_error = "You must choose a spaceship from the grid on the left before evolving it!"
+no_selection_error = "You must choose a spaceship from the grid on the left!"
 
 end_of_experiment = "End of generations with the current configuration! Select the spaceship you like the most and download it, then fill out the next section of the questionnaire before proceeding."
 

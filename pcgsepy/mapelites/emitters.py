@@ -492,7 +492,7 @@ class ContextualBanditEmitter(Emitter):
         self._fitted = False
         
         self._tot_actions = 0
-        self.sampling_strategy = 'epsilon_greedy'  # or 'gibbs', 'thompson'
+        self.sampling_strategy = 'thompson'  # or 'gibbs', 'epsilon_greedy'
         self._thompson_stats = {}
         
     def _fit(self) -> None:

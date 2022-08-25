@@ -19,7 +19,7 @@ import plotly.graph_objects as go
 from dash import ALL, dcc, html
 from dash.dependencies import Input, Output, State
 from pcgsepy.common.api_call import block_definitions
-from pcgsepy.common.jsonifier import json_dumps, json_loads
+from pcgsepy.common.jsonifier import json_dumps
 from pcgsepy.config import (BIN_POP_SIZE, CS_MAX_AGE, N_EMITTER_STEPS,
                             N_GENS_ALLOWED)
 from pcgsepy.guis.main_webapp.modals_msgs import (end_of_experiment,
@@ -65,6 +65,7 @@ class Metric:
         self.history: Dict[int, List[Any]] = {
             self.current_generation: [] if multiple_values else 0
         }
+        self.emitter_names: List[str] = [my_emitterslist[exp_n]]
     
     def add(self,
             value: Any):
@@ -82,6 +83,7 @@ class Metric:
     def new_generation(self):
         self.current_generation += 1
         self.reset()
+        self.emitter_names.append(my_emitterslist[exp_n])
     
     def get_averages(self) -> List[Any]:
         return [np.mean(l) for l in self.history.values()]
@@ -308,7 +310,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                            size='lg')
 
     no_bins_selected_modal = dbc.Modal(children=[
-        dbc.ModalHeader(dbc.ModalTitle("Error"), close_button=True),
+        dbc.ModalHeader(dbc.ModalTitle("⚠ Warning ⚠"), close_button=True),
         dbc.ModalBody(no_selection_error),
         dbc.ModalFooter(children=[dbc.Button("Ok",
                                              id="nbs-err-btn",
@@ -580,7 +582,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
             html.Br(),
             dbc.Row(dbc.Col(children=[
                 dbc.Button(id='step-btn',
-                           children='Evolve from spaceship',
+                           children='Evolve from selected spaceship',
                            className='button-fullsize')
                 ],
                     width={'size': 4, 'offset':4})),
@@ -612,7 +614,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
             html.Br(),
             dbc.Row(dbc.Col(children=[
                 dbc.Button(id='reset-btn',
-                           children='Initialize/Reset',
+                           children='Reinitialize population',
                            className='button-fullsize')
                 ],
                     id='reset-btn-div',
@@ -856,8 +858,12 @@ def download_content(n):
                               pop='feasible')
             zf.writestr('bp.sbc', convert_structure_to_xml(structure=elite.content, name=f'My Spaceship ({rngseed}) (exp{exp_n})'))
             zf.writestr(f'spaceship_{rngseed}_exp{exp_n}', elite.string)
-    logging.getLogger('webapp').info(f'Your selected spaceship will be downloaded shortly.')
-    return dcc.send_bytes(write_archive, f'MySpaceship_{rngseed}_exp{exp_n}_gen{gen_counter}.zip')    
+    
+    if selected_bins:
+        logging.getLogger('webapp').info(f'Your selected spaceship will be downloaded shortly.')
+        return dcc.send_bytes(write_archive, f'MySpaceship_{rngseed}_exp{exp_n}_gen{gen_counter}.zip')
+    else:
+        return None
 
 
 def _switch(ls: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
@@ -1559,6 +1565,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                                                     pop=None)
                     cs_string = ''
                     cs_properties = get_properties_table()
+        else:
+            nbs_err_modal_show = True
     elif event_trig == 'popdownload-btn':
         content_dl = dict(content=json.dumps([b.to_json() for b in current_mapelites.bins.flatten().tolist()]),
                           filename=f'population_{rngseed}_exp{exp_n}_{current_mapelites.emitter.name}.json')
