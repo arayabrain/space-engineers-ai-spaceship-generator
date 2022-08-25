@@ -3,9 +3,9 @@ pyinstaller main_webapp_launcher.py ^
 	--onefile ^
 	--noconfirm ^
 	--name "Spaceships Generator" ^
-	--icon assets\main_webapp\favicon.ico ^
+	--icon assets\favicon.ico ^
 	--add-data "./estimators;estimators" ^
-	--add-data "./assets/main_webapp;assets" ^
+	--add-data "./assets;assets" ^
 	--add-data "./block_definitions.json;." ^
 	--add-data "./common_atoms.json;." ^
 	--add-data "./configs.ini;." ^

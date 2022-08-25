@@ -3,9 +3,9 @@ pyinstaller comparator_webapp_launcher.py ^
 	--onefile ^
 	--noconfirm ^
 	--name "Spaceships Comparator" ^
-	--icon assets\comparator\favicon.ico ^
+	--icon assets\favicon.ico ^
 	--add-data "./estimators;estimators" ^
-	--add-data "./assets/comparator;assets" ^
+	--add-data "./assets;assets" ^
 	--add-data "./block_definitions.json;." ^
 	--add-data "./common_atoms.json;." ^
 	--add-data "./configs.ini;." ^
