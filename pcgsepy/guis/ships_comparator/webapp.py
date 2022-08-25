@@ -139,10 +139,17 @@ def get_rankings_div() -> html.Div:
     Returns:
         html.Div: The container for the rankings.
     """
-    return html.Div(children=[
+    rankings_div = html.Div(children=[
+        dbc.Row(children=[
+            dbc.Col(children=[dbc.Label("Spaceships ranking: ")],
+                    width={'offset': 5, 'size': 1})]),            
+        html.Br(),
+        ],
+                            id='ranking-div')
+    rankings_div.children.extend([
         html.Div(children=[
             dbc.Row(children=[
-                dbc.Col(dbc.Label(f"Spaceship in {i + 1}{['st', 'nd', 'rd', 'th'][i] if i < 4 else 'th'} place:"),
+                dbc.Col(dbc.Label(f"{i + 1}{['st', 'nd', 'rd', 'th'][i] if i < 4 else 'th'} place:"),
                         width={'offset': 5, 'size': 1}),
                 dbc.Col(dbc.DropdownMenu(label='A',
                                         children=[dbc.DropdownMenuItem(f'{chr(ord("A") + j)}',
@@ -150,9 +157,8 @@ def get_rankings_div() -> html.Div:
                                         id={'type': "ranking-dropdown", 'index': i}),
                         width=1,
                         align='start')]),
-            html.Br()]) for i in range(len(emitters))],
-                    id='ranking-div'
-    )
+            html.Br()]) for i in range(len(emitters))])
+    return rankings_div
 
 
 def parse_contents(filename: str,
