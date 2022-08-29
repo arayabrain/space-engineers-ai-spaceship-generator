@@ -6,7 +6,8 @@ When you select a spaceship, its main properties are displayed on the right, and
 
 You can see the current iteration number on the left, and check system messages in the "**Log**" window on the right.
 
-... reinitialize population
+You can reinitialize the population by clicking the corresponding button (beware: it may take a while for the reinitialization to complete).
+
 
 You can also follow this video tutorial:
 
