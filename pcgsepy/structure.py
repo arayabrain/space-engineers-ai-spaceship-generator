@@ -38,7 +38,7 @@ class MountPoint:
         """
         self.face = Vec.from_json(face)
         self.start = Vec.from_json(start).dot(block_size)
-        self.end = Vec.from_json(end).dot(block_size).to_veci()
+        self.end = Vec.from_json(end).dot(block_size)
         self.exclusion_mask = exclusion_mask
         self.properties_mask = properties_mask
 
@@ -68,7 +68,7 @@ class Block:
         self.orientation_up = orientation_up.value
         self.position = position
         self.definition_id = block_definitions[self.block_type]['definition_id']
-        self.color = None
+        self.color = Vec.v3f(x=0.5, y=0.5, z=0.5)
     
     @cached_property
     def cube_size(self) -> float:
