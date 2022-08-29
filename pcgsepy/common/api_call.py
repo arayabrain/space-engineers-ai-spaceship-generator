@@ -64,7 +64,8 @@ def call_api(host: str = HOST,
     s = TransportTcpIp(addr=(host, port),
                        timeout=2,
                        limit=4096)
-    return json.loads(s.sendrecv(string=compactify_jsons(jsons=jsons).encode('utf-8')).decode(encoding='utf-8'))
+    res = s.sendrecv(string=compactify_jsons(jsons=jsons).encode('utf-8')).decode(encoding='utf-8')
+    return json.loads(res)
 
 
 # block_definitions as a module-level variable
@@ -157,7 +158,8 @@ def place_blocks(blocks: List[Any],
             "blockDefinitionId": block.definition_id,
             "position": block.position.as_dict(),
             "orientationForward": block.orientation_forward.as_dict(),
-            "orientationUp": block.orientation_up.as_dict()
+            "orientationUp": block.orientation_up.as_dict(),
+            "color": block.color.as_dict() if block.color else None,
             }) for block in blocks]
     # place blocks
     if not sequential:

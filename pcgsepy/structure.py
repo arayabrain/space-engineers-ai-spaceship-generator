@@ -68,6 +68,7 @@ class Block:
         self.orientation_up = orientation_up.value
         self.position = position
         self.definition_id = block_definitions[self.block_type]['definition_id']
+        self.color = None
     
     @cached_property
     def cube_size(self) -> float:
