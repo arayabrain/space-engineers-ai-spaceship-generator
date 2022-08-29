@@ -6,6 +6,7 @@ When you select a spaceship, its main properties are displayed on the right, and
 
 You can see the current iteration number on the left, and check system messages in the "**Log**" window on the right.
 
+... reinitialize population
 
 You can also follow this video tutorial:
 

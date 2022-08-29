@@ -109,6 +109,8 @@ mapelites = MAPElites(lsystem=lsystem,
                       emitter=RandomEmitter())
 mapelites.allow_aging = False
 
+mapelites.hull_builder.apply_smoothing = False
+
 set_callback_props(mapelites=mapelites)
 
 set_app_layout(mapelites=mapelites,

@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import random
+import ssl
 import sys
 import time
 import uuid
@@ -74,6 +75,7 @@ block_to_colour = {
     'Window1x1Flat': '#fffff0',
     'LargeBlockLight_1corner': '#fffaf0'
 }
+use_custom_colors = True
 gdev_mode: bool = False
 gen_counter: int = 0
 selected_bins: List[Tuple[int, int]] = []
@@ -989,7 +991,10 @@ def _build_heatmap(mapelites: MAPElites,
 def _get_colour_mapping(block_types: List[str]) -> Dict[str, str]:
     colour_map = {}
     for block_type in block_types:
-        c = block_to_colour.get(block_type, '#ff0000')
+        if use_custom_colors:
+            pass  # TODO: pick from user choice
+        else:
+            c = block_to_colour.get(block_type, '#ff0000')
         if block_type not in colour_map.keys():
             colour_map[block_type] = c
     return colour_map
@@ -1048,18 +1053,16 @@ def _get_elite_content(mapelites: MAPElites,
                     'ticktext': [structure.grid_size * i for i in show_z],
                 }
             )
-        )
-        
+        )        
     else:
         fig = px.scatter_3d(x=np.zeros(0, dtype=object),
                             y=np.zeros(0, dtype=object),
                             z=np.zeros(0, dtype=object),
                             title='Selected spaceship',
                             template='plotly_dark')
-    
     fig.update_traces(marker=dict(size=4,
-                              line=dict(width=3,
-                                        color='DarkSlateGrey')),
+                                  line=dict(width=3,
+                                            color='Black')),
                       selector=dict(mode='markers'))
         
     camera = dict(

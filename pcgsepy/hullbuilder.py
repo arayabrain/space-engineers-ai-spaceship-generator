@@ -248,11 +248,11 @@ class HullBuilder:
         i, j, k = loc.as_tuple()
         di, dj, dk = direction.as_tuple()
         while 0 < i < hull.shape[0] and 0 < j < hull.shape[1] and 0 < k < hull.shape[2]:
+            hull[i, j, k] = BlockValue.AIR_BLOCK
             i += di
             j += dj
             k += dk
             if (i, j, k) in self._blocks_set.keys():
-                hull[i, j, k] = BlockValue.AIR_BLOCK
                 self._blocks_set.pop((i, j, k))
         return hull
     
@@ -613,6 +613,8 @@ class HullBuilder:
         Args:
             structure (Structure): The spaceship.
         """
+        self._blocks_set = {}
+        
         arr = structure.as_grid_array
         air = self._tag_internal_air_blocks(arr=arr)
         hull = self._get_convex_hull(arr=arr)
