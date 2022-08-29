@@ -11,23 +11,23 @@ from scipy.spatial.transform import Rotation
 from enum import IntEnum
 
 
-class Block(IntEnum):
-    AIR_BLOCK_VALUE: 0
-    BASE_BLOCK_VALUE: 1
-    SLOPE_BLOCK_VALUE: 2
-    CORNER_BLOCK_VALUE: 3
-    CORNERINV_BLOCK_VALUE: 4
-    CORNERSQUARE_BLOCK_VALUE: 5
-    CORNERSQUAREINV_BLOCK_VALUE: 6
+class BlockValue(IntEnum):
+    AIR_BLOCK = 0
+    BASE_BLOCK = 1
+    SLOPE_BLOCK = 2
+    CORNER_BLOCK = 3
+    CORNERINV_BLOCK = 4
+    CORNERSQUARE_BLOCK = 5
+    CORNERSQUAREINV_BLOCK = 6
 
 
 block_value_types = {
-    Block.BASE_BLOCK_VALUE: 'MyObjectBuilder_CubeBlock_LargeBlockArmorBlock',
-    Block.SLOPE_BLOCK_VALUE: 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope',
-    Block.CORNER_BLOCK_VALUE: 'MyObjectBuilder_CubeBlock_LargeBlockArmorCorner',
-    Block.CORNERINV_BLOCK_VALUE: 'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerInv',
-    Block.CORNERSQUARE_BLOCK_VALUE: 'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerSquare',
-    Block.CORNERSQUAREINV_BLOCK_VALUE: 'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerSquareInverted',
+    BlockValue.BASE_BLOCK: 'MyObjectBuilder_CubeBlock_LargeBlockArmorBlock',
+    BlockValue.SLOPE_BLOCK: 'MyObjectBuilder_CubeBlock_LargeBlockArmorSlope',
+    BlockValue.CORNER_BLOCK: 'MyObjectBuilder_CubeBlock_LargeBlockArmorCorner',
+    BlockValue.CORNERINV_BLOCK: 'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerInv',
+    BlockValue.CORNERSQUARE_BLOCK: 'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerSquare',
+    BlockValue.CORNERSQUAREINV_BLOCK: 'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerSquareInverted',
 }
 
 
@@ -71,14 +71,14 @@ class HullBuilder:
         self._orientations = [Orientation.FORWARD, Orientation.BACKWARD, Orientation.UP, Orientation.DOWN, Orientation.LEFT, Orientation.RIGHT]
         self._valid_orientations = [(of, ou) for (of, ou) in list(product(self._orientations, self._orientations)) if of != ou and of != orientation_from_vec(ou.value.opposite())]
         # self._smoothing_order = {
-        #     Block.BASE_BLOCK_VALUE: [Block.SLOPE_BLOCK_VALUE, Block.CORNERSQUARE_BLOCK_VALUE, Block.CORNER_BLOCK_VALUE],
-        #     Block.CORNERSQUAREINV_BLOCK_VALUE: [],
-        #     Block.CORNERINV_BLOCK_VALUE: [],
-        #     Block.SLOPE_BLOCK_VALUE: [Block.CORNERSQUARE_BLOCK_VALUE, Block.CORNER_BLOCK_VALUE]
+        #     BlockValue.BASE_BLOCK: [BlockValue.SLOPE_BLOCK, BlockValue.CORNERSQUARE_BLOCK, BlockValue.CORNER_BLOCK],
+        #     BlockValue.CORNERSQUAREINV_BLOCK: [],
+        #     BlockValue.CORNERINV_BLOCK: [],
+        #     BlockValue.SLOPE_BLOCK: [BlockValue.CORNERSQUARE_BLOCK, BlockValue.CORNER_BLOCK]
         #     }
         self._smoothing_order = {
-            Block.BASE_BLOCK_VALUE: [Block.SLOPE_BLOCK_VALUE],
-            Block.SLOPE_BLOCK_VALUE: [Block.CORNER_BLOCK_VALUE]
+            BlockValue.BASE_BLOCK: [BlockValue.SLOPE_BLOCK],
+            BlockValue.SLOPE_BLOCK: [BlockValue.CORNER_BLOCK]
             }
     
     def _get_convex_hull(self,
@@ -97,7 +97,7 @@ class HullBuilder:
         idx = np.stack(np.indices(arr.shape), axis=-1)
         out_idx = np.nonzero(deln.find_simplex(idx) + 1)
         out_arr = np.zeros(arr.shape)
-        out_arr[out_idx] = Block.BASE_BLOCK_VALUE
+        out_arr[out_idx] = BlockValue.BASE_BLOCK
         return out_arr
     
     def _adj_to_spaceship(self,
@@ -163,7 +163,7 @@ class HullBuilder:
                         sum(arr[i, j:arr.shape[1], k]) != 0 and \
                         sum(arr[i, j, 0:k]) != 0 and \
                         sum(arr[i, j, k:arr.shape[2]]) != 0:
-                            air_blocks[i, j, k] = Block.BASE_BLOCK_VALUE
+                            air_blocks[i, j, k] = BlockValue.BASE_BLOCK
         return air_blocks
         
     def _exists_block(self,
@@ -210,7 +210,7 @@ class HullBuilder:
             bool: Whether the block is an air block.
         """
         return not self._exists_block(idx=loc.as_tuple(), structure=structure) and\
-            (self._within_hull(loc=loc.scale(1 / structure.grid_size).to_veci(), hull=hull) and hull[loc.scale(1 / structure.grid_size).to_veci().as_tuple()] == Block.AIR_BLOCK_VALUE)
+            (self._within_hull(loc=loc.scale(1 / structure.grid_size).to_veci(), hull=hull) and hull[loc.scale(1 / structure.grid_size).to_veci().as_tuple()] == BlockValue.AIR_BLOCK)
     
     def _next_to_target(self,
                         loc: Vec,
@@ -252,7 +252,7 @@ class HullBuilder:
             j += dj
             k += dk
             if (i, j, k) in self._blocks_set.keys():
-                hull[i, j, k] = Block.AIR_BLOCK_VALUE
+                hull[i, j, k] = BlockValue.AIR_BLOCK
                 self._blocks_set.pop((i, j, k))
         return hull
     
@@ -273,14 +273,14 @@ class HullBuilder:
         for i in range(ii):
             for j in range(jj):
                 for k in range(kk):
-                    if hull[i, j, k] != Block.AIR_BLOCK_VALUE:
+                    if hull[i, j, k] != BlockValue.AIR_BLOCK:
                         loc = Vec.from_tuple((scale * i, scale * j, scale * k))
                         for direction in self._orientations:
                             ntt = self._next_to_target(loc=loc,
                                                        structure=structure,
                                                        direction=direction.value.scale(scale))
                             if ntt:
-                                hull[i, j, k] = Block.AIR_BLOCK_VALUE
+                                hull[i, j, k] = BlockValue.AIR_BLOCK
                                 self._blocks_set.pop((i, j, k))
                                 hull = self._remove_in_direction(loc=loc.scale(v=1 / structure.grid_size).to_veci(),
                                                                  hull=hull,
@@ -475,7 +475,6 @@ class HullBuilder:
         mp1 = [mp for mp in block.mountpoints if rotate(rot_mat, mp.face) == direction.value]
         starts1, ends1, planes1 = self._get_mountpoint_limits(mountpoints=mp1,
                                                               block_center=block.center,
-                                                              block_size = block.scaled_size,
                                                               rotation_matrix=rot_mat)
         other_block = self.try_and_get_block(idx=idx,
                                              offset=direction.value.scale(structure.grid_size).to_veci(),
@@ -486,7 +485,6 @@ class HullBuilder:
                 mp2 = [mp for mp in block.mountpoints if rotate(rot_mat, mp.face) == opposite_direction.value]
                 _, _, planes2 = self._get_mountpoint_limits(mountpoints=mp2,
                                                             block_center=block.center,
-                                                            block_size = block.scaled_size,
                                                             rotation_matrix=rot_mat)
                 val = sum(planes2)  # error as the surface of mountpoints on opposite face
             else:
@@ -503,7 +501,6 @@ class HullBuilder:
                     return False, 0
                 starts2, ends2, planes2 = self._get_mountpoint_limits(mountpoints=mp2,
                                                                       block_center=other_block.center,
-                                                                      block_size = block.scaled_size,
                                                                       rotation_matrix=rot_mat_other)
                 all_valid = []
                 for eo1, so1, p1 in zip(ends1, starts1, planes1):
@@ -540,7 +537,6 @@ class HullBuilder:
             res, delta_area = self._check_valid_placement(idx=idx,
                                                           block=block,
                                                           direction=direction,
-                                                          hull=hull,
                                                           structure=structure)
             valid &= res
             area_err += delta_area
@@ -571,7 +567,7 @@ class HullBuilder:
                                                      hull=hull,
                                                      structure=structure)
         if not valid:
-            return None, Block.AIR_BLOCK_VALUE
+            return None, BlockValue.AIR_BLOCK
         # replacement check   
         elif block_type in self._smoothing_order.keys():
             # give priority to surrounding blocks orientations
@@ -620,8 +616,8 @@ class HullBuilder:
         arr = structure.as_grid_array
         air = self._tag_internal_air_blocks(arr=arr)
         hull = self._get_convex_hull(arr=arr)
-        hull[np.nonzero(air)] = Block.AIR_BLOCK_VALUE
-        hull[np.nonzero(arr)] = Block.AIR_BLOCK_VALUE
+        hull[np.nonzero(air)] = BlockValue.AIR_BLOCK
+        hull[np.nonzero(arr)] = BlockValue.AIR_BLOCK
         
         if self.apply_erosion:
             if self.erosion_type == 'grey':
@@ -630,24 +626,24 @@ class HullBuilder:
                                     mode='constant',
                                     cval=1)
                 hull = hull.astype(int)
-                hull *= Block.BASE_BLOCK_VALUE                
+                hull *= BlockValue.BASE_BLOCK                
             elif self.erosion_type == 'bin':
                 mask = np.zeros(arr.shape)
                 for i in range(mask.shape[0]):
                     for j in range(mask.shape[1]):
                         for k in range(mask.shape[2]):
-                            mask[i, j, k] = Block.AIR_BLOCK_VALUE if self._adj_to_spaceship(i=i, j=j, k=k, spaceship=arr) else Block.BASE_BLOCK_VALUE
+                            mask[i, j, k] = BlockValue.AIR_BLOCK if self._adj_to_spaceship(i=i, j=j, k=k, spaceship=arr) else BlockValue.BASE_BLOCK
                 hull = binary_erosion(input=hull,
                                       mask=mask,
                                       iterations=self.iterations)
                 hull = hull.astype(int)
-                hull *= Block.BASE_BLOCK_VALUE
+                hull *= BlockValue.BASE_BLOCK
                 
         # add blocks to self._blocks_set
         for i in range(hull.shape[0]):
                 for j in range(hull.shape[1]):
                     for k in range(hull.shape[2]):
-                        if hull[i, j, k] != Block.AIR_BLOCK_VALUE:
+                        if hull[i, j, k] != BlockValue.AIR_BLOCK:
                             self._add_block(block_type=self.base_block,
                                             idx=(i, j, k),
                                             pos=Vec.v3i(i, j, k).scale(v=structure.grid_size),
@@ -660,14 +656,14 @@ class HullBuilder:
         
         # initial blocks removal check
         for (i, j, k), v in np.ndenumerate(hull):
-            if v != Block.AIR_BLOCK_VALUE:
+            if v != BlockValue.AIR_BLOCK:
                 block = self._blocks_set[(i, j, k)]
                 valid, _ = self._check_valid_position(idx=(i, j, k),
                                                         block=block,
                                                         hull=hull,
                                                         structure=structure)
                 if not valid:
-                    hull[i, j, k] = Block.AIR_BLOCK_VALUE
+                    hull[i, j, k] = BlockValue.AIR_BLOCK
                     self._blocks_set.pop((i, j, k))
         
         if self.apply_smoothing:
@@ -685,7 +681,7 @@ class HullBuilder:
                         substitute_block.position = block.position
                         self._blocks_set[(i, j, k)] = substitute_block
                         to_inspect.extend(self.adj_in_hull(idx=(i, j, k), hull=hull))
-                    elif substitute_block is None and val == Block.AIR_BLOCK_VALUE:
+                    elif substitute_block is None and val == BlockValue.AIR_BLOCK:
                         to_rem.append((i, j, k))
                         to_inspect.extend(self.adj_in_hull(idx=(i, j, k), hull=hull))
                     hull[i, j, k] = val
