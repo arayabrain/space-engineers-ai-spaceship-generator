@@ -57,41 +57,6 @@ dashLoggerHandler = DashLoggerHandler()
 logger.addHandler(dashLoggerHandler)
 
 
-class Metric:
-    def __init__(self,
-                 multiple_values: bool = False) -> None:
-        self.current_generation: int = 0
-        self.multiple_values = multiple_values
-        self.history: Dict[int, List[Any]] = {
-            self.current_generation: [] if multiple_values else 0
-        }
-        self.emitter_names: List[str] = [my_emitterslist[exp_n]]
-    
-    def add(self,
-            value: Any):
-        if self.multiple_values:
-            self.history[self.current_generation].append(value)
-        else:
-            self.history[self.current_generation] += value
-    
-    def reset(self):
-        if self.multiple_values:
-            self.history[self.current_generation] = []
-        else:
-            self.history[self.current_generation] = 0
-    
-    def new_generation(self):
-        self.current_generation += 1
-        self.reset()
-        self.emitter_names.append(my_emitterslist[exp_n])
-    
-    def get_averages(self) -> List[Any]:
-        return [np.mean(l) for l in self.history.values()]
-
-
-n_spaceships_inspected = Metric()
-time_elapsed = Metric(multiple_values=True)
-
 hm_callback_props = {}
 block_to_colour = {
     # colours from https://developer.mozilla.org/en-US/docs/Web/CSS/color_value
@@ -132,6 +97,42 @@ def resource_path(relative_path):
     except Exception:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
+
+
+class Metric:
+    def __init__(self,
+                 multiple_values: bool = False) -> None:
+        self.current_generation: int = 0
+        self.multiple_values = multiple_values
+        self.history: Dict[int, List[Any]] = {
+            self.current_generation: [] if multiple_values else 0
+        }
+        self.emitter_names: List[str] = [my_emitterslist[exp_n]]
+    
+    def add(self,
+            value: Any):
+        if self.multiple_values:
+            self.history[self.current_generation].append(value)
+        else:
+            self.history[self.current_generation] += value
+    
+    def reset(self):
+        if self.multiple_values:
+            self.history[self.current_generation] = []
+        else:
+            self.history[self.current_generation] = 0
+    
+    def new_generation(self):
+        self.current_generation += 1
+        self.reset()
+        self.emitter_names.append(my_emitterslist[exp_n])
+    
+    def get_averages(self) -> List[Any]:
+        return [np.mean(l) for l in self.history.values()]
+
+
+n_spaceships_inspected = Metric()
+time_elapsed = Metric(multiple_values=True)
 
 
 app = dash.Dash(__name__,
@@ -237,6 +238,10 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     with open(quickstart_info_file, 'r', encoding='utf-8') as f:
         quickstart_info_str = f.read()
     
+    quickstart_usermode_info_file = './assets/quickstart_usermode.md'
+    with open(quickstart_usermode_info_file, 'r', encoding='utf-8') as f:
+        quickstart_usermode_info_str = f.read()
+    
     current_mapelites = mapelites
     
     rngseed = uuid.uuid4().int
@@ -308,6 +313,18 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                            is_open=False,
                            scrollable=True,
                            size='lg')
+    
+    quickstart_usermode_modal = dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle("Quickstart"), close_button=True),
+        dbc.ModalBody(dcc.Markdown(quickstart_usermode_info_str,
+                                   link_target="_blank"))
+    ],
+                           id='quickstart-usermode-modal',
+                           centered=True,
+                           backdrop='static',
+                           is_open=False,
+                           scrollable=True,
+                           size='lg')
 
     no_bins_selected_modal = dbc.Modal(children=[
         dbc.ModalHeader(dbc.ModalTitle("⚠ Warning ⚠"), close_button=True),
@@ -344,7 +361,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                            scrollable=True)
     
     modals = html.Div(children=[
-        consent_dialog, webapp_info_modal, algo_info_modal, quickstart_modal,
+        consent_dialog, webapp_info_modal, algo_info_modal, quickstart_modal, quickstart_usermode_modal,
         no_bins_selected_modal, end_of_experiment_modal, end_of_userstudy_modal
     ])
     
@@ -1235,6 +1252,7 @@ def _apply_emitter_change(mapelites: MAPElites,
               Output('symmetry-dropdown', 'label'),
               Output("consent-modal", "is_open"),
               Output("quickstart-modal", "is_open"),
+              Output("quickstart-usermode-modal", "is_open"),
               Output("nbs-err-modal", "is_open"),
               Output("eoe-modal", "is_open"),
               Output("eous-modal", "is_open"),
@@ -1318,6 +1336,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     content_dl = None
     metrics_dl = None
     nbs_err_modal_show = False
+    qs_um_modal_show = False
     
     ctx = dash.callback_context
 
@@ -1526,6 +1545,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                     logging.getLogger('webapp').info(f'Reached end of all experiments! Please go back to the questionnaire to continue the evaluation.')
                     eous_modal_show = True
                     user_study_mode = False
+                    qs_um_modal_show = True
                     logging.getLogger('webapp').info(msg='Initializing a new population; this may take a while...')
                     current_mapelites.reset()
                     current_mapelites.emitter = RandomEmitter()
@@ -1591,6 +1611,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
             current_mapelites.reset(lcs=[])
             current_mapelites.load_population(filename=my_emitterslist[exp_n])
             logging.getLogger('webapp').info(msg='Population loaded.')
+            qs_modal_show = True
         else:
             logging.getLogger('webapp').info(msg=f'No user data will be collected during this session. Please do not refresh the page.')
             logging.getLogger('webapp').info(msg='Initializing population; this may take a while...')
@@ -1598,9 +1619,9 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
             current_mapelites.reset()
             logging.getLogger('webapp').info(msg='Initialization completed.')
             user_study_mode = False
+            qs_um_modal_show = True
             rand_step_btn_style, reset_btn_style, exp_progress_style = {}, {}, {'visibility': 'hidden', 'height': '0px'}
         privacy_modal_show = False
-        qs_modal_show = True
         gen_counter = 0
         curr_heatmap = _build_heatmap(mapelites=current_mapelites,
                                         pop_name=pop_name,
@@ -1647,6 +1668,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     #   ('symmetry-dropdown', 'label'),
     #   ("consent-modal", "is_open"),
     #   ("quickstart-modal", "is_open"),
+    #   ("quickstart-usermode-modal", "is_open"),
     #   ("nbs-err-modal", "is_open"),
     #   ("eoe-modal", "is_open"),
     #   ("eous-modal", "is_open"),
@@ -1670,6 +1692,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         symm_axis,\
         privacy_modal_show,\
         qs_modal_show,\
+        qs_um_modal_show,\
         nbs_err_modal_show,\
         eoe_modal_show,\
         eous_modal_show,\
