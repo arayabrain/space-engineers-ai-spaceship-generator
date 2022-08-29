@@ -97,7 +97,7 @@ class HullBuilder:
         idx = np.stack(np.indices(arr.shape), axis=-1)
         out_idx = np.nonzero(deln.find_simplex(idx) + 1)
         out_arr = np.zeros(arr.shape)
-        out_arr[out_idx] = block.BASE_BLOCK_VALUE
+        out_arr[out_idx] = Block.BASE_BLOCK_VALUE
         return out_arr
     
     def _adj_to_spaceship(self,
@@ -163,7 +163,7 @@ class HullBuilder:
                         sum(arr[i, j:arr.shape[1], k]) != 0 and \
                         sum(arr[i, j, 0:k]) != 0 and \
                         sum(arr[i, j, k:arr.shape[2]]) != 0:
-                            air_blocks[i, j, k] = block.BASE_BLOCK_VALUE
+                            air_blocks[i, j, k] = Block.BASE_BLOCK_VALUE
         return air_blocks
         
     def _exists_block(self,
@@ -210,7 +210,7 @@ class HullBuilder:
             bool: Whether the block is an air block.
         """
         return not self._exists_block(idx=loc.as_tuple(), structure=structure) and\
-            (self._within_hull(loc=loc.scale(1 / structure.grid_size).to_veci(), hull=hull) and hull[loc.scale(1 / structure.grid_size).to_veci().as_tuple()] == block.AIR_BLOCK_VALUE)
+            (self._within_hull(loc=loc.scale(1 / structure.grid_size).to_veci(), hull=hull) and hull[loc.scale(1 / structure.grid_size).to_veci().as_tuple()] == Block.AIR_BLOCK_VALUE)
     
     def _next_to_target(self,
                         loc: Vec,
@@ -252,7 +252,7 @@ class HullBuilder:
             j += dj
             k += dk
             if (i, j, k) in self._blocks_set.keys():
-                hull[i, j, k] = block.AIR_BLOCK_VALUE
+                hull[i, j, k] = Block.AIR_BLOCK_VALUE
                 self._blocks_set.pop((i, j, k))
         return hull
     
@@ -273,14 +273,14 @@ class HullBuilder:
         for i in range(ii):
             for j in range(jj):
                 for k in range(kk):
-                    if hull[i, j, k] != block.AIR_BLOCK_VALUE:
+                    if hull[i, j, k] != Block.AIR_BLOCK_VALUE:
                         loc = Vec.from_tuple((scale * i, scale * j, scale * k))
                         for direction in self._orientations:
                             ntt = self._next_to_target(loc=loc,
                                                        structure=structure,
                                                        direction=direction.value.scale(scale))
                             if ntt:
-                                hull[i, j, k] = block.AIR_BLOCK_VALUE
+                                hull[i, j, k] = Block.AIR_BLOCK_VALUE
                                 self._blocks_set.pop((i, j, k))
                                 hull = self._remove_in_direction(loc=loc.scale(v=1 / structure.grid_size).to_veci(),
                                                                  hull=hull,
@@ -571,7 +571,7 @@ class HullBuilder:
                                                      hull=hull,
                                                      structure=structure)
         if not valid:
-            return None, block.AIR_BLOCK_VALUE
+            return None, Block.AIR_BLOCK_VALUE
         # replacement check   
         elif block_type in self._smoothing_order.keys():
             # give priority to surrounding blocks orientations
@@ -620,8 +620,8 @@ class HullBuilder:
         arr = structure.as_grid_array
         air = self._tag_internal_air_blocks(arr=arr)
         hull = self._get_convex_hull(arr=arr)
-        hull[np.nonzero(air)] = block.AIR_BLOCK_VALUE
-        hull[np.nonzero(arr)] = block.AIR_BLOCK_VALUE
+        hull[np.nonzero(air)] = Block.AIR_BLOCK_VALUE
+        hull[np.nonzero(arr)] = Block.AIR_BLOCK_VALUE
         
         if self.apply_erosion:
             if self.erosion_type == 'grey':
@@ -630,24 +630,24 @@ class HullBuilder:
                                     mode='constant',
                                     cval=1)
                 hull = hull.astype(int)
-                hull *= block.BASE_BLOCK_VALUE                
+                hull *= Block.BASE_BLOCK_VALUE                
             elif self.erosion_type == 'bin':
                 mask = np.zeros(arr.shape)
                 for i in range(mask.shape[0]):
                     for j in range(mask.shape[1]):
                         for k in range(mask.shape[2]):
-                            mask[i, j, k] = block.AIR_BLOCK_VALUE if self._adj_to_spaceship(i=i, j=j, k=k, spaceship=arr) else block.BASE_BLOCK_VALUE
+                            mask[i, j, k] = Block.AIR_BLOCK_VALUE if self._adj_to_spaceship(i=i, j=j, k=k, spaceship=arr) else Block.BASE_BLOCK_VALUE
                 hull = binary_erosion(input=hull,
                                       mask=mask,
                                       iterations=self.iterations)
                 hull = hull.astype(int)
-                hull *= block.BASE_BLOCK_VALUE
+                hull *= Block.BASE_BLOCK_VALUE
                 
         # add blocks to self._blocks_set
         for i in range(hull.shape[0]):
                 for j in range(hull.shape[1]):
                     for k in range(hull.shape[2]):
-                        if hull[i, j, k] != block.AIR_BLOCK_VALUE:
+                        if hull[i, j, k] != Block.AIR_BLOCK_VALUE:
                             self._add_block(block_type=self.base_block,
                                             idx=(i, j, k),
                                             pos=Vec.v3i(i, j, k).scale(v=structure.grid_size),
@@ -660,14 +660,14 @@ class HullBuilder:
         
         # initial blocks removal check
         for (i, j, k), v in np.ndenumerate(hull):
-            if v != block.AIR_BLOCK_VALUE:
+            if v != Block.AIR_BLOCK_VALUE:
                 block = self._blocks_set[(i, j, k)]
                 valid, _ = self._check_valid_position(idx=(i, j, k),
                                                         block=block,
                                                         hull=hull,
                                                         structure=structure)
                 if not valid:
-                    hull[i, j, k] = block.AIR_BLOCK_VALUE
+                    hull[i, j, k] = Block.AIR_BLOCK_VALUE
                     self._blocks_set.pop((i, j, k))
         
         if self.apply_smoothing:
@@ -681,11 +681,11 @@ class HullBuilder:
                     substitute_block, val = self.try_smoothing(idx=(i, j, k),
                                                                hull=hull,
                                                                structure=structure)
-                    if substitute_block is not None and substitute_block.block_type != block.block_type:
+                    if substitute_block is not None and substitute_block.block_type != Block.Block_type:
                         substitute_block.position = block.position
                         self._blocks_set[(i, j, k)] = substitute_block
                         to_inspect.extend(self.adj_in_hull(idx=(i, j, k), hull=hull))
-                    elif substitute_block is None and val == block.AIR_BLOCK_VALUE:
+                    elif substitute_block is None and val == Block.AIR_BLOCK_VALUE:
                         to_rem.append((i, j, k))
                         to_inspect.extend(self.adj_in_hull(idx=(i, j, k), hull=hull))
                     hull[i, j, k] = val
