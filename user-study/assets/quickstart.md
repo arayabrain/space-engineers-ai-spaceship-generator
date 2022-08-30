@@ -2,7 +2,7 @@ This application generates spaceships for Space Engineers using an evolutionary 
 
 You can select a spaceship from the population on the left (only those marked with the "▣" symbol can be selected) and click the "**Evolve from selected spaceship**" button to generate new spaceships.
 
-When you select a spaceship, its main properties are displayed on the right, and an interactive preview of the spaceship is displayed in the middle of the application window.
+When you select a spaceship, its main properties are displayed on the right, and an interactive preview of the spaceship is displayed in the middle of the application window. You can also change the base color of the spaceship by picking it from the widget next to the spaceship properties.
 
 You can see the current progress on the bars on the left, and check system messages in the "**Log**" window on the right.
 

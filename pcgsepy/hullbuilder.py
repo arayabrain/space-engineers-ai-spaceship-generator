@@ -315,6 +315,23 @@ class HullBuilder:
         else:
             return np.nonzero(n_neighbours)
     
+    def adj_in_hull(self,
+                    idx: Tuple[int, int, int]) -> List[Tuple[int, int, int]]:
+        """Get the indices of adjacent blocks in the hull from a given index.
+
+        Args:
+            idx (Tuple[int, int, int]): The index.
+
+        Returns:
+            List[Tuple[int, int, int]]: The list of adjacent indices.
+        """
+        adjs = []
+        for direction in self._orientations:
+            new_idx = Vec.from_tuple(idx).sum(direction.value).as_tuple()
+            if new_idx in self._blocks_set.keys():
+                adjs.append(new_idx)
+        return adjs
+    
     def _get_neighbourhood(self,
                            idx: Vec,
                            structure: Structure) -> List[Block]:
@@ -586,7 +603,7 @@ class HullBuilder:
                 orientation_scores, valids = np.zeros(shape=len(self._valid_orientations), dtype=np.int64), np.zeros(shape=len(self._valid_orientations), dtype=np.bool8)
                 # try replacement
                 for i, (of, ou) in enumerate(priority_orientations):
-                    possible_block = Block(block_type=self.block_value_types[possible_type],
+                    possible_block = Block(block_type=block_value_types[possible_type],
                                            orientation_forward=of,
                                            orientation_up=ou)
                     valid, err = self._check_valid_position(idx=idx,
@@ -597,7 +614,7 @@ class HullBuilder:
                     valids[i] = valid
                 if any(valids) and min(orientation_scores) < curr_err:
                     of, ou = priority_orientations[np.argmin(orientation_scores)]
-                    return Block(block_type=self.block_value_types[possible_type],
+                    return Block(block_type=block_value_types[possible_type],
                                 orientation_forward=of,
                                 orientation_up=ou), possible_type
             return None, block_type
@@ -679,13 +696,13 @@ class HullBuilder:
                     substitute_block, val = self.try_smoothing(idx=(i, j, k),
                                                                hull=hull,
                                                                structure=structure)
-                    if substitute_block is not None and substitute_block.block_type != Block.Block_type:
+                    if substitute_block is not None and substitute_block.block_type != block.block_type:
                         substitute_block.position = block.position
                         self._blocks_set[(i, j, k)] = substitute_block
-                        to_inspect.extend(self.adj_in_hull(idx=(i, j, k), hull=hull))
+                        to_inspect.extend(self.adj_in_hull(idx=(i, j, k)))
                     elif substitute_block is None and val == BlockValue.AIR_BLOCK:
                         to_rem.append((i, j, k))
-                        to_inspect.extend(self.adj_in_hull(idx=(i, j, k), hull=hull))
+                        to_inspect.extend(self.adj_in_hull(idx=(i, j, k)))
                     hull[i, j, k] = val
                 to_inspect = list(set(to_inspect))
                 to_rem = list(set(to_rem))

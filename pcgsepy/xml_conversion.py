@@ -242,7 +242,7 @@ def convert_structure_to_xml(structure: Structure,
 			<SubtypeName>{block_type}</SubtypeName>
 			<Min x = "{pos.x}" y="{pos.y}" z="{pos.z}" />
 			<BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
-			<ColorMaskHSV x="0" y="-0.8" z="0.55" />
+			<ColorMaskHSV x="{block.color.x}" y="{block.color.y}" z="{block.color.z}" />
 		</MyObjectBuilder_CubeBlock>
 		"""
 

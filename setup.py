@@ -17,6 +17,7 @@ setup(
         "dash-bootstrap-components >= 1.2.1",
         "dash-core-components >= 2.0.0",
         "dash-html-components >= 2.0.0",
+        "dash-daq >= 0.5.0",
         "kaleido >= 0.2.1",
         "matplotlib >= 3.5.1",
         "numpy >= 1.22.3",

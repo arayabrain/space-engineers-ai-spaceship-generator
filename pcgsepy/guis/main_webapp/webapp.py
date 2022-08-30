@@ -1,4 +1,5 @@
 import base64
+from cProfile import label
 from cmath import exp
 import json
 import logging
@@ -14,6 +15,7 @@ from zipfile import ZipFile
 
 import dash
 import dash_bootstrap_components as dbc
+import dash_daq as daq
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
@@ -21,6 +23,7 @@ from dash import ALL, dcc, html
 from dash.dependencies import Input, Output, State
 from pcgsepy.common.api_call import block_definitions
 from pcgsepy.common.jsonifier import json_dumps
+from pcgsepy.common.vecs import Vec
 from pcgsepy.config import (BIN_POP_SIZE, CS_MAX_AGE, N_EMITTER_STEPS,
                             N_GENS_ALLOWED)
 from pcgsepy.guis.main_webapp.modals_msgs import (end_of_experiment,
@@ -701,6 +704,18 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                          className='log-area')
             ])
     
+    color_picker = html.Div(children=[
+        daq.ColorPicker(id='color-picker',
+                        label='Spaceship base color',
+                        labelPosition="bottom",
+                        size=164,
+                        value=dict(rgb=dict(r=128, g=128, b=128, a=1)),
+                        theme={'dark': True,
+                               'detail': '#080808',
+                               'primary': '#222222',
+                               'secondary': '#464d55'})
+        ])
+    
     app.layout = dbc.Container(
         children=[
             modals,
@@ -708,7 +723,8 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
             html.Br(),
             dbc.Row(children=[
                 dbc.Col(mapelites_heatmap, width=3),
-                dbc.Col(content_plot, width=7),
+                dbc.Col(content_plot, width=6),
+                dbc.Col(color_picker, width=1),
                 dbc.Col(content_properties, width=2)],
                     align="center"),
             dbc.Row(children=[
@@ -875,6 +891,12 @@ def download_content(n):
             elite = get_elite(mapelites=current_mapelites,
                               bin_idx=_switch([selected_bins[-1]])[0],
                               pop='feasible')
+            # reset content to add smoothed-out hull
+            elite._content = None
+            current_mapelites.lsystem._set_structure(cs=elite)
+            current_mapelites.hull_builder.apply_smoothing = True
+            current_mapelites.hull_builder.add_external_hull(elite.content)
+            current_mapelites.hull_builder.apply_smoothing = False
             zf.writestr('bp.sbc', convert_structure_to_xml(structure=elite.content, name=f'My Spaceship ({rngseed}) (exp{exp_n})'))
             zf.writestr(f'spaceship_{rngseed}_exp{exp_n}', elite.string)
     
@@ -988,16 +1010,8 @@ def _build_heatmap(mapelites: MAPElites,
     return heatmap
 
 
-def _get_colour_mapping(block_types: List[str]) -> Dict[str, str]:
-    colour_map = {}
-    for block_type in block_types:
-        if use_custom_colors:
-            pass  # TODO: pick from user choice
-        else:
-            c = block_to_colour.get(block_type, '#ff0000')
-        if block_type not in colour_map.keys():
-            colour_map[block_type] = c
-    return colour_map
+def is_base_block(block_type: str) -> bool:
+    return block_type.endswith("Block") or block_type.endswith("Slope") or block_type.endswith("Corner") or block_type.endswith("CornerInv")
 
 
 def _get_elite_content(mapelites: MAPElites,
@@ -1015,19 +1029,32 @@ def _get_elite_content(mapelites: MAPElites,
         x, y, z = arr
         cs = [content[i, j, k] for i, j, k in zip(x, y, z)]
         ss = [structure._clean_label(list(block_definitions.keys())[v - 1]) for v in cs]
-        fig = px.scatter_3d(x=x,
-                            y=y,
-                            z=z,
-                            color=ss,
-                            color_discrete_map=_get_colour_mapping(ss),
-                            labels={
-                                'x': '',
-                                'y': 'm',
-                                'z': '',
-                                'color': 'Block type'
-                            },
-                            title='Selected spaceship',
-                            template='plotly_dark')
+        
+        custom_colors = []
+        for (i, j, k) in zip(x, y, z):
+            b = structure._blocks[(i * structure.grid_size, j * structure.grid_size, k * structure.grid_size)]
+            if is_base_block(block_type=b.block_type):
+                custom_colors.append(f'rgb{b.color.as_tuple()}')
+            else:
+                custom_colors.append(block_to_colour.get(structure._clean_label(b.block_type), '#ff0000'))
+        
+        fig = go.Figure()
+        
+        fig.add_scatter3d(x=x,
+                          y=y,
+                          z=z,
+                          mode='markers',
+                          marker=dict(size=4,
+                                      line=dict(width=3,
+                                                color='DarkSlateGrey'),
+                                      color=custom_colors),
+                          showlegend=False
+                          )
+        
+        fig.update_traces(
+            hoverinfo='text',
+            hovertext=ss
+        )
         
         ux, uy, uz = np.unique(x), np.unique(y), np.unique(z)
         ptg = .2
@@ -1053,18 +1080,14 @@ def _get_elite_content(mapelites: MAPElites,
                     'ticktext': [structure.grid_size * i for i in show_z],
                 }
             )
-        )        
+        )
     else:
-        fig = px.scatter_3d(x=np.zeros(0, dtype=object),
-                            y=np.zeros(0, dtype=object),
-                            z=np.zeros(0, dtype=object),
-                            title='Selected spaceship',
-                            template='plotly_dark')
-    fig.update_traces(marker=dict(size=4,
-                                  line=dict(width=3,
-                                            color='Black')),
-                      selector=dict(mode='markers'))
+        fig = go.Figure()
         
+        fig.add_scatter3d(x=np.zeros(0, dtype=object),
+                          y=np.zeros(0, dtype=object),
+                          z=np.zeros(0, dtype=object))
+    
     camera = dict(
         up=dict(x=0, y=0, z=1),
         center=dict(x=0, y=0, z=0),
@@ -1073,8 +1096,10 @@ def _get_elite_content(mapelites: MAPElites,
     
     fig.update_layout(scene=dict(aspectmode='data'),
                       scene_camera=camera,
+                      template='plotly_dark',
                       paper_bgcolor='rgba(0,0,0,0)',
-                      plot_bgcolor='rgba(0,0,0,0)')
+                      plot_bgcolor='rgba(0,0,0,0)',
+                      title='Selected spaceship')
     return fig
 
 
@@ -1117,6 +1142,7 @@ def _apply_step(mapelites: MAPElites,
 def _apply_reset(mapelites: MAPElites) -> bool:
     logging.getLogger('webapp').info(msg='Started resetting all bins (this may take a while)...')
     mapelites.reset()
+    mapelites.hull_builder.apply_smoothing = False
     logging.getLogger('webapp').info(msg='Reset completed.')
     return True
 
@@ -1318,12 +1344,14 @@ def _apply_emitter_change(mapelites: MAPElites,
               Input('symmetry-radio', 'value'),
               Input("consent-yes", "n_clicks"),
               Input("consent-no", "n_clicks"),
-              Input("nbs-err-btn", "n_clicks")
+              Input("nbs-err-btn", "n_clicks"),
+              
+              Input('color-picker', 'value')
               )
 def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, privacy_modal_show, qs_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style,
                      pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights,
                      b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn,
-                     emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn):
+                     emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn, color):
     global gdev_mode
     global user_study_mode
     global current_mapelites
@@ -1551,6 +1579,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                     qs_um_modal_show = True
                     logging.getLogger('webapp').info(msg='Initializing a new population; this may take a while...')
                     current_mapelites.reset()
+                    current_mapelites.hull_builder.apply_smoothing = False
                     current_mapelites.emitter = RandomEmitter()
                     rand_step_btn_style, reset_btn_style, exp_progress_style = {}, {}, {'visibility': 'hidden', 'height': '0px'}
                     curr_heatmap = _build_heatmap(mapelites=current_mapelites,
@@ -1569,6 +1598,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                     if consent_ok:
                         logging.getLogger('webapp').info(msg='Loading next population...')
                         current_mapelites.reset(lcs=[])
+                        current_mapelites.hull_builder.apply_smoothing = False
                         current_mapelites.load_population(filename=my_emitterslist[exp_n])
                         logging.getLogger('webapp').info(msg='Next population loaded.')
                         n_spaceships_inspected.new_generation()
@@ -1577,6 +1607,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                     else:
                         logging.getLogger('webapp').info(msg='Initializing a new population; this may take a while...')
                         current_mapelites.reset()
+                        current_mapelites.hull_builder.apply_smoothing = False
                         logging.getLogger('webapp').info(msg='Initialization completed.')
                     curr_heatmap = _build_heatmap(mapelites=current_mapelites,
                                                 pop_name=pop_name,
@@ -1612,6 +1643,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
             logging.getLogger('webapp').info(msg=f'Thank you for participating in the user study! Please do not refresh the page.')
             logging.getLogger('webapp').info(msg='Loading population...')
             current_mapelites.reset(lcs=[])
+            current_mapelites.hull_builder.apply_smoothing = False
             current_mapelites.load_population(filename=my_emitterslist[exp_n])
             logging.getLogger('webapp').info(msg='Population loaded.')
             qs_modal_show = True
@@ -1620,6 +1652,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
             logging.getLogger('webapp').info(msg='Initializing population; this may take a while...')
             current_mapelites.emitter = RandomEmitter()
             current_mapelites.reset()
+            current_mapelites.hull_builder.apply_smoothing = False
             logging.getLogger('webapp').info(msg='Initialization completed.')
             user_study_mode = False
             qs_um_modal_show = True
@@ -1632,6 +1665,17 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                                         method_name=method_name)
     elif event_trig == 'nbs-err-btn':
         nbs_err_modal_show = False
+    elif event_trig == 'color-picker':
+        r, g, b = color['rgb']['r'], color['rgb']['g'], color['rgb']['b']
+        new_color = Vec.v3f(r, g, b).scale(1 / 256)
+        for (_, _), b in np.ndenumerate(current_mapelites.bins):
+            for cs in b._feasible:
+                for block in cs.content._blocks.values():
+                    if is_base_block(block_type=block.block_type):
+                        block.color = new_color
+        curr_content = _get_elite_content(mapelites=current_mapelites,
+                                          bin_idx=selected_bins[-1],
+                                          pop='feasible' if pop_name == 'Feasible' else 'infeasible')
     elif event_trig is None:
         curr_heatmap = _build_heatmap(mapelites=current_mapelites,
                                     pop_name=pop_name,
