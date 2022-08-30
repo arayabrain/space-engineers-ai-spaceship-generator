@@ -1064,18 +1064,21 @@ def _get_elite_content(mapelites: MAPElites,
         
         fig.update_layout(
             scene=dict(
+                xaxis_title='',
+                yaxis_title='',
+                zaxis_title='',
                 xaxis={
-                    'tickmode': 'array',
+                    # 'tickmode': 'array',
                     'tickvals': show_x,
                     'ticktext': [structure.grid_size * i for i in show_x],
                 },
                 yaxis={
-                    'tickmode': 'array',
+                    # 'tickmode': 'array',
                     'tickvals': show_y,
                     'ticktext': [structure.grid_size * i for i in show_y],
                 },
                 zaxis={
-                    'tickmode': 'array',
+                    # 'tickmode': 'array',
                     'tickvals': show_z,
                     'ticktext': [structure.grid_size * i for i in show_z],
                 }
