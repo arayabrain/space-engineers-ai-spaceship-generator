@@ -1,3 +1,4 @@
+import logging
 from scipy.spatial import ConvexHull, Delaunay
 from scipy.ndimage import grey_erosion, binary_erosion, binary_dilation
 import numpy as np
@@ -566,17 +567,15 @@ class HullBuilder:
             # give priority to surrounding blocks orientations
             neighbourhood = self._get_neighbourhood(idx=idx,
                                                     structure=structure)
-            priority_orientations = []
+            priority_scores = np.zeros(shape=len(self._valid_orientations), dtype=np.int8).tolist()
             for other_block in neighbourhood:                
                 oo = (orientation_from_vec(other_block.orientation_forward),
                         orientation_from_vec(other_block.orientation_up))
-                if oo not in priority_orientations:
-                    priority_orientations.append(oo)
-            for oo in self._valid_orientations:
-                if oo not in priority_orientations:
-                    priority_orientations.append(oo)
+                priority_scores[self._valid_orientations.index(oo)] = priority_scores[self._valid_orientations.index(oo)] + 1
+            idxs = [x for _, x in sorted(zip(priority_scores, np.arange(len(self._valid_orientations)).tolist()))]
+            priority_orientations = [self._valid_orientations[i] for i in idxs]
             for possible_type in self._smoothing_order[block_type]:
-                orientation_scores, valids = np.zeros(shape=len(self._valid_orientations), dtype=np.int64), np.zeros(shape=len(self._valid_orientations), dtype=np.bool8)
+                orientation_scores, valids = np.zeros(shape=len(self._valid_orientations), dtype=np.float32), np.zeros(shape=len(self._valid_orientations), dtype=np.bool8)
                 # try replacement
                 for i, (of, ou) in enumerate(priority_orientations):
                     possible_block = Block(block_type=block_value_types[possible_type],
