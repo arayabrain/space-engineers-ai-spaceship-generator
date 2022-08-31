@@ -99,29 +99,7 @@ class HullBuilder:
         out_arr = np.zeros(arr.shape)
         out_arr[out_idx] = BlockValue.BASE_BLOCK
         return out_arr
-    
-    def _adj_to_spaceship(self,
-                          i: int,
-                          j: int,
-                          k: int,
-                          spaceship: np.ndarray) -> bool:
-        """Check coordinates adjacency to original spaceship hull.
-
-        Args:
-            i (int): The i coordinate
-            j (int): The j coordiante
-            k (int): The k coordinate
-            spaceship (np.ndarray): The original spaceship hull
-
-        Returns:
-            bool: Whether the coordinate is adjacent to the original spaceship
-        """
-        adj = False
-        for di, dj, dk in zip([+1, 0, 0, 0, 0, -1], [0, +1, 0, 0, -1, 0], [0, 0, +1, -1, 0, 0]):
-            if 0 < i + di < spaceship.shape[0] and 0 < j + dj < spaceship.shape[1] and 0 < k + dk < spaceship.shape[2]:
-                adj |= spaceship[i + di, j + dj, k + dk] != 0
-        return adj
-       
+           
     def _add_block(self,
                    block_type: str,
                    idx: Tuple[int, int, int],
@@ -154,16 +132,16 @@ class HullBuilder:
             npt.NDArray[np.uint8]: The mask array.
         """
         air_blocks = np.zeros(shape=arr.shape, dtype=np.uint8)
-        for i in range(arr.shape[0]):
-            for j in range(arr.shape[1]):
-                for k in range(arr.shape[2]):
-                    if sum(arr[0:i, j, k]) != 0 and \
-                        sum(arr[i:arr.shape[0], j, k]) != 0 and \
-                        sum(arr[i, 0:j, k]) != 0 and \
-                        sum(arr[i, j:arr.shape[1], k]) != 0 and \
-                        sum(arr[i, j, 0:k]) != 0 and \
-                        sum(arr[i, j, k:arr.shape[2]]) != 0:
-                            air_blocks[i, j, k] = BlockValue.BASE_BLOCK
+        # TODO: this could be improved--need a way to check if an air block is surrounded on all 6 (extended) sides by non-air blocks
+        i1, j1, k1 = arr.shape
+        for (i, j, k) in zip(*np.nonzero(arr == 0)):
+            if np.sum(arr[0:i, j, k]) != 0 and \
+                np.sum(arr[i:i1, j, k]) != 0 and \
+                np.sum(arr[i, 0:j, k]) != 0 and \
+                np.sum(arr[i, j:j1, k]) != 0 and \
+                np.sum(arr[i, j, 0:k]) != 0 and \
+                np.sum(arr[i, j, k:k1]) != 0:
+                    air_blocks[i, j, k] = BlockValue.BASE_BLOCK
         return air_blocks
         
     def _exists_block(self,
@@ -247,6 +225,7 @@ class HullBuilder:
         """
         i, j, k = loc.as_tuple()
         di, dj, dk = direction.as_tuple()
+        # TODO: improve if needed
         while 0 < i < hull.shape[0] and 0 < j < hull.shape[1] and 0 < k < hull.shape[2]:
             hull[i, j, k] = BlockValue.AIR_BLOCK
             i += di
@@ -268,23 +247,20 @@ class HullBuilder:
         Returns:
             npt.NDArray[np.float32]: The modified hull array.
         """
-        ii, jj, kk = hull.shape
         scale = structure.grid_size
-        for i in range(ii):
-            for j in range(jj):
-                for k in range(kk):
-                    if hull[i, j, k] != BlockValue.AIR_BLOCK:
-                        loc = Vec.from_tuple((scale * i, scale * j, scale * k))
-                        for direction in self._orientations:
-                            ntt = self._next_to_target(loc=loc,
-                                                       structure=structure,
-                                                       direction=direction.value.scale(scale))
-                            if ntt:
-                                hull[i, j, k] = BlockValue.AIR_BLOCK
-                                self._blocks_set.pop((i, j, k))
-                                hull = self._remove_in_direction(loc=loc.scale(v=1 / structure.grid_size).to_veci(),
-                                                                 hull=hull,
-                                                                 direction=direction.value.opposite())
+        for (i, j, k) in list(self._blocks_set.keys()):
+            if hull[i, j, k] != BlockValue.AIR_BLOCK:  # skip removed blocks
+                loc = Vec.from_tuple((scale * i, scale * j, scale * k))
+                for direction in self._orientations:
+                    ntt = self._next_to_target(loc=loc,
+                                                structure=structure,
+                                                direction=direction.value.scale(scale))
+                    if ntt:
+                        hull[i, j, k] = BlockValue.AIR_BLOCK
+                        self._blocks_set.pop((i, j, k))
+                        hull = self._remove_in_direction(loc=loc.scale(v=1 / structure.grid_size).to_veci(),
+                                                            hull=hull,
+                                                            direction=direction.value.opposite())
         return hull
     
     def _get_outer_indices(self,
@@ -647,11 +623,9 @@ class HullBuilder:
                 hull = hull.astype(int)
                 hull *= BlockValue.BASE_BLOCK                
             elif self.erosion_type == 'bin':
-                mask = np.zeros(arr.shape)
-                for i in range(mask.shape[0]):
-                    for j in range(mask.shape[1]):
-                        for k in range(mask.shape[2]):
-                            mask[i, j, k] = BlockValue.AIR_BLOCK if self._adj_to_spaceship(i=i, j=j, k=k, spaceship=arr) else BlockValue.BASE_BLOCK
+                dilated_arr = binary_dilation(arr)
+                mask = np.ones_like(arr) * BlockValue.BASE_BLOCK
+                mask[np.nonzero(dilated_arr)] = BlockValue.AIR_BLOCK                
                 hull = binary_erosion(input=hull,
                                       mask=mask,
                                       iterations=self.iterations)
@@ -672,19 +646,8 @@ class HullBuilder:
         # remove all blocks that obstruct target block type
         hull = self._remove_obstructing_blocks(hull=hull,
                                                structure=structure)
-        
-        # initial blocks removal check
-        for (i, j, k), v in np.ndenumerate(hull):
-            if v != BlockValue.AIR_BLOCK:
-                block = self._blocks_set[(i, j, k)]
-                valid, _ = self._check_valid_position(idx=(i, j, k),
-                                                        block=block,
-                                                        hull=hull,
-                                                        structure=structure)
-                if not valid:
-                    hull[i, j, k] = BlockValue.AIR_BLOCK
-                    self._blocks_set.pop((i, j, k))
-        
+
+        # apply iterative smoothing algorithm
         if self.apply_smoothing:
             idxs = self._get_outer_indices(arr=hull, edges_only=True)
             ii, jj, kk = idxs

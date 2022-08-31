@@ -29,6 +29,34 @@ orientations_str = {
 grid_enum_to_offset = {'Small': 1, 'Normal': 2, 'Large': 5}
 
 
+def rgb_to_hsv(rgb: Vec) -> Vec:
+	"""Convert an RGB color to its HSV equivalent.
+	Based on https://en.wikipedia.org/wiki/HSL_and_HSV.
+
+	Args:
+		rgb (Vec): The RGB vector.
+
+	Returns:
+		Vec: The HSV vector.
+	"""
+	r, g, b = rgb.as_tuple()
+	M = max([r, g, b])
+	m = min([r, g, b])
+	C = M - m
+	if C == 0:
+		H1 = 0
+	elif M == r:
+		H1 = ((g - b) / C) % 6
+	elif M == g:
+		H1 = ((b - r) / C) + 2
+	elif M == b:
+		H1 = ((r - g) / C) + 4
+	H = 60 * H1
+	V = M
+	S = 0 if V == 0 else C / V
+	return Vec.v3f(H, S * 100, V * 100)
+
+
 def convert_xml_to_structure(root_node: ET.Element,
                              struct_dim: int = 100) -> Structure:
     """Convert the XML-defined structure to a `Structure` object.
@@ -238,11 +266,12 @@ def convert_structure_to_xml(structure: Structure,
     def armour_blocks(block: Block) -> str:
         builder, xsi, block_type = block.block_type.split('_')
         pos = block.position.scale(v=1 / structure.grid_size).to_veci()
+        hsv = rgb_to_hsv(rgb=block.color)
         return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
 			<SubtypeName>{block_type}</SubtypeName>
 			<Min x = "{pos.x}" y="{pos.y}" z="{pos.z}" />
 			<BlockOrientation Forward="{orientations_str[orientation_from_vec(block.orientation_forward)]}" Up="{orientations_str[orientation_from_vec(block.orientation_up)]}" />
-			<ColorMaskHSV x="{block.color.x}" y="{block.color.y}" z="{block.color.z}" />
+			<ColorMaskHSV x="{hsv.x}" y="{hsv.y}" z="{hsv.z}" />
 		</MyObjectBuilder_CubeBlock>
 		"""
 

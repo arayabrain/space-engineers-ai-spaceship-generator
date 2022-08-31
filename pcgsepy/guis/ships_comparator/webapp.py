@@ -229,7 +229,7 @@ def get_content_plot(spaceship: CandidateSolution) -> go.Figure:
     fig.update_layout(
         scene=dict(
             xaxis_title='',
-            yaxis_title='',
+            yaxis_title='m',
             zaxis_title='',
             xaxis={
                 'tickmode': 'array',

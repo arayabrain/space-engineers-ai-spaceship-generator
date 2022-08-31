@@ -68,7 +68,7 @@ class Block:
         self.orientation_up = orientation_up.value
         self.position = position
         self.definition_id = block_definitions[self.block_type]['definition_id']
-        self.color = Vec.v3f(x=0.5, y=0.5, z=0.5)
+        self.color = Vec.v3f(x=0.45, y=0.45, z=0.45)  # default block color is #737373
     
     @cached_property
     def cube_size(self) -> float:

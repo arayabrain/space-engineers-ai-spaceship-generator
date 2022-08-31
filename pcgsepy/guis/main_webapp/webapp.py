@@ -896,6 +896,9 @@ def download_content(n):
             current_mapelites.hull_builder.apply_smoothing = True
             current_mapelites.hull_builder.add_external_hull(elite.content)
             current_mapelites.hull_builder.apply_smoothing = False
+            for block in elite.content._blocks.values():
+                if is_base_block(block_type=block.block_type):
+                    block.color = base_color
             zf.writestr('bp.sbc', convert_structure_to_xml(structure=elite.content, name=f'My Spaceship ({rngseed}) (exp{exp_n})'))
             content_properties = {
                 'string': elite.string,
@@ -1076,7 +1079,7 @@ def _get_elite_content(mapelites: MAPElites,
         fig.update_layout(
             scene=dict(
                 xaxis_title='',
-                yaxis_title='',
+                yaxis_title='m',
                 zaxis_title='',
                 xaxis={
                     # 'tickmode': 'array',
@@ -1690,7 +1693,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                     if is_base_block(block_type=block.block_type):
                         block.color = new_color
         curr_content = _get_elite_content(mapelites=current_mapelites,
-                                          bin_idx=selected_bins[-1],
+                                          bin_idx=_switch([selected_bins[-1]])[0],
                                           pop='feasible' if pop_name == 'Feasible' else 'infeasible')
     elif event_trig is None:
         curr_heatmap = _build_heatmap(mapelites=current_mapelites,
