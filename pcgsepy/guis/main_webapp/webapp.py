@@ -10,6 +10,9 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from zipfile import ZipFile
 
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    os.chdir(sys._MEIPASS)
+
 import dash
 import dash_bootstrap_components as dbc
 import dash_daq as daq
@@ -707,7 +710,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                         label='Spaceship base color',
                         labelPosition="bottom",
                         size=164,
-                        value=dict(rgb=dict(r=128, g=128, b=128, a=1)),
+                        value=dict(rgb=dict(r=115, g=115, b=115, a=1)),
                         theme={'dark': True,
                                'detail': '#080808',
                                'primary': '#222222',
