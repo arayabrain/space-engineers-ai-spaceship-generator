@@ -1,11 +1,8 @@
 import base64
-from cProfile import label
-from cmath import exp
 import json
 import logging
 import os
 import random
-import ssl
 import sys
 import time
 import uuid
@@ -17,7 +14,6 @@ import dash
 import dash_bootstrap_components as dbc
 import dash_daq as daq
 import numpy as np
-import plotly.express as px
 import plotly.graph_objects as go
 from dash import ALL, dcc, html
 from dash.dependencies import Input, Output, State
@@ -36,8 +32,9 @@ from pcgsepy.lsystem.solution import CandidateSolution
 from pcgsepy.mapelites.behaviors import (BehaviorCharacterization, avg_ma,
                                          mame, mami, symmetry)
 from pcgsepy.mapelites.bin import MAPBin
-from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, Emitter, GreedyEmitter,
-                                        HumanEmitter, HumanPrefMatrixEmitter,
+from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, Emitter,
+                                        GreedyEmitter, HumanEmitter,
+                                        HumanPrefMatrixEmitter,
                                         PreferenceBanditEmitter, RandomEmitter)
 from pcgsepy.mapelites.map import MAPElites, get_elite
 from pcgsepy.xml_conversion import convert_structure_to_xml
@@ -88,6 +85,7 @@ current_mapelites: Optional[MAPElites] = None
 step_progress: int = -1
 consent_ok: Optional[bool] = None
 user_study_mode: bool = True
+base_color: Vec = Vec.v3f(0.5, 0.5, 0.5)
 my_emitterslist: List[str] = ['mapelites_human.json',
                               'mapelites_random.json',
                               'mapelites_greedy.json',
@@ -878,6 +876,7 @@ def download_mapelites(n_clicks):
 def download_content(n):
     global selected_bins
     global current_mapelites
+    global base_color
     
     def write_archive(bytes_io):
         with ZipFile(bytes_io, mode="w") as zf:
@@ -898,7 +897,11 @@ def download_content(n):
             current_mapelites.hull_builder.add_external_hull(elite.content)
             current_mapelites.hull_builder.apply_smoothing = False
             zf.writestr('bp.sbc', convert_structure_to_xml(structure=elite.content, name=f'My Spaceship ({rngseed}) (exp{exp_n})'))
-            zf.writestr(f'spaceship_{rngseed}_exp{exp_n}', elite.string)
+            content_properties = {
+                'string': elite.string,
+                'base_color': base_color.as_dict()
+            }
+            zf.writestr(f'spaceship_{rngseed}_exp{exp_n}', json.dumps(content_properties))
     
     if selected_bins:
         logging.getLogger('webapp').info(f'Your selected spaceship will be downloaded shortly.')
@@ -1011,6 +1014,14 @@ def _build_heatmap(mapelites: MAPElites,
 
 
 def is_base_block(block_type: str) -> bool:
+    """Check if the block is a base block. Base blocks are non-functional, structural blocks.
+
+    Args:
+        block_type (str): The type of the block.
+
+    Returns:
+        bool: Whether the block is a base block.
+    """
     return block_type.endswith("Block") or block_type.endswith("Slope") or block_type.endswith("Corner") or block_type.endswith("CornerInv")
 
 
@@ -1366,6 +1377,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     global consent_ok
     global n_spaceships_inspected
     global time_elapsed
+    global base_color
     
     content_dl = None
     metrics_dl = None
@@ -1671,6 +1683,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     elif event_trig == 'color-picker':
         r, g, b = color['rgb']['r'], color['rgb']['g'], color['rgb']['b']
         new_color = Vec.v3f(r, g, b).scale(1 / 256)
+        base_color = new_color
         for (_, _), b in np.ndenumerate(current_mapelites.bins):
             for cs in b._feasible:
                 for block in cs.content._blocks.values():

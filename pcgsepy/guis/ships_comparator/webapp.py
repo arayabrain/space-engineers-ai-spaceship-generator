@@ -1,4 +1,5 @@
 import base64
+import json
 import os
 import random
 import sys
@@ -12,6 +13,7 @@ import plotly.graph_objects as go
 from dash import ALL, dcc, html
 from dash.dependencies import Input, Output, State
 from pcgsepy.common.api_call import block_definitions
+from pcgsepy.common.vecs import Vec
 from pcgsepy.evo.genops import expander
 from pcgsepy.guis.ships_comparator.modals_msgs import (rankings_assigned,
                                                        scores_different_error)
@@ -53,10 +55,11 @@ expander.initialize(rules=lsystem.hl_solver.parser.rules)
 
 hull_builder = HullBuilder(erosion_type='bin',
                            apply_erosion=True,
-                           apply_smoothing=True)
+                           apply_smoothing=False)
 
 emitters = ['Human', 'Random', 'Greedy', 'Contextual Bandit']
 progress = -1
+base_color = Vec.v3f(0.5, 0.5, 0.5)
 
 block_to_colour = {
     # colours from https://developer.mozilla.org/en-US/docs/Web/CSS/color_value
@@ -83,22 +86,16 @@ app = dash.Dash(__name__,
                 update_title=None)
 
 
-def _get_colour_mapping(block_types: List[str]) -> Dict[str, str]:
-    """Get the colour of a list of block types. Blocks with unspecified
-    colour are assigned bright red (`#ff0000`).
+def is_base_block(block_type: str) -> bool:
+    """Check if the block is a base block. Base blocks are non-functional, structural blocks.
 
     Args:
-        block_types (List[str]): The list of block types.
+        block_type (str): The type of the block.
 
     Returns:
-        Dict[str, str]: The map between block types and colours.
+        bool: Whether the block is a base block.
     """
-    colour_map = {}
-    for block_type in block_types:
-        c = block_to_colour.get(block_type, '#ff0000')
-        if block_type not in colour_map.keys():
-            colour_map[block_type] = c
-    return colour_map
+    return block_type.endswith("Block") or block_type.endswith("Slope") or block_type.endswith("Corner") or block_type.endswith("CornerInv")
 
 
 def get_content_div(content_n: int) -> html.Div:
@@ -162,7 +159,7 @@ def get_rankings_div() -> html.Div:
 
 
 def parse_contents(filename: str,
-                   contents: str) -> Tuple[int, int, str]:
+                   contents: str) -> Tuple[int, int, str, Vec]:
     """Parse the contents of the uploaded data.
 
     Args:
@@ -175,9 +172,10 @@ def parse_contents(filename: str,
     _, rngseed, exp_n = filename.split('_')
     rngseed = int(rngseed)
     exp_n = int(exp_n.replace('exp', ''))
-    _, content_string = contents.split(',')
-    cs_string = base64.b64decode(content_string).decode(encoding='utf-8')
-    return rngseed, exp_n, cs_string
+    _, cs_properties = contents.split(',')
+    cs_properties = json.loads(base64.b64decode(cs_properties).decode(encoding='utf-8'))
+    cs_string, base_color = cs_properties['string'], Vec.from_json(cs_properties['base_color'])
+    return rngseed, exp_n, cs_string, base_color
 
 
 def get_content_plot(spaceship: CandidateSolution) -> go.Figure:
@@ -196,55 +194,72 @@ def get_content_plot(spaceship: CandidateSolution) -> go.Figure:
     x, y, z = arr
     cs = [content[i, j, k] for i, j, k in zip(x, y, z)]
     ss = [spaceship.content._clean_label(list(block_definitions.keys())[v - 1]) for v in cs]
-    fig = px.scatter_3d(x=x,
+    custom_colors = []
+    for (i, j, k) in zip(x, y, z):
+        b = spaceship.content._blocks[(i * spaceship.content.grid_size, j * spaceship.content.grid_size, k * spaceship.content.grid_size)]
+        if is_base_block(block_type=b.block_type):
+            custom_colors.append(f'rgb{base_color.as_tuple()}')
+        else:
+            custom_colors.append(block_to_colour.get(spaceship.content._clean_label(b.block_type), '#ff0000'))
+    
+    fig = go.Figure()
+    
+    fig.add_scatter3d(x=x,
                         y=y,
                         z=z,
-                        color=ss,
-                        color_discrete_map=_get_colour_mapping(ss),
-                        labels={
-                            'x': '',
-                            'y': 'm',
-                            'z': '',
-                            'color': 'Block type'
-                        },
-                        title='',
-                        template='plotly_dark')
+                        mode='markers',
+                        marker=dict(size=4,
+                                    line=dict(width=3,
+                                            color='DarkSlateGrey'),
+                                    color=custom_colors),
+                        showlegend=False
+                        )
+    
+    fig.update_traces(
+        hoverinfo='text',
+        hovertext=ss
+    )
+    
+    ux, uy, uz = np.unique(x), np.unique(y), np.unique(z)
     ptg = .2
-    show_x = [v for i, v in enumerate(np.unique(x)) if i % (1 / ptg) == 0]
-    show_y = [v for i, v in enumerate(np.unique(y)) if i % (1 / ptg) == 0]
-    show_z = [v for i, v in enumerate(np.unique(z)) if i % (1 / ptg) == 0]
+    show_x = [v for i, v in enumerate(ux) if i % (1 / ptg) == 0]
+    show_y = [v for i, v in enumerate(uy) if i % (1 / ptg) == 0]
+    show_z = [v for i, v in enumerate(uz) if i % (1 / ptg) == 0]
+    
     fig.update_layout(
         scene=dict(
-            aspectmode='data',
+            xaxis_title='',
+            yaxis_title='',
+            zaxis_title='',
             xaxis={
                 'tickmode': 'array',
                 'tickvals': show_x,
                 'ticktext': [spaceship.content.grid_size * i for i in show_x],
             },
             yaxis={
-                'tickmode': 'array',
+                # 'tickmode': 'array',
                 'tickvals': show_y,
                 'ticktext': [spaceship.content.grid_size * i for i in show_y],
             },
             zaxis={
-                'tickmode': 'array',
+                # 'tickmode': 'array',
                 'tickvals': show_z,
                 'ticktext': [spaceship.content.grid_size * i for i in show_z],
             }
-        ),
-        scene_camera=dict(
-            up=dict(x=0, y=0, z=1),
-            center=dict(x=0, y=0, z=0),
-            eye=dict(x=2, y=2, z=2)
-            ),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        showlegend=False
+        )
     )
-    fig.update_traces(marker=dict(size=4,
-                                  line=dict(width=3,
-                                            color='DarkSlateGrey')),
-                      selector=dict(mode='markers'))
+    camera = dict(
+        up=dict(x=0, y=0, z=1),
+        center=dict(x=0, y=0, z=0),
+        eye=dict(x=2, y=2, z=2)
+        )
+    
+    fig.update_layout(scene=dict(aspectmode='data'),
+                      scene_camera=camera,
+                      template='plotly_dark',
+                      paper_bgcolor='rgba(0,0,0,0)',
+                      plot_bgcolor='rgba(0,0,0,0)',
+                      title='')
     return fig
 
 
@@ -429,6 +444,7 @@ def general_callback(list_of_contents: List[str],
                      spaceship_plot: List[go.Figure]) -> Tuple[List[go.Figure], str, str]:
     global rng_seed
     global progress
+    global base_color
 
     ctx = dash.callback_context
 
@@ -442,7 +458,8 @@ def general_callback(list_of_contents: List[str],
         progress = 0
         for child in children:
             progress += 100 / len(children)
-            rng_seed, exp_n, cs_string = child
+            rng_seed, exp_n, cs_string, cs_base_color = child
+            base_color = cs_base_color
             cs = CandidateSolution(string=cs_string)
             spaceship_plot[exp_n] = get_content_plot(spaceship=cs)
         progress = -1
