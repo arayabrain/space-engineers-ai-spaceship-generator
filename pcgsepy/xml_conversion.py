@@ -57,6 +57,24 @@ def rgb_to_hsv(rgb: Vec) -> Vec:
 	return Vec.v3f(H, S * 100, V * 100)
 
 
+def rescale_hsv(hsv: Vec) -> Vec:
+	"""Space Engineers HSV are not normalized in [0,1]:
+	* H: [0,1]
+	* S: [-0.8,0.2],
+	* V: [-0.45,0.55].
+
+	Args:
+		hsv (Vec): The HSV vector.
+
+	Returns:
+		Vec: The rescaled HSV vector.
+	"""
+	hsv.x = hsv.x / 360
+	hsv.y = (hsv.y / 100) - 0.8
+	hsv.z = (hsv.z / 100) - 0.45	
+	return hsv
+
+
 def convert_xml_to_structure(root_node: ET.Element,
                              struct_dim: int = 100) -> Structure:
     """Convert the XML-defined structure to a `Structure` object.
@@ -267,6 +285,7 @@ def convert_structure_to_xml(structure: Structure,
         builder, xsi, block_type = block.block_type.split('_')
         pos = block.position.scale(v=1 / structure.grid_size).to_veci()
         hsv = rgb_to_hsv(rgb=block.color)
+        hsv = rescale_hsv(hsv=hsv)
         return f"""<MyObjectBuilder_CubeBlock xsi:type="{builder}_{xsi}">
 			<SubtypeName>{block_type}</SubtypeName>
 			<Min x = "{pos.x}" y="{pos.y}" z="{pos.z}" />
