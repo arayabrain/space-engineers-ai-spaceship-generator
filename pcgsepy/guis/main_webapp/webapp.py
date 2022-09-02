@@ -260,7 +260,8 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     
     consent_dialog = dbc.Modal([
             dbc.ModalHeader(dbc.ModalTitle("Privacy policy"), close_button=False),
-            dbc.ModalBody(children=[dcc.Markdown(privacy_policy_body),
+            dbc.ModalBody(children=[dcc.Markdown(privacy_policy_body,
+                                                 link_target="_blank"),
                                     dcc.Markdown(privacy_policy_question,
                                                  style={'text-align': 'center'})
                                     ]),

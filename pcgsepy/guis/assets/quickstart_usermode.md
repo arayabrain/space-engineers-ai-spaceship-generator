@@ -11,4 +11,4 @@ You can reinitialize the population by clicking the corresponding button (beware
 
 You can also follow this video tutorial:
 
-[![Tutorial Video](https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg)](https://www.youtube.com/watch?v=dQw4w9WgXcQ "PCGSEPy webapp quickstart tutorial")
+[![Tutorial Video](https://img.youtube.com/vi/3Gu1bUekdfU/0.jpg)](https://youtu.be/3Gu1bUekdfU "PCGSEPy webapp quickstart tutorial")
