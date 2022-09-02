@@ -254,14 +254,15 @@ class HullBuilder:
                 loc = Vec.from_tuple((scale * i, scale * j, scale * k))
                 for direction in self._orientations:
                     ntt = self._next_to_target(loc=loc,
-                                                structure=structure,
-                                                direction=direction.value.scale(scale))
+                                               structure=structure,
+                                               direction=direction.value.scale(scale))
                     if ntt:
                         hull[i, j, k] = BlockValue.AIR_BLOCK
                         self._blocks_set.pop((i, j, k))
                         hull = self._remove_in_direction(loc=loc.scale(v=1 / structure.grid_size).to_veci(),
                                                             hull=hull,
                                                             direction=direction.value.opposite())
+                        break
         return hull
     
     def _remove_floating_blocks(self,
