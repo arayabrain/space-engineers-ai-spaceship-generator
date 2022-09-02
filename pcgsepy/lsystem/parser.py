@@ -66,8 +66,7 @@ class HLParser(LParser):
                 if n is not None:
                     rhs = rhs.replace('(Y)', f'({max(1, n - rhs_n)})')
             # apply expansion in string
-            string = string[:match.start + offset] + \
-                rhs + string[match.end + offset:]
+            string = string[:match.start + offset] + rhs + string[match.end + offset:]
             offset += len(rhs) - len(match.lhs_string)
 
         return string

@@ -1,8 +1,10 @@
 import math
 from random import choices, random, sample
+import re
 from typing import List, Tuple
 
 import numpy as np
+from pcgsepy.common.regex_handler import MyMatch, extract_regex
 from pcgsepy.config import (CROSSOVER_P, MUTATION_DECAY, MUTATION_INITIAL_P,
                             PL_HIGH, PL_LOW)
 from pcgsepy.lsystem.rules import StochasticRules
@@ -11,6 +13,9 @@ from pcgsepy.lsystem.solution import CandidateSolution, string_merging
 
 class EvoException(Exception):
     pass
+
+
+atoms_re = re.compile('corridor[a-z]*\(\d\)')
 
 
 def roulette_wheel_selection(pop: List[CandidateSolution],
@@ -41,6 +46,7 @@ def roulette_wheel_selection(pop: List[CandidateSolution],
 class SimplifiedExpander:
     def __init__(self):
         self.rules: StochasticRules = None
+        self.compiled_lhs = None
 
     def initialize(self,
                    rules: StochasticRules):
@@ -50,43 +56,7 @@ class SimplifiedExpander:
             rules (StochasticRules): The set of expansion rules.
         """
         self.rules = rules
-
-    def get_rhs(self,
-                string: str,
-                idx: int) -> str:
-        """Get the string produced by the rules for the given string.
-
-        Args:
-            string (str): The string.
-            idx (int): The index of the LHS of interest.
-
-        Returns:
-            str: The resulting RHS.
-        """
-        assert self.rules is not None, 'SimplifiedExpander has not been initialized'
-        for k in self.rules.lhs_alphabet:
-            if string[idx:].startswith(k):
-                offset = len(k)
-                lhs = k
-                n = None
-                # check if there are parameters
-                if idx + offset < len(string) and string[idx + offset] == '(':
-                    params = string[idx + offset:string.index(')', idx + offset + 1) + 1]
-                    offset += len(params)
-                    n = int(params.replace('(', '').replace(')', ''))
-                    lhs += '(x)'
-                    if idx + offset < len(string) and string[idx + offset] == ']':
-                        lhs += ']'
-                        offset += 1
-                rhs = self.rules.get_rhs(lhs=lhs)
-                if '(x)' in rhs or '(X)' in rhs or '(Y)' in rhs:
-                    # update rhs to include parameters
-                    rhs = rhs.replace('(x)', f'({n})')
-                    rhs_n = np.random.randint(PL_LOW, PL_HIGH)
-                    rhs = rhs.replace('(X)', f'({rhs_n})')
-                    if n is not None:
-                        rhs = rhs.replace('(Y)', f'({max(1, n - rhs_n)})')
-                return rhs, offset
+        self.compiled_lhs = [extract_regex(lhs) for lhs in rules.get_lhs()]
 
 
 # module-scoped uninitialized variable
@@ -94,14 +64,12 @@ expander = SimplifiedExpander()
 
 
 def mutate(cs: CandidateSolution,
-           n_iteration: int,
-           mutable_atom: str = 'corridorsimple') -> None:
+           n_iteration: int) -> None:
     """Apply mutation to the parameters of the solution string.
 
     Args:
         cs (CandidateSolution): The solution to mutate.
-        n_iteration (int): _desThe current iteration number (used to compute decayed mutation probability).
-        mutable_atom (str, optional): The atom that can mutate. Defaults to `'corridorsimple'`.
+        n_iteration (int): The current iteration number (used to compute decayed mutation probability).
 
     Raises:
         EvoException: Raised if no mutation can be applied to the candidate solution.
@@ -109,8 +77,6 @@ def mutate(cs: CandidateSolution,
     mutated = False
     for module in cs.hls_mod.keys():
         if cs.hls_mod[module]['mutable']:
-            idxs = get_atom_indexes(string=cs.hls_mod[module]['string'],
-                                    atom=mutable_atom)
             # TODO: for enforcing symmetry automatically, should check if the atom to expand
             # is within a bracketed along the symmetry axis. If it is, mutate and copy the mutation
             # on the "next" bracketed enclosure.
@@ -119,21 +85,41 @@ def mutate(cs: CandidateSolution,
             # ...[RotYccwZ corridorsimple corridorsimple][RotYcwZ corridorsimple corridorsimple]...
             # ->
             # ...[RotYccwZ [RotYcwX corridorsimple] corridorsimple][RotYcwZ [RotYcwX corridorsimple] corridorsimple]...
-            n = len(idxs)
-            if n > 0:
-                p = max(MUTATION_INITIAL_P /
-                        math.exp(n_iteration * MUTATION_DECAY), 0)
-                to_mutate = int(p * n)
-                for_mutation = sample(population=idxs,
+            # get all matches with regex
+            matches: List[MyMatch] = []
+            for r, rule in zip(expander.compiled_lhs, expander.rules.get_lhs()):
+                matches.extend([MyMatch(lhs=rule,
+                                        span=match.span(),
+                                        lhs_string=match.group()) for match in r.finditer(string=cs.hls_mod[module]['string'])])
+            # sort matches in-place
+            matches.sort()
+            if matches:
+                # filter out matches
+                filtered_matches = [matches[0]]
+                for match in matches:
+                    if match.start != filtered_matches[-1].start:
+                        filtered_matches.append(match)
+                p = max(MUTATION_INITIAL_P / math.exp(n_iteration * MUTATION_DECAY), 0)
+                to_mutate = int(p * len(filtered_matches))
+                for_mutation = sample(population=filtered_matches,
                                       k=to_mutate)
-                for_mutation = sorted(for_mutation,
-                                      key=lambda x: x[0],
-                                      reverse=True)
-                for idx in for_mutation:
-                    rhs, offset = expander.get_rhs(string=cs.hls_mod[module]['string'],
-                                                   idx=idx[0])
-                    d = offset - (idx[1] + 1 - idx[0])
-                    cs.hls_mod[module]['string'] = f"{cs.hls_mod[module]['string'][:idx[0]]}{rhs}{cs.hls_mod[module]['string'][idx[1] + 1 + d:]}"
+                for_mutation = sorted(for_mutation)
+                offset = 0
+                for match in for_mutation:
+                    rhs = expander.rules.get_rhs(lhs=match.lhs)
+                    # update numerical parameters
+                    if '(x)' in rhs or '(X)' in rhs or '(Y)' in rhs:
+                        n = [m for m in re.compile(r'\d').finditer(match.lhs_string)]
+                        n = int(n[0].group()) if n else None
+                        # update rhs to include parameters
+                        rhs = rhs.replace('(x)', f'({n})')
+                        rhs_n = np.random.randint(PL_LOW, PL_HIGH)
+                        rhs = rhs.replace('(X)', f'({rhs_n})')
+                        if n is not None:
+                            rhs = rhs.replace('(Y)', f'({max(1, n - rhs_n)})')
+                    # apply expansion in string
+                    cs.hls_mod[module]['string'] = cs.hls_mod[module]['string'][:match.start + offset] + rhs + cs.hls_mod[module]['string'][match.end + offset:]
+                    offset += len(rhs) - len(match.lhs_string)
                     mutated |= True
     if not mutated:
         raise EvoException(f'No mutation could be applied to {cs.string}.')
@@ -166,11 +152,9 @@ def crossover(a1: CandidateSolution,
             idxs1 = get_matching_brackets(string=string1)
             idxs2 = get_matching_brackets(string=string2)
             if not idxs1:
-                idxs1 = get_atom_indexes(string=string1,
-                                         atom='corridor')
+                idxs1 = [match.span() for match in atoms_re.finditer(string=string1)]
             if not idxs2:
-                idxs2 = get_atom_indexes(string=string2,
-                                         atom='corridor')
+                idxs2 = [match.span() for match in atoms_re.finditer(string=string2)]
             if len(idxs1) == 0 or len(idxs2) == 0:
                 pass
             else:
@@ -221,23 +205,3 @@ def get_matching_brackets(string: str) -> List[Tuple[int, int]]:
             # add to list of brackets
             brackets.append((i, idx_c))
     return brackets
-
-
-def get_atom_indexes(string: str,
-                     atom: str) -> List[Tuple[int, int]]:
-    """Get the indexes of the positions of the given atom in the string.
-
-    Args:
-        string (str): The string.
-        atom (str): The atom.
-
-    Returns:
-        List[Tuple[int, int]]: The list of pair indexes.
-    """
-    indexes = []
-    for i, _ in enumerate(string):
-        if string[i:].startswith(atom):
-            cb = string.find(')', i + len(atom))
-            indexes.append((i, cb))
-            i = cb
-    return indexes
