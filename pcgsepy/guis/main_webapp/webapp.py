@@ -30,6 +30,7 @@ from pcgsepy.guis.main_webapp.modals_msgs import (end_of_experiment,
                                                   no_selection_error,
                                                   privacy_policy_body,
                                                   privacy_policy_question)
+from pcgsepy.hullbuilder import HullBuilder
 from pcgsepy.lsystem.rules import StochasticRules
 from pcgsepy.lsystem.solution import CandidateSolution
 from pcgsepy.mapelites.behaviors import (BehaviorCharacterization, avg_ma,
@@ -897,9 +898,10 @@ def download_content(n):
             # reset content to add smoothed-out hull
             elite._content = None
             current_mapelites.lsystem._set_structure(cs=elite)
-            current_mapelites.hull_builder.apply_smoothing = True
-            current_mapelites.hull_builder.add_external_hull(elite.content)
-            current_mapelites.hull_builder.apply_smoothing = False
+            hullbuilder = HullBuilder(erosion_type=current_mapelites.hull_builder.erosion_type,
+                                      apply_erosion=True,
+                                      apply_smoothing=True)
+            hullbuilder.add_external_hull(elite.content)
             for block in elite.content._blocks.values():
                 if is_base_block(block_type=block.block_type):
                     block.color = base_color

@@ -691,7 +691,7 @@ class HullBuilder:
         
         # remove all blocks that obstruct target block type
         hull = self._remove_obstructing_blocks(hull=hull,
-                                               structure=structure)
+                                            structure=structure)
         
         # remove "floating" blocks
         # i.e.: blocks not connected to the spaceship
