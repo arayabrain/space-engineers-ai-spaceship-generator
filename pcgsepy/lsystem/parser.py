@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 
 import numpy as np
+from pcgsepy.common.regex_handler import MyMatch, extract_regex
 from pcgsepy.config import PL_HIGH, PL_LOW
 from pcgsepy.lsystem.actions import Rotations
 from pcgsepy.lsystem.rules import StochasticRules
@@ -17,6 +18,7 @@ class LParser(ABC):
             rules (StochasticRules): The set of expansion rules.
         """
         self.rules = rules
+        self.compiled_lhs = [extract_regex(lhs) for lhs in rules.get_lhs()]
 
     @abstractmethod
     def expand(self,
@@ -35,36 +37,39 @@ class LParser(ABC):
 class HLParser(LParser):
     def expand(self,
                string: str) -> str:
-        i = 0
-        while i < len(string):
-            offset = 0
-            for k in self.rules.lhs_alphabet:
-                if string[i:].startswith(k):
-                    offset += len(k)
-                    lhs = k
-                    n = None
-                    # check if there are parameters
-                    if i + offset < len(string) and string[i + offset] == '(':
-                        params = string[i + offset:
-                                        string.index(')', i + offset + 1) + 1]
-                        offset += len(params)
-                        n = int(params.replace('(', '').replace(')', ''))
-                        lhs += '(x)'
-                        if i + offset < len(string) and string[i + offset] == ']':
-                            lhs += ']'
-                            offset += 1
-                    rhs = self.rules.get_rhs(lhs=lhs)
-                    if '(x)' in rhs or '(X)' in rhs or '(Y)' in rhs:
-                        # update rhs to include parameters
-                        rhs = rhs.replace('(x)', f'({n})')
-                        rhs_n = np.random.randint(PL_LOW, PL_HIGH)
-                        rhs = rhs.replace('(X)', f'({rhs_n})')
-                        if n is not None:
-                            rhs = rhs.replace('(Y)', f'({max(1, n - rhs_n)})')
-                    string = string[:i] + rhs + string[i + offset:]
-                    i += len(rhs) - 1
-                    break
-            i += 1
+
+        # get all matches with regex
+        matches: List[MyMatch] = []
+        for r, rule in zip(self.compiled_lhs, self.rules.get_lhs()):
+            matches.extend([MyMatch(lhs=rule,
+                                    span=match.span(),
+                                    lhs_string=match.group()) for match in r.finditer(string=string)])
+        # sort matches in-place
+        matches.sort()
+        # filter out matches
+        filtered_matches = [matches[0]]
+        for match in matches:
+            if match.start != filtered_matches[-1].start:
+                filtered_matches.append(match)
+        # expand using filtered_matches
+        offset = 0
+        for match in filtered_matches:
+            rhs = self.rules.get_rhs(lhs=match.lhs)
+            # update numerical parameters
+            if '(x)' in rhs or '(X)' in rhs or '(Y)' in rhs:
+                n = [m for m in re.compile(r'\d').finditer(match.lhs_string)]
+                n = int(n[0].group()) if n else None
+                # update rhs to include parameters
+                rhs = rhs.replace('(x)', f'({n})')
+                rhs_n = np.random.randint(PL_LOW, PL_HIGH)
+                rhs = rhs.replace('(X)', f'({rhs_n})')
+                if n is not None:
+                    rhs = rhs.replace('(Y)', f'({max(1, n - rhs_n)})')
+            # apply expansion in string
+            string = string[:match.start + offset] + \
+                rhs + string[match.end + offset:]
+            offset += len(rhs) - len(match.lhs_string)
+
         return string
 
 
