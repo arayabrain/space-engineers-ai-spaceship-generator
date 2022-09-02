@@ -264,6 +264,52 @@ class HullBuilder:
                                                             direction=direction.value.opposite())
         return hull
     
+    def _remove_floating_blocks(self,
+                                hull: npt.NDArray[np.float32],
+                                structure: Structure,
+                                pivot_blocktype: str = 'MyObjectBuilder_Cockpit_OpenCockpitLarge') -> npt.NDArray[np.float32]:
+        """Remove floating blocks from the hull. Floating blocks are blocks not connected to the spaceship.
+        These may appear when removing obstructing blocks.
+
+        Args:
+            hull (npt.NDArray[np.float32]): The hull array.
+            structure (Structure): The structure.
+            pivot_blocktype (str): The pivot block type. Defaults to 'MyObjectBuilder_Cockpit_OpenCockpitLarge'.
+
+        Returns:
+            npt.NDArray[np.float32]: The modified hull array.
+        """
+        structure_arr = structure.as_grid_array
+        structure_shape = Vec.from_tuple(structure_arr.shape)
+        # mask of all blocks
+        mask = np.zeros_like(structure_arr, dtype=np.uint8)
+        mask[np.nonzero(hull)] = BlockValue.BASE_BLOCK
+        mask[np.nonzero(structure_arr)] = BlockValue.BASE_BLOCK
+        # pivot position defines the region to keep
+        pivot_position = [x for x in structure._blocks.values() if x.block_type == pivot_blocktype][0].position
+        pivot_idx = pivot_position.scale(1 / structure.grid_size).to_veci().as_tuple()
+        # get the region to keep defined by blocks connected to pivot position
+        connected_blocks = set()
+        to_check = [pivot_idx]
+        while to_check:
+            to_add = set()
+            for block_position in to_check:
+                if mask[block_position] == BlockValue.BASE_BLOCK:
+                    connected_blocks.add(block_position)
+                    for direction in self._orientations:
+                        dpos = Vec.from_tuple(block_position).sum(direction.value)
+                        if 0 <= dpos.x < structure_shape.x and 0 <= dpos.y < structure_shape.y and 0 <= dpos.z < structure_shape.z:
+                            to_add.add(dpos.as_tuple())
+            to_add = to_add.difference(to_add.intersection(connected_blocks))
+            to_check = list(to_add)
+        # disconnected blocks are the difference between all blocks and blocks connected to pivot block
+        disconnected_blocks = set(self._blocks_set.keys()) - connected_blocks
+        # remove disconnected blocks
+        for block_idx in disconnected_blocks:
+            hull[block_idx] = BlockValue.AIR_BLOCK
+            self._blocks_set.pop(block_idx)
+        return hull
+    
     def _get_outer_indices(self,
                            arr: npt.NDArray[np.float32],
                            edges_only: bool = False,
@@ -645,6 +691,11 @@ class HullBuilder:
         # remove all blocks that obstruct target block type
         hull = self._remove_obstructing_blocks(hull=hull,
                                                structure=structure)
+        
+        # remove "floating" blocks
+        # i.e.: blocks not connected to the spaceship
+        hull = self._remove_floating_blocks(hull=hull,
+                                            structure=structure)
 
         # apply iterative smoothing algorithm
         if self.apply_smoothing:
