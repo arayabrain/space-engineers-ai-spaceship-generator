@@ -94,6 +94,7 @@ my_emitterslist: List[str] = ['mapelites_human.json',
                               'mapelites_random.json',
                               'mapelites_greedy.json',
                               'mapelites_contbandit.json']
+running_something = False
 
 
 def resource_path(relative_path):
@@ -1387,6 +1388,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     global n_spaceships_inspected
     global time_elapsed
     global base_color
+    global running_something
     
     content_dl = None
     metrics_dl = None
@@ -1403,36 +1405,39 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     if event_trig == 'step-btn' or event_trig == 'rand-step-btn':
         if len(selected_bins) > 0 or event_trig == 'rand-step-btn':
             s = time.perf_counter()
-            res = _apply_step(mapelites=current_mapelites,
-                              selected_bins=[(x[1], x[0]) for x in selected_bins],
-                              gen_counter=gen_counter,
-                              only_human=event_trig == 'step-btn' and not user_study_mode and not gdev_mode,
-                              only_emitter=event_trig == 'rand-step-btn' and not user_study_mode and not gdev_mode)
-            if res:
-                elapsed = time.perf_counter() - s
-                gen_counter += 1
-                curr_heatmap = _build_heatmap(mapelites=current_mapelites,
-                                            pop_name=pop_name,
-                                            metric_name=metric_name,
-                                            method_name=method_name)
-                # update metrics if user consented to privacy
-                if consent_ok:
-                    n_spaceships_inspected.add(1)
-                    time_elapsed.add(elapsed)
-                if len(selected_bins) > 0:
-                # remove preview and properties if last selected bin is now invalid
-                    lb = selected_bins[-1]
-                    lb = (lb[1], lb[0])
-                    if lb not in [b.bin_idx for b in current_mapelites._valid_bins()]:
-                        curr_content = _get_elite_content(mapelites=current_mapelites,
-                                                        bin_idx=None,
-                                                        pop=[])
-                        cs_string = ''
-                        cs_properties = get_properties_table()
-        
-                # prompt user to download content if reached end of generations
-                if user_study_mode and gen_counter == N_GENS_ALLOWED:
-                    eoe_modal_show = True
+            if not running_something:
+                running_something = True
+                res = _apply_step(mapelites=current_mapelites,
+                                selected_bins=[(x[1], x[0]) for x in selected_bins],
+                                gen_counter=gen_counter,
+                                only_human=event_trig == 'step-btn' and not user_study_mode and not gdev_mode,
+                                only_emitter=event_trig == 'rand-step-btn' and not user_study_mode and not gdev_mode)
+                if res:
+                    elapsed = time.perf_counter() - s
+                    gen_counter += 1
+                    curr_heatmap = _build_heatmap(mapelites=current_mapelites,
+                                                pop_name=pop_name,
+                                                metric_name=metric_name,
+                                                method_name=method_name)
+                    # update metrics if user consented to privacy
+                    if consent_ok:
+                        n_spaceships_inspected.add(1)
+                        time_elapsed.add(elapsed)
+                    if len(selected_bins) > 0:
+                    # remove preview and properties if last selected bin is now invalid
+                        lb = selected_bins[-1]
+                        lb = (lb[1], lb[0])
+                        if lb not in [b.bin_idx for b in current_mapelites._valid_bins()]:
+                            curr_content = _get_elite_content(mapelites=current_mapelites,
+                                                            bin_idx=None,
+                                                            pop=[])
+                            cs_string = ''
+                            cs_properties = get_properties_table()
+            
+                    # prompt user to download content if reached end of generations
+                    if user_study_mode and gen_counter == N_GENS_ALLOWED:
+                        eoe_modal_show = True
+                running_something = False
         else:
             logging.getLogger('webapp').info(msg=f'Step not applied: no bin(s) selected.')
             nbs_err_modal_show = True
