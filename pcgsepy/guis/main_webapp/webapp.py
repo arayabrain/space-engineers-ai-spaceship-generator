@@ -710,7 +710,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     color_picker = html.Div(children=[
         daq.ColorPicker(id='color-picker',
                         label='Spaceship base color',
-                        labelPosition="bottom",
+                        labelPosition="top",
                         size=164,
                         value=dict(rgb=dict(r=115, g=115, b=115, a=1)),
                         theme={'dark': True,

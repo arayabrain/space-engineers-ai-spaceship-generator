@@ -60,6 +60,7 @@ hull_builder = HullBuilder(erosion_type='bin',
 emitters = ['Human', 'Random', 'Greedy', 'Contextual Bandit']
 progress = -1
 base_color = Vec.v3f(0.5, 0.5, 0.5)
+rng_seed = None
 
 block_to_colour = {
     # colours from https://developer.mozilla.org/en-US/docs/Web/CSS/color_value
@@ -342,7 +343,7 @@ def set_app_layout():
         dbc.Col(children=[dbc.Button(children='Save',
                                      id='save-btn',
                                      n_clicks=0,
-                                     disabled=False,
+                                     disabled=True,
                                      color="primary",
                                      size="lg",
                                      className="me-1"),
@@ -433,6 +434,7 @@ def download_scores(n_clicks: int,
     Output({'type': 'spaceship-content', 'index': ALL}, 'figure'),
     Output('upload-data', 'contents'),
     Output('upload-data', 'filename'),
+    Output('save-btn', 'disabled'),
 
     Input('upload-data', 'contents'),
 
@@ -445,6 +447,8 @@ def general_callback(list_of_contents: List[str],
     global rng_seed
     global progress
     global base_color
+    
+    savebtn_disabled = True
 
     ctx = dash.callback_context
 
@@ -463,5 +467,6 @@ def general_callback(list_of_contents: List[str],
             cs = CandidateSolution(string=cs_string)
             spaceship_plot[exp_n] = get_content_plot(spaceship=cs)
         progress = -1
+        savebtn_disabled = False
 
-    return spaceship_plot, '', ''
+    return spaceship_plot, '', '', savebtn_disabled
