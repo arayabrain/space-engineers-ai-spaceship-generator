@@ -62,7 +62,7 @@ dashLoggerHandler = DashLoggerHandler()
 logger.addHandler(dashLoggerHandler)
 
 
-hm_callback_props = {}
+base_color: Vec = Vec.v3f(0.45, 0.45, 0.45)
 block_to_colour = {
     # colours from https://developer.mozilla.org/en-US/docs/Web/CSS/color_value
     'LargeBlockArmorCorner': '#778899',
@@ -79,22 +79,23 @@ block_to_colour = {
     'Window1x1Flat': '#fffff0',
     'LargeBlockLight_1corner': '#fffaf0'
 }
-use_custom_colors = True
-gdev_mode: bool = False
-gen_counter: int = 0
-selected_bins: List[Tuple[int, int]] = []
-exp_n: int = 0
-rngseed: int = 42
-current_mapelites: Optional[MAPElites] = None
-step_progress: int = -1
 consent_ok: Optional[bool] = None
-user_study_mode: bool = True
-base_color: Vec = Vec.v3f(0.5, 0.5, 0.5)
+current_mapelites: Optional[MAPElites] = None
+exp_n: int = 0
+gen_counter: int = 0
+gdev_mode: bool = False
+hidden_style = {'visibility': 'hidden', 'height': '0px'}
+hm_callback_props = {}
 my_emitterslist: List[str] = ['mapelites_human.json',
                               'mapelites_random.json',
                               'mapelites_greedy.json',
                               'mapelites_contbandit.json']
+rngseed: int = 42
 running_something = False
+selected_bins: List[Tuple[int, int]] = []
+step_progress: int = -1
+use_custom_colors = True
+user_study_mode: bool = True
 
 
 def resource_path(relative_path):
@@ -404,7 +405,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                              striped=False,
                              animated=False)],
                      id='exp-progress-div',
-                     style={'visibility': 'hidden', 'height': '0px'} if gdev_mode else {})
+                     style=hidden_style if gdev_mode else {})
         ])
     
     mapelites_heatmap = html.Div(children=[
@@ -445,7 +446,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                         ],
                         value='Population')
             ],
-        style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {})
+        style=hidden_style if not gdev_mode else {})
     
     content_plot = html.Div(children=[
         dcc.Graph(id="content-plot",
@@ -474,7 +475,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                              disabled=True,
                              class_name='content-string-area')
             ],
-                     style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {}),
+                     style=hidden_style if not gdev_mode else {}),
             html.Div(children=[
                 dbc.Row(
                     dbc.Col(children=[dbc.Button('Download content',
@@ -518,7 +519,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                              id='b1-dropdown')
                 ],
                            className="mb-3",
-                           style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {}),
+                           style=hidden_style if not gdev_mode else {}),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Toggle L-system modules:'),
                 dbc.Checklist(id='lsystem-modules',
@@ -527,7 +528,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                               inline=True,
                               switch=True)
                 ],
-                           style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {},
+                           style=hidden_style if not gdev_mode else {},
                            className="mb-3"),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Fitness weights:'),
@@ -565,7 +566,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                              id='emitter-dropdown')
                 ],
                            className="mb-3",
-                           style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {}),
+                           style=hidden_style if not gdev_mode else {}),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Enforce symmetry:'),
                 dbc.DropdownMenu(label='None',
@@ -576,7 +577,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                                  dbc.DropdownMenuItem('Z-axis', id='symmetry-z'),
                              ],
                              id='symmetry-dropdown',
-                             style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {}),
+                             style=hidden_style if not gdev_mode else {}),
                 dbc.RadioItems(id='symmetry-radio',
                         options=[
                             {'label': 'Upper', 'value': 'Upper'},
@@ -584,7 +585,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                         ],
                         value='Upper')
                 ],
-                           style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {},
+                           style=hidden_style if not gdev_mode else {},
                            className="mb-3"),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Save/load population:'),
@@ -597,9 +598,9 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                     ),
                 ],
                            className="mb-3",
-                           style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {})
+                           style=hidden_style if not gdev_mode else {})
             ],
-        style={'visibility': 'hidden', 'height': '0px'} if user_study_mode else {})
+        style=hidden_style if user_study_mode else {})
     
     experiment_controls = html.Div(
         children=[
@@ -619,7 +620,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                            className='button-fullsize')
                 ],
                     id='rand-step-btn-div',
-                    style={'visibility': 'hidden', 'height': '0px'} if user_study_mode or gdev_mode else {},
+                    style=hidden_style if user_study_mode or gdev_mode else {},
                     width={'size': 4, 'offset':4})),
             html.Br(),
             dbc.Row(dbc.Col(children=[
@@ -627,7 +628,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                        children='Clear selection',
                            className='button-fullsize')
                 ],
-                    style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {},
+                    style=hidden_style if not gdev_mode else {},
                     width={'size': 4, 'offset':4})),
             html.Br(),
             dbc.Row(dbc.Col(children=[
@@ -635,7 +636,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                        children='Toggle single bin selection',
                            className='button-fullsize')
                 ],
-                    style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {},
+                    style=hidden_style if not gdev_mode else {},
                     width={'size': 4, 'offset':4})),
             html.Br(),
             dbc.Row(dbc.Col(children=[
@@ -644,7 +645,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                            className='button-fullsize')
                 ],
                     id='reset-btn-div',
-                    style={'visibility': 'hidden', 'height': '0px'} if user_study_mode else {},
+                    style=hidden_style if user_study_mode else {},
                     width={'size': 4, 'offset':4})),
             html.Br(),
             dbc.Row(dbc.Col(children=[
@@ -652,7 +653,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                        children='Subdivide selected bin(s)',
                            className='button-fullsize')
                 ],
-                    style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {},
+                    style=hidden_style if not gdev_mode else {},
                     width={'size': 4, 'offset':4})),
             html.Br(),
             dbc.Row(dbc.Col(children=[
@@ -661,7 +662,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                            className='button-fullsize'),
                 dcc.Download(id='download-mapelites')
                 ],
-                    style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {},
+                    style=hidden_style if not gdev_mode else {},
                     width={'size': 4, 'offset':4})),
         ])
     
@@ -679,7 +680,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                         width={'size': 4, 'offset':4}),
                 align='center')
             ],
-        style={'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {})
+        style=hidden_style if not gdev_mode else {})
     
     progress = html.Div(
         children=[
@@ -713,7 +714,10 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                         label='Spaceship base color',
                         labelPosition="top",
                         size=164,
-                        value=dict(rgb=dict(r=115, g=115, b=115, a=1)),
+                        value=dict(rgb=dict(r=int(base_color[0] * 256),
+                                            g=int(base_color[1] * 256),
+                                            b=int(base_color[2] * 256),
+                                            a=1)),
                         theme={'dark': True,
                                'detail': '#080808',
                                'primary': '#222222',
@@ -753,7 +757,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
             
             html.Div(id='hidden-div',
                      children=[],
-                     style={'visibility': 'hidden', 'height': '0px'})
+                     style=hidden_style)
             ],
         fluid=True)
 
@@ -844,20 +848,6 @@ def update_gen_progress(n):
 def update_exp_progress(n):
     val = np.round(100 * ((1 + exp_n) / len(my_emitterslist)), 2)
     return val, f"{exp_n + 1} / {len(my_emitterslist)}"
-
-
-def _from_bc_to_idx(bcs: Tuple[float, float],
-                    mapelites: MAPElites) -> Tuple[int, int]:
-    b0, b1 = bcs
-    i = np.digitize([b0],
-                    np.cumsum([0] + mapelites.bin_sizes[0]
-                              [:-1]) + mapelites.b_descs[0].bounds[0],
-                    right=False)[0] - 1
-    j = np.digitize([b1],
-                    np.cumsum([0] + mapelites.bin_sizes[1]
-                              [:-1]) + mapelites.b_descs[1].bounds[0],
-                    right=False)[0] - 1
-    return (i, j)
 
 
 @app.callback(
@@ -1443,17 +1433,20 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
             nbs_err_modal_show = True
             
     elif event_trig == 'reset-btn':
-        res = _apply_reset(mapelites=current_mapelites)
-        if res:
-            gen_counter = 0
-            curr_heatmap = _build_heatmap(mapelites=current_mapelites,
-                                          pop_name=pop_name,
-                                          metric_name=metric_name,
-                                          method_name=method_name)
-            
-            if consent_ok:
-                n_spaceships_inspected.reset()
-                time_elapsed.reset()
+        if not running_something:
+            running_something = True
+            res = _apply_reset(mapelites=current_mapelites)
+            if res:
+                gen_counter = 0
+                curr_heatmap = _build_heatmap(mapelites=current_mapelites,
+                                            pop_name=pop_name,
+                                            metric_name=metric_name,
+                                            method_name=method_name)
+                
+                if consent_ok:
+                    n_spaceships_inspected.reset()
+                    time_elapsed.reset()
+        running_something = False
     elif event_trig in ['bc0-Major-axis_Medium-axis', 'bc0-Major-axis_Smallest-axis', 'bc0-Average-Proportions', 'bc0-Symmetry']:
         b0 = event_trig.replace('bc0-', '').replace('_', ' / ').replace('-', ' ')
         res = _apply_bc_change(bcs=(b0, b1),
@@ -1530,9 +1523,12 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         cs_properties = get_properties_table()
         logging.getLogger('webapp').info(msg=f'Symmetry enforcement completed.')
     elif event_trig == 'heatmap-plot' or event_trig == 'population_dropdown':
-        i, j = _from_bc_to_idx(bcs=(clickData['points'][0]['x'],
-                                    clickData['points'][0]['y']),
-                               mapelites=current_mapelites)
+        i = np.digitize([clickData['points'][0]['x']],
+                        np.cumsum([0] + current_mapelites.bin_sizes[0][:-1]) + current_mapelites.b_descs[0].bounds[0],
+                        right=False)[0] - 1
+        j = np.digitize([clickData['points'][0]['y']],
+                        np.cumsum([0] + current_mapelites.bin_sizes[1][:-1]) + current_mapelites.b_descs[1].bounds[0],
+                        right=False)[0] - 1
         if current_mapelites.bins[j, i].non_empty(pop='feasible' if pop_name == 'Feasible' else 'infeasible'):
             if (j, i) in [b.bin_idx for b in current_mapelites._valid_bins()]:
                 curr_content = _get_elite_content(mapelites=current_mapelites,
@@ -1610,7 +1606,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                     current_mapelites.reset()
                     current_mapelites.hull_builder.apply_smoothing = False
                     current_mapelites.emitter = RandomEmitter()
-                    rand_step_btn_style, reset_btn_style, exp_progress_style = {}, {}, {'visibility': 'hidden', 'height': '0px'}
+                    rand_step_btn_style, reset_btn_style, exp_progress_style = {}, {}, hidden_style
                     curr_heatmap = _build_heatmap(mapelites=current_mapelites,
                                                   pop_name='Feasible',
                                                   metric_name='Fitness',
@@ -1685,7 +1681,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
             logging.getLogger('webapp').info(msg='Initialization completed.')
             user_study_mode = False
             qs_um_modal_show = True
-            rand_step_btn_style, reset_btn_style, exp_progress_style = {}, {}, {'visibility': 'hidden', 'height': '0px'}
+            rand_step_btn_style, reset_btn_style, exp_progress_style = {}, {}, hidden_style
         privacy_modal_show = False
         gen_counter = 0
         curr_heatmap = _build_heatmap(mapelites=current_mapelites,
