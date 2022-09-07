@@ -333,9 +333,11 @@ class HullBuilder:
                     if self._blocks_set.get(pos, None):
                         n_neighbours[idx] = n_neighbours[idx] + 1
         if corners_only:
-            return np.nonzero(np.where(n_neighbours <= 2, n_neighbours, 0))
+            return np.nonzero(np.where(n_neighbours < 2, n_neighbours, 0))
         elif edges_only:
-            return np.nonzero(np.where(n_neighbours <= 3, n_neighbours, 0))
+            ci, cj, ck = np.nonzero(np.where(n_neighbours < 2, n_neighbours, 0))
+            ei, ej, ek = np.nonzero(np.where(n_neighbours <= 3, n_neighbours, 0))
+            return np.append(ci, ei), np.append(cj, ej), np.append(ck, ek)
         else:
             return np.nonzero(n_neighbours)
     
@@ -700,7 +702,12 @@ class HullBuilder:
 
         # apply iterative smoothing algorithm
         if self.apply_smoothing:
-            idxs = self._get_outer_indices(arr=hull, edges_only=True)
+            my_arr = np.ones_like(hull) * BlockValue.AIR_BLOCK
+            my_arr[np.nonzero(structure.as_grid_array)] = BlockValue.BASE_BLOCK
+            my_arr[np.nonzero(hull)] = BlockValue.BASE_BLOCK
+            within_arr = binary_erosion(my_arr)
+            my_arr[np.where(within_arr == BlockValue.AIR_BLOCK)] = BlockValue.AIR_BLOCK
+            idxs = self._get_outer_indices(arr=my_arr, edges_only=True)
             ii, jj, kk = idxs
             curr_checking = [(i, j, k) for (i, j, k) in zip(ii, jj, kk)]
             while len(curr_checking) != 0:
