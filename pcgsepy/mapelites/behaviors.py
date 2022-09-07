@@ -1,6 +1,6 @@
 from typing import Any, Dict, Tuple
+import numpy as np
 
-from pcgsepy.common.vecs import Vec
 from pcgsepy.lsystem.solution import CandidateSolution
 
 
@@ -77,7 +77,6 @@ def avg_ma(cs: CandidateSolution) -> float:
     return ((largest_axis / medium_axis) + (largest_axis / smallest_axis)) / 2
 
 
-# TODO: This function should be optimized if possible.
 def symmetry(cs: CandidateSolution):
     """Symmetry of the solution, expressed in `[0,1]`.
 
@@ -88,53 +87,28 @@ def symmetry(cs: CandidateSolution):
         _type_: The value of this behavior characterization.
     """
     structure = cs.content
-    blocks = structure._blocks.values()
-    bts, bps = [], []
-    center_pos = Vec.v3i(0, 0, 0)
-    for i, block in enumerate(blocks):
-        bts.append(block.block_type)
-        bps.append(Vec.v3i(x=int(block.position.x / structure.grid_size),
-                           y=int(block.position.y / structure.grid_size),
-                           z=int(block.position.z / structure.grid_size)))
-        if block.block_type == 'MyObjectBuilder_Cockpit_OpenCockpitLarge':
-            center_pos = bps[-1]
-    center_pos.x -= 1
-    diff = Vec.v3i(x=-center_pos.x,
-                   y=0,
-                   z=-center_pos.z)
-    for i in range(len(bps)):
-        bps[i] = bps[i].sum(diff)
-    err_x, err_z = 0, 0
-    excl_x, excl_z = 0, 0
-    for i, pos in enumerate(bps):
-        # error along x
-        if pos.x != 0:
-            mirr = pos.sum(Vec.v3i(x=2 * (-pos.x),
-                                   y=0,
-                                   z=0))
-            try:
-                other = bps.index(mirr)
-                err_x += 1 if bts[i] != bts[other] else 0
-            except ValueError:
-                err_x += 1
-        else:
-            excl_x += 1
-        # error along z
-        if pos.z != 0:
-            mirr = pos.sum(Vec.v3i(x=0,
-                                   y=0,
-                                   z=2*(-pos.z)))
-            try:
-                other = bps.index(mirr)
-                err_z += 1 if bts[i] != bts[other] else 0
-            except ValueError:
-                err_z += 1
-        else:
-            excl_z += 1
-
-    symm_x = 1 - ((err_x / 2) / (len(bps) - excl_x))
-    symm_z = 1 - ((err_z / 2) / (len(bps) - excl_z))
-    return max(symm_x, symm_z)
+    pivot_blocktype = 'MyObjectBuilder_Cockpit_OpenCockpitLarge'
+    midpoint = [x for x in structure._blocks.values() if x.block_type == pivot_blocktype][0].position.scale(1 / structure.grid_size).to_veci()
+    arr = structure.as_grid_array
+    
+    # along x
+    x_shape = max(midpoint.x, arr.shape[0] - midpoint.x)
+    upper = np.zeros((x_shape, arr.shape[1], arr.shape[2]))
+    lower = np.zeros((x_shape, arr.shape[1], arr.shape[2]))
+    upper[np.nonzero(np.flip(arr[midpoint.x:, :, :], 1))] = np.flip(arr[midpoint.x:, :, :], 1)[np.nonzero(np.flip(arr[midpoint.x:, :, :], 1))]
+    lower[np.nonzero(arr[:midpoint.x - 1, :, :])] = arr[np.nonzero(arr[:midpoint.x - 1, :, :])]
+    err_x = abs(np.sum(upper - lower))
+    
+    # along z
+    z_shape = max(midpoint.z, arr.shape[2] - midpoint.z)
+    upper = np.zeros((arr.shape[0], arr.shape[1], z_shape))
+    lower = np.zeros((arr.shape[0], arr.shape[1], z_shape))
+    tmp = np.flip(arr[:, :, midpoint.z:], 2)
+    upper[np.nonzero(np.flip(arr[:, :, midpoint.z:], 2))] = np.flip(arr[:, :, midpoint.z:], 2)[np.nonzero(np.flip(arr[:, :, midpoint.z:], 2))]
+    lower[np.nonzero(arr[:, :, :midpoint.z - 1])] = arr[np.nonzero(arr[:, :, :midpoint.z - 1])]
+    err_z = abs(np.sum(upper - lower))
+        
+    return 1 - (min(err_x, err_z) / np.sum(arr))
 
 
 behavior_funcs = {
