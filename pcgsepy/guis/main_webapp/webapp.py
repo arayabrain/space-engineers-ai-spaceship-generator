@@ -19,8 +19,8 @@ import dash_daq as daq
 import numpy as np
 import plotly.graph_objects as go
 from dash import ALL, dcc, html
-from dash.exceptions import PreventUpdate
 from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
 from pcgsepy.common.api_call import block_definitions
 from pcgsepy.common.jsonifier import json_dumps
 from pcgsepy.common.vecs import Vec
