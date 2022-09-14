@@ -963,6 +963,8 @@ def _build_heatmap(mapelites: MAPElites,
                    pop_name: str,
                    metric_name: str,
                    method_name: str) -> go.Figure:
+    global selected_bins
+    
     valid_bins = [x.bin_idx for x in mapelites._valid_bins()]
     metric = hm_callback_props['metric'][metric_name]
     use_mean = hm_callback_props['method'][method_name]
@@ -976,7 +978,8 @@ def _build_heatmap(mapelites: MAPElites,
                                                 use_mean=use_mean,
                                                 population=population)
             disp_map[i, j] = v
-            s = '▣' if (i, j) in valid_bins else ''
+            s = '☐' if (i, j) in valid_bins else ''
+            s = '☑' if (j, i) in selected_bins else s
             if j == 0:
                 text.append([s])
             else:
@@ -1435,6 +1438,7 @@ def __update_content(**kwargs) -> Dict[str, Any]:
     global current_mapelites
     global selected_bins
     
+    curr_heatmap = kwargs['curr_heatmap']
     curr_content = kwargs['curr_content']
     cs_string = kwargs['cs_string']
     cs_properties = kwargs['cs_properties']
@@ -1467,10 +1471,15 @@ def __update_content(**kwargs) -> Dict[str, Any]:
                                     pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
                 cs_string = elite.string
                 cs_properties = get_properties_table(cs=elite)
+                curr_heatmap = _build_heatmap(mapelites=current_mapelites,
+                                              pop_name=kwargs['pop_name'],
+                                              metric_name=kwargs['metric_name'],
+                                              method_name=kwargs['method_name'])
     else:
         logging.getLogger('webapp').error(msg=f'Empty bin selected ({i}, {j}).')
     
     return {
+        'heatmap-plot.figure': curr_heatmap,
         'content-plot.figure': curr_content,
         'content-string.value': cs_string,
         'spaceship-properties.children': cs_properties,
