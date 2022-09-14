@@ -85,7 +85,7 @@ current_mapelites: Optional[MAPElites] = None
 exp_n: int = 0
 gen_counter: int = 0
 gdev_mode: bool = False
-hidden_style = {'visibility': 'hidden', 'height': '0px'}
+hidden_style = {'visibility': 'hidden', 'height': '0px', 'display': 'none'}
 hm_callback_props = {}
 my_emitterslist: List[str] = ['mapelites_human.json',
                               'mapelites_random.json',
@@ -551,7 +551,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                                        value=1,
                                        marks=None,
                                        tooltip={"placement": "bottom",
-                                                "always_visible": True},
+                                                "always_visible": False},
                                        id={'type': 'fitness-sldr',
                                            'index': i})
                         ],
@@ -701,7 +701,9 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                          animated=True)
         ],
         id='step-progress-div',
-        style={'content-visibility': 'visible' if 0 <= step_progress <= 100 else 'hidden'})
+        style={'content-visibility': 'visible' if 0 <= step_progress <= 100 else 'hidden',
+               'display': 'inline-block' if 0 <= step_progress <= 100 else 'none',
+               'width': '100%'})
     
     log = html.Div(
         children=[
@@ -833,7 +835,9 @@ def update_output(n):
     [Input("interval1", "n_intervals")],
 )
 def update_progress(n):  
-    return step_progress, f"{np.round(step_progress, 2)}%", {'content-visibility': 'visible' if 0 <= step_progress <= 100 else 'hidden'}
+    return step_progress, f"{np.round(step_progress, 2)}%", {'content-visibility': 'visible' if 0 <= step_progress <= 100 else 'hidden', 
+                                                             'display': 'inline-block' if 0 <= step_progress <= 100 else 'none',
+                                                             'width': '100%'}
 
 
 @app.callback(
@@ -979,8 +983,10 @@ def _build_heatmap(mapelites: MAPElites,
                                                 use_mean=use_mean,
                                                 population=population)
             disp_map[i, j] = v
-            s = '☐' if (i, j) in valid_bins else ''
-            s = '☑' if (j, i) in selected_bins else s
+            s = ''
+            if mapelites.bins[i, j].non_empty(pop='feasible'):
+                s = '☐' if (i, j) in valid_bins else s
+                s = '☑' if (j, i) in selected_bins else s
             if j == 0:
                 text.append([s])
             else:
@@ -1197,10 +1203,6 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
         if res:
             elapsed = time.perf_counter() - s
             gen_counter += 1
-            curr_heatmap = _build_heatmap(mapelites=current_mapelites,
-                                        pop_name=kwargs['pop_name'],
-                                        metric_name=kwargs['metric_name'],
-                                        method_name=kwargs['method_name'])
             # update metrics if user consented to privacy
             if consent_ok:
                 n_spaceships_inspected.add(1)
@@ -1219,6 +1221,11 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
             # prompt user to download content if reached end of generations
             if user_study_mode and gen_counter == N_GENS_ALLOWED:
                 eoe_modal_show = True
+            # update heatmap
+            curr_heatmap = _build_heatmap(mapelites=current_mapelites,
+                                        pop_name=kwargs['pop_name'],
+                                        metric_name=kwargs['metric_name'],
+                                        method_name=kwargs['method_name'])
     else:
         logging.getLogger('webapp').error(msg=f'Step not applied: no bin(s) selected.')
         nbs_err_modal_show = True
