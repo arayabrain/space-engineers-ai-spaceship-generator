@@ -919,13 +919,14 @@ def download_content(n):
         return None
 
 @app.callback(
-    Output("consent-modal", "is_open"),
+    Output("consent-yes", "disabled"),
+    Output("consent-no", "disabled"),
     Input("consent-yes", "n_clicks"),
     Input("consent-no", "n_clicks"),
     prevent_initial_call=True
 )
-def close_privacy_modal(ny, nn):
-    return False
+def disable_privacy_modal(ny, nn):
+    return True, True
 
 
 def _switch(ls: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
@@ -1706,7 +1707,7 @@ def __consent(**kwargs) -> Dict[str, Any]:
     rand_step_btn_style = kwargs['rand_step_btn_style']
     reset_btn_style = kwargs['reset_btn_style']
     exp_progress_style = kwargs['exp_progress_style']
-    # privacy_modal_show = kwargs['privacy_modal_show']
+    cm_modal_show = kwargs['cm_modal_show']
     
     consent_ok = True if nclicks_yes else False if nclicks_no else None
     if nclicks_yes:
@@ -1727,7 +1728,7 @@ def __consent(**kwargs) -> Dict[str, Any]:
         user_study_mode = False
         qs_um_modal_show = True
         rand_step_btn_style, reset_btn_style, exp_progress_style = {}, {}, hidden_style
-    # privacy_modal_show = False
+    cm_modal_show = False
     gen_counter = 0
     
     return {
@@ -1735,7 +1736,7 @@ def __consent(**kwargs) -> Dict[str, Any]:
                                 pop_name=kwargs['pop_name'],
                                 metric_name=kwargs['metric_name'],
                                 method_name=kwargs['method_name']),
-        # 'consent-modal.is_open': privacy_modal_show,
+        'consent-modal.is_open': cm_modal_show,
         'quickstart-modal.is_open': qs_modal_show,
         'quickstart-usermode-modal.is_open': qs_um_modal_show,
         'rand-step-btn-div.style': rand_step_btn_style,
@@ -1843,6 +1844,7 @@ triggers_map = {
               Output('symmetry-dropdown', 'label'),
               Output("quickstart-modal", "is_open"),
               Output("quickstart-usermode-modal", "is_open"),
+              Output("consent-modal", "is_open"),
               Output("nbs-err-modal", "is_open"),
               Output("eoe-modal", "is_open"),
               Output("eous-modal", "is_open"),
@@ -1862,6 +1864,7 @@ triggers_map = {
               State('symmetry-dropdown', 'label'),
               State("quickstart-modal", "is_open"),
               State("quickstart-usermode-modal", "is_open"),
+              State("consent-modal", "is_open"),
               State("nbs-err-modal", "is_open"),
               State("eoe-modal", "is_open"),
               State("eous-modal", "is_open"),
@@ -1906,7 +1909,7 @@ triggers_map = {
               Input("consent-no", "n_clicks"),
               Input("nbs-err-btn", "n_clicks"),
               Input('color-picker', 'value'))
-def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, qs_modal_show, qs_um_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style,
+def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, qs_modal_show, qs_um_modal_show, cm_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style,
                      pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights, b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn, color):
     global user_study_mode
     global current_mapelites
@@ -1949,6 +1952,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         'symmetry-dropdown.label': symm_axis,
         'quickstart-modal.is_open': qs_modal_show,
         'quickstart-usermode-modal.is_open': qs_um_modal_show,
+        'consent-modal.is_open': cm_modal_show,
         'nbs-err-modal.is_open': nbs_err_modal_show,
         'eoe-modal.is_open': eoe_modal_show,
         'eous-modal.is_open': eous_modal_show,
