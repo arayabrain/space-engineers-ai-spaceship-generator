@@ -1,15 +1,16 @@
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
-from pcgsepy.config import BETA_A, BETA_B, CONTEXT_IDXS, CS_MAX_AGE
+from pcgsepy.config import BETA_A, BETA_B, CONTEXT_IDXS, CS_MAX_AGE, USE_LINEAR_ESTIMATOR
 from pcgsepy.mapelites.bin import MAPBin
 from pcgsepy.mapelites.buffer import Buffer, mean_merge
-from scipy.stats import boltzmann
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import scale
+from scipy.stats import boltzmann, dirichlet
+from sklearn.linear_model import LogisticRegression
+
+from pcgsepy.nn.estimators import NonLinearEstimator, train_estimator
 
 
 def diversity_builder(bins: 'np.ndarray[MAPBin]',
@@ -488,7 +489,7 @@ class ContextualBanditEmitter(Emitter):
         self._decay = decay
         self._buffer = Buffer(merge_method=mean_merge)
         self._n_features_context = n_features_context
-        self._estimator: LinearRegression = None
+        self._estimator: Union[LogisticRegression, NonLinearEstimator] = None
         self._fitted = False
         
         self._tot_actions = 0
@@ -497,7 +498,15 @@ class ContextualBanditEmitter(Emitter):
         
     def _fit(self) -> None:
         xs, ys = self._buffer.get()
-        self._estimator = LinearRegression().fit(X=xs, y=ys)
+        if USE_LINEAR_ESTIMATOR:
+            self._estimator = LogisticRegression().fit(X=xs, y=ys)
+        else:
+            self._estimator = NonLinearEstimator(xhsape=self._n_features_context,
+                                                 yshape=1)
+            train_estimator(estimator=self._estimator,
+                            xs=xs,
+                            ys=ys,
+                            n_epochs=20)
         self._fitted = True
     
     def _extract_bin_context(self,
@@ -532,14 +541,17 @@ class ContextualBanditEmitter(Emitter):
     
     def pre_step(self, **kwargs) -> None:
         bins: 'np.ndarray[MAPBin]' = kwargs['bins']
-        idxs: List[List[int]] = kwargs['selected_idxs']
+        idxs: List[Tuple[int]] = kwargs['selected_idxs']
+        
+        print(f'{len(bins)=}, {idxs=}')
+        
         for i in range(bins.shape[0]):
             for j in range(bins.shape[1]):
                 if bins[i, j].non_empty(pop='feasible'):
                     self._buffer.insert(x=self._extract_bin_context(bins[i, j]),
-                                        y=1. if [i, j] in idxs else 0.)
+                                        y=1. if (i, j) in idxs else 0.)
                     context = self._extract_bin_context(b=bins[i, j]).tobytes()
-                    if [i, j] in idxs:
+                    if (i, j) in idxs:
                         if context not in self._thompson_stats:
                             self._thompson_stats[context] = [2, 1]
                         else:
@@ -586,7 +598,7 @@ class ContextualBanditEmitter(Emitter):
         self._fitted = False
     
     def to_json(self) -> Dict[str, Any]:
-        return {
+        j = {
             'name': self.name,
             'requires_init': self.requires_init,
             'requires_pre': self.requires_pre,
@@ -601,12 +613,17 @@ class ContextualBanditEmitter(Emitter):
             'diversity_weight': self.diversity_weight,
             'fitted': self._fitted,
             
-            'estimator_params': self._estimator.get_params() if self._fitted else None,
-            'estimator_coefs': self._estimator.coef_.tolist() if self._fitted else None,
-            'estimator_intercept': np.asarray(self._estimator.intercept_).tolist() if self._fitted else None,
-            
             'thompson_stats': self._thompson_stats
         }
+        
+        if isinstance(self._estimator, LogisticRegression):
+            j['estimator_params'] = self._estimator.get_params(),
+            j['estimator_coefs'] = self._estimator.coef_.tolist() if self._fitted else None,
+            j['estimator_intercept'] = np.asarray(self._estimator.intercept_).tolist() if self._fitted else None,
+        elif isinstance(self._estimator, NonLinearEstimator):
+            j['estimator_parameters'] = self._estimator.to_json()
+        
+        return j
     
     @staticmethod
     def from_json(my_args: Dict[str, Any]) -> 'ContextualBanditEmitter':
@@ -624,13 +641,15 @@ class ContextualBanditEmitter(Emitter):
         re._n_features_context = my_args['n_features_context']
         re._fitted = my_args['fitted']
         
-        re._estimator = LinearRegression()
-        if my_args['estimator_params'] is not None:
+        if 'estimator_parameters' in my_args.keys():
+            re._estimator = NonLinearEstimator.from_json(my_args=my_args['estimator_parameters'])
+        else:
+            re._estimator = LogisticRegression()
             re._estimator.set_params(my_args['estimator_params'])
-        if my_args['estimator_coefs'] is not None:
-            re._estimator.coef_ = np.asarray(my_args['estimator_coefs'])
-        if my_args['estimator_intercept'] is not None:
-            re._estimator.intercept_ = np.asarray(my_args['estimator_intercept'])
+            if my_args['estimator_coefs'] is not None:
+                re._estimator.coef_ = np.asarray(my_args['estimator_coefs'])
+            if my_args['estimator_intercept'] is not None:
+                re._estimator.intercept_ = np.asarray(my_args['estimator_intercept'])
         
         re._thompson_stats = my_args['thompson_stats']
         
@@ -649,7 +668,7 @@ class PreferenceBanditEmitter(Emitter):
         self._epsilon = self._initial_epsilon
         self._decay = decay
         self._buffer = Buffer(merge_method=mean_merge)
-        self._estimator: LinearRegression = None
+        self._estimator: LogisticRegression = None
         self._fitted = False
         
         self._tot_actions = 0
@@ -658,7 +677,15 @@ class PreferenceBanditEmitter(Emitter):
 
     def _fit(self) -> None:
         xs, ys = self._buffer.get()
-        self._estimator = LinearRegression().fit(X=xs, y=ys)
+        if USE_LINEAR_ESTIMATOR:
+            self._estimator = LogisticRegression().fit(X=xs, y=ys)
+        else:
+            self._estimator = NonLinearEstimator(xshape=2,
+                                                 yshape=1)
+            train_estimator(estimator=self._estimator,
+                            xs=xs,
+                            ys=ys,
+                            n_epochs=20)
         self._fitted = True
     
     def _get_valid_bins(self,
@@ -706,14 +733,17 @@ class PreferenceBanditEmitter(Emitter):
     def pre_step(self, **kwargs) -> None:
         bins: 'np.ndarray[MAPBin]' = kwargs['bins']
         idxs: List[Tuple[int, int]] = kwargs['selected_idxs']
+        bounds: List[Tuple[float, float]] = kwargs['bounds']
+        bcs0 = np.cumsum([bounds[0][0]] + [b.bin_size[0] for b in bins[0, :]])[:-1]
+        bcs1 = np.cumsum([bounds[1][0]] + [b.bin_size[1] for b in bins[:, 0]])[:-1]
         for i in range(bins.shape[0]):
             for j in range(bins.shape[1]):
                 if bins[i, j].non_empty(pop='feasible'):
-                    self._buffer.insert(x=np.asarray([i / bins.shape[0], j / bins.shape[1]]),
+                    self._buffer.insert(x=np.asarray([bcs0[i] / bounds[0][1], bcs1[j] / bounds[1][1]]),
                                         y=1. if (i, j) in idxs else 0.)
             n_i = i / bins.shape[0]
             n_j = j / bins.shape[1]
-            if [i, j] in idxs:
+            if (i, j) in idxs:
                 if (n_i, n_j) not in self._thompson_stats:
                     self._thompson_stats[n_i, n_j] = [2, 1]
                 else:
@@ -761,7 +791,7 @@ class PreferenceBanditEmitter(Emitter):
         self._tot_actions = 0
 
     def to_json(self) -> Dict[str, Any]:
-        return {
+        j = {
             'name': self.name,
             'requires_init': self.requires_init,
             'requires_pre': self.requires_pre,
@@ -776,12 +806,16 @@ class PreferenceBanditEmitter(Emitter):
             'diversity_weight': self.diversity_weight,
             'fitted': self._fitted,
             
-            'estimator_params': self._estimator.get_params(),
-            'estimator_coefs': self._estimator.coef_.tolist() if self._fitted else None,
-            'estimator_intercept': np.asarray(self._estimator.intercept_).tolist() if self._fitted else None,
-            
             'thompson_stats': self._thompson_stats
         }
+        if isinstance(self._estimator, LogisticRegression):
+            j['estimator_params'] = self._estimator.get_params(),
+            j['estimator_coefs'] = self._estimator.coef_.tolist() if self._fitted else None,
+            j['estimator_intercept'] = np.asarray(self._estimator.intercept_).tolist() if self._fitted else None,
+        elif isinstance(self._estimator, NonLinearEstimator):
+            j['estimator_parameters'] = self._estimator.to_json()
+        
+        return j
     
     @staticmethod
     def from_json(my_args: Dict[str, Any]) -> 'ContextualBanditEmitter':
@@ -800,12 +834,15 @@ class PreferenceBanditEmitter(Emitter):
         re._n_features_context = my_args['n_features_context']
         re._fitted = my_args['fitted']
         
-        re._estimator = LinearRegression()
-        re._estimator.set_params(my_args['estimator_params'])
-        if my_args['estimator_coefs'] is not None:
-            re._estimator.coef_ = np.asarray(my_args['estimator_coefs'])
-        if my_args['estimator_intercept'] is not None:
-            re._estimator.intercept_ = np.asarray(my_args['estimator_intercept'])
+        if 'estimator_parameters' in my_args.keys():
+            re._estimator = NonLinearEstimator.from_json(my_args=my_args['estimator_parameters'])
+        else:
+            re._estimator = LogisticRegression()
+            re._estimator.set_params(my_args['estimator_params'])
+            if my_args['estimator_coefs'] is not None:
+                re._estimator.coef_ = np.asarray(my_args['estimator_coefs'])
+            if my_args['estimator_intercept'] is not None:
+                re._estimator.intercept_ = np.asarray(my_args['estimator_intercept'])
         
         re._thompson_stats = my_args['thompson_stats']
         

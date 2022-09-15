@@ -596,7 +596,8 @@ class MAPElites:
         if self.emitter is not None and self.emitter.requires_pre:
             self.emitter.pre_step(bins=self.bins,
                                   selected_idxs=bin_idxs,
-                                  expanded_idxs=expanded_idxs)
+                                  expanded_idxs=expanded_idxs,
+                                  bounds=[b.bounds for b in self.b_descs])
 
     def emitter_step(self,
                      gen: int = 0) -> None:

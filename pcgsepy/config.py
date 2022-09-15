@@ -73,6 +73,8 @@ ALIGNMENT_INTERVAL = config['MAPELITES'].getint('alignment_interval')
 RESCALE_INFEAS_FITNESS = config['MAPELITES'].getboolean('rescale_infeas_fitness')
 # minimum subdivision percentage of a bin
 BIN_SMALLEST_PERC = config['MAPELITES'].getfloat('bin_min_resolution')
+# whether to use a linear estimator or a NN estimator in the emitter (if possible)
+USE_LINEAR_ESTIMATOR = config['MAPELITES'].getboolean('use_linear_estimator')
 
 # number of experiments to run
 N_RUNS = config['EXPERIMENT'].getint('n_runs')

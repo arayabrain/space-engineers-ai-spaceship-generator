@@ -259,6 +259,85 @@ class MLPEstimator(th.nn.Module):
         return mlpe
 
 
+class NonLinearEstimator(th.nn.Module):
+    def __init__(self,
+                 xshape: int,
+                 yshape: int):
+        """Create the NonLinearEstimator.
+
+        Args:
+            xshape (int): The number of dimensions in input.
+            yshape (int): The number of dimensions in output.
+        """
+        super(NonLinearEstimator, self).__init__()
+        self.xshape = xshape
+        self.yshape = yshape
+        self.l1 = th.nn.Linear(xshape, xshape * 2)
+        self.l2 = th.nn.Linear(xshape * 2, int(xshape * 2 / 3))
+        self.l3 = th.nn.Linear(int(xshape * 2 / 3), yshape)
+
+        self.optimizer = th.optim.Adam(self.parameters())
+        self.criterion = th.nn.CrossEntropyLoss()
+        self.is_trained = False
+        self.train_losses = []
+
+    def forward(self, x):
+        out = F.elu(self.l1(x))
+        out = F.elu(self.l2(out))
+        out = F.elu(self.l3(out))
+        return th.clamp(out, 0, 1)
+    
+    def predict(self,
+                X: np.ndarray) -> float:
+         with th.no_grad():
+             return self.forward(th.tensor(X).float()).numpy()[0]
+    
+    def save(self,
+             fname: str):
+        """Save the current model to file.
+
+        Args:
+            fname (str): The filename.
+        """
+        with open(f'{fname}.pth', 'wb') as f:
+            th.save({
+                'model_params': self.state_dict(),
+                'optimizer': self.optimizer.state_dict(),
+                'is_trained': self.is_trained
+            }, f)
+
+    def load(self,
+             fname: str):
+        """Load the parameters for the model from file.
+
+        Args:
+            fname (str): The filename.
+        """
+        with open(f'{fname}.pth', 'rb') as f:
+            prev = th.load(f)
+            self.load_state_dict(prev['model_params'])
+            self.optimizer.load_state_dict(prev['optimizer'])
+            self.is_trained = prev['is_trained']
+        
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            'xshape': self.xshape,
+            'yshape': self.yshape,
+            'is_trained': self.is_trained,
+            'model_params': str(self.state_dict()),
+            'optimizer': str(self.optimizer.state_dict()),
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'NonLinearEstimator':
+        nle = NonLinearEstimator(xhsape=my_args['xshape'],
+                                 yshape=my_args['yshape'])
+        nle.is_trained = my_args['is_trained']
+        nle.load_state_dict(ast.literal_eval(my_args['model_params']))
+        nle.load_state_dict(ast.literal_eval(my_args['optimizer']))
+        return nle
+
+
 def prepare_dataset(f_pop: List[CandidateSolution]) -> Tuple[List[List[float]]]:
     """Prepare the dataset for the estimator.
 
