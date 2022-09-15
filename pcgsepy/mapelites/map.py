@@ -485,6 +485,10 @@ class MAPElites:
         Returns:
             List[CandidateSolution]: The new solutions.
         """
+        # reset bins new_elite flags
+        for (_, _), b in np.ndenumerate(self.bins):
+            for p in ['feasible', 'infeasible']:
+                b.new_elite[p] = False
         # generate solutions from both populations
         generated = []
         for pop in populations:

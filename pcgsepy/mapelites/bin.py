@@ -6,7 +6,7 @@ from pcgsepy.lsystem.solution import CandidateSolution
 
 
 class MAPBin:
-    __slots__ = ['_feasible', '_infeasible', 'bin_idx', 'bin_size', 'bin_initial_size']
+    __slots__ = ['_feasible', '_infeasible', 'bin_idx', 'bin_size', 'bin_initial_size', 'new_elite']
 
     def __init__(self,
                  bin_idx: Tuple[int, int],
@@ -17,12 +17,17 @@ class MAPBin:
         Args:
             bin_idx (Tuple[int, int]): The index of the bin in the grid.
             bin_size (Tuple[float, float]): The size of the bin.
+            bin_initial_size: Optional[Tuple[float, float]]: Initial size of the bin. Defaults to None.
         """
         self._feasible = []
         self._infeasible = []
         self.bin_idx = bin_idx
         self.bin_size = bin_size
         self.bin_initial_size = bin_initial_size if bin_initial_size else bin_size
+        self.new_elite = {'feasible': False,
+                          '_elite_feasible': '',
+                          'infeasible': False,
+                          '_elite_infeasible': ''}
 
     def __str__(self) -> str:
         return f'Bin {self.bin_idx}, {self.bin_size} w/ {len(self._feasible)}f and {len(self._infeasible)}i cs'
@@ -84,10 +89,18 @@ class MAPBin:
             if cs not in self._feasible:
                 self._feasible.append(cs)
                 self._feasible = self._reduce_pop(self._feasible)
+                new_elite_str = self.get_elite(population='feasible').string
+                if new_elite_str != self.new_elite['_elite_feasible']:
+                    self.new_elite['feasible'] = True
+                    self.new_elite['_elite_feasible'] = new_elite_str
         else:
             if cs not in self._infeasible:
                 self._infeasible.append(cs)
                 self._infeasible = self._reduce_pop(self._infeasible)
+                new_elite_str = self.get_elite(population='infeasible').string
+                if new_elite_str != self.new_elite['_elite_infeasible']:
+                    self.new_elite['infeasible'] = True
+                    self.new_elite['_elite_infeasible'] = new_elite_str
 
     def age(self,
             diff: int = -1):
@@ -163,7 +176,7 @@ class MAPBin:
         for pop in [self._feasible, self._infeasible]:
             for cs in pop:
                 cs.hls_mod[module]['mutable'] = not cs.hls_mod[module]['mutable']
-
+    
     def to_json(self) -> Dict[str, Any]:
         return {
             'feasible': [cs.to_json() for cs in self._feasible],

@@ -968,6 +968,7 @@ def _build_heatmap(mapelites: MAPElites,
                    pop_name: str,
                    metric_name: str,
                    method_name: str) -> go.Figure:
+    global gen_counter
     global selected_bins
     
     valid_bins = [x.bin_idx for x in mapelites._valid_bins()]
@@ -988,8 +989,10 @@ def _build_heatmap(mapelites: MAPElites,
             disp_map[i, j] = v
             s = ''
             if mapelites.bins[i, j].non_empty(pop='feasible'):
-                s = '☐' if (i, j) in valid_bins else s
-                s = '☑' if (j, i) in selected_bins else s
+                if (i, j) in valid_bins:
+                    s = '☑' if (j, i) in selected_bins else '☐'
+                if gen_counter > 0:
+                    s = '☉' if (i, j) in valid_bins and mapelites.bins[i, j].new_elite[population] else s
             if j == 0:
                 text.append([s])
             else:
@@ -1055,7 +1058,7 @@ def _is_base_block(block_type: str) -> bool:
 
 def _get_elite_content(mapelites: MAPElites,
                        bin_idx: Optional[Tuple[int, int]],
-                       pop: List[CandidateSolution]) -> go.Scatter3d:
+                       pop: str) -> go.Scatter3d:
     if bin_idx is not None:
         # get elite content
         elite = get_elite(mapelites=mapelites,
@@ -1076,9 +1079,7 @@ def _get_elite_content(mapelites: MAPElites,
                 custom_colors.append(f'rgb{b.color.as_tuple()}')
             else:
                 custom_colors.append(block_to_colour.get(structure._clean_label(b.block_type), '#ff0000'))
-        
         fig = go.Figure()
-        
         fig.add_scatter3d(x=x,
                           y=y,
                           z=z,
@@ -1089,18 +1090,15 @@ def _get_elite_content(mapelites: MAPElites,
                                       color=custom_colors),
                           showlegend=False
                           )
-        
         fig.update_traces(
             hoverinfo='text',
             hovertext=ss
         )
-        
         ux, uy, uz = np.unique(x), np.unique(y), np.unique(z)
         ptg = .2
         show_x = [v for i, v in enumerate(ux) if i % (1 / ptg) == 0]
         show_y = [v for i, v in enumerate(uy) if i % (1 / ptg) == 0]
         show_z = [v for i, v in enumerate(uz) if i % (1 / ptg) == 0]
-        
         fig.update_layout(
             scene=dict(
                 xaxis_title='',
@@ -1129,13 +1127,11 @@ def _get_elite_content(mapelites: MAPElites,
         fig.add_scatter3d(x=np.zeros(0, dtype=object),
                           y=np.zeros(0, dtype=object),
                           z=np.zeros(0, dtype=object))
-    
     camera = dict(
         up=dict(x=0, y=0, z=1),
         center=dict(x=0, y=0, z=0),
         eye=dict(x=2, y=2, z=2)
         )
-    
     fig.update_layout(scene=dict(aspectmode='data'),
                       scene_camera=camera,
                       template='plotly_dark',
@@ -1218,19 +1214,27 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
                 lb = (lb[1], lb[0])
                 if lb not in [b.bin_idx for b in current_mapelites._valid_bins()]:
                     curr_content = _get_elite_content(mapelites=current_mapelites,
-                                                    bin_idx=None,
-                                                    pop=[])
+                                                      bin_idx=None,
+                                                      pop='')
                     cs_string = ''
                     cs_properties = get_properties_table()
-    
+                elif current_mapelites.bins[lb].new_elite[hm_callback_props['pop'][kwargs['pop_name']]]:
+                    curr_content = _get_elite_content(mapelites=current_mapelites,
+                                                      bin_idx=lb,
+                                                      pop=kwargs['pop_name'])
+                    elite = get_elite(mapelites=current_mapelites,
+                                      bin_idx=lb,
+                                      pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
+                    cs_string = elite.string
+                    cs_properties = get_properties_table(cs=elite)
             # prompt user to download content if reached end of generations
             if user_study_mode and gen_counter == N_GENS_ALLOWED:
                 eoe_modal_show = True
             # update heatmap
             curr_heatmap = _build_heatmap(mapelites=current_mapelites,
-                                        pop_name=kwargs['pop_name'],
-                                        metric_name=kwargs['metric_name'],
-                                        method_name=kwargs['method_name'])
+                                          pop_name=kwargs['pop_name'],
+                                          metric_name=kwargs['metric_name'],
+                                          method_name=kwargs['method_name'])
     else:
         logging.getLogger('webapp').error(msg=f'Step not applied: no bin(s) selected.')
         nbs_err_modal_show = True
