@@ -3,7 +3,7 @@ How to use the program:
 ### Plots
 There are two plots that you can interact with:
 
-* Collection plot: here you can select spaceships based on their characteristics. Only spaceships marked with the "▣" symbol can be selected. The color of the spaceship is determined by its *Fitness*, which is a measure of how "good" the spaceship is. You can zoom using the scrollwheel and pan by keeping the left mouse button pressed and dragging the plot around.
+* Collection plot: here you can select spaceships based on their characteristics; only the cells marked with the "☐" symbol can be selected. The spaceship you selected will change its symbol to "☑". After new spaceships are generated, the symbol "▣" will mark the cells in the grid with a new spaceship. The color of the spaceship is determined by its *Fitness*, which is a measure of how "good" the spaceship is. You can zoom using the scrollwheel and pan by keeping the left mouse button pressed and dragging the plot around.
 * Spaceship plot: here you can explore a preview of the spaceship you selected. Each sphere in the plot represents a game block and you can tell which block it is simply by hovering over it with the mouse cursor. The color wheel on the right allows you to change the base color of the spaceship.
 
 ### Properties & Download
