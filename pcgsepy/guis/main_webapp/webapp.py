@@ -1973,7 +1973,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         'selected-bin.children': '',
         'content-string.value': cs_string,
         'spaceship-properties.children': cs_properties,
-        'step-btn.disabled': user_study_mode and gen_counter >= N_GENS_ALLOWED,
+        'step-btn.disabled': user_study_mode and gen_counter >= N_GENS_ALLOWED - 1,
         'step-spinner.children': '',
         'download-population.data': None,
         'download-metrics.data': None,
