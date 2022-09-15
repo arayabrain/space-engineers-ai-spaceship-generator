@@ -501,7 +501,7 @@ class ContextualBanditEmitter(Emitter):
         if USE_LINEAR_ESTIMATOR:
             self._estimator = LogisticRegression().fit(X=xs, y=ys)
         else:
-            self._estimator = NonLinearEstimator(xhsape=self._n_features_context,
+            self._estimator = NonLinearEstimator(xshape=self._n_features_context,
                                                  yshape=1)
             train_estimator(estimator=self._estimator,
                             xs=xs,
