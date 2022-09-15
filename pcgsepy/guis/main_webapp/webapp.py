@@ -990,9 +990,11 @@ def _build_heatmap(mapelites: MAPElites,
             s = ''
             if mapelites.bins[i, j].non_empty(pop='feasible'):
                 if (i, j) in valid_bins:
-                    s = '☑' if (j, i) in selected_bins else '☐'
-                if gen_counter > 0:
-                    s = '▣' if (i, j) in valid_bins and mapelites.bins[i, j].new_elite[population] else s
+                    s = '☐'
+                if gen_counter > 0 and mapelites.bins[i, j].new_elite[population]:
+                    s = '▣'
+                if (j, i) in selected_bins:
+                    s = '☑'
             if j == 0:
                 text.append([s])
             else:
