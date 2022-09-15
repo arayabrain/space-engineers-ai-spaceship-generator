@@ -1599,6 +1599,9 @@ def __content_download(**kwargs) -> Dict[str, Any]:
     
     if cs_string != '':
         if user_study_mode and gen_counter == N_GENS_ALLOWED:
+            
+            time.sleep(1.5)
+            
             exp_n += 1
             # check end of user study
             if exp_n >= len(my_emitterslist):
