@@ -1006,7 +1006,7 @@ def _build_heatmap(mapelites: MAPElites,
             s = ''
             if mapelites.bins[i, j].non_empty(pop='feasible'):
                 if (i, j) in valid_bins:
-                    s = '☐'
+                    # s = '☐'
                     s = '▣' if gen_counter > 0 and mapelites.bins[i, j].new_elite[population] else s
                     s = '☑' if (j, i) in selected_bins else s                    
             if j == 0:
@@ -1172,6 +1172,12 @@ def _apply_step(mapelites: MAPElites,
             valid &= bin_idx in valid_bins
     if valid:
         logging.getLogger('webapp').info(msg=f'Started step {gen_counter + 1}...')
+        
+        # reset bins new_elite flags
+        for (_, _), b in np.ndenumerate(mapelites.bins):
+            for p in ['feasible', 'infeasible']:
+                b.new_elite[p] = False        
+        
         step_progress = 0
         if not only_emitter:
             mapelites.interactive_step(bin_idxs=selected_bins,
@@ -1236,10 +1242,10 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
                     cs_properties = get_properties_table()
                 elif current_mapelites.bins[lb].new_elite[hm_callback_props['pop'][kwargs['pop_name']]]:
                     curr_content = _get_elite_content(mapelites=current_mapelites,
-                                                      bin_idx=lb,
+                                                      bin_idx=selected_bins[-1],
                                                       pop=kwargs['pop_name'])
                     elite = get_elite(mapelites=current_mapelites,
-                                      bin_idx=lb,
+                                      bin_idx=selected_bins[-1],
                                       pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
                     cs_string = elite.string
                     cs_properties = get_properties_table(cs=elite)
@@ -1599,9 +1605,7 @@ def __content_download(**kwargs) -> Dict[str, Any]:
     
     if cs_string != '':
         if user_study_mode and gen_counter == N_GENS_ALLOWED:
-            
-            time.sleep(1.5)
-            
+            time.sleep(2)
             exp_n += 1
             # check end of user study
             if exp_n >= len(my_emitterslist):

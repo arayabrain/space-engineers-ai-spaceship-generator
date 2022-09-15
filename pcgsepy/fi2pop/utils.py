@@ -68,32 +68,47 @@ def create_new_pool(population: List[CandidateSolution],
     patience = GEN_PATIENCE
     while len(pool) < n_individuals:
         prev_len_pool = len(pool)
-        # fitness-proportionate selection
-        p1 = roulette_wheel_selection(pop=population,
-                                      minimize=minimize)
-        new_pop = []
-        new_pop[:] = population[:]
-        new_pop.remove(p1)
-        p2 = roulette_wheel_selection(pop=new_pop,
-                                      minimize=minimize)
-        if p1 != p2:
-            # crossover
-            o1, o2 = crossover(a1=p1, a2=p2, n_childs=2)
-            # set parents
-            o1.parents = [p1, p2]
-            o2.parents = [p1, p2]
-            for o in [o1, o2]:
-                if MAX_STRING_LEN == -1 or len(o.string) <= MAX_STRING_LEN:
-                    # mutation
-                    try:
-                        mutate(cs=o, n_iteration=generation)
-                    except EvoException:
-                        pass
-                    if o not in pool:
-                        pool.append(o)
+        childs = []
+        # apply crossover if possible
+        if len(population) > 1:
+            # fitness-proportionate selection
+            p1 = roulette_wheel_selection(pop=population,
+                                          minimize=minimize)
+            new_pop = []
+            new_pop[:] = population[:]
+            new_pop.remove(p1)
+            p2 = roulette_wheel_selection(pop=new_pop,
+                                        minimize=minimize)
+            if p1 != p2:
+                # crossover
+                o1, o2 = crossover(a1=p1, a2=p2, n_childs=2)
+                # set parents
+                o1.parents = [p1, p2]
+                o2.parents = [p1, p2]
+                childs = [o1, o2]
+            else:
+                raise EvoException('Picked same parents, this should never happen.')
+        # else, copy twice
         else:
-            raise EvoException(
-                'Picked same parents, this should never happen.')
+            o1 = CandidateSolution(string=population[0].string[:])
+            o2 = CandidateSolution(string=population[0].string[:])
+            o1.hls_mod = population[0].hls_mod.copy()
+            o2.hls_mod = population[0].hls_mod.copy()
+            if population[0].parents:
+                o1.parents = population[0].parents
+                o2.parents = population[0].parents
+                population[0].parents[0].n_offspring += 2
+                population[0].parents[1].n_offspring += 2
+            childs = [o1, o2]
+        for o in childs:
+            if MAX_STRING_LEN == -1 or len(o.string) <= MAX_STRING_LEN:
+                # mutation
+                try:
+                    mutate(cs=o, n_iteration=generation)
+                except EvoException:
+                    pass
+                if o not in pool:
+                    pool.append(o)
         if len(pool) == prev_len_pool:
             patience -= 1
         else:
