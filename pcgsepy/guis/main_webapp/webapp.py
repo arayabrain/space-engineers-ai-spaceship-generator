@@ -976,7 +976,10 @@ def _build_heatmap(mapelites: MAPElites,
     population = hm_callback_props['pop'][pop_name]
     # build heatmap
     disp_map = np.zeros(shape=mapelites.bins.shape)
+    labels = np.zeros(shape=(mapelites.bins.shape[0], mapelites.bins.shape[1], 2))
     text = []
+    x_labels = np.cumsum([0] + mapelites.bin_sizes[0][:-1]) + mapelites.b_descs[0].bounds[0]
+    y_labels = np.cumsum([0] + mapelites.bin_sizes[1][:-1]) + mapelites.b_descs[1].bounds[0]
     for i in range(mapelites.bins.shape[0]):
         for j in range(mapelites.bins.shape[1]):
             v = mapelites.bins[i, j].get_metric(metric=metric['name'],
@@ -991,24 +994,26 @@ def _build_heatmap(mapelites: MAPElites,
                 text.append([s])
             else:
                 text[-1].append(s)
+            labels[i, j, 0] = x_labels[i]
+            labels[i, j, 1] = y_labels[j]
     # plot
-    x_labels = np.cumsum([0] + mapelites.bin_sizes[0][:-1]) + mapelites.b_descs[0].bounds[0]
-    y_labels = np.cumsum([0] + mapelites.bin_sizes[1][:-1]) + mapelites.b_descs[1].bounds[0]
-    # title = f'{pop_name} population {metric_name.lower()} ({"Average" if use_mean else "Elite"})'
+    hovertemplate = f'{mapelites.b_descs[0].name}: X<br>{mapelites.b_descs[1].name}: Y<br>{metric_name}: Z<extra></extra>'
+    hovertemplate = hovertemplate.replace('X', '%{customdata[0]}').replace('Y', '%{customdata[1]}').replace('Z', '%{z}')
     title = 'Spaceships population'
     heatmap = go.Figure(
         data=go.Heatmap(
             z=disp_map,
             zmin=0,
             zmax=hm_callback_props['metric'][metric_name]['zmax'][population],
-            x=x_labels,
-            y=y_labels,
+            x=np.arange(disp_map.shape[0]),
+            y=np.arange(disp_map.shape[1]),
             hoverongaps=False,
             colorscale=hm_callback_props['metric'][metric_name]['colorscale'],
             text=text,
-            texttemplate="%{text}",
+            texttemplate='%{text}',
             textfont={"color": 'rgba(238, 238, 238, 1.)'},
-            colorbar={"title": {"text": "Fitness", "side": "right"}, 'orientation': 'v'}
+            colorbar={"title": {"text": "Fitness", "side": "right"}, 'orientation': 'v'},
+            customdata=labels,
             ))
     heatmap.update_xaxes(title=dict(text=mapelites.b_descs[0].name))
     heatmap.update_yaxes(title=dict(text=mapelites.b_descs[1].name))
@@ -1020,16 +1025,16 @@ def _build_heatmap(mapelites: MAPElites,
                           paper_bgcolor='rgba(0,0,0,0)',
                           plot_bgcolor='rgba(0,0,0,0)',
                           template='plotly_dark')
-    hovertemplate = f'{mapelites.b_descs[0].name}: X<br>{mapelites.b_descs[1].name}: Y<br>{metric_name}: Z<extra></extra>'
-    hovertemplate = hovertemplate.replace('X', '%{x}').replace('Y', '%{y}').replace('Z', '%{z}')
-    heatmap.update_traces(hovertemplate=hovertemplate,
-                          selector=dict(type='heatmap'))
+    heatmap.update_traces(hovertemplate=hovertemplate)
+    heatmap.update_traces(selector=dict(type='heatmap'))
     heatmap.update_layout(
         xaxis={
-            'tickvals': x_labels
+            'tickvals': np.arange(disp_map.shape[0]),
+            'ticktext': x_labels
         },
         yaxis={
-            'tickvals': y_labels
+            'tickvals': np.arange(disp_map.shape[1]),
+            'ticktext': y_labels
         },
     )
     
@@ -1451,12 +1456,7 @@ def __update_content(**kwargs) -> Dict[str, Any]:
     cs_string = kwargs['cs_string']
     cs_properties = kwargs['cs_properties']
     
-    i = np.digitize([kwargs['clickData']['points'][0]['x']],
-                    np.cumsum([0] + current_mapelites.bin_sizes[0][:-1]) + current_mapelites.b_descs[0].bounds[0],
-                    right=False)[0] - 1
-    j = np.digitize([kwargs['clickData']['points'][0]['y']],
-                    np.cumsum([0] + current_mapelites.bin_sizes[1][:-1]) + current_mapelites.b_descs[1].bounds[0],
-                    right=False)[0] - 1
+    i, j = kwargs['clickData']['points'][0]['x'], kwargs['clickData']['points'][0]['y']
     if current_mapelites.bins[j, i].non_empty(pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible'):
         if (j, i) in [b.bin_idx for b in current_mapelites._valid_bins()]:
             curr_content = _get_elite_content(mapelites=current_mapelites,
