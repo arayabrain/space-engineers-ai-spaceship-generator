@@ -491,7 +491,16 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                              class_name='content-string-area')
             ],
                      style=hidden_style if not gdev_mode else {}),
+            html.Br(),
             html.Div(children=[
+                dbc.Row(dbc.Col(children=[dcc.Loading(id='download-spinner',
+                                                      children='\n\n',
+                                                      fullscreen=False,
+                                                      color='#eeeeee',
+                                                      type='default')]),
+                        align='center'),
+                html.Br(),
+                html.Br(),
                 dbc.Row(
                     dbc.Col(children=[dbc.Button('Download content',
                                                  id='download-btn',
@@ -742,7 +751,13 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
             html.Br(),
             dbc.Row(children=[
                 dbc.Col(mapelites_heatmap, width=3),
-                dbc.Col(content_plot, width=6),
+                dbc.Col(dbc.Row(children=[
+                    dcc.Loading(id='step-spinner',
+                                children='',
+                                fullscreen=False,
+                                color='#eeeeee',
+                                type='circle'),
+                    content_plot]), width=6),
                 dbc.Col(color_picker, width=1),
                 dbc.Col(content_properties, width=2)],
                     align="center"),
@@ -879,6 +894,7 @@ def download_mapelites(n_clicks):
 
 @app.callback(
     Output("download-content", "data"),
+    Output('download-spinner', 'children'),
     Input("download-btn", "n_clicks"),
     prevent_initial_call=True,
 )
@@ -918,9 +934,9 @@ def download_content(n):
     
     if selected_bins:
         logging.getLogger('webapp').info(f'Your selected spaceship will be downloaded shortly.')
-        return dcc.send_bytes(write_archive, f'MySpaceship_{rngseed}_exp{exp_n}_gen{gen_counter}.zip')
+        return dcc.send_bytes(write_archive, f'MySpaceship_{rngseed}_exp{exp_n}_gen{gen_counter}.zip'), '\n\n'
     else:
-        return None
+        return None, '\n\n'
 
 @app.callback(
     Output("consent-yes", "disabled"),
@@ -991,10 +1007,8 @@ def _build_heatmap(mapelites: MAPElites,
             if mapelites.bins[i, j].non_empty(pop='feasible'):
                 if (i, j) in valid_bins:
                     s = '☐'
-                if gen_counter > 0 and mapelites.bins[i, j].new_elite[population]:
-                    s = '▣'
-                if (j, i) in selected_bins:
-                    s = '☑'
+                    s = '▣' if gen_counter > 0 and mapelites.bins[i, j].new_elite[population] else s
+                    s = '☑' if (j, i) in selected_bins else s                    
             if j == 0:
                 text.append([s])
             else:
@@ -1848,6 +1862,7 @@ triggers_map = {
               Output('content-string', 'value'),
               Output('spaceship-properties', 'children'),
               Output('step-btn', 'disabled'),
+              Output('step-spinner', 'children'),
               Output("download-population", "data"),
               Output("download-metrics", "data"),
               Output('population-dropdown', 'label'),
@@ -1956,6 +1971,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         'content-string.value': cs_string,
         'spaceship-properties.children': cs_properties,
         'step-btn.disabled': user_study_mode and gen_counter >= N_GENS_ALLOWED,
+        'step-spinner.children': '',
         'download-population.data': None,
         'download-metrics.data': None,
         'population-dropdown.label': pop_name,
