@@ -1,4 +1,4 @@
-# 🚀 Space Engineers AI Spaceship Generator 🚀
+# 🚀 AI Spaceship Generator for Space Engineers 🚀
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Lines of code](https://img.shields.io/tokei/lines/github/arayabrain/space-engineers-ai-spaceship-generator)
 ![GitHub issues](https://img.shields.io/github/issues-raw/arayabrain/space-engineers-ai-spaceship-generator)

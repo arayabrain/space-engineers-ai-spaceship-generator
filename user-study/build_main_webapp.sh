@@ -2,7 +2,7 @@ pyinstaller main_webapp_launcher.py \
 	--clean \
 	--onefile \
 	--noconfirm \
-	--name "Spaceship Generator" \
+	--name "AI Spaceship Generator" \
 	--icon assets\favicon.ico \
 	--add-data "./estimators:estimators" \
 	--add-data "./assets:assets" \
