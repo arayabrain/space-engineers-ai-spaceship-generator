@@ -779,15 +779,12 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                 dbc.Col(children=[
                     dbc.Label("Spaceship Color",
                               style={'font-size': 'large'}),
-                    daq.ColorPicker(id='color-picker',
-                                    value=dict(rgb=dict(r=int(base_color.x * 256),
-                                                        g=int(base_color.y * 256),
-                                                        b=int(base_color.z * 256),
-                                                        a=1)),
-                                    theme={'dark': True,
-                                           'detail': '#080808',
-                                           'primary': '#222222',
-                                           'secondary': '#464d55'})
+                    dbc.Input(
+                        type="color",
+                        id="color-picker",
+                        value="#737373",
+                        size='lg',
+                    )
                     ],
                         style={'text-align': 'center'},
                         width={'size': 12, 'offset': 0}),
@@ -1927,7 +1924,7 @@ def __color(**kwargs) -> Dict[str, Any]:
     color = kwargs['color']
     curr_content = kwargs['curr_content']
     
-    r, g, b = color['rgb']['r'], color['rgb']['g'], color['rgb']['b']
+    r, g, b = tuple(int(color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
     new_color = Vec.v3f(r, g, b).scale(1 / 256)
     base_color = new_color
     for (_, _), b in np.ndenumerate(current_mapelites.bins):
