@@ -735,19 +735,13 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
             ])
     
     color_picker = html.Div(children=[
-        daq.ColorPicker(id='color-picker',
-                        label='Spaceship base color',
-                        labelPosition="top",
-                        size=164,
-                        value=dict(rgb=dict(r=int(base_color.x * 256),
-                                            g=int(base_color.y * 256),
-                                            b=int(base_color.z * 256),
-                                            a=1)),
-                        theme={'dark': True,
-                               'detail': '#080808',
-                               'primary': '#222222',
-                               'secondary': '#464d55'})
-        ])
+        dbc.Label(["Spaceship base color"]),
+        dbc.Input(
+            type="color",
+            id="color-picker",
+            value="#737373",
+            style={"width": 75, "height": 50},
+        )])
     
     app.layout = dbc.Container(
         children=[
@@ -958,6 +952,81 @@ def download_content(n):
 )
 def disable_privacy_modal(ny, nn):
     return True, True
+
+
+@app.callback(Output('step-btn', 'disabled'),
+              Output('download-btn', 'disabled'),
+              Output('popdownload-btn', 'disabled'),
+              Output('rand-step-btn', 'disabled'),
+              Output('selection-clr-btn', 'disabled'),
+              Output('selection-btn', 'disabled'),
+              Output('reset-btn', 'disabled'),
+              Output('subdivide-btn', 'disabled'),
+              Output('download-mapelites-btn', 'disabled'),
+              Output('update-rules-btn', 'disabled'),
+              
+              Output('popupload-data', 'disabled'),
+              
+              Output('population-dropdown', 'disabled'),
+              Output('metric-dropdown', 'disabled'),
+              Output('method-radio', 'options'),
+              Output('b0-dropdown', 'disabled'),
+              Output('b1-dropdown', 'disabled'),
+              Output('lsystem-modules', 'options'),
+              Output('emitter-dropdown', 'disabled'),
+              Output('symmetry-dropdown', 'disabled'),
+              Output('symmetry-radio', 'options'),
+              Output('color-picker', 'disabled'),
+              
+              Output({'type': 'fitness-sldr', 'index': ALL}, 'disabled'),
+              
+              State({'type': 'fitness-sldr', 'index': ALL}, 'disabled'),
+              State('method-radio', 'options'),
+              State('lsystem-modules', 'options'),
+              State('symmetry-radio', 'options'),
+                   
+              Input('interval2', 'n_intervals')
+              )
+def update_btsn_state(fdis, ms, lsysms, symms,
+                      ni):
+    # non-definitive solution, see: https://github.com/plotly/dash-table/issues/925, https://github.com/plotly/dash/issues/1861
+    # long_callback and background callback also do not work (infinite redeployment of webapp)
+    global running_something
+    
+    for o in ms:
+        o['disabled'] = running_something
+    for o in symms:
+        o['disabled'] = running_something
+    for o in lsysms:
+        o['disabled'] = running_something
+    
+    btns = {
+        'step-btn.disabled': running_something or (user_study_mode and gen_counter >= N_GENS_ALLOWED),
+        'download-btn.disabled': running_something,
+        'popdownload-btn.disabled': running_something,
+        'rand-step-btn.disabled': running_something,
+        'selection-clr-btn.disabled': running_something,
+        'selection-btn.disabled': running_something,
+        'reset-btn.disabled': running_something,
+        'subdivide-btn.disabled': running_something,
+        'download-mapelites-btn.disabled': running_something,
+        'update-rules-btn.disabled': running_something,
+        
+        'popupload-data.disabled': running_something,
+        'population-dropdown.disabled': running_something,
+        'metric-dropdown.disabled': running_something,
+        'method-radio.options': ms,
+        'b0-dropdown.disabled': running_something,
+        'b1-dropdown.disabled': running_something,
+        'lsystem-modules.options': lsysms,
+        'emitter-dropdown.disabled': running_something,
+        'symmetry-dropdown.disabled': running_something,
+        'symmetry-radio.options': symms,
+        'color-picker.disabled': running_something,
+        'fitness-sldr.disabled': [running_something] * len(fdis)
+    }
+    
+    return tuple(btns.values())
 
 
 def _switch(ls: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
@@ -1866,18 +1935,6 @@ triggers_map = {
     'fitness-sldr': __fitness_weights,
     None: __default
 }
-
-
-@app.callback(Output('step-btn', 'disabled'),
-              Input('interval2', 'n_intervals')
-              )
-def update_btsn_state(ni):
-    # non-definitive solution, see: https://github.com/plotly/dash-table/issues/925, https://github.com/plotly/dash/issues/1861
-    # long callback also do not work (infinite redeployment of webapp)
-    # NOTE: this can be extended to ALL buttons
-    global running_something
-    
-    return running_something or (user_study_mode and gen_counter >= N_GENS_ALLOWED)
 
 
 @app.callback(Output('heatmap-plot', 'figure'),
