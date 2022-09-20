@@ -1,3 +1,4 @@
+from tabnanny import check
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -92,14 +93,15 @@ class MAPBin:
             if cs not in self._infeasible:
                 self._infeasible.append(cs)
                 self._infeasible = self._reduce_pop(self._infeasible)
-        checking = '_elite_feasible' if cs.is_feasible else '_elite_infeasible'   
-        
-        print(f'{self.bin_idx}\t{self.new_elite[checking]=}')
-             
-        if self.new_elite[checking] is None or cs.c_fitness > self.new_elite[checking].c_fitness:
-            self.new_elite['feasible' if cs.is_feasible else 'infeasible'] = True
-            self.new_elite[checking] = cs
 
+    def check_new_elite(self,
+                        pop: str = 'feasible'):
+        checking = f'_elite_{pop}'
+        elite = self.get_elite(population=pop)
+        if elite is not None and (self.new_elite[checking] is None or elite.c_fitness > self.new_elite[checking].c_fitness):
+            self.new_elite[pop] = True
+            self.new_elite[checking] = elite
+    
     def age(self,
             diff: int = -1):
         """Age the bin.
@@ -150,7 +152,7 @@ class MAPBin:
 
     def get_elite(self,
                   population: str = 'feasible',
-                  always_max: bool = True) -> CandidateSolution:
+                  always_max: bool = True) -> Optional[CandidateSolution]:
         """Get the elite of the selected population.
 
         Args:
@@ -158,11 +160,14 @@ class MAPBin:
             always_max (bool): Whether to select based on highest fitness. Defaults to `True`.
 
         Returns:
-            CandidateSolution: The elite solution.
+            Optional[CandidateSolution]: The elite solution, if it exists.
         """
         pop = self._feasible if population == 'feasible' else self._infeasible
-        get_max = always_max or population == 'feasible'
-        return sorted(pop, key=lambda x: x.c_fitness, reverse=get_max)[0]
+        if pop:
+            get_max = always_max or population == 'feasible'
+            return sorted(pop, key=lambda x: x.c_fitness, reverse=get_max)[0]
+        else:
+            return None
 
     def toggle_module_mutability(self,
                                  module: str):
