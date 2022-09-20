@@ -162,7 +162,7 @@ time_elapsed = Metric(multiple_values=True)
 
 
 app = dash.Dash(__name__,
-                title='Spaceship Generator',
+                title='AI Spaceship Generator',
                 external_stylesheets=[dbc.themes.DARKLY],
                 assets_folder=resource_path("assets"),
                 update_title=None)
@@ -393,7 +393,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     ])
     
     header = dbc.Row(children=[
-                dbc.Col(html.H1(children='🚀Space Engineers Spaceships Generator🚀',
+                dbc.Col(html.H1(children='🚀Space Engineers AI Spaceship Generator🚀',
                                 className='title'), width={'size': 8, 'offset': 2}),
                 dbc.Col(children=[dbc.Button('Webapp Info',
                                              id='webapp-info-btn',
