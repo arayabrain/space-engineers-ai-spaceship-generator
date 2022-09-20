@@ -1,5 +1,7 @@
 from typing import List
 
+import numpy as np
+
 from pcgsepy.config import GEN_PATIENCE, MAX_STRING_LEN, POP_SIZE
 from pcgsepy.evo.genops import (EvoException, crossover, mutate,
                                 roulette_wheel_selection)
@@ -85,6 +87,10 @@ def create_new_pool(population: List[CandidateSolution],
                 # set parents
                 o1.parents = [p1, p2]
                 o2.parents = [p1, p2]
+                # set base color
+                o1.base_color = np.random.choice([p1.base_color, p2.base_color])
+                o2.base_color = np.random.choice([p1.base_color, p2.base_color])
+                
                 childs = [o1, o2]
             else:
                 raise EvoException('Picked same parents, this should never happen.')
@@ -95,8 +101,10 @@ def create_new_pool(population: List[CandidateSolution],
             o1.hls_mod = population[0].hls_mod.copy()
             o2.hls_mod = population[0].hls_mod.copy()
             if population[0].parents:
-                o1.parents = population[0].parents
-                o2.parents = population[0].parents
+                o1.parents = population[0].parents.copy()
+                o2.parents = population[0].parents.copy()
+                o1.base_color = population[0].base_color
+                o2.base_color = population[0].base_color
                 population[0].parents[0].n_offspring += 2
                 population[0].parents[1].n_offspring += 2
             childs = [o1, o2]

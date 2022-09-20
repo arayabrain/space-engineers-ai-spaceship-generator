@@ -1183,12 +1183,10 @@ def _apply_step(mapelites: MAPElites,
             valid &= bin_idx in valid_bins
     if valid:
         logging.getLogger('webapp').info(msg=f'Started step {gen_counter + 1}...')
-        
         # reset bins new_elite flags
         for (_, _), b in np.ndenumerate(mapelites.bins):
             for p in ['feasible', 'infeasible']:
-                b.new_elite[p] = False        
-        
+                b.new_elite[p] = False
         step_progress = 0
         if not only_emitter:
             mapelites.interactive_step(bin_idxs=selected_bins,
@@ -1230,21 +1228,20 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
     if len(selected_bins) > 0 or kwargs['event_trig'] == 'rand-step-btn':
         s = time.perf_counter()
         res = _apply_step(mapelites=current_mapelites,
-                        selected_bins=[(x[1], x[0]) for x in selected_bins],
-                        gen_counter=gen_counter,
-                        only_human=kwargs['event_trig'] == 'step-btn' and not user_study_mode and not gdev_mode,
-                        only_emitter=kwargs['event_trig'] == 'rand-step-btn' and not user_study_mode and not gdev_mode)
+                          selected_bins=_switch(selected_bins),
+                          gen_counter=gen_counter,
+                          only_human=kwargs['event_trig'] == 'step-btn' and not user_study_mode and not gdev_mode,
+                          only_emitter=kwargs['event_trig'] == 'rand-step-btn' and not user_study_mode and not gdev_mode)
         if res:
             elapsed = time.perf_counter() - s
             gen_counter += 1
             # update metrics if user consented to privacy
             if consent_ok:
-                n_spaceships_inspected.add(1)
+                # n_spaceships_inspected.add(1)
                 time_elapsed.add(elapsed)
             if len(selected_bins) > 0:
             # remove preview and properties if last selected bin is now invalid
-                lb = selected_bins[-1]
-                lb = (lb[1], lb[0])
+                lb = _switch([selected_bins[-1]])[0]
                 if lb not in [b.bin_idx for b in current_mapelites._valid_bins()]:
                     curr_content = _get_elite_content(mapelites=current_mapelites,
                                                       bin_idx=None,
@@ -1253,10 +1250,10 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
                     cs_properties = get_properties_table()
                 elif current_mapelites.bins[lb].new_elite[hm_callback_props['pop'][kwargs['pop_name']]]:
                     curr_content = _get_elite_content(mapelites=current_mapelites,
-                                                      bin_idx=selected_bins[-1],
-                                                      pop=kwargs['pop_name'])
+                                                      bin_idx=lb,
+                                                      pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
                     elite = get_elite(mapelites=current_mapelites,
-                                      bin_idx=selected_bins[-1],
+                                      bin_idx=lb,
                                       pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
                     cs_string = elite.string
                     cs_properties = get_properties_table(cs=elite)
@@ -1804,14 +1801,13 @@ def __color(**kwargs) -> Dict[str, Any]:
     new_color = Vec.v3f(r, g, b).scale(1 / 256)
     base_color = new_color
     for (_, _), b in np.ndenumerate(current_mapelites.bins):
-        for cs in b._feasible:
-            for block in cs.content._blocks.values():
-                if _is_base_block(block_type=block.block_type):
-                    block.color = new_color
+        for cs in [*b._feasible, *b._infeasible]:
+            cs.base_color = new_color
+            cs.content.set_color(new_color)
     return {
         'content-plot.figure':  _get_elite_content(mapelites=current_mapelites,
-                                        bin_idx=_switch([selected_bins[-1]])[0],
-                                        pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
+                                                   bin_idx=_switch([selected_bins[-1]])[0],
+                                                   pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
     }
 
 
@@ -2041,5 +2037,5 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         output['valid-bins.children'] = valid_bins_str
         
         running_something = False
-            
+        
     return tuple(output.values())

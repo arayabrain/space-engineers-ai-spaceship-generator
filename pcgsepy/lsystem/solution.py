@@ -3,13 +3,15 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
+from pcgsepy.common.vecs import Vec
+
 from ..structure import Structure
 
 
 class CandidateSolution:
     __slots__ = ['string', '_content', 'age', 'b_descs', 'c_fitness', 'fitness', 'hls_mod',
                  'is_feasible', 'll_string', 'n_feas_offspring', 'n_offspring', 'ncv',
-                 'parents', 'representation']
+                 'parents', 'representation', 'base_color']
     
     def __init__(self,
                  string: str,
@@ -29,6 +31,7 @@ class CandidateSolution:
         self.ncv: int = 0  # number of constraints violated
         self.parents: List[CandidateSolution] = []
         self.representation: List[float] = []
+        self.base_color = Vec.v3f(x=0.45, y=0.45, z=0.45)  # default block color is #737373
 
     def __str__(self) -> str:
         return f'{self.string}; fitness: {self.c_fitness}; is_feasible: {self.is_feasible}'

@@ -308,13 +308,17 @@ class MAPElites:
         """
         bc0 = np.cumsum([0] + self.bin_sizes[0][:-1]) + self.b_descs[0].bounds[0]
         bc1 = np.cumsum([0] + self.bin_sizes[1][:-1]) + self.b_descs[1].bounds[0]
+        updated_bins = []
         for cs in lcs:
             b0, b1 = cs.b_descs
             i = np.digitize(x=[b0], bins=bc0, right=False)[0] - 1
             j = np.digitize(x=[b1], bins=bc1, right=False)[0] - 1
             self.bins[i, j].insert_cs(cs)
+            updated_bins.append((i, j))
         for (_, _), b in np.ndenumerate(self.bins):
             b.remove_old()
+        for idx in list(set(updated_bins)):
+            self.bins[idx].check_new_elite(pop='feasible')
 
     def _age_bins(self,
                   diff: int = -1) -> None:
@@ -505,6 +509,8 @@ class MAPElites:
                     if self.hull_builder is not None:
                         for cs in new_pool:
                             self.hull_builder.add_external_hull(cs.content)
+                    for cs in new_pool:
+                        cs.content.set_color(color=cs.base_color)
                     # assign fitness
                     generated.extend(Parallel(n_jobs=-1, prefer="threads")(delayed(self._assign_fitness)(cs) for cs in new_pool))
                 # evoexceptions are ignored, though it is possible to get stuck here
