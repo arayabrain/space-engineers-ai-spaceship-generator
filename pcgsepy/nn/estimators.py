@@ -290,7 +290,7 @@ class NonLinearEstimator(th.nn.Module):
     def predict(self,
                 X: np.ndarray) -> float:
          with th.no_grad():
-             return self.forward(th.tensor(X).float()).numpy()[:, 0]
+             return self.forward(th.tensor(X).float()).numpy()[0]
     
     def save(self,
              fname: str):
