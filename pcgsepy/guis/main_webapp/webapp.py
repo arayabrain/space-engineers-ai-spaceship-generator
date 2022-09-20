@@ -1,4 +1,5 @@
 import base64
+from cProfile import run
 import json
 import logging
 import os
@@ -106,7 +107,7 @@ behavior_descriptors = [
                              bounds=(0, 1))
 ]
 rngseed: int = 42
-running_something = False
+running_something: bool = False
 selected_bins: List[Tuple[int, int]] = []
 step_progress: int = -1
 use_custom_colors = True
@@ -157,6 +158,7 @@ class Metric:
 
 n_spaceships_inspected = Metric()
 time_elapsed = Metric(multiple_values=True)
+
 
 
 app = dash.Dash(__name__,
@@ -726,7 +728,10 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                          wrap=False,
                          contentEditable=False,
                          disabled=True,
-                         className='log-area')
+                         className='log-area'),
+            dcc.Interval(id='interval2',
+                         interval=1 * 100,
+                         n_intervals=0),
             ])
     
     color_picker = html.Div(children=[
@@ -799,7 +804,8 @@ app.clientside_callback(
     }
     """,
     Output("hidden-div", "n_clicks"),  # super hacky but Dash leaves me no choice
-    Input("consent-yes", "n_clicks")
+    Input("consent-yes", "n_clicks"),
+    prevent_initial_call=True
 )
 
 
@@ -815,7 +821,8 @@ app.clientside_callback(
     }
     """,
     Output("hidden-div", "title"),  # super hacky but Dash leaves me no choice
-    Input("interval1", "n_intervals")
+    Input("interval1", "n_intervals"),
+    prevent_initial_call=True
 )
 
 
@@ -838,7 +845,8 @@ def show_algo_info(n):
 
 
 @app.callback(Output('console-out', 'value'),
-              Input('interval1', 'n_intervals'))
+              Input('interval1', 'n_intervals'),
+              prevent_initial_call=True)
 def update_output(n):
     return ('\n'.join(dashLoggerHandler.queue))
 
@@ -848,6 +856,7 @@ def update_output(n):
      Output("step-progress", "label"),
      Output('step-progress-div', 'style')],
     [Input("interval1", "n_intervals")],
+    prevent_initial_call=True
 )
 def update_progress(n):  
     return step_progress, f"{np.round(step_progress, 2)}%", {'content-visibility': 'visible' if 0 <= step_progress <= 100 else 'hidden', 
@@ -859,6 +868,7 @@ def update_progress(n):
     [Output("gen-progress", "value"),
      Output("gen-progress", "label")],
     [Input("interval1", "n_intervals")],
+    prevent_initial_call=True
 )
 def update_gen_progress(n):
     if user_study_mode:
@@ -872,6 +882,7 @@ def update_gen_progress(n):
     [Output("exp-progress", "value"),
      Output("exp-progress", "label")],
     [Input("interval1", "n_intervals")],
+    prevent_initial_call=True
 )
 def update_exp_progress(n):
     val = np.round(100 * ((1 + exp_n) / len(my_emitterslist)), 2)
@@ -1861,6 +1872,18 @@ triggers_map = {
 }
 
 
+@app.callback(Output('step-btn', 'disabled'),
+              Input('interval2', 'n_intervals')
+              )
+def update_btsn_state(ni):
+    # non-definitive solution, see: https://github.com/plotly/dash-table/issues/925, https://github.com/plotly/dash/issues/1861
+    # long callback also do not work (infinite redeployment of webapp)
+    # NOTE: this can be extended to ALL buttons
+    global running_something
+    
+    return running_something or (user_study_mode and gen_counter >= N_GENS_ALLOWED)
+
+
 @app.callback(Output('heatmap-plot', 'figure'),
               Output('content-plot', 'figure'),
               Output('valid-bins', 'children'),
@@ -1868,7 +1891,6 @@ triggers_map = {
               Output('selected-bin', 'children'),
               Output('content-string', 'value'),
               Output('spaceship-properties', 'children'),
-              Output('step-btn', 'disabled'),
               Output('step-spinner', 'children'),
               Output("download-population", "data"),
               Output("download-metrics", "data"),
@@ -1943,7 +1965,8 @@ triggers_map = {
               Input("consent-yes", "n_clicks"),
               Input("consent-no", "n_clicks"),
               Input("nbs-err-btn", "n_clicks"),
-              Input('color-picker', 'value'))
+              Input('color-picker', 'value'),
+              )
 def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, qs_modal_show, qs_um_modal_show, cm_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style,
                      pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights, b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn, color):
     global user_study_mode
@@ -1977,7 +2000,6 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         'selected-bin.children': '',
         'content-string.value': cs_string,
         'spaceship-properties.children': cs_properties,
-        'step-btn.disabled': user_study_mode and gen_counter >= N_GENS_ALLOWED - 1,
         'step-spinner.children': '',
         'download-population.data': None,
         'download-metrics.data': None,
@@ -1997,13 +2019,9 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         'exp-progress-div.style': exp_progress_style
     }
     
-    if running_something:
-        # non-definitive solution, see: https://github.com/plotly/dash-table/issues/925, https://github.com/plotly/dash/issues/1861
-        # long callback also do not work (infinite loop)
-        # NOTE: the prevent update blocks previous callback results to be displayed
-        raise PreventUpdate
-    else:
+    if not running_something:
         running_something = True
+    
         u = triggers_map[event_trig](**vars)
         for k in u.keys():
             output[k] = u[k]
@@ -2023,5 +2041,5 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         output['valid-bins.children'] = valid_bins_str
         
         running_something = False
-        
-        return tuple(output.values())
+            
+    return tuple(output.values())
