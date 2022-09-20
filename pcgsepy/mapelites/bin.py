@@ -1,3 +1,4 @@
+from tabnanny import check
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -25,9 +26,9 @@ class MAPBin:
         self.bin_size = bin_size
         self.bin_initial_size = bin_initial_size if bin_initial_size else bin_size
         self.new_elite = {'feasible': False,
-                          '_elite_feasible': '',
+                          '_elite_feasible': None,
                           'infeasible': False,
-                          '_elite_infeasible': ''}
+                          '_elite_infeasible': None}
 
     def __str__(self) -> str:
         return f'Bin {self.bin_idx}, {self.bin_size} w/ {len(self._feasible)}f and {len(self._infeasible)}i cs'
@@ -50,7 +51,6 @@ class MAPBin:
         bs1 /= 2
         return bs0 >= ms0 and bs1 >= ms1
         
-
     def non_empty(self,
                   pop: str) -> bool:
         """Check if the bin is not empty for the given population.
@@ -89,19 +89,19 @@ class MAPBin:
             if cs not in self._feasible:
                 self._feasible.append(cs)
                 self._feasible = self._reduce_pop(self._feasible)
-                new_elite_str = self.get_elite(population='feasible').string
-                if new_elite_str != self.new_elite['_elite_feasible']:
-                    self.new_elite['feasible'] = True
-                    self.new_elite['_elite_feasible'] = new_elite_str
         else:
             if cs not in self._infeasible:
                 self._infeasible.append(cs)
                 self._infeasible = self._reduce_pop(self._infeasible)
-                new_elite_str = self.get_elite(population='infeasible').string
-                if new_elite_str != self.new_elite['_elite_infeasible']:
-                    self.new_elite['infeasible'] = True
-                    self.new_elite['_elite_infeasible'] = new_elite_str
 
+    def check_new_elite(self,
+                        pop: str = 'feasible'):
+        checking = f'_elite_{pop}'
+        elite = self.get_elite(population=pop)
+        if elite is not None and (self.new_elite[checking] is None or elite.c_fitness > self.new_elite[checking].c_fitness):
+            self.new_elite[pop] = True
+            self.new_elite[checking] = elite
+    
     def age(self,
             diff: int = -1):
         """Age the bin.
@@ -152,7 +152,7 @@ class MAPBin:
 
     def get_elite(self,
                   population: str = 'feasible',
-                  always_max: bool = True) -> CandidateSolution:
+                  always_max: bool = True) -> Optional[CandidateSolution]:
         """Get the elite of the selected population.
 
         Args:
@@ -160,11 +160,14 @@ class MAPBin:
             always_max (bool): Whether to select based on highest fitness. Defaults to `True`.
 
         Returns:
-            CandidateSolution: The elite solution.
+            Optional[CandidateSolution]: The elite solution, if it exists.
         """
         pop = self._feasible if population == 'feasible' else self._infeasible
-        get_max = always_max or population == 'feasible'
-        return sorted(pop, key=lambda x: x.c_fitness, reverse=get_max)[0]
+        if pop:
+            get_max = always_max or population == 'feasible'
+            return sorted(pop, key=lambda x: x.c_fitness, reverse=get_max)[0]
+        else:
+            return None
 
     def toggle_module_mutability(self,
                                  module: str):

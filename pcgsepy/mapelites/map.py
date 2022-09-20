@@ -181,8 +181,8 @@ class MAPElites:
                    vmax=vmaxs[metric][population])
         plt.xticks(np.arange(self.bin_qnt[0]), np.cumsum(self.bin_sizes[0]) + self.b_descs[0].bounds[0])
         plt.yticks(np.arange(self.bin_qnt[1]), np.cumsum(self.bin_sizes[1]) + self.b_descs[1].bounds[0])
-        plt.xlabel(self.b_descs[1].name)
-        plt.ylabel(self.b_descs[0].name)
+        plt.xlabel(self.b_descs[0].name)
+        plt.ylabel(self.b_descs[1].name)
         plt.title(f'CMAP-Elites {"Avg. " if show_mean else ""}{metric} ({population})')
         cbar = plt.colorbar()
         cbar.set_label(
@@ -308,13 +308,17 @@ class MAPElites:
         """
         bc0 = np.cumsum([0] + self.bin_sizes[0][:-1]) + self.b_descs[0].bounds[0]
         bc1 = np.cumsum([0] + self.bin_sizes[1][:-1]) + self.b_descs[1].bounds[0]
+        updated_bins = []
         for cs in lcs:
             b0, b1 = cs.b_descs
             i = np.digitize(x=[b0], bins=bc0, right=False)[0] - 1
             j = np.digitize(x=[b1], bins=bc1, right=False)[0] - 1
             self.bins[i, j].insert_cs(cs)
+            updated_bins.append((i, j))
         for (_, _), b in np.ndenumerate(self.bins):
             b.remove_old()
+        for idx in list(set(updated_bins)):
+            self.bins[idx].check_new_elite(pop='feasible')
 
     def _age_bins(self,
                   diff: int = -1) -> None:
@@ -333,7 +337,7 @@ class MAPElites:
         Returns:
             List[MAPBin]: The list of valid bins.
         """
-        return [cbin for (_, _), cbin in np.ndenumerate(self.bins) if len(cbin._feasible) > 1 and len(cbin._infeasible) > 1]
+        return [cbin for (_, _), cbin in np.ndenumerate(self.bins) if len(cbin._feasible) > 0]
 
     def _check_res_trigger(self) -> List[Tuple[int, int]]:
         """Trigger a resolution increase if at least 1 bin has reached full population capacity for both Feasible and Infeasible populations.
@@ -485,10 +489,6 @@ class MAPElites:
         Returns:
             List[CandidateSolution]: The new solutions.
         """
-        # reset bins new_elite flags
-        for (_, _), b in np.ndenumerate(self.bins):
-            for p in ['feasible', 'infeasible']:
-                b.new_elite[p] = False
         # generate solutions from both populations
         generated = []
         for pop in populations:
@@ -509,6 +509,8 @@ class MAPElites:
                     if self.hull_builder is not None:
                         for cs in new_pool:
                             self.hull_builder.add_external_hull(cs.content)
+                    for cs in new_pool:
+                        cs.content.set_color(color=cs.base_color)
                     # assign fitness
                     generated.extend(Parallel(n_jobs=-1, prefer="threads")(delayed(self._assign_fitness)(cs) for cs in new_pool))
                 # evoexceptions are ignored, though it is possible to get stuck here
@@ -564,6 +566,42 @@ class MAPElites:
         else:
             self._age_bins(diff=1)
 
+    def seek_nearest_valid(self,
+                           bin_idxs: List[List[int]],
+                           pop: str = 'infeasible') -> List[CandidateSolution]:
+        """Collect CandidateSolutions from neighbouring indexes in a pseudo-nearestneighbour style.
+
+        Args:
+            bin_idxs (List[List[int]]): The list of bin indices.
+            pop (str, optional): The population to collect solutions for. Defaults to 'infeasible'.
+
+        Returns:
+            List[CandidateSolution]: The list of neighbouring solutions, if it exists.
+        """
+        new_pop = []
+        inspecting = [idx for idx in bin_idxs]
+        offsets = [(-1, -1), (-1, 0), (-1,1), (0, -1), (0, 1), (1, -1),  (1, 0), (1, 1)]
+        np.random.shuffle(offsets)
+        while new_pop == []:
+            to_inspect = []
+            past_idxs = []
+            for idx in inspecting:
+                past_idxs.append(idx)
+                for offset in offsets:
+                    new_idx = (idx[0] + offset[0], idx[1] + offset[1])
+                    if 0 <= new_idx[0] < self.bins.shape[0] and 0 <= new_idx[1] < self.bins.shape[1]:
+                        pool = self.bins[new_idx]._feasible if pop == 'feasible' else self.bins[new_idx]._infeasible
+                        if pool:
+                            new_pop.extend(pool) 
+                            break
+                        else:
+                            if idx not in past_idxs:
+                                to_inspect.append(new_idx)
+            if to_inspect == []:
+                break
+            inspecting = to_inspect
+        return new_pop
+    
     def interactive_step(self,
                          bin_idxs: List[List[int]],
                          gen: int = 0) -> None:
@@ -582,6 +620,11 @@ class MAPElites:
                 assert chosen_bin in self._valid_bins(), f'Bin at {chosen_bin.bin_idx} is not a valid bin.'
             f_pop.extend(chosen_bin._feasible)
             i_pop.extend(chosen_bin._infeasible)
+        
+        if i_pop == []:
+            i_pop = self.seek_nearest_valid(bin_idxs=bin_idxs,
+                                            pop='infeasible')
+        
         generated = self._step(populations=[f_pop, i_pop],
                                gen=gen)
         if generated:
@@ -596,7 +639,8 @@ class MAPElites:
         if self.emitter is not None and self.emitter.requires_pre:
             self.emitter.pre_step(bins=self.bins,
                                   selected_idxs=bin_idxs,
-                                  expanded_idxs=expanded_idxs)
+                                  expanded_idxs=expanded_idxs,
+                                  bounds=[b.bounds for b in self.b_descs])
 
     def emitter_step(self,
                      gen: int = 0) -> None:
@@ -645,6 +689,15 @@ class MAPElites:
                     ipop.extend(selected_bin._infeasible)
             else:
                 raise NotImplementedError(f'Unrecognized emitter output: {selected_bins}.')
+            
+            if ipop == []:
+                if isinstance(selected_bins[0], MAPBin):
+                    ipop = self.seek_nearest_valid(bin_idxs=[b.bin_idx for b in selected_bins],
+                                                    pop='infeasible')
+                elif isinstance(selected_bins[0], list):
+                    ipop = self.seek_nearest_valid(bin_idxs=[b.bin_idx for b in selected_bins[1]],
+                                                    pop='infeasible')
+            
             generated = self._step(populations=[fpop, ipop],
                                    gen=gen)
             if generated:

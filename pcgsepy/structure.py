@@ -131,6 +131,19 @@ class IntersectionException(Exception):
     pass
 
 
+def _is_base_block(block_type: str) -> bool:
+    """Check if the block is a base block. Base blocks are non-functional, structural blocks.
+
+    Args:
+        block_type (str): The type of the block.
+
+    Returns:
+        bool: Whether the block is a base block.
+    """
+    return block_type.endswith("Block") or block_type.endswith("Slope") or block_type.endswith("Corner") or block_type.endswith("CornerInv")
+
+
+
 class Structure:
     __slots__ = ['origin_coords', 'orientation_forward', 'orientation_up', 'grid_size', '_blocks',
                  '_has_intersections', '_scaled_arr', '_arr']
@@ -177,6 +190,12 @@ class Structure:
             self._has_intersections = True
         
         self._blocks[(i, j, k)] = block
+    
+    def set_color(self,
+                  color: Vec) -> None:
+        for block in self._blocks.values():
+            if _is_base_block(block_type=block.block_type):
+                block.color = color
     
     @property
     def _max_dims(self) -> Tuple[int, int, int]:
