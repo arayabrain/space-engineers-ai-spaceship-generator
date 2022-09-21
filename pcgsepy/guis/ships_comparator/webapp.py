@@ -3,6 +3,7 @@ import json
 import os
 import random
 import sys
+from turtle import width
 from typing import Dict, List, Optional, Tuple
 
 import dash
@@ -333,7 +334,7 @@ def set_app_layout():
     # create containers
     header = dbc.Row(children=[
         dbc.Col(html.H1(children='🚀Space Engineers Spaceships Ranker🚀',
-                        className='title'), width={'size': 10, 'offset': 1}),
+                        className='title'), width={'size': 6, 'offset': 3}),
         dbc.Col(children=[dbc.Button('Info',
                                      id='info-btn',
                                      color='info')],
@@ -391,15 +392,28 @@ def set_app_layout():
             ok_modal,
             header,
             html.Br(),
-            upload_component,
+            dbc.Row(
+                dbc.Col(
+                    [
+                        upload_component,
+                        html.Br(),
+                        upload_progress,
+                        ],
+                    width={'size': 10, 'offset': 1}
+                )
+            ),
             html.Br(),
-            upload_progress,
-            html.Br(),
-            content_container,
-            html.Br(),
-            get_rankings_div(),
-            html.Br(),
-            save_data,
+            dbc.Row(
+                dbc.Col(
+                    [
+                        content_container,
+                        html.Br(),
+                        get_rankings_div(),
+                        html.Br(),
+                        save_data
+                        ],
+                    width={'size': 10, 'offset': 1})
+            ),
             dcc.Interval(id='interval',
                          interval=1 * 1000,
                          n_intervals=0),
