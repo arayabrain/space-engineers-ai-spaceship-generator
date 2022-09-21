@@ -1,12 +1,12 @@
 How to use the program:
-###### Plot settings
+##### Plot settings
 Here it is possible to change the data that is being visualized in the MAP-Elites plot (left) and content plot (right).
 
 It is possible to visualize behavior characteristics for both the feasible and infeasible population. It is possible to plot either the Fitness, the Age, and the Coverage metric for all solutions. Additionally, it is possible to plot metrics for only the elite or the bin population.
 
 By selecting a bin in the MAP-Elites plot, the elite content will be displayed in the content plot (right) and the content properties (spaceship size, number of blocks used, and string representation) will be shown next to it. Additionally, the selected spaceship can be downloaded by clicking the "DOWNLOAD CONTENT" button at any time. You can also change the base color of the spaceship by picking it from the widget next to the spaceship properties.
 
-###### Experiment settings & control
+##### Experiment settings & control
 Here there are both information on the experiment and buttons that allow the user to interact with the evolution procedure.
 
 In particular:
@@ -24,8 +24,8 @@ In particular:
     - **SUBDIVIDE SELECTED BIN(S)**: Subdivides the selected bin(s) in half, reassigning the solutions to the correct bin.
     - **DOWNLOAD MAP-ELITES**: Downloads the MAP-Elites object. This is only possible after a certain number of generations has elapsed.
 
-###### High-level rules
+##### High-level rules
 Here it is possible to inspect and update the high-level rules used by the L-system. When updating a rule, a check is always performed to ensure the expansion probability of the left-hand side rule sums up to 1.
 
-###### Log
+##### Log
 All log messages are relayed here. As some operations may take some time to complete, progress messages are also reported.
