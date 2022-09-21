@@ -293,9 +293,10 @@ class MAPElites:
                                     bin_size=(self.bin_sizes[0][m],
                                               self.bin_sizes[1][n]),
                                     bin_initial_size=(v_i, v_j))
-            x = m if m <= i else m - 1
-            y = n if n <= j else n - 1
-            new_bins[m, n].new_elite = self.bins[x, y].new_elite
+            if m != i or m != i + 1 or n != j or n != j + 1:
+                x = m if m < i else m - 1
+                y = n if n < j else n - 1
+                new_bins[m, n].new_elite = self.bins[x, y].new_elite
         # assign new bin map
         self.bins = new_bins
         # assign solutions to bins
