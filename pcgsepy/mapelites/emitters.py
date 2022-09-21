@@ -542,9 +542,6 @@ class ContextualBanditEmitter(Emitter):
     def pre_step(self, **kwargs) -> None:
         bins: 'np.ndarray[MAPBin]' = kwargs['bins']
         idxs: List[Tuple[int]] = kwargs['selected_idxs']
-        
-        print(f'{len(bins)=}, {idxs=}')
-        
         for i in range(bins.shape[0]):
             for j in range(bins.shape[1]):
                 if bins[i, j].non_empty(pop='feasible'):
