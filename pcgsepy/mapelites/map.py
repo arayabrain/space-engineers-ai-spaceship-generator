@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.typing as npt
 from joblib import Parallel, delayed
 from pcgsepy.common.jsonifier import json_dumps, json_loads
 from pcgsepy.config import (ALIGNMENT_INTERVAL, BIN_POP_SIZE, CS_MAX_AGE,
@@ -121,7 +122,7 @@ class MAPElites:
         self._initial_n_bins = n_bins
         self.bin_qnt = n_bins
         self.bin_sizes = [[self.limits[0] / self.bin_qnt[0]] * n_bins[0], [self.limits[1] / self.bin_qnt[1]] * n_bins[1]]
-        self.bins = np.empty(shape=self.bin_qnt, dtype=MAPBin)
+        self.bins: npt.NDarray[MAPBin] = np.empty(shape=self.bin_qnt, dtype=MAPBin)
         for (i, j), _ in np.ndenumerate(self.bins):
             self.bins[i, j] = MAPBin(bin_idx=(i, j),
                                      bin_size=(self.bin_sizes[0][i], self.bin_sizes[1][j]))
@@ -292,6 +293,9 @@ class MAPElites:
                                     bin_size=(self.bin_sizes[0][m],
                                               self.bin_sizes[1][n]),
                                     bin_initial_size=(v_i, v_j))
+            x = m if m <= i else m - 1
+            y = n if n <= j else n - 1
+            new_bins[m, n].new_elite = self.bins[x, y].new_elite
         # assign new bin map
         self.bins = new_bins
         # assign solutions to bins
@@ -308,17 +312,13 @@ class MAPElites:
         """
         bc0 = np.cumsum([0] + self.bin_sizes[0][:-1]) + self.b_descs[0].bounds[0]
         bc1 = np.cumsum([0] + self.bin_sizes[1][:-1]) + self.b_descs[1].bounds[0]
-        updated_bins = []
         for cs in lcs:
             b0, b1 = cs.b_descs
             i = np.digitize(x=[b0], bins=bc0, right=False)[0] - 1
             j = np.digitize(x=[b1], bins=bc1, right=False)[0] - 1
             self.bins[i, j].insert_cs(cs)
-            updated_bins.append((i, j))
         for (_, _), b in np.ndenumerate(self.bins):
             b.remove_old()
-        for idx in list(set(updated_bins)):
-            self.bins[idx].check_new_elite(pop='feasible')
 
     def _age_bins(self,
                   diff: int = -1) -> None:
@@ -473,6 +473,8 @@ class MAPElites:
         # if required, initialize the emitter
         if self.emitter is not None and self.emitter.requires_init:
             self.emitter.init_emitter(bins=self.bins)
+        # update bins for elites
+        self.update_elites()
 
     def _step(self,
               populations: List[List[CandidateSolution]],
@@ -641,6 +643,7 @@ class MAPElites:
                                   selected_idxs=bin_idxs,
                                   expanded_idxs=expanded_idxs,
                                   bounds=[b.bounds for b in self.b_descs])
+        
 
     def emitter_step(self,
                      gen: int = 0) -> None:
@@ -767,6 +770,17 @@ class MAPElites:
                 if b.non_empty(pop='feasible'):
                     for cs in b._feasible:
                         self.hull_builder.add_external_hull(cs.content)
+        # update bins for elites
+        self.update_elites()
+    
+    def update_elites(self,
+                      reset: bool = False):
+        for (_, _), b in np.ndenumerate(self.bins):
+            for pop in ['feasible', 'infeasible']:
+                if reset:
+                    b.new_elite[pop] = False
+                else:
+                    b.check_new_elite(pop=pop)
     
     def to_json(self) -> Dict[str, Any]:
         return {

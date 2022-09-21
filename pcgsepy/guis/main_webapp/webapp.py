@@ -89,10 +89,11 @@ gen_counter: int = 0
 gdev_mode: bool = False
 hidden_style = {'visibility': 'hidden', 'height': '0px', 'display': 'none'}
 hm_callback_props = {}
-my_emitterslist: List[str] = ['mapelites_human.json',
-                              'mapelites_random.json',
-                              'mapelites_greedy.json',
-                              'mapelites_contbandit.json']
+my_emitterslist: List[str] = ['mapelites_human.json']
+# my_emitterslist: List[str] = ['mapelites_human.json',
+#                               'mapelites_random.json',
+#                               'mapelites_greedy.json',
+#                               'mapelites_contbandit.json']
 behavior_descriptors = [
     BehaviorCharacterization(name='Major axis / Medium axis',
                              func=mame,
@@ -1134,7 +1135,6 @@ def _build_heatmap(mapelites: MAPElites,
             s = ''
             if mapelites.bins[i, j].non_empty(pop='feasible'):
                 if (i, j) in valid_bins:
-                    # s = '☐'
                     s = '▣' if gen_counter > 0 and mapelites.bins[i, j].new_elite[population] else s
                     s = '☑' if (j, i) in selected_bins else s                    
             if j == 0:
@@ -1310,13 +1310,12 @@ def _apply_step(mapelites: MAPElites,
     if valid:
         logging.getLogger('webapp').info(msg=f'Started step {gen_counter + 1}...')
         # reset bins new_elite flags
-        for (_, _), b in np.ndenumerate(mapelites.bins):
-            for p in ['feasible', 'infeasible']:
-                b.new_elite[p] = False
+        mapelites.update_elites(reset=True)
         step_progress = 0
         if not only_emitter:
             mapelites.interactive_step(bin_idxs=selected_bins,
                                        gen=gen_counter)
+        
         step_progress += perc_step
         logging.getLogger('webapp').info(msg=f'Completed step {gen_counter + 1} (created {mapelites.n_new_solutions} solutions); running {N_EMITTER_STEPS} additional emitter steps if available...')
         mapelites.n_new_solutions = 0
@@ -1328,6 +1327,7 @@ def _apply_step(mapelites: MAPElites,
         logging.getLogger('webapp').info(msg=f'Emitter step(s) completed (created {mapelites.n_new_solutions} solutions).')
         mapelites.n_new_solutions = 0
         step_progress = -1
+        mapelites.update_elites()
         return True
     else:
         logging.getLogger('webapp').info(msg='Step not applied: invalid bin(s) selected.')
@@ -1801,9 +1801,9 @@ def __content_download(**kwargs) -> Dict[str, Any]:
                     current_mapelites.hull_builder.apply_smoothing = False
                     logging.getLogger('webapp').info(msg='Initialization completed.')
                 curr_heatmap = _build_heatmap(mapelites=current_mapelites,
-                                            pop_name=kwargs['pop_name'],
-                                            metric_name=kwargs['metric_name'],
-                                            method_name=kwargs['method_name'])
+                                              pop_name=kwargs['pop_name'],
+                                              metric_name=kwargs['metric_name'],
+                                              method_name=kwargs['method_name'])
                 selected_bins = []
                 curr_content = _get_elite_content(mapelites=current_mapelites,
                                                 bin_idx=None,
