@@ -140,40 +140,28 @@ def get_rankings_div() -> html.Div:
     """
     rankings_div = html.Div(children=[
         dbc.Row(children=[
-            dbc.Col(children=[dbc.Label("Spaceships ranking: ",
-                                        size='lg')],
+            dbc.Col(children=[html.H1("Spaceships Ranking")],
                     style={'text-align': 'center'},
                     width={'offset': 4, 'size': 4})]),            
         html.Br(),
         ],
-                            id='ranking-div')
-    # rankings_div.children.extend([
-    #     html.Div(children=[
-    #         dbc.Row(children=[
-    #             dbc.Col(dbc.Label(f"{i + 1}{['st', 'nd', 'rd', 'th'][i] if i < 4 else 'th'} place:"),
-    #                     width={'offset': 5, 'size': 1}),
-    #             dbc.Col(dbc.DropdownMenu(label='A',
-    #                                     children=[dbc.DropdownMenuItem(f'{chr(ord("A") + j)}',
-    #                                                                     id={'type': "spaceship-ranking", 'index': (i * len(emitters)) + j}) for j in range(len(emitters))],
-    #                                     id={'type': "ranking-dropdown", 'index': i}),
-    #                     width=1,
-    #                     align='start')]),
-    #         html.Br()]) for i in range(len(emitters))])
-    
+                            id='ranking-div')    
     rankings_div.children.append(
         dbc.Row(children=[
             dbc.Col(children=[
                 dbc.Row(
-                    dbc.Col(dbc.Label(f"{i + 1}{['st', 'nd', 'rd', 'th'][i] if i < 4 else 'th'} place:")),
+                    dbc.Col(dbc.Label(f"{i + 1}{['st', 'nd', 'rd', 'th'][i] if i < 4 else 'th'} place:", style={'font-size': 'x-large'})),
                     ),
                 dbc.Row(
                     dbc.Col(dbc.DropdownMenu(label='A',
+                                             style={'font-size': 'x-large'},
                                              children=[dbc.DropdownMenuItem(f'{chr(ord("A") + j)}',
                                                                             id={'type': "spaceship-ranking", 'index': (i * len(emitters)) + j}) for j in range(len(emitters))],
                                              id={'type': "ranking-dropdown", 'index': i}))
                     )
                 ],
-                    style={'text-align': 'center'}) for i in range(len(emitters))
+                    style={'text-align': 'center'},
+                    width={'offset': 4 if i == 0 else 0, 'size': 1}) for i in range(len(emitters))
             ])
         )
             
@@ -301,7 +289,8 @@ def set_app_layout():
         dbc.ModalHeader(dbc.ModalTitle("Info"),
                         style={'flex-direction': 'column-reverse'},
                         close_button=True),
-        dbc.ModalBody(dcc.Markdown(info_str))
+        dbc.ModalBody(dcc.Markdown(info_str),
+                      style={'text-align': 'justify'})
     ],
         id='info-modal',
         centered=True,
@@ -343,10 +332,11 @@ def set_app_layout():
         className='header')
     upload_component = html.Div(children=[
         dcc.Upload(id='upload-data',
-                   children=html.Div([
+                   children=html.Div(children=[
                        'Drag and Drop or ',
                        html.A('Select Files')
-                   ]),
+                   ],
+                                     style={'font-size': 'x-large'}),
                    style={
                        'width': '60%',
                        'height': '60px',
@@ -374,6 +364,7 @@ def set_app_layout():
                                  style={'width': '100%', 'display': 'flex', 'flex-direction': 'row', 'justify-content': 'center'})
     save_data = dbc.Row(children=[
         dbc.Col(children=[dbc.Button(children='Save',
+                                     style={'font-size': 'xx-large'},
                                      id='save-btn',
                                      n_clicks=0,
                                      disabled=True,
@@ -408,7 +399,13 @@ def set_app_layout():
                     [
                         content_container,
                         html.Br(),
-                        get_rankings_div(),
+                        dbc.Row(
+                            dbc.Col(
+                                get_rankings_div(),
+                                width=('offset: 1')
+                            )
+                        ),
+                        html.Br(),
                         html.Br(),
                         save_data
                         ],

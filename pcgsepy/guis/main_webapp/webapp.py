@@ -451,12 +451,11 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
         children=[
             dbc.Row(
                 dbc.Col(
-                    # dbc.Label('Study Progress',
-                    #           size='lg',
-                    #           style=hidden_style if gdev_mode else {}),
-                    html.H4('Study Progress',
-                            className='section-title',
-                            style=hidden_style if gdev_mode else {}),
+                    children=[
+                        html.H4('Study Progress',
+                                className='section-title',
+                                style=hidden_style if gdev_mode else {}),
+                        html.Br()],
                     width={'size': 12, 'offset': 0},
                     style={'text-align': 'center'}
                 ),
@@ -496,6 +495,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     mapelites_heatmap = html.Div(children=[
         html.H4('Spaceship Population',
                 className='section-title'),
+        html.Br(),
         dcc.Graph(id="heatmap-plot",
                   figure=go.Figure(data=[]),
                   config={
@@ -508,6 +508,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
         children=[
             html.H4(children='Plot Settings',
                     className='section-title'),
+            html.Br(),
             dbc.Label('Choose which population to display.'),
             dbc.DropdownMenu(label='Feasible',
                             children=[
@@ -538,6 +539,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     content_plot = html.Div(children=[
         html.H4('Selected Spaceship',
                 className='section-title'),
+        html.Br(),
         dcc.Graph(id="content-plot",
                   figure=go.Figure(data=[]),
                   config={
@@ -558,6 +560,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                         width={'size': 10, 'offset': 1},
                         style={'text-align': 'center'})
             ),
+            html.Br(),
             dbc.Row(
                 dbc.Col([
                     dbc.Label("Download Content",
@@ -605,10 +608,11 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                     align='center')])    
 
     properties_panel = html.Div(
-        children=[dbc.Row(dbc.Col(
+        children=[dbc.Row(dbc.Col([
             html.H4('Spaceship Properties',
-                    className='section-title')
-            )),
+                    className='section-title'),
+            html.Br()
+            ])),
                   dbc.Row(
                       [
                           dbc.Col(color_and_download),
@@ -795,6 +799,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
         children=[
             html.H4(children='High-level Rules',
                     className='section-title'),
+            html.Br(),
             dbc.Textarea(id='hl-rules',
                          value=str(current_mapelites.lsystem.hl_solver.parser.rules),
                          wrap=False,
@@ -809,7 +814,6 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     
     progress = html.Div(
         children=[
-            html.Br(),
             dbc.Label('Evolution Progress: ',
                       style={'font-size': 'large'}),
             dbc.Progress(id="step-progress",
@@ -829,6 +833,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                          n_intervals=0),
             html.H4(children='Log',
                     className='section-title'),
+            html.Br(),
             dbc.Textarea(id='console-out',
                          value='',
                          wrap=False,
