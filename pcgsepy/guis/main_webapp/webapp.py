@@ -60,7 +60,7 @@ class DashLoggerHandler(logging.StreamHandler):
 
 
 logger = logging.getLogger('webapp')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 dashLoggerHandler = DashLoggerHandler()
 logger.addHandler(dashLoggerHandler)
 
@@ -89,11 +89,10 @@ gen_counter: int = 0
 gdev_mode: bool = False
 hidden_style = {'visibility': 'hidden', 'height': '0px', 'display': 'none'}
 hm_callback_props = {}
-my_emitterslist: List[str] = ['mapelites_human.json']
-# my_emitterslist: List[str] = ['mapelites_human.json',
-#                               'mapelites_random.json',
-#                               'mapelites_greedy.json',
-#                               'mapelites_contbandit.json']
+my_emitterslist: List[str] = ['mapelites_human.json',
+                              'mapelites_random.json',
+                              'mapelites_greedy.json',
+                              'mapelites_contbandit.json']
 behavior_descriptors = [
     BehaviorCharacterization(name='Major axis / Medium axis',
                              func=mame,
@@ -109,7 +108,6 @@ behavior_descriptors = [
                              bounds=(0, 1))
 ]
 rngseed: int = 42
-running_something: bool = False
 selected_bins: List[Tuple[int, int]] = []
 step_progress: int = -1
 use_custom_colors = True
@@ -161,6 +159,24 @@ class Metric:
 n_spaceships_inspected = Metric()
 time_elapsed = Metric(multiple_values=True)
 
+
+class Semaphore:
+    def __init__(self,
+                 locked: bool = False) -> None:
+        self._is_locked = locked
+    
+    @property
+    def is_locked(self) -> bool:
+        return self._is_locked
+    
+    def lock(self):
+        self._is_locked = True
+    
+    def unlock(self):
+        self._is_locked = False
+
+download_semaphore = Semaphore(locked=True)    
+process_semaphore = Semaphore()
 
 
 app = dash.Dash(__name__,
@@ -835,6 +851,8 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
             ],
         fluid=True)
 
+    logging.getLogger('webapp').debug(msg='[set_app_layout] Set the webapp layout.')
+
 
 # clientside callback to open the Google Forms questionnaire on a new page
 app.clientside_callback(
@@ -956,14 +974,21 @@ def download_content(n):
     global selected_bins
     global current_mapelites
     global base_color
+    global download_semaphore
     
     def write_archive(bytes_io):
         with ZipFile(bytes_io, mode="w") as zf:
+            
+            print(f'{selected_bins[-1]=} -> {_switch([selected_bins[-1]])[0]}')
+            
             # with open('./assets/thumb.png', 'rb') as f:
             #     thumbnail_img = f.read()
             curr_content = _get_elite_content(mapelites=current_mapelites,
                                               bin_idx=_switch([selected_bins[-1]])[0],
                                               pop='feasible')
+            
+            print(f'{current_mapelites.bins[_switch([selected_bins[-1]])[0]]=}')
+            
             thumbnail_img = curr_content.to_image(format="png")
             zf.writestr('thumb.png', thumbnail_img)
             elite = get_elite(mapelites=current_mapelites,
@@ -975,6 +1000,8 @@ def download_content(n):
             hullbuilder = HullBuilder(erosion_type=current_mapelites.hull_builder.erosion_type,
                                       apply_erosion=True,
                                       apply_smoothing=True)
+            download_semaphore.unlock()
+            logging.getLogger('webapp').debug('[write_archive] Semaphore unlocked')
             hullbuilder.add_external_hull(elite.content)
             for block in elite.content._blocks.values():
                 if _is_base_block(block_type=block.block_type):
@@ -990,6 +1017,7 @@ def download_content(n):
         logging.getLogger('webapp').info(f'Your selected spaceship will be downloaded shortly.')
         return dcc.send_bytes(write_archive, f'MySpaceship_{rngseed}_exp{exp_n}_gen{gen_counter}.zip'), '\n\n'
     else:
+        download_semaphore.unlock()
         return None, '\n\n'
 
 @app.callback(
@@ -1040,7 +1068,9 @@ def update_btsn_state(fdis, ms, lsysms, symms,
                       ni):
     # non-definitive solution, see: https://github.com/plotly/dash-table/issues/925, https://github.com/plotly/dash/issues/1861
     # long_callback and background callback also do not work (infinite redeployment of webapp)
-    global running_something
+    global process_semaphore
+    
+    running_something = process_semaphore.is_locked
     
     for o in ms:
         o['disabled'] = running_something
@@ -1122,7 +1152,7 @@ def _build_heatmap(mapelites: MAPElites,
     population = hm_callback_props['pop'][pop_name]
     # build heatmap
     disp_map = np.zeros(shape=mapelites.bins.shape)
-    labels = np.zeros(shape=(mapelites.bins.shape[0], mapelites.bins.shape[1], 2))
+    labels = np.zeros(shape=(mapelites.bins.shape[1], mapelites.bins.shape[0], 2))
     text = []
     x_labels = np.cumsum([0] + mapelites.bin_sizes[0][:-1]) + mapelites.b_descs[0].bounds[0]
     y_labels = np.cumsum([0] + mapelites.bin_sizes[1][:-1]) + mapelites.b_descs[1].bounds[0]
@@ -1141,8 +1171,8 @@ def _build_heatmap(mapelites: MAPElites,
                 text.append([s])
             else:
                 text[-1].append(s)
-            labels[i, j, 0] = x_labels[i]
-            labels[i, j, 1] = y_labels[j]
+            labels[j, i, 0] = x_labels[i]
+            labels[j, i, 1] = y_labels[j]
     # plot
     hovertemplate = f'{mapelites.b_descs[0].name}: X<br>{mapelites.b_descs[1].name}: Y<br>{metric_name}: Z<extra></extra>'
     hovertemplate = hovertemplate.replace('X', '%{customdata[0]}').replace('Y', '%{customdata[1]}').replace('Z', '%{z}')
@@ -1620,8 +1650,8 @@ def __update_content(**kwargs) -> Dict[str, Any]:
     if current_mapelites.bins[j, i].non_empty(pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible'):
         if (j, i) in [b.bin_idx for b in current_mapelites._valid_bins()]:
             curr_content = _get_elite_content(mapelites=current_mapelites,
-                                            bin_idx=(j, i),
-                                            pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
+                                              bin_idx=(j, i),
+                                              pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
             if consent_ok:
                 n_spaceships_inspected.add(1)
             if not current_mapelites.enforce_qnt and selected_bins != []:
@@ -1724,7 +1754,15 @@ def __content_download(**kwargs) -> Dict[str, Any]:
     global time_elapsed
     global n_spaceships_inspected
     global rngseed
+    global download_semaphore
 
+    logging.getLogger('webapp').debug(f'[__content_download] (init) Semaphore lock is set to {download_semaphore.is_locked=}')
+    while download_semaphore.is_locked:
+        pass
+    logging.getLogger('webapp').debug(f'[__content_download] (after waiting) Semaphore lock is set to {download_semaphore.is_locked=}')
+    download_semaphore.lock()
+    logging.getLogger('webapp').debug(f'[__content_download] Semaphore locked')
+    
     cs_string = kwargs['cs_string']
     cs_properties = kwargs['cs_properties']
     curr_heatmap = kwargs['curr_heatmap']
@@ -1739,7 +1777,7 @@ def __content_download(**kwargs) -> Dict[str, Any]:
     
     if cs_string != '':
         if user_study_mode and gen_counter == N_GENS_ALLOWED:
-            time.sleep(2)
+            # time.sleep(2)
             exp_n += 1
             # check end of user study
             if exp_n >= len(my_emitterslist):
@@ -1806,8 +1844,8 @@ def __content_download(**kwargs) -> Dict[str, Any]:
                                               method_name=kwargs['method_name'])
                 selected_bins = []
                 curr_content = _get_elite_content(mapelites=current_mapelites,
-                                                bin_idx=None,
-                                                pop=None)
+                                                  bin_idx=None,
+                                                  pop=None)
                 cs_string = ''
                 cs_properties = get_properties_table()
     else:
@@ -2086,7 +2124,6 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     global current_mapelites
     global gen_counter
     global selected_bins
-    global running_something
     
     ctx = dash.callback_context
 
@@ -2132,8 +2169,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         'exp-progress-div.style': exp_progress_style
     }
     
-    if not running_something:
-        running_something = True
+    if not process_semaphore.is_locked:
+        process_semaphore.lock()
     
         u = triggers_map[event_trig](**vars)
         for k in u.keys():
@@ -2153,6 +2190,6 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         output['selected-bin.children'] = selected_bins_str
         output['valid-bins.children'] = valid_bins_str
         
-        running_something = False
+        process_semaphore.unlock()
         
     return tuple(output.values())

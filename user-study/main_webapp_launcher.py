@@ -46,6 +46,9 @@ args = parser.parse_args()
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
+if args.debug:
+    logging.getLogger('webapp').setLevel(logging.DEBUG)
+
 setup_matplotlib(larger_fonts=False)
 
 used_ll_blocks = [
