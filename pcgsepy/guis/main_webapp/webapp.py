@@ -389,7 +389,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     no_bins_selected_modal = dbc.Modal(children=[
         dbc.ModalHeader(dbc.ModalTitle("⚠ Warning ⚠"),
                         style={'justify-content': 'center'},
-                        close_button=True),
+                        close_button=False),
         dbc.ModalBody(no_selection_error),
         dbc.ModalFooter(children=[dbc.Button("Ok",
                                              id="nbs-err-btn",
@@ -405,7 +405,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     end_of_experiment_modal = dbc.Modal([
         dbc.ModalHeader(dbc.ModalTitle("End of Generation"),
                         style={'justify-content': 'center'},
-                        close_button=True),
+                        close_button=False),
         dbc.ModalBody(dcc.Markdown(end_of_experiment,
                                    style={'text-align': 'justify'}))
     ],
@@ -418,7 +418,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     end_of_userstudy_modal = dbc.Modal([
         dbc.ModalHeader(dbc.ModalTitle("End of User Study"),
                         style={'justify-content': 'center'},
-                        close_button=True),
+                        close_button=False),
         dbc.ModalBody(dcc.Markdown(end_of_userstudy,
                                    style={'text-align': 'justify'}))
     ],

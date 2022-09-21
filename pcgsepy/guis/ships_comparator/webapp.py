@@ -139,23 +139,44 @@ def get_rankings_div() -> html.Div:
     """
     rankings_div = html.Div(children=[
         dbc.Row(children=[
-            dbc.Col(children=[dbc.Label("Spaceships ranking: ")],
-                    width={'offset': 5, 'size': 1})]),            
+            dbc.Col(children=[dbc.Label("Spaceships ranking: ",
+                                        size='lg')],
+                    style={'text-align': 'center'},
+                    width={'offset': 4, 'size': 4})]),            
         html.Br(),
         ],
                             id='ranking-div')
-    rankings_div.children.extend([
-        html.Div(children=[
-            dbc.Row(children=[
-                dbc.Col(dbc.Label(f"{i + 1}{['st', 'nd', 'rd', 'th'][i] if i < 4 else 'th'} place:"),
-                        width={'offset': 5, 'size': 1}),
-                dbc.Col(dbc.DropdownMenu(label='A',
-                                        children=[dbc.DropdownMenuItem(f'{chr(ord("A") + j)}',
-                                                                        id={'type': "spaceship-ranking", 'index': (i * len(emitters)) + j}) for j in range(len(emitters))],
-                                        id={'type': "ranking-dropdown", 'index': i}),
-                        width=1,
-                        align='start')]),
-            html.Br()]) for i in range(len(emitters))])
+    # rankings_div.children.extend([
+    #     html.Div(children=[
+    #         dbc.Row(children=[
+    #             dbc.Col(dbc.Label(f"{i + 1}{['st', 'nd', 'rd', 'th'][i] if i < 4 else 'th'} place:"),
+    #                     width={'offset': 5, 'size': 1}),
+    #             dbc.Col(dbc.DropdownMenu(label='A',
+    #                                     children=[dbc.DropdownMenuItem(f'{chr(ord("A") + j)}',
+    #                                                                     id={'type': "spaceship-ranking", 'index': (i * len(emitters)) + j}) for j in range(len(emitters))],
+    #                                     id={'type': "ranking-dropdown", 'index': i}),
+    #                     width=1,
+    #                     align='start')]),
+    #         html.Br()]) for i in range(len(emitters))])
+    
+    rankings_div.children.append(
+        dbc.Row(children=[
+            dbc.Col(children=[
+                dbc.Row(
+                    dbc.Col(dbc.Label(f"{i + 1}{['st', 'nd', 'rd', 'th'][i] if i < 4 else 'th'} place:")),
+                    ),
+                dbc.Row(
+                    dbc.Col(dbc.DropdownMenu(label='A',
+                                             children=[dbc.DropdownMenuItem(f'{chr(ord("A") + j)}',
+                                                                            id={'type': "spaceship-ranking", 'index': (i * len(emitters)) + j}) for j in range(len(emitters))],
+                                             id={'type': "ranking-dropdown", 'index': i}))
+                    )
+                ],
+                    style={'text-align': 'center'}) for i in range(len(emitters))
+            ])
+        )
+            
+    
     return rankings_div
 
 
@@ -258,9 +279,14 @@ def get_content_plot(spaceship: CandidateSolution) -> go.Figure:
     fig.update_layout(scene=dict(aspectmode='data'),
                       scene_camera=camera,
                       template='plotly_dark',
-                      paper_bgcolor='rgba(0,0,0,0)',
-                      plot_bgcolor='rgba(0,0,0,0)',
-                      title='')
+                    #   paper_bgcolor='rgba(0,0,0,0)',
+                    #   plot_bgcolor='rgba(0,0,0,0)',
+                    margin=go.layout.Margin(
+                          l=0,
+                          r=0,
+                          b=0,
+                          t=0)
+                      )
     return fig
 
 
@@ -271,7 +297,9 @@ def set_app_layout():
         info_str = f.read()
     # create modals
     info_modal = dbc.Modal([
-        dbc.ModalHeader(dbc.ModalTitle("Info"), close_button=True),
+        dbc.ModalHeader(dbc.ModalTitle("Info"),
+                        style={'flex-direction': 'column-reverse'},
+                        close_button=True),
         dbc.ModalBody(dcc.Markdown(info_str))
     ],
         id='info-modal',
@@ -281,21 +309,25 @@ def set_app_layout():
         scrollable=True,
         size='lg')
     err_modal = dbc.Modal([
-        dbc.ModalHeader(dbc.ModalTitle("❌ Error ❌"), close_button=True),
+        dbc.ModalHeader(dbc.ModalTitle("❌ Error ❌"),
+                        style={'flex-direction': 'column-reverse'}, 
+                        close_button=False),
         dbc.ModalBody(dcc.Markdown(scores_different_error))
     ],
         id='err-modal',
         centered=True,
-        backdrop='static',
+        backdrop=True,
         is_open=False,
         scrollable=True)
     ok_modal = dbc.Modal([
-        dbc.ModalHeader(dbc.ModalTitle("✔️ Success ✔️"), close_button=True),
+        dbc.ModalHeader(dbc.ModalTitle("✔️ Success ✔️"),
+                        style={'flex-direction': 'column-reverse'}, 
+                        close_button=False),
         dbc.ModalBody(dcc.Markdown(rankings_assigned))
     ],
         id='ok-modal',
         centered=True,
-        backdrop='static',
+        backdrop=True,
         is_open=False,
         scrollable=True)
     # create containers
@@ -348,7 +380,9 @@ def set_app_layout():
                                      size="lg",
                                      className="me-1"),
                           dcc.Download(id='save-data')],
-                align='center', width={'offset': 6, 'size': 1})])
+                align='center',
+                width={'offset': 4, 'size': 4},
+                style={'text-align': 'center'})])
     # set the app layout
     app.layout = dbc.Container(
         children=[
