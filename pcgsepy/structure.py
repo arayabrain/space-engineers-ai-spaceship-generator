@@ -170,6 +170,9 @@ class Structure:
         self._scaled_arr: npt.NDArray[np.uint32] = None
         self._arr: npt.NDArray[np.uint32] = None
 
+    def __repr__(self) -> str:
+        return f'{self.grid_size}x Structure with {len(self._blocks.keys())} blocks'
+    
     def add_block(self,
                   block: Block,
                   grid_position: Tuple[int, int, int]) -> None:

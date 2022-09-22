@@ -59,10 +59,8 @@ class DashLoggerHandler(logging.StreamHandler):
         self.queue.append(f'[{t}]\t{msg}')
 
 
-logger = logging.getLogger('webapp')
-logger.setLevel(logging.INFO)
 dashLoggerHandler = DashLoggerHandler()
-logger.addHandler(dashLoggerHandler)
+logging.getLogger('webapp').addHandler(dashLoggerHandler)
 
 
 base_color: Vec = Vec.v3f(0.45, 0.45, 0.45)
@@ -90,9 +88,10 @@ gdev_mode: bool = False
 hidden_style = {'visibility': 'hidden', 'height': '0px', 'display': 'none'}
 hm_callback_props = {}
 my_emitterslist: List[str] = ['mapelites_human.json',
-                              'mapelites_random.json',
-                              'mapelites_greedy.json',
-                              'mapelites_contbandit.json']
+                              'mapelites_random.json']
+                            #   'mapelites_random.json',
+                            #   'mapelites_greedy.json',
+                            #   'mapelites_contbandit.json']
 behavior_descriptors = [
     BehaviorCharacterization(name='Major axis / Medium axis',
                              func=mame,
@@ -448,6 +447,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                      className='header')
     
     exp_progress = html.Div(
+        id='study-progress-div',
         children=[
             dbc.Row(
                 dbc.Col(
@@ -490,7 +490,9 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                         align='center',
                         id='exp-progress-div')
             )
-        ])
+        ],
+        style=hidden_style if not user_study_mode and not gdev_mode else {}
+        )
     
     mapelites_heatmap = html.Div(children=[
         html.H4('Spaceship Population',
@@ -615,7 +617,8 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
             ])),
                   dbc.Row(
                       [
-                          dbc.Col(color_and_download),
+                          dbc.Col(color_and_download,
+                                  align='center'),
                           dbc.Col(content_properties)
                       ]
                   )]
@@ -814,12 +817,16 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     
     progress = html.Div(
         children=[
-            dbc.Label('Evolution Progress: ',
-                      style={'font-size': 'large'}),
-            dbc.Progress(id="step-progress",
-                         color='info',
-                         striped=True,
-                         animated=True)
+            dbc.Row(
+                dbc.Col(children=[
+                    dbc.Label('Evolution Progress',
+                              style={'font-size': 'large'}),
+                    dbc.Progress(id="step-progress",
+                                 color='info',
+                                 striped=True,
+                                 animated=True)
+                ])
+            )
         ],
         id='step-progress-div',
         style={'content-visibility': 'visible' if 0 <= step_progress <= 100 else 'hidden',
@@ -877,6 +884,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
             dbc.Row(children=[
                 dbc.Col(children=[mapelites_controls,
                                   exp_progress,
+                                  html.Br(),
                                   progress],
                         width={'size': 3, 'offset': 1}),
                 dbc.Col(children=[experiment_controls,
@@ -897,7 +905,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
             ],
         fluid=True)
 
-    logging.getLogger('webapp').debug(msg='[set_app_layout] Set the webapp layout.')
+    logging.getLogger('webapp').debug(msg=f'[{__name__}.set_app_layout] Set the webapp layout.')
 
 
 # clientside callback to open the Google Forms questionnaire on a new page
@@ -1034,22 +1042,22 @@ def download_content(n):
             elite = get_elite(mapelites=current_mapelites,
                               bin_idx=_switch([selected_bins[-1]])[0],
                               pop='feasible')
-            # reset content to add smoothed-out hull
-            elite._content = None
-            current_mapelites.lsystem._set_structure(cs=elite)
+            tmp = CandidateSolution(string=elite.string)
+            tmp.ll_string = elite.ll_string
+            tmp.base_color = elite.base_color
+            current_mapelites.lsystem._set_structure(cs=tmp)
             hullbuilder = HullBuilder(erosion_type=current_mapelites.hull_builder.erosion_type,
                                       apply_erosion=True,
                                       apply_smoothing=True)
             download_semaphore.unlock()
-            logging.getLogger('webapp').debug('[write_archive] Semaphore unlocked')
-            hullbuilder.add_external_hull(elite.content)
-            for block in elite.content._blocks.values():
-                if _is_base_block(block_type=block.block_type):
-                    block.color = base_color
-            zf.writestr('bp.sbc', convert_structure_to_xml(structure=elite.content, name=f'My Spaceship ({rngseed}) (exp{exp_n})'))
+            logging.getLogger('webapp').debug('[{__name__}.write_archive] Semaphore unlocked')
+            hullbuilder.add_external_hull(tmp.content)
+            tmp.content.set_color(tmp.base_color)
+            logging.getLogger('webapp').debug(f'[{__name__}.write_archive] {tmp.string=}; {tmp.content=}; {tmp.base_color=}')
+            zf.writestr('bp.sbc', convert_structure_to_xml(structure=tmp.content, name=f'My Spaceship ({rngseed}) (exp{exp_n})'))
             content_properties = {
-                'string': elite.string,
-                'base_color': base_color.as_dict()
+                'string': tmp.string,
+                'base_color': tmp.base_color.as_dict()
             }
             zf.writestr(f'spaceship_{rngseed}_exp{exp_n}', json.dumps(content_properties))
     
@@ -1057,7 +1065,6 @@ def download_content(n):
         logging.getLogger('webapp').info(f'Your selected spaceship will be downloaded shortly.')
         return dcc.send_bytes(write_archive, f'MySpaceship_{rngseed}_exp{exp_n}_gen{gen_counter}.zip'), '\n\n'
     else:
-        download_semaphore.unlock()
         return None, '\n\n'
 
 @app.callback(
@@ -1419,8 +1426,9 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
     curr_heatmap = kwargs['curr_heatmap']
     eoe_modal_show = kwargs['eoe_modal_show']
     nbs_err_modal_show = kwargs['nbs_err_modal_show']
+    dlbtn_label = kwargs['dlbtn_label']
     
-    if len(selected_bins) > 0 or kwargs['event_trig'] == 'rand-step-btn':
+    if selected_bins or kwargs['event_trig'] == 'rand-step-btn':
         s = time.perf_counter()
         res = _apply_step(mapelites=current_mapelites,
                           selected_bins=_switch(selected_bins),
@@ -1434,24 +1442,32 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
             if consent_ok:
                 # n_spaceships_inspected.add(1)
                 time_elapsed.add(elapsed)
-            if len(selected_bins) > 0:
-            # remove preview and properties if last selected bin is now invalid
-                lb = _switch([selected_bins[-1]])[0]
-                if lb not in [b.bin_idx for b in current_mapelites._valid_bins()]:
-                    curr_content = _get_elite_content(mapelites=current_mapelites,
-                                                      bin_idx=None,
-                                                      pop='')
-                    cs_string = ''
-                    cs_properties = get_properties_table()
-                elif current_mapelites.bins[lb].new_elite[hm_callback_props['pop'][kwargs['pop_name']]]:
-                    curr_content = _get_elite_content(mapelites=current_mapelites,
-                                                      bin_idx=lb,
-                                                      pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
-                    elite = get_elite(mapelites=current_mapelites,
-                                      bin_idx=lb,
-                                      pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
-                    cs_string = elite.string
-                    cs_properties = get_properties_table(cs=elite)
+            if selected_bins:
+                rem_idxs = []
+                for i, b in enumerate(selected_bins):
+                    # remove preview and properties if last selected bin is now invalid
+                    lb = _switch([b])[0]
+                    if lb not in [b.bin_idx for b in current_mapelites._valid_bins()]:
+                        rem_idxs.append(i)
+                for i in reversed(rem_idxs):
+                    selected_bins.pop(i)
+                if selected_bins == []:
+                        curr_content = _get_elite_content(mapelites=current_mapelites,
+                                                        bin_idx=None,
+                                                        pop='')
+                        cs_string = ''
+                        cs_properties = get_properties_table()
+                else:
+                    lb = _switch([selected_bins[-1]])[0]
+                    if current_mapelites.bins[selected_bins[-1]].new_elite[hm_callback_props['pop'][kwargs['pop_name']]]:
+                        curr_content = _get_elite_content(mapelites=current_mapelites,
+                                                        bin_idx=lb,
+                                                        pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
+                        elite = get_elite(mapelites=current_mapelites,
+                                        bin_idx=lb,
+                                        pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
+                        cs_string = elite.string
+                        cs_properties = get_properties_table(cs=elite)
             # prompt user to download content if reached end of generations
             if user_study_mode and gen_counter == N_GENS_ALLOWED:
                 eoe_modal_show = True
@@ -1464,6 +1480,9 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
         logging.getLogger('webapp').error(msg=f'Step not applied: no bin(s) selected.')
         nbs_err_modal_show = True
     
+    if user_study_mode and gen_counter == N_GENS_ALLOWED:
+        dlbtn_label = 'Download and Start Next Experiment'
+    
     return {
         'content-plot.figure': curr_content,
         'content-string.value': cs_string,
@@ -1471,6 +1490,7 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
         'heatmap-plot.figure': curr_heatmap,
         'nbs-err-modal.is_open': nbs_err_modal_show,
         'spaceship-properties.children': cs_properties,
+        'download-btn.children': dlbtn_label
     }
 
 
@@ -1480,21 +1500,23 @@ def __reset(**kwargs) -> Dict[str, Any]:
     global gen_counter
     global n_spaceships_inspected
     global time_elapsed
+    global selected_bins
     
     logging.getLogger('webapp').info(msg='Started resetting all bins (this may take a while)...')
     current_mapelites.reset()
     current_mapelites.hull_builder.apply_smoothing = False
     logging.getLogger('webapp').info(msg='Reset completed.')
     gen_counter = 0
+    selected_bins = []
     if consent_ok:
         n_spaceships_inspected.reset()
         time_elapsed.reset()
 
     return {
         'heatmap-plot.figure': _build_heatmap(mapelites=current_mapelites,
-                                    pop_name=kwargs['pop_name'],
-                                    metric_name=kwargs['metric_name'],
-                                    method_name=kwargs['method_name'])
+                                              pop_name=kwargs['pop_name'],
+                                              metric_name=kwargs['metric_name'],
+                                              method_name=kwargs['method_name'])
     }
 
 
@@ -1517,9 +1539,9 @@ def __bc_change(**kwargs) -> Dict[str, Any]:
         b1 = behavior_descriptors[[b.name for b in behavior_descriptors].index(b1)]
         current_mapelites.update_behavior_descriptors((b0, b1))
         curr_heatmap = _build_heatmap(mapelites=current_mapelites,
-                                        pop_name=kwargs['pop_name'],
-                                        metric_name=kwargs['metric_name'],
-                                        method_name=kwargs['method_name'])
+                                      pop_name=kwargs['pop_name'],
+                                      metric_name=kwargs['metric_name'],
+                                      method_name=kwargs['method_name'])
         logging.getLogger('webapp').info(msg='Feature descriptors update completed.')
     else:
         logging.getLogger('webapp').error(msg=f'Could not change BC: passed unrecognized value ({event_trig}).')
@@ -1660,10 +1682,10 @@ def __apply_symmetry(**kwargs) -> Dict[str, Any]:
     elif event_trig == 'symmetry-z':
         symm_axis = 'Z-axis'
     current_mapelites.reassign_all_content(sym_axis=symm_axis[0].lower() if symm_axis != "None" else None,
-                                            sym_upper=symm_orientation == 'Upper')
+                                           sym_upper=symm_orientation == 'Upper')
     curr_content = _get_elite_content(mapelites=current_mapelites,
-                                        bin_idx=None,
-                                        pop=None)
+                                      bin_idx=None,
+                                      pop=None)
     logging.getLogger('webapp').info(msg=f'Symmetry enforcement completed.')
     
     selected_bins = []
@@ -1704,8 +1726,8 @@ def __update_content(**kwargs) -> Dict[str, Any]:
             cs_properties = get_properties_table()
             if len(selected_bins) > 0:
                 elite = get_elite(mapelites=current_mapelites,
-                                    bin_idx=_switch([selected_bins[-1]])[0],
-                                    pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
+                                  bin_idx=_switch([selected_bins[-1]])[0],
+                                  pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
                 cs_string = elite.string
                 cs_properties = get_properties_table(cs=elite)
                 curr_heatmap = _build_heatmap(mapelites=current_mapelites,
@@ -1713,7 +1735,7 @@ def __update_content(**kwargs) -> Dict[str, Any]:
                                               metric_name=kwargs['metric_name'],
                                               method_name=kwargs['method_name'])
     else:
-        logging.getLogger('webapp').error(msg=f'Empty bin selected ({i}, {j}).')
+        logging.getLogger('webapp').error(msg=f'[{__name__}.__update_content] Empty bin selected: {(i, j)=}')
     
     return {
         'heatmap-plot.figure': curr_heatmap,
@@ -1744,8 +1766,8 @@ def __clear_selection(**kwargs) -> Dict[str, Any]:
     
     return {
         'content-plot.figure':  _get_elite_content(mapelites=current_mapelites,
-                                        bin_idx=None,
-                                        pop=None),
+                                                   bin_idx=None,
+                                                   pop=None),
         'content-string.value': '',
         'spaceship-properties.children': get_properties_table(),
         }
@@ -1777,7 +1799,7 @@ def __emitter(**kwargs) -> Dict[str, Any]:
         current_mapelites.emitter = HumanEmitter()
         logging.getLogger('webapp').info(msg=f'Emitter set to {emitter_name}')
     else:
-        logging.getLogger('webapp').info(msg=f'Unrecognized emitter type {emitter_name}')
+        logging.getLogger('webapp').error(msg=f'[{__name__}.__emitter] Unrecognized {emitter_name=}')
 
     return {}
 
@@ -1795,13 +1817,6 @@ def __content_download(**kwargs) -> Dict[str, Any]:
     global rngseed
     global download_semaphore
 
-    logging.getLogger('webapp').debug(f'[__content_download] (init) Semaphore lock is set to {download_semaphore.is_locked=}')
-    while download_semaphore.is_locked:
-        pass
-    logging.getLogger('webapp').debug(f'[__content_download] (after waiting) Semaphore lock is set to {download_semaphore.is_locked=}')
-    download_semaphore.lock()
-    logging.getLogger('webapp').debug(f'[__content_download] Semaphore locked')
-    
     cs_string = kwargs['cs_string']
     cs_properties = kwargs['cs_properties']
     curr_heatmap = kwargs['curr_heatmap']
@@ -1813,8 +1828,18 @@ def __content_download(**kwargs) -> Dict[str, Any]:
     reset_btn_style = kwargs['reset_btn_style']
     exp_progress_style = kwargs['exp_progress_style']
     metrics_dl = None
+    dlbtn_label = kwargs['dlbtn_label']
     
-    if cs_string != '':
+    # if cs_string != '':
+    if selected_bins:
+        
+        logging.getLogger('webapp').debug(f'[{__name__}.__content_download] (pre-check) {download_semaphore.is_locked=}')
+        while download_semaphore.is_locked:
+            pass
+        logging.getLogger('webapp').debug(f'[{__name__}.__content_download] (post-check) {download_semaphore.is_locked=}')
+        download_semaphore.lock()
+        logging.getLogger('webapp').debug(f'[{__name__}.__content_download] (re-lock) {download_semaphore.is_locked=}')
+        
         if user_study_mode and gen_counter == N_GENS_ALLOWED:
             # time.sleep(2)
             exp_n += 1
@@ -1827,10 +1852,9 @@ def __content_download(**kwargs) -> Dict[str, Any]:
                         y=np.zeros(0, dtype=object),
                         hoverongaps=False,
                         ))
-                selected_bins = []
                 curr_content = _get_elite_content(mapelites=current_mapelites,
-                                                bin_idx=None,
-                                                pop=None)
+                                                  bin_idx=None,
+                                                  pop=None)
                 cs_string = ''
                 cs_properties = get_properties_table()
                 if consent_ok:
@@ -1845,24 +1869,26 @@ def __content_download(**kwargs) -> Dict[str, Any]:
                 eous_modal_show = True
                 qs_um_modal_show = True
                 user_study_mode = False
+                dlbtn_label = 'Download'
+                selected_bins = []
                 logging.getLogger('webapp').info(msg='Initializing a new population; this may take a while...')
                 current_mapelites.reset()
                 current_mapelites.hull_builder.apply_smoothing = False
                 current_mapelites.emitter = RandomEmitter()
                 rand_step_btn_style, reset_btn_style, exp_progress_style = {}, {}, hidden_style
                 curr_heatmap = _build_heatmap(mapelites=current_mapelites,
-                                                pop_name=kwargs['pop_name'],
-                                            metric_name=kwargs['metric_name'],
-                                            method_name=kwargs['method_name'])
-                selected_bins = []
+                                              pop_name=kwargs['pop_name'],
+                                              metric_name=kwargs['metric_name'],
+                                              method_name=kwargs['method_name'])
                 curr_content = _get_elite_content(mapelites=current_mapelites,
-                                                    bin_idx=None,
-                                                    pop=None)
+                                                  bin_idx=None,
+                                                  pop=None)
                 logging.getLogger('webapp').info(msg='Initialization completed.')
             else:
                 logging.getLogger('webapp').info(msg=f'Reached end of experiment {exp_n}! Loading the next experiment...')
                 gen_counter = 0
-                
+                dlbtn_label = 'Download'
+                selected_bins = []
                 if consent_ok:
                     logging.getLogger('webapp').info(msg='Loading next population...')
                     current_mapelites.reset(lcs=[])
@@ -1881,15 +1907,18 @@ def __content_download(**kwargs) -> Dict[str, Any]:
                                               pop_name=kwargs['pop_name'],
                                               metric_name=kwargs['metric_name'],
                                               method_name=kwargs['method_name'])
-                selected_bins = []
                 curr_content = _get_elite_content(mapelites=current_mapelites,
                                                   bin_idx=None,
                                                   pop=None)
                 cs_string = ''
                 cs_properties = get_properties_table()
+            # update base color on new experiment switch
+            _update_base_color(color=base_color)
     else:
         nbs_err_modal_show = True
 
+    logging.getLogger('webapp').debug(f'[{__name__}.__content_download] {selected_bins=}; {exp_n=}; {gen_counter=}')
+    
     return {
         'heatmap-plot.figure': curr_heatmap,
         'content-plot.figure': curr_content,
@@ -1901,7 +1930,8 @@ def __content_download(**kwargs) -> Dict[str, Any]:
         'rand-step-btn-div.style': rand_step_btn_style,
         'reset-btn-div.style': reset_btn_style,
         'exp-progress-div.style': exp_progress_style,
-        'download-metrics.data': metrics_dl
+        'download-metrics.data': metrics_dl,
+        'download-btn.children': dlbtn_label
     }
 
 
@@ -1953,6 +1983,7 @@ def __consent(**kwargs) -> Dict[str, Any]:
     reset_btn_style = kwargs['reset_btn_style']
     exp_progress_style = kwargs['exp_progress_style']
     cm_modal_show = kwargs['cm_modal_show']
+    study_style = kwargs['study_style']
     
     consent_ok = True if nclicks_yes else False if nclicks_no else None
     if nclicks_yes:
@@ -1972,26 +2003,35 @@ def __consent(**kwargs) -> Dict[str, Any]:
         logging.getLogger('webapp').info(msg='Initialization completed.')
         user_study_mode = False
         qs_um_modal_show = True
-        rand_step_btn_style, reset_btn_style, exp_progress_style = {}, {}, hidden_style
+        rand_step_btn_style, reset_btn_style, exp_progress_style, study_style = {}, {}, hidden_style, hidden_style
     cm_modal_show = False
     gen_counter = 0
     
     return {
         'heatmap-plot.figure': _build_heatmap(mapelites=current_mapelites,
-                                pop_name=kwargs['pop_name'],
-                                metric_name=kwargs['metric_name'],
-                                method_name=kwargs['method_name']),
+                                              pop_name=kwargs['pop_name'],
+                                              metric_name=kwargs['metric_name'],
+                                              method_name=kwargs['method_name']),
         'consent-modal.is_open': cm_modal_show,
         'quickstart-modal.is_open': qs_modal_show,
         'quickstart-usermode-modal.is_open': qs_um_modal_show,
         'rand-step-btn-div.style': rand_step_btn_style,
         'reset-btn-div.style': reset_btn_style,
-        'exp-progress-div.style': exp_progress_style
+        'exp-progress-div.style': exp_progress_style,
+        'study-progress-div.style': study_style
         }
 
 
 def __close_error(**kwargs) -> Dict[str, Any]:
     return {'nbs-err-modal.is_open': False}
+
+
+def _update_base_color(color: Vec) -> None:
+    global current_mapelites
+    for (_, _), b in np.ndenumerate(current_mapelites.bins):
+            for cs in [*b._feasible, *b._infeasible]:
+                cs.base_color = color
+                cs.content.set_color(color)
 
 
 def __color(**kwargs) -> Dict[str, Any]:
@@ -2004,10 +2044,7 @@ def __color(**kwargs) -> Dict[str, Any]:
     r, g, b = tuple(int(color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
     new_color = Vec.v3f(r, g, b).scale(1 / 256)
     base_color = new_color
-    for (_, _), b in np.ndenumerate(current_mapelites.bins):
-        for cs in [*b._feasible, *b._infeasible]:
-            cs.base_color = new_color
-            cs.content.set_color(new_color)
+    _update_base_color(color=base_color)    
     if selected_bins:
         curr_content =  _get_elite_content(mapelites=current_mapelites,
                                            bin_idx=_switch([selected_bins[-1]])[0],
@@ -2022,12 +2059,12 @@ def __default(**kwargs) -> Dict[str, Any]:
     
     return {
         'heatmap-plot.figure': _build_heatmap(mapelites=current_mapelites,
-                                pop_name=kwargs['pop_name'],
-                                metric_name=kwargs['metric_name'],
-                                method_name=kwargs['method_name']),
+                                              pop_name=kwargs['pop_name'],
+                                              metric_name=kwargs['metric_name'],
+                                              method_name=kwargs['method_name']),
         'content-plot.figure': _get_elite_content(mapelites=current_mapelites,
-                                        bin_idx=None,
-                                        pop=None)
+                                                  bin_idx=None,
+                                                  pop=None)
         }
 
 
@@ -2098,6 +2135,8 @@ triggers_map = {
               Output("rand-step-btn-div", "style"),
               Output("reset-btn-div", "style"),
               Output("exp-progress-div", "style"),
+              Output('study-progress-div', 'style'),
+              Output('download-btn', 'children'),
               
               State('heatmap-plot', 'figure'),
               State('hl-rules', 'value'),
@@ -2118,6 +2157,8 @@ triggers_map = {
               State("rand-step-btn-div", "style"),
               State("reset-btn-div", "style"),
               State("exp-progress-div", "style"),
+              State('study-progress-div', 'style'),
+              State('download-btn', 'children'),
               
               Input('population-feasible', 'n_clicks'),
               Input('population-infeasible', 'n_clicks'),
@@ -2157,11 +2198,9 @@ triggers_map = {
               Input("nbs-err-btn", "n_clicks"),
               Input('color-picker', 'value'),
               )
-def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, qs_modal_show, qs_um_modal_show, cm_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style,
+def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, qs_modal_show, qs_um_modal_show, cm_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style, study_style, dlbtn_label,
                      pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights, b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn, color):
-    global user_study_mode
     global current_mapelites
-    global gen_counter
     global selected_bins
     
     ctx = dash.callback_context
@@ -2177,7 +2216,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
             event_trig = ast.literal_eval(event_trig)
             event_trig = event_trig['type']
         except ValueError:
-            logging.getLogger('webapp').info(msg=f'Unrecognized event trigger: {event_trig}. No operations have been applied!')
+            logging.getLogger('webapp').error(msg=f'[{__name__}.general_callback] Unrecognized {event_trig=}. No operations have been applied!')
     
     vars = locals()
     
@@ -2205,8 +2244,12 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         'eous-modal.is_open': eous_modal_show,
         'rand-step-btn-div.style': rand_step_btn_style,
         'reset-btn-div.style': reset_btn_style,
-        'exp-progress-div.style': exp_progress_style
+        'exp-progress-div.style': exp_progress_style,
+        'study-progress-div.style': study_style,
+        'download-btn.children': dlbtn_label
     }
+    
+    logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {event_trig=}; {exp_n=}; {gen_counter=}; {selected_bins=}; {process_semaphore.is_locked=}')
     
     if not process_semaphore.is_locked:
         process_semaphore.lock()
@@ -2216,15 +2259,15 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
             output[k] = u[k]
 
         selected_bins, selected_bins_str = _format_bins(mapelites=current_mapelites,
-                                                    bins_idx_list=selected_bins,
-                                                    do_switch=True,
-                                                    str_prefix='Selected bin(s):',
-                                                    filter_out_empty=True) 
+                                                        bins_idx_list=selected_bins,
+                                                        do_switch=True,
+                                                        str_prefix='Selected bin(s):',
+                                                        filter_out_empty=True) 
         _, valid_bins_str = _format_bins(mapelites=current_mapelites,
-                                        do_switch=False,
-                                        bins_idx_list=_switch([x.bin_idx for x in current_mapelites._valid_bins()]),
-                                        str_prefix='Valid bins are:',
-                                        filter_out_empty=False)
+                                         do_switch=False,
+                                         bins_idx_list=_switch([x.bin_idx for x in current_mapelites._valid_bins()]),
+                                         str_prefix='Valid bins are:',
+                                         filter_out_empty=False)
         
         output['selected-bin.children'] = selected_bins_str
         output['valid-bins.children'] = valid_bins_str

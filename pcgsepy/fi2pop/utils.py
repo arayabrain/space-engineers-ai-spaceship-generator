@@ -1,5 +1,6 @@
 from typing import List
 
+import logging
 import numpy as np
 
 from pcgsepy.config import GEN_PATIENCE, MAX_STRING_LEN, POP_SIZE
@@ -90,7 +91,7 @@ def create_new_pool(population: List[CandidateSolution],
                 # set base color
                 o1.base_color = np.random.choice([p1.base_color, p2.base_color])
                 o2.base_color = np.random.choice([p1.base_color, p2.base_color])
-                
+                logging.getLogger('mapelites').debug(f'[{__name__}.create_new_pool] xover2p: Parents: {p1.string=},{p1.base_color}; {p2.string=},{p2.base_color}; Offsprings: {o1.string=},{o1.base_color}; {o2.string=},{o2.base_color}')
                 childs = [o1, o2]
             else:
                 raise EvoException('Picked same parents, this should never happen.')
@@ -100,13 +101,15 @@ def create_new_pool(population: List[CandidateSolution],
             o2 = CandidateSolution(string=population[0].string[:])
             o1.hls_mod = population[0].hls_mod.copy()
             o2.hls_mod = population[0].hls_mod.copy()
-            if population[0].parents:
-                o1.parents = population[0].parents.copy()
-                o2.parents = population[0].parents.copy()
-                o1.base_color = population[0].base_color
-                o2.base_color = population[0].base_color
-                population[0].parents[0].n_offspring += 2
-                population[0].parents[1].n_offspring += 2
+            p = population[0]
+            if p.parents:
+                o1.parents = p.parents.copy()
+                o2.parents = p.parents.copy()
+                p.parents[0].n_offspring += 2
+                p.parents[1].n_offspring += 2
+            o1.base_color = p.base_color
+            o2.base_color = p.base_color
+            logging.getLogger('mapelites').debug(f'[{__name__}.create_new_pool] xover1p: Parent: {p.string=},{p.base_color}; Offsprings: {o1.string=},{o1.base_color}; {o2.string=},{o2.base_color}')
             childs = [o1, o2]
         for o in childs:
             if MAX_STRING_LEN == -1 or len(o.string) <= MAX_STRING_LEN:

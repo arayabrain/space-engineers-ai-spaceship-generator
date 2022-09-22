@@ -46,8 +46,10 @@ args = parser.parse_args()
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
-if args.debug:
-    logging.getLogger('webapp').setLevel(logging.DEBUG)
+available_loggers = ['mapelites', 'webapp']
+
+for logger_name in available_loggers:
+    logging.getLogger(logger_name).setLevel(logging.DEBUG if args.debug else logging.INFO)    
 
 setup_matplotlib(larger_fonts=False)
 
