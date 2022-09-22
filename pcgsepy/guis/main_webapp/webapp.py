@@ -307,12 +307,14 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                                     ]),
             dbc.ModalFooter(children=[
                 dbc.Button("No",
+                           disabled=False,
                            id="consent-no",
                            color="danger",
                            className="ms-auto",
                            n_clicks=0,
                            style={'width': '49%'}),
                 dbc.Button("Yes",
+                           disabled=False,
                            id="consent-yes",
                            color="success",
                            className="ms-auto",
@@ -324,7 +326,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
         centered=True,
         backdrop="static",
         keyboard=False,
-        is_open=consent_ok is None)
+        is_open=False)
     
     webapp_info_modal = dbc.Modal([
         dbc.ModalHeader(dbc.ModalTitle("Webapp Info"),
@@ -1205,6 +1207,7 @@ def _build_heatmap(mapelites: MAPElites,
     y_labels = np.cumsum([0] + mapelites.bin_sizes[1][:-1]) + mapelites.b_descs[1].bounds[0]
     for i in range(mapelites.bins.shape[0]):
         for j in range(mapelites.bins.shape[1]):
+            logging.getLogger('webapp').debug(f'[{__name__}._build_heatmap] {(i, j)=}, {mapelites.bins[i, j].new_elite[population]=}')
             v = mapelites.bins[i, j].get_metric(metric=metric['name'],
                                                 use_mean=use_mean,
                                                 population=population)
@@ -2238,7 +2241,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         'symmetry-dropdown.label': symm_axis,
         'quickstart-modal.is_open': qs_modal_show,
         'quickstart-usermode-modal.is_open': qs_um_modal_show,
-        'consent-modal.is_open': cm_modal_show,
+        'consent-modal.is_open': cm_modal_show if consent_ok is not None else True,
         'nbs-err-modal.is_open': nbs_err_modal_show,
         'eoe-modal.is_open': eoe_modal_show,
         'eous-modal.is_open': eous_modal_show,
@@ -2246,7 +2249,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         'reset-btn-div.style': reset_btn_style,
         'exp-progress-div.style': exp_progress_style,
         'study-progress-div.style': study_style,
-        'download-btn.children': dlbtn_label
+        'download-btn.children': dlbtn_label,
     }
     
     logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {event_trig=}; {exp_n=}; {gen_counter=}; {selected_bins=}; {process_semaphore.is_locked=}')
