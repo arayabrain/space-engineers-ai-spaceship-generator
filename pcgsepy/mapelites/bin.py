@@ -96,9 +96,14 @@ class MAPBin:
 
     def check_new_elite(self,
                         pop: str = 'feasible'):
+        """Check if the bin contains a new elite for the selected population.
+
+        Args:
+            pop (str, optional): The population. Defaults to 'feasible'.
+        """
         checking = f'_elite_{pop}'
         elite = self.get_elite(population=pop)
-        if elite is not None and (self.new_elite[checking] is None or elite.c_fitness > self.new_elite[checking].c_fitness):
+        if elite is not None and (self.new_elite[checking] is None or elite.string != self.new_elite[checking].string):
             self.new_elite[pop] = True
             self.new_elite[checking] = elite
     

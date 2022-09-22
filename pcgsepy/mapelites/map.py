@@ -1,6 +1,7 @@
 import random
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
@@ -277,6 +278,7 @@ class MAPElites:
         all_cs = []
         for (_, _), cbin in np.ndenumerate(self.bins):
             all_cs.extend([*cbin._feasible, *cbin._infeasible])
+            logging.getLogger('mapelites').debug(f'[{__name__}.subdivide_range] {bin_idx=} (pre) - {cbin.bin_idx=}; {cbin.new_elite=}')
         # update bin sizes
         v_i, v_j = self.bin_sizes[0][i], self.bin_sizes[1][j]
         self.bin_sizes[0][i] = v_i / 2
@@ -293,10 +295,14 @@ class MAPElites:
                                     bin_size=(self.bin_sizes[0][m],
                                               self.bin_sizes[1][n]),
                                     bin_initial_size=(v_i, v_j))
-            if m != i or m != i + 1 or n != j or n != j + 1:
-                x = m if m < i else m - 1
-                y = n if n < j else n - 1
-                new_bins[m, n].new_elite = self.bins[x, y].new_elite
+            if m != i + 1 or n != j + 1:
+                x = m if m <= i else m - 1
+                y = n if n <= j else n - 1
+            else:
+                x = i
+                y = j
+            new_bins[m, n].new_elite = self.bins[x, y].new_elite.copy()
+            logging.getLogger('mapelites').debug(f'[{__name__}.subdivide_range] {bin_idx=} (post) - {(m, n)=}; {new_bins[m, n].new_elite=}')
         # assign new bin map
         self.bins = new_bins
         # assign solutions to bins
@@ -318,8 +324,9 @@ class MAPElites:
             i = np.digitize(x=[b0], bins=bc0, right=False)[0] - 1
             j = np.digitize(x=[b1], bins=bc1, right=False)[0] - 1
             self.bins[i, j].insert_cs(cs)
-        for (_, _), b in np.ndenumerate(self.bins):
-            b.remove_old()
+        if self.allow_aging:
+            for (_, _), b in np.ndenumerate(self.bins):
+                b.remove_old()
 
     def _age_bins(self,
                   diff: int = -1) -> None:
@@ -776,12 +783,18 @@ class MAPElites:
     
     def update_elites(self,
                       reset: bool = False):
+        """Update the elite tracking for the MAPElites bins.
+
+        Args:
+            reset (bool, optional): Whether to reset the tracking. Defaults to False.
+        """
         for (_, _), b in np.ndenumerate(self.bins):
             for pop in ['feasible', 'infeasible']:
                 if reset:
                     b.new_elite[pop] = False
                 else:
                     b.check_new_elite(pop=pop)
+                # logging.getLogger('mapelites').debug(f'[{__name__}.update_elites] {reset=}; {b.bin_idx} -> {b.new_elite[pop]}')
     
     def to_json(self) -> Dict[str, Any]:
         return {

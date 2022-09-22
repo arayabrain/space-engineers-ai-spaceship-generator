@@ -46,7 +46,10 @@ args = parser.parse_args()
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
-available_loggers = ['mapelites', 'webapp']
+available_loggers = [
+    # 'mapelites',
+    'webapp'
+    ]
 
 for logger_name in available_loggers:
     logging.getLogger(logger_name).setLevel(logging.DEBUG if args.debug else logging.INFO)    
