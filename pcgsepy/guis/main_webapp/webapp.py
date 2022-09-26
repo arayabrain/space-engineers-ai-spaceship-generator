@@ -26,7 +26,7 @@ from dash.exceptions import PreventUpdate
 from pcgsepy.common.api_call import block_definitions
 from pcgsepy.common.jsonifier import json_dumps
 from pcgsepy.common.vecs import Vec
-from pcgsepy.config import (BIN_POP_SIZE, CS_MAX_AGE, N_EMITTER_STEPS,
+from pcgsepy.config import (BIN_POP_SIZE, CS_MAX_AGE, MY_EMITTERS, N_EMITTER_STEPS,
                             N_GENS_ALLOWED)
 from pcgsepy.guis.main_webapp.modals_msgs import (end_of_experiment,
                                                   end_of_userstudy,
@@ -87,11 +87,7 @@ gen_counter: int = 0
 gdev_mode: bool = False
 hidden_style = {'visibility': 'hidden', 'height': '0px', 'display': 'none'}
 hm_callback_props = {}
-my_emitterslist: List[str] = ['mapelites_human.json',
-                              'mapelites_random.json']
-                            #   'mapelites_random.json',
-                            #   'mapelites_greedy.json',
-                            #   'mapelites_contbandit.json']
+my_emitterslist: List[str] = MY_EMITTERS.copy()
 behavior_descriptors = [
     BehaviorCharacterization(name='Major axis / Medium axis',
                              func=mame,
