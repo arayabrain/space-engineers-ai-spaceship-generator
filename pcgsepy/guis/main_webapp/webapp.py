@@ -1140,8 +1140,6 @@ def update_btsn_state(fdis, ms, lsysms, symms,
     for o in lsysms:
         o['disabled'] = running_something
     
-    print(f'{running_something=} or {download_semaphore._running=}')
-    
     btns = {
         'step-btn.disabled': running_something or (user_study_mode and gen_counter >= N_GENS_ALLOWED),
         'download-btn.disabled': running_something or download_semaphore._running == 'YES',
