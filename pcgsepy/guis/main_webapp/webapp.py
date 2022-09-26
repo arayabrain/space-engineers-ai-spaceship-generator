@@ -163,16 +163,20 @@ class Semaphore:
     def __init__(self,
                  locked: bool = False) -> None:
         self._is_locked = locked
+        self._running = ''
     
     @property
     def is_locked(self) -> bool:
         return self._is_locked
     
-    def lock(self):
+    def lock(self,
+             name: Optional[str] = ''):
         self._is_locked = True
+        self._running = name
     
     def unlock(self):
         self._is_locked = False
+        self._running = ''
 
 download_semaphore = Semaphore(locked=True)    
 process_semaphore = Semaphore()
@@ -500,12 +504,23 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
         html.H4('Spaceship Population',
                 className='section-title'),
         html.Br(),
-        dcc.Graph(id="heatmap-plot",
-                  figure=go.Figure(data=[]),
-                  config={
-                      'displayModeBar': False,
-                      'displaylogo': False, 
-                      'scrollZoom': True})
+        html.Div(className='container',
+                 children=[
+                     dcc.Graph(id="heatmap-plot",
+                               figure=go.Figure(data=[]),
+                               config={
+                                   'displayModeBar': False,
+                                   'displaylogo': False,
+                                   'scrollZoom': True},
+                               className='content',
+                               style={'z-index': 0}),
+                     html.Div(id='heatmap-plot-container',
+                              className='overlay',
+                              style={'visibility': 'hidden',
+                                     'display': 'none',
+                                     'pointer-events': 'auto',
+                                     'z-index': 1}),
+                 ])
         ])
     
     mapelites_controls = html.Div(
@@ -1090,9 +1105,7 @@ def disable_privacy_modal(ny, nn):
               Output('subdivide-btn', 'disabled'),
               Output('download-mapelites-btn', 'disabled'),
               Output('update-rules-btn', 'disabled'),
-              
               Output('popupload-data', 'disabled'),
-              
               Output('population-dropdown', 'disabled'),
               Output('metric-dropdown', 'disabled'),
               Output('method-radio', 'options'),
@@ -1103,9 +1116,9 @@ def disable_privacy_modal(ny, nn):
               Output('symmetry-dropdown', 'disabled'),
               Output('symmetry-radio', 'options'),
               Output('color-picker', 'disabled'),
-              
+              Output('heatmap-plot-container', 'style'),
               Output({'type': 'fitness-sldr', 'index': ALL}, 'disabled'),
-              
+
               State({'type': 'fitness-sldr', 'index': ALL}, 'disabled'),
               State('method-radio', 'options'),
               State('lsystem-modules', 'options'),
@@ -1139,7 +1152,6 @@ def update_btsn_state(fdis, ms, lsysms, symms,
         'subdivide-btn.disabled': running_something,
         'download-mapelites-btn.disabled': running_something,
         'update-rules-btn.disabled': running_something,
-        
         'popupload-data.disabled': running_something,
         'population-dropdown.disabled': running_something,
         'metric-dropdown.disabled': running_something,
@@ -1151,6 +1163,11 @@ def update_btsn_state(fdis, ms, lsysms, symms,
         'symmetry-dropdown.disabled': running_something,
         'symmetry-radio.options': symms,
         'color-picker.disabled': running_something,
+        'heatmap-plot-container.style': {'visibility': 'visible' if running_something else 'hidden',
+                                         'display': 'grid' if running_something else 'none',
+                                        #  'background': '#ffffff11',  # enable for debugging purposes
+                                         'pointer-events': 'auto',
+                                         'z-index': 1 if running_something else -1},
         'fitness-sldr.disabled': [running_something] * len(fdis)
     }
     
@@ -1709,7 +1726,7 @@ def __update_content(**kwargs) -> Dict[str, Any]:
     curr_content = kwargs['curr_content']
     cs_string = kwargs['cs_string']
     cs_properties = kwargs['cs_properties']
-    
+        
     i, j = kwargs['clickData']['points'][0]['x'], kwargs['clickData']['points'][0]['y']
     if current_mapelites.bins[j, i].non_empty(pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible'):
         if (j, i) in [b.bin_idx for b in current_mapelites._valid_bins()]:
@@ -2255,8 +2272,10 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {event_trig=}; {exp_n=}; {gen_counter=}; {selected_bins=}; {process_semaphore.is_locked=}')
     
     if not process_semaphore.is_locked:
-        process_semaphore.lock()
-    
+        process_semaphore.lock(name=event_trig)
+
+        print(f'{process_semaphore.is_locked=}, {process_semaphore._running=}')
+        
         u = triggers_map[event_trig](**vars)
         for k in u.keys():
             output[k] = u[k]
@@ -2276,5 +2295,5 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         output['valid-bins.children'] = valid_bins_str
         
         process_semaphore.unlock()
-        
+    
     return tuple(output.values())

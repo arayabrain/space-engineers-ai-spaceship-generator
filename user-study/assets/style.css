@@ -32,3 +32,11 @@
 .spacer {
     margin-top: 1%;
 }
+
+.container {
+    display: grid;
+}
+.content, .overlay {
+    position: relative;
+    grid-area: 1 / 1;
+}
