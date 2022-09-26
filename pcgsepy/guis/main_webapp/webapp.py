@@ -1067,6 +1067,7 @@ def download_content(n):
                                       apply_erosion=True,
                                       apply_smoothing=True)
             download_semaphore.unlock()
+            download_semaphore._running = 'YES'           
             logging.getLogger('webapp').debug('[{__name__}.write_archive] Semaphore unlocked')
             hullbuilder.add_external_hull(tmp.content)
             tmp.content.set_color(tmp.base_color)
@@ -1077,6 +1078,7 @@ def download_content(n):
                 'base_color': tmp.base_color.as_dict()
             }
             zf.writestr(f'spaceship_{rngseed}_exp{exp_n}', json.dumps(content_properties))
+            download_semaphore._running = 'NO'
     
     if selected_bins:
         logging.getLogger('webapp').info(f'Your selected spaceship will be downloaded shortly.')
@@ -1141,9 +1143,11 @@ def update_btsn_state(fdis, ms, lsysms, symms,
     for o in lsysms:
         o['disabled'] = running_something
     
+    print(f'{running_something=} or {download_semaphore._running=}')
+    
     btns = {
         'step-btn.disabled': running_something or (user_study_mode and gen_counter >= N_GENS_ALLOWED),
-        'download-btn.disabled': running_something,
+        'download-btn.disabled': running_something or download_semaphore._running == 'YES',
         'popdownload-btn.disabled': running_something,
         'rand-step-btn.disabled': running_something,
         'selection-clr-btn.disabled': running_something,
@@ -1165,7 +1169,7 @@ def update_btsn_state(fdis, ms, lsysms, symms,
         'color-picker.disabled': running_something,
         'heatmap-plot-container.style': {'visibility': 'visible' if running_something else 'hidden',
                                          'display': 'grid' if running_something else 'none',
-                                        #  'background': '#ffffff11',  # enable for debugging purposes
+                                        #  'background': '#ffffff11',  # decomment for debugging purposes
                                          'pointer-events': 'auto',
                                          'z-index': 1 if running_something else -1},
         'fitness-sldr.disabled': [running_something] * len(fdis)
@@ -1860,7 +1864,7 @@ def __content_download(**kwargs) -> Dict[str, Any]:
         while download_semaphore.is_locked:
             pass
         logging.getLogger('webapp').debug(f'[{__name__}.__content_download] (post-check) {download_semaphore.is_locked=}')
-        download_semaphore.lock()
+        download_semaphore.lock(name=download_semaphore._running)
         logging.getLogger('webapp').debug(f'[{__name__}.__content_download] (re-lock) {download_semaphore.is_locked=}')
         
         if user_study_mode and gen_counter == N_GENS_ALLOWED:
@@ -2277,8 +2281,6 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     if not process_semaphore.is_locked:
         process_semaphore.lock(name=event_trig)
 
-        print(f'{process_semaphore.is_locked=}, {process_semaphore._running=}')
-        
         u = triggers_map[event_trig](**vars)
         for k in u.keys():
             output[k] = u[k]
