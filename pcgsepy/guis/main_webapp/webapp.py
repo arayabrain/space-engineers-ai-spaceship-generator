@@ -1017,8 +1017,8 @@ def update_gen_progress(n):
     prevent_initial_call=True
 )
 def update_exp_progress(n):
-    val = np.round(100 * ((1 + exp_n) / len(my_emitterslist)), 2)
-    return val, f"{exp_n + 1} / {len(my_emitterslist)}"
+    val = min(100, np.round(100 * ((1 + exp_n) / len(my_emitterslist)), 2))
+    return val, f"{min(exp_n + 1, len(my_emitterslist))} / {len(my_emitterslist)}"
 
 
 @app.callback(
@@ -1501,7 +1501,10 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
         nbs_err_modal_show = True
     
     if user_study_mode and gen_counter == N_GENS_ALLOWED:
-        dlbtn_label = 'Download and Start Next Experiment'
+        if exp_n + 1 == len(my_emitterslist):
+            dlbtn_label = 'Download and Switch to User Mode'
+        else:
+            dlbtn_label = 'Download and Start Next Experiment'
     
     return {
         'content-plot.figure': curr_content,
