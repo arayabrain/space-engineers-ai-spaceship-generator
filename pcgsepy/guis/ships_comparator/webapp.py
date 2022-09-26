@@ -1,5 +1,6 @@
 import base64
 import json
+import logging
 import os
 import random
 import sys
@@ -186,6 +187,7 @@ def parse_contents(filename: str,
     _, cs_properties = contents.split(',')
     cs_properties = json.loads(base64.b64decode(cs_properties).decode(encoding='utf-8'))
     cs_string, base_color = cs_properties['string'], Vec.from_json(cs_properties['base_color'])
+    logging.getLogger('webapp').debug(msg=f'[{__name__}.parse_contents] {rngseed=}; {exp_n=}; {cs_string=}; {base_color=}')
     return rngseed, exp_n, cs_string, base_color
 
 
@@ -502,6 +504,8 @@ def general_callback(list_of_contents: List[str],
     else:
         event_trig = ctx.triggered[0]['prop_id'].split('.')[0]
 
+    logging.getLogger('webapp').debug(msg=f'[{__name__}.general_callback] {event_trig=}')
+    
     if event_trig == 'upload-data':
         children = [parse_contents(n, c) for c, n in zip(list_of_contents, list_of_names)]
         progress = 0
@@ -510,7 +514,7 @@ def general_callback(list_of_contents: List[str],
             rng_seed, exp_n, cs_string, cs_base_color = child
             base_color = cs_base_color
             cs = CandidateSolution(string=cs_string)
-            spaceship_plot[exp_n] = get_content_plot(spaceship=cs)
+            spaceship_plot[exp_n - 1] = get_content_plot(spaceship=cs)
         progress = -1
         savebtn_disabled = False
 

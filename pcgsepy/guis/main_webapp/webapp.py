@@ -295,6 +295,9 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     
     logging.getLogger('webapp').info(msg=f'Your ID is {rngseed}.')
     
+    logging.getLogger('webapp').info(msg=f'[{__name__}.set_app_layout] {rngseed=}; {my_emitterslist=}.')
+    
+    
     consent_dialog = dbc.Modal([
             dbc.ModalHeader(dbc.ModalTitle("Privacy Policy"),
                             style={'justify-content': 'center'},
@@ -861,7 +864,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                          disabled=True,
                          className='log-area'),
             dcc.Interval(id='interval2',
-                         interval=1 * 100,
+                         interval=5 * 10,
                          n_intervals=0),
             ])
     
@@ -917,8 +920,6 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                      style=hidden_style)
             ],
         fluid=True)
-
-    logging.getLogger('webapp').debug(msg=f'[{__name__}.set_app_layout] Set the webapp layout.')
 
 
 # clientside callback to open the Google Forms questionnaire on a new page
