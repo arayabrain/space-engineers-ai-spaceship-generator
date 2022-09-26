@@ -1028,6 +1028,7 @@ def download_mapelites(n_clicks):
     
     t = datetime.now().strftime("%Y%m%d%H%M%S")
     fname = f'{t}_mapelites_{current_mapelites.emitter.name}_gen{str(gen_counter).zfill(2)}'
+    logging.getLogger('webapp').info(f'The MAP-Elites object will be downloaded shortly.')
     return dict(content=json_dumps(current_mapelites), filename=f'{fname}.json')
 
 
@@ -1064,7 +1065,7 @@ def download_content(n):
                                       apply_smoothing=True)
             download_semaphore.unlock()
             download_semaphore._running = 'YES'           
-            logging.getLogger('webapp').debug('[{__name__}.write_archive] Semaphore unlocked')
+            logging.getLogger('webapp').debug(f'[{__name__}.write_archive] {download_semaphore.is_locked=}')
             hullbuilder.add_external_hull(tmp.content)
             tmp.content.set_color(tmp.base_color)
             logging.getLogger('webapp').debug(f'[{__name__}.write_archive] {tmp.string=}; {tmp.content=}; {tmp.base_color=}')
@@ -1224,7 +1225,6 @@ def _build_heatmap(mapelites: MAPElites,
     y_labels = np.cumsum([0] + mapelites.bin_sizes[1][:-1]) + mapelites.b_descs[1].bounds[0]
     for i in range(mapelites.bins.shape[0]):
         for j in range(mapelites.bins.shape[1]):
-            logging.getLogger('webapp').debug(f'[{__name__}._build_heatmap] {(i, j)=}, {mapelites.bins[i, j].new_elite[population]=}')
             v = mapelites.bins[i, j].get_metric(metric=metric['name'],
                                                 use_mean=use_mean,
                                                 population=population)
@@ -1315,7 +1315,6 @@ def _get_elite_content(mapelites: MAPElites,
         x, y, z = arr
         cs = [content[i, j, k] for i, j, k in zip(x, y, z)]
         ss = [structure._clean_label(list(block_definitions.keys())[v - 1]) for v in cs]
-        
         custom_colors = []
         for (i, j, k) in zip(x, y, z):
             b = structure._blocks[(i * structure.grid_size, j * structure.grid_size, k * structure.grid_size)]
@@ -1496,6 +1495,7 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
                                           pop_name=kwargs['pop_name'],
                                           metric_name=kwargs['metric_name'],
                                           method_name=kwargs['method_name'])
+            logging.getLogger('webapp').debug(msg=f'[{__name__}.__apply_step] {elapsed=}; {gen_counter=}; {selected_bins=}')
     else:
         logging.getLogger('webapp').error(msg=f'Step not applied: no bin(s) selected.')
         nbs_err_modal_show = True
@@ -1550,8 +1550,7 @@ def __bc_change(**kwargs) -> Dict[str, Any]:
     b0 = kwargs['b0']
     b1 = kwargs['b1']
     curr_heatmap = kwargs['curr_heatmap']
-    
-    
+        
     if event_trig.startswith('bc0') or event_trig.startswith('bc1'):
         if event_trig.startswith('bc0'):
             b0 = event_trig.replace('bc0-', '').replace('_', ' / ').replace('-', ' ')
@@ -1582,6 +1581,7 @@ def __subdivide(**kwargs) -> Dict[str, Any]:
     
     bin_idxs = [(x[1], x[0]) for x in selected_bins]
     for bin_idx in bin_idxs:
+        logging.getLogger('webapp').debug(msg=f'[{__name__}.__subdivide] Subdividing {bin_idx=}')
         current_mapelites.subdivide_range(bin_idx=bin_idx)
     curr_heatmap = _build_heatmap(mapelites=current_mapelites,
                                     pop_name=kwargs['pop_name'],
@@ -1606,14 +1606,15 @@ def __lsystem_modules(**kwargs) -> Dict[str, Any]:
         if module in modules and not all_modules[i].active:
             # activate module
             current_mapelites.toggle_module_mutability(module=module)
-            logging.getLogger('webapp').info(msg=f'Enabled {module}.')
+            logging.getLogger('webapp').debug(msg=f'[{__name__}.__subdivide] Enabled {module}')
             break
         elif module not in modules and all_modules[i].active:
             # deactivate module
             current_mapelites.toggle_module_mutability(module=module)
-            logging.getLogger('webapp').info(msg=f'Disabled {module}.')
+            logging.getLogger('webapp').debug(msg=f'[{__name__}.__subdivide] Disabled {module}')
             break
-        
+    logging.getLogger('webapp').info(msg=f'L-system modules updated')
+
     return {}
 
 
@@ -1679,6 +1680,8 @@ def __update_heatmap(**kwargs) -> Dict[str, Any]:
         metric_name = 'Age'
     elif event_trig == 'metric-coverage':
         metric_name = 'Coverage'
+    logging.getLogger('webapp').debug(msg=f'[{__name__}.__update_heatmap] {pop_name=}; {metric_name=}; {method_name=}')
+
     curr_heatmap = _build_heatmap(mapelites=current_mapelites,
                                     pop_name=pop_name,
                                     metric_name=metric_name,
@@ -1704,6 +1707,8 @@ def __apply_symmetry(**kwargs) -> Dict[str, Any]:
         symm_axis = 'Y-axis'
     elif event_trig == 'symmetry-z':
         symm_axis = 'Z-axis'
+    logging.getLogger('webapp').debug(msg=f'[{__name__}.__apply_symmetry] {symm_axis=}; {symm_orientation=}')
+        
     current_mapelites.reassign_all_content(sym_axis=symm_axis[0].lower() if symm_axis != "None" else None,
                                            sym_upper=symm_orientation == 'Upper')
     curr_content = _get_elite_content(mapelites=current_mapelites,
@@ -1885,7 +1890,7 @@ def __content_download(**kwargs) -> Dict[str, Any]:
                         'time_elapsed': time_elapsed.get_averages(),
                         'n_interactions': n_spaceships_inspected.get_averages()
                         }),
-                                    filename=f'user_metrics_{rngseed}')
+                                      filename=f'user_metrics_{rngseed}')
                 else:
                     metrics_dl = None
                 logging.getLogger('webapp').info(f'Reached end of all experiments! Please go back to the questionnaire to continue the evaluation.')
@@ -1964,7 +1969,7 @@ def __population_download(**kwargs) -> Dict[str, Any]:
     
     content_dl = dict(content=json.dumps([b.to_json() for b in current_mapelites.bins.flatten().tolist()]),
                       filename=f'population_{rngseed}_exp{exp_n}_{current_mapelites.emitter.name}.json')
-
+    logging.getLogger('webapp').info(f'The population will be downloaded shortly.')
     return {
         'download-population.data': content_dl
     }
@@ -2051,6 +2056,7 @@ def __close_error(**kwargs) -> Dict[str, Any]:
 
 def _update_base_color(color: Vec) -> None:
     global current_mapelites
+    logging.getLogger('webapp').debug(f'[{__name__}._update_base_color] {color=}')
     for (_, _), b in np.ndenumerate(current_mapelites.bins):
             for cs in [*b._feasible, *b._infeasible]:
                 cs.base_color = color
@@ -2067,7 +2073,8 @@ def __color(**kwargs) -> Dict[str, Any]:
     r, g, b = tuple(int(color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
     new_color = Vec.v3f(r, g, b).scale(1 / 256)
     base_color = new_color
-    _update_base_color(color=base_color)    
+    logging.getLogger('webapp').debug(msg=f'[{__name__}.__color] {base_color=}')
+    _update_base_color(color=base_color)
     if selected_bins:
         curr_content =  _get_elite_content(mapelites=current_mapelites,
                                            bin_idx=_switch([selected_bins[-1]])[0],
