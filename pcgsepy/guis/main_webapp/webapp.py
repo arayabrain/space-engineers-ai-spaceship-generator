@@ -295,7 +295,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     
     logging.getLogger('webapp').info(msg=f'Your ID is {rngseed}.')
     
-    logging.getLogger('webapp').info(msg=f'[{__name__}.set_app_layout] {rngseed=}; {my_emitterslist=}.')
+    logging.getLogger('webapp').debug(msg=f'[{__name__}.set_app_layout] {rngseed=}; {my_emitterslist=}.')
     
     
     consent_dialog = dbc.Modal([
