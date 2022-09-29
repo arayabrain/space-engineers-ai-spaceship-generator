@@ -3,7 +3,6 @@ import os
 import sys
 
 from waitress import serve
-from pcgsepy.nn.estimators import GaussianEstimator
 
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     os.chdir(sys._MEIPASS)
@@ -11,7 +10,7 @@ if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
 import argparse
 import webbrowser
 
-from pcgsepy.config import BIN_N, USE_TORCH
+from pcgsepy.config import BIN_N
 from pcgsepy.evo.fitness import (Fitness, box_filling_fitness,
                                  func_blocks_fitness, mame_fitness,
                                  mami_fitness)
@@ -22,16 +21,10 @@ from pcgsepy.mapelites.behaviors import (BehaviorCharacterization, avg_ma,
                                          mame, mami, symmetry)
 from pcgsepy.setup_utils import get_default_lsystem, setup_matplotlib
 from pcgsepy.mapelites.buffer import Buffer, mean_merge
+from pcgsepy.nn.estimators import GaussianEstimator
 from pcgsepy.mapelites.map import MAPElites
 from pcgsepy.mapelites.emitters import RandomEmitter
 from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel
-
-# if USE_TORCH:
-#     from pcgsepy.nn.estimators import MLPEstimator
-# else:
-#     class MLPEstimator:
-#         def __init__(self):
-#             raise NotImplementedError('This object should never be instantiated')
 
 
 parser = argparse.ArgumentParser()

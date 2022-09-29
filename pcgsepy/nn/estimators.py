@@ -1,7 +1,6 @@
 from typing import Any, Dict, List, Tuple, Union
 
 import ast
-import warnings
 import numpy as np
 from pcgsepy.config import EPSILON_F, RESCALE_INFEAS_FITNESS, USE_TORCH
 from pcgsepy.lsystem.solution import CandidateSolution
