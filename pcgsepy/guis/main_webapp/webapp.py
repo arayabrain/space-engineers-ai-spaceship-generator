@@ -12,6 +12,8 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from zipfile import ZipFile
 
+from pcgsepy.structure import _is_base_block
+
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     os.chdir(sys._MEIPASS)
 
@@ -66,10 +68,10 @@ logging.getLogger('webapp').addHandler(dashLoggerHandler)
 base_color: Vec = Vec.v3f(0.45, 0.45, 0.45)
 block_to_colour = {
     # colours from https://developer.mozilla.org/en-US/docs/Web/CSS/color_value
-    'LargeBlockArmorCorner': '#778899',
-    'LargeBlockArmorSlope': '#778899',
-    'LargeBlockArmorCornerInv': '#778899',
-    'LargeBlockArmorBlock': '#778899',
+    'LargeBlockArmorCorner': '#737373',
+    'LargeBlockArmorSlope': '#737373',
+    'LargeBlockArmorCornerInv': '#737373',
+    'LargeBlockArmorBlock': '#737373',
     'LargeBlockGyro': '#2f4f4f',
     'LargeBlockSmallGenerator': '#ffa07a',
     'LargeBlockSmallContainer': '#008b8b',
@@ -86,6 +88,13 @@ exp_n: int = 0
 gen_counter: int = 0
 gdev_mode: bool = False
 hidden_style = {'visibility': 'hidden', 'height': '0px', 'display': 'none'}
+circle_style = {
+        'height': '10px',
+        'width': '10px',
+        'border-radius': '50%',
+        'vertical-align': 'middle',
+        'margin': '0 5px 0 0'
+  }
 hm_callback_props = {}
 my_emitterslist: List[str] = MY_EMITTERS.copy()
 behavior_descriptors = [
@@ -240,6 +249,18 @@ def get_properties_table(cs: Optional[CandidateSolution] = None) -> dbc.Table:
     ])]
     
     return table_header + table_body
+
+
+def get_content_legend() -> dbc.Row:
+    return dbc.Row([
+        dbc.Col(children=[
+            html.Span(children=[
+                html.P('', style={**circle_style,
+                                  **{'background-color': '#%02x%02x%02x' % base_color.scale(256).to_veci().as_tuple() if _is_base_block(block_type) else block_to_colour[block_type]}}),
+                dbc.Label(block_type, size='sm', align='start')],
+                      style={'display': 'inline-flex', 'align-items': 'center'}),
+            ]) for block_type in block_to_colour.keys()
+        ])
 
 
 def _get_emitter() -> Emitter:
@@ -896,6 +917,9 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
         
     ])
     
+    content_legend = html.Div([get_content_legend()],
+                              id='content-legend-div')
+    
     app.layout = dbc.Container(
         children=[
             modals,
@@ -909,6 +933,10 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                 dbc.Col(properties_panel, width=3)],
                     align="start"),
             html.Br(),
+            dbc.Row(children=[
+                dbc.Col(content_legend, width={'size': 4, 'offset': 4})
+                ],
+                    align='start'),
             html.Br(),
             html.Br(),
             dbc.Row(children=[
@@ -1304,18 +1332,6 @@ def _build_heatmap(mapelites: MAPElites,
     return heatmap
 
 
-def _is_base_block(block_type: str) -> bool:
-    """Check if the block is a base block. Base blocks are non-functional, structural blocks.
-
-    Args:
-        block_type (str): The type of the block.
-
-    Returns:
-        bool: Whether the block is a base block.
-    """
-    return block_type.endswith("Block") or block_type.endswith("Slope") or block_type.endswith("Corner") or block_type.endswith("CornerInv")
-
-
 def _get_elite_content(mapelites: MAPElites,
                        bin_idx: Optional[Tuple[int, int]],
                        pop: str) -> go.Scatter3d:
@@ -1334,7 +1350,7 @@ def _get_elite_content(mapelites: MAPElites,
         custom_colors = []
         for (i, j, k) in zip(x, y, z):
             b = structure._blocks[(i * structure.grid_size, j * structure.grid_size, k * structure.grid_size)]
-            if _is_base_block(block_type=b.block_type):
+            if _is_base_block(block_type=b.block_type.split('_')[2]):
                 custom_colors.append(f'rgb{b.color.as_tuple()}')
             else:
                 custom_colors.append(block_to_colour.get(structure._clean_label(b.block_type), '#ff0000'))
@@ -2096,7 +2112,8 @@ def __color(**kwargs) -> Dict[str, Any]:
                                            bin_idx=_switch([selected_bins[-1]])[0],
                                            pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
     return {
-        'content-plot.figure': curr_content
+        'content-plot.figure': curr_content,
+        'content-legend-div.children': get_content_legend()
     }
 
 
@@ -2191,6 +2208,7 @@ triggers_map = {
               Output("exp-progress-div", "style"),
               Output('study-progress-div', 'style'),
               Output('download-btn', 'children'),
+              Output('content-legend-div', 'children'),
               
               State('heatmap-plot', 'figure'),
               State('hl-rules', 'value'),
@@ -2213,6 +2231,7 @@ triggers_map = {
               State("exp-progress-div", "style"),
               State('study-progress-div', 'style'),
               State('download-btn', 'children'),
+              State('content-legend-div', 'children'),
               
               Input('population-feasible', 'n_clicks'),
               Input('population-infeasible', 'n_clicks'),
@@ -2253,7 +2272,7 @@ triggers_map = {
               Input('color-picker', 'value'),
               Input('webapp-quickstart-btn', 'n_clicks'),
               )
-def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, qs_modal_show, qs_um_modal_show, cm_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style, study_style, dlbtn_label,
+def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, qs_modal_show, qs_um_modal_show, cm_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style, study_style, dlbtn_label, curr_legend,
                      pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights, b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn, color, qs_btn):
     global current_mapelites
     global selected_bins
@@ -2302,6 +2321,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         'exp-progress-div.style': exp_progress_style,
         'study-progress-div.style': study_style,
         'download-btn.children': dlbtn_label,
+        'content-legend-div.children': curr_legend
     }
     
     logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {event_trig=}; {exp_n=}; {gen_counter=}; {selected_bins=}; {process_semaphore.is_locked=}')

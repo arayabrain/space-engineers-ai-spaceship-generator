@@ -140,7 +140,8 @@ def _is_base_block(block_type: str) -> bool:
     Returns:
         bool: Whether the block is a base block.
     """
-    return block_type.endswith("Block") or block_type.endswith("Slope") or block_type.endswith("Corner") or block_type.endswith("CornerInv")
+    return block_type in ['LargeBlockArmorCorner', 'LargeBlockArmorSlope',
+                          'LargeBlockArmorCornerInv', 'LargeBlockArmorBlock']
 
 
 
@@ -197,7 +198,7 @@ class Structure:
     def set_color(self,
                   color: Vec) -> None:
         for block in self._blocks.values():
-            if _is_base_block(block_type=block.block_type):
+            if _is_base_block(block_type=block.block_type.split('_')[2]):
                 block.color = color
     
     @property
