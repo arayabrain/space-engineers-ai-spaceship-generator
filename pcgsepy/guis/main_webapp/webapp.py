@@ -439,17 +439,31 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     
     header = dbc.Row(children=[
                 dbc.Col(html.H1(children='🚀Space Engineers AI Spaceship Generator🚀',
-                                className='title'), width={'size': 6, 'offset': 3}),
-                dbc.Col(children=[dbc.Button('Webapp Info',
-                                             id='webapp-info-btn',
-                                             color='info')],
-                        align='center', width=1),
-                dbc.Col(children=[dbc.Button('AI Info',
-                                             id='ai-info-btn',
-                                             color='info')],
-                        align='center', width=1)
+                                className='title'),
+                        width={'size': 6,
+                               'offset': 3
+                               }),
+                dbc.Col(children=[
+                    dbc.Row(children=[
+                        dbc.Col(dbc.Button('Quickstart',
+                                           id='webapp-quickstart-btn',
+                                           color='info'),
+                                width=4,
+                                style=hidden_style if gdev_mode else {}),
+                        dbc.Col(dbc.Button('Webapp Info',
+                                           id='webapp-info-btn',
+                                           color='info'),
+                                width=4),
+                        dbc.Col(dbc.Button('AI Info',
+                                           id='ai-info-btn',
+                                           color='info'),
+                                width=4)
+                        ],
+                            align='center', justify='evenly')],
+                        align='center', width=2)
     ],
-                     className='header')
+                     className='header',
+                     style={'text-align': 'center'})
     
     exp_progress = html.Div(
         id='study-progress-div',
@@ -962,6 +976,9 @@ app.clientside_callback(
 )
 def show_webapp_info(n):
     return True
+
+
+
 
 
 @app.callback(
@@ -2083,6 +2100,13 @@ def __color(**kwargs) -> Dict[str, Any]:
     }
 
 
+def __show_quickstart_modal(**kwargs) -> Dict[str, Any]:
+    return {
+        'quickstart-modal.is_open': user_study_mode,
+        'quickstart-usermode-modal.is_open': not user_study_mode
+    }
+
+
 def __default(**kwargs) -> Dict[str, Any]:
     global current_mapelites
     
@@ -2136,6 +2160,7 @@ triggers_map = {
     'nbs-err-btn': __close_error,
     'color-picker': __color,
     'fitness-sldr': __fitness_weights,
+    'webapp-quickstart-btn': __show_quickstart_modal,
     None: __default
 }
 
@@ -2226,9 +2251,10 @@ triggers_map = {
               Input("consent-no", "n_clicks"),
               Input("nbs-err-btn", "n_clicks"),
               Input('color-picker', 'value'),
+              Input('webapp-quickstart-btn', 'n_clicks'),
               )
 def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, qs_modal_show, qs_um_modal_show, cm_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style, study_style, dlbtn_label,
-                     pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights, b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn, color):
+                     pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights, b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn, color, qs_btn):
     global current_mapelites
     global selected_bins
     
