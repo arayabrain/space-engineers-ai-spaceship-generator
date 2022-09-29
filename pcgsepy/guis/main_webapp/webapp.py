@@ -878,7 +878,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                          disabled=True,
                          className='log-area'),
             dcc.Interval(id='interval2',
-                         interval=5 * 10,
+                         interval=1 * 10,
                          n_intervals=0),
             ])
     
@@ -1141,9 +1141,9 @@ def disable_privacy_modal(ny, nn):
               State('lsystem-modules', 'options'),
               State('symmetry-radio', 'options'),
                    
-              Input('interval2', 'n_intervals')
+              Input('interval2', 'n_intervals'),
               )
-def update_btsn_state(fdis, ms, lsysms, symms,
+def interval_updates(fdis, ms, lsysms, symms,
                       ni):
     # non-definitive solution, see: https://github.com/plotly/dash-table/issues/925, https://github.com/plotly/dash/issues/1861
     # long_callback and background callback also do not work (infinite redeployment of webapp)
@@ -1187,7 +1187,7 @@ def update_btsn_state(fdis, ms, lsysms, symms,
                                          'z-index': 1 if running_something else -1},
         'fitness-sldr.disabled': [running_something] * len(fdis)
     }
-    
+        
     return tuple(btns.values())
 
 
