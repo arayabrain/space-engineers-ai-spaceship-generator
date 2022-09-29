@@ -132,6 +132,14 @@ webapp_url = f'http://{args.host}:{args.port}/'
 print(f'Serving webapp on http://{args.host}:{args.port}/...')
 webbrowser.open_new(webapp_url)
 
+# close the splash screen if launched via application
+try:
+    import pyi_splash
+    if pyi_splash.is_alive():
+        pyi_splash.close()
+except ModuleNotFoundError as e:
+    pass
+
 serve(app.server,
       threads=16,
       host=args.host,

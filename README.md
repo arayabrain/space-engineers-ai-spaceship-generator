@@ -12,9 +12,9 @@
 Research code for the Space Engineers PCG project developed under the GoodAI research grant.
 
 ## Installation
-The application can be built using the provided `.bat` or `.sh` files placed in the `user-study` folder. The executable files will be created in the `user-study\dist` folder.
+The application can be built using the provided `.py` files placed in the `user-study` folder. The executable files will be created in the `user-study\dist` folder.
 
-You can build just the main web application (running `build_main_webapp.bat`) or also the spaceships ranker (running `build_comparator.bat`). Keep in mind that the latter is used only for the user study.
+You can build just the main web application (running `python build_main_webapp.py`) or also the spaceships ranker (running `python build_comparator.py`). Keep in mind that the latter is used *only* for the user study.
 
 ### Modifiable files
 Some files can be modified before building the application. These are:
@@ -51,7 +51,7 @@ This is the most advanced mode, giving the user full access to every part of the
 This webapp is used only for the user study and allows the user to upload and rank different spaceships.
 
 ## Development
-Install the `PCGSEPy` library by first installing the requirements:
+Install the `PCGSEPy` library by first installing the requirements (optional):
 ```
 pip install -r requirements.txt
 ```
@@ -59,6 +59,7 @@ And then install the library:
 ```
 pip install -e .
 ```
+Remember to set the `use_torch` flag in `configs.ini` if you want to use the PyTorch library.
 
 ## Contents overview
 - `pcgsepy`: this directory contains the main Python PCGSEPy library.
