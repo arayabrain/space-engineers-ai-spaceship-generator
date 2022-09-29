@@ -4,13 +4,26 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
-from pcgsepy.config import BETA_A, BETA_B, CONTEXT_IDXS, CS_MAX_AGE, USE_LINEAR_ESTIMATOR
+from sklearn.neural_network import MLPRegressor
+from pcgsepy.config import BETA_A, BETA_B, CONTEXT_IDXS, CS_MAX_AGE, USE_LINEAR_ESTIMATOR, USE_TORCH
 from pcgsepy.mapelites.bin import MAPBin
 from pcgsepy.mapelites.buffer import Buffer, mean_merge
-from scipy.stats import boltzmann, dirichlet
+from scipy.stats import boltzmann
 from sklearn.linear_model import LogisticRegression
+from sklearn.utils._testing import ignore_warnings
+from sklearn.exceptions import ConvergenceWarning
 
-from pcgsepy.nn.estimators import NonLinearEstimator, train_estimator
+if USE_TORCH:
+    from pcgsepy.nn.estimators import NonLinearEstimator, train_estimator
+else:
+    class NonLinearEstimator():
+        def __init__(self,
+                     xshape,
+                     yshape):
+            raise NotImplementedError('This object should never be instantiated')
+
+        def train_estimator(estimator, xs, ys, n_epochs):
+            raise NotImplementedError('This function should never be called')
 
 
 def diversity_builder(bins: 'np.ndarray[MAPBin]',
@@ -238,10 +251,9 @@ class GreedyEmitter(Emitter):
 
     def pre_step(self, **kwargs) -> None:
         self._last_selected = []
-        for idx in kwargs['selected_idxs']:
-            self._last_selected.append(tuple(idx))
-        for idx in kwargs['expanded_idxs']:
-            self._last_selected.append(tuple(idx))
+        idxs: List[Tuple[int, int]] = [*kwargs['selected_idxs'], *kwargs['expanded_idxs']]
+        for idx in idxs:
+            self._last_selected.append(idx)
     
     def to_json(self) -> Dict[str, Any]:
         return {
@@ -412,7 +424,7 @@ class HumanPrefMatrixEmitter(Emitter):
     def pre_step(self, **kwargs) -> None:
         assert self._prefs is not None, f'{self.name} has not been initialized! Preference matrix has not been set.'
         bins: 'np.ndarray[MAPBin]' = kwargs['bins']
-        idxs: List[List[int]] = kwargs['selected_idxs']
+        idxs: List[Tuple[int, int]] = [*kwargs['selected_idxs'], *kwargs['expanded_idxs']]
         # get number of new/updated bins
         n_new_bins = self._get_n_new_bins(bins=bins)
         # update preference for selected bins
@@ -489,24 +501,30 @@ class ContextualBanditEmitter(Emitter):
         self._decay = decay
         self._buffer = Buffer(merge_method=mean_merge)
         self._n_features_context = n_features_context
-        self._estimator: Union[LogisticRegression, NonLinearEstimator] = None
+        self._estimator: Union[LogisticRegression, NonLinearEstimator, MLPRegressor] = None
         self._fitted = False
         
         self._tot_actions = 0
         self.sampling_strategy = 'thompson'  # or 'gibbs', 'epsilon_greedy'
         self._thompson_stats = {}
-        
+    
+    @ignore_warnings(category=ConvergenceWarning)
     def _fit(self) -> None:
         xs, ys = self._buffer.get()
         if USE_LINEAR_ESTIMATOR:
             self._estimator = LogisticRegression().fit(X=xs, y=ys)
-        else:
+        elif USE_TORCH:
             self._estimator = NonLinearEstimator(xshape=self._n_features_context,
                                                  yshape=1)
             train_estimator(estimator=self._estimator,
                             xs=xs,
                             ys=ys,
                             n_epochs=20)
+        else:
+            self._estimator = MLPRegressor(hidden_layer_sizes=self._n_features_context,
+                                           activation='relu',
+                                           solver='sgd',
+                                           max_iter=20).fit(X=xs, y=ys)
         self._fitted = True
     
     def _extract_bin_context(self,
@@ -541,7 +559,7 @@ class ContextualBanditEmitter(Emitter):
     
     def pre_step(self, **kwargs) -> None:
         bins: 'np.ndarray[MAPBin]' = kwargs['bins']
-        idxs: List[Tuple[int]] = kwargs['selected_idxs']
+        idxs: List[Tuple[int, int]] = [*kwargs['selected_idxs'], *kwargs['expanded_idxs']]
         for i in range(bins.shape[0]):
             for j in range(bins.shape[1]):
                 if bins[i, j].non_empty(pop='feasible'):
@@ -612,12 +630,20 @@ class ContextualBanditEmitter(Emitter):
             
             'thompson_stats': self._thompson_stats
         }
-        
+        j['estimator_name'] = self._estimator.__class__.__name__ if self._estimator else None
         if isinstance(self._estimator, LogisticRegression):
             j['estimator_params'] = self._estimator.get_params(),
             j['estimator_coefs'] = self._estimator.coef_.tolist() if self._fitted else None,
             j['estimator_intercept'] = np.asarray(self._estimator.intercept_).tolist() if self._fitted else None,
-        elif isinstance(self._estimator, NonLinearEstimator):
+        elif isinstance(self._estimator, MLPRegressor):
+            j['coefs_'] = self._estimator.coefs_
+            j['intercepts_']: self._estimator.intercepts_
+            j['n_features_in_']: self._estimator.n_features_in_
+            j['n_iter_']: self._estimator.n_iter_
+            j['n_layers_']: self._estimator.n_layers_
+            j['n_outputs_']: self._estimator.n_outputs_
+            j['out_activation_']: self._estimator.out_activation_
+        elif USE_TORCH and isinstance(self._estimator, NonLinearEstimator):
             j['estimator_parameters'] = self._estimator.to_json()
         
         return j
@@ -638,15 +664,29 @@ class ContextualBanditEmitter(Emitter):
         re._n_features_context = my_args['n_features_context']
         re._fitted = my_args['fitted']
         
-        if 'estimator_parameters' in my_args.keys():
-            re._estimator = NonLinearEstimator.from_json(my_args=my_args['estimator_parameters'])
-        else:
-            re._estimator = LogisticRegression()
-            re._estimator.set_params(my_args['estimator_params'])
-            if my_args['estimator_coefs'] is not None:
-                re._estimator.coef_ = np.asarray(my_args['estimator_coefs'])
-            if my_args['estimator_intercept'] is not None:
-                re._estimator.intercept_ = np.asarray(my_args['estimator_intercept'])
+        if 'estimator_name' in my_args.keys():
+            if my_args['estimator_name'] == 'NonLinearEstimator' and USE_TORCH and not USE_LINEAR_ESTIMATOR:
+                re._estimator = NonLinearEstimator.from_json(my_args=my_args['estimator_parameters'])
+            elif my_args['estimator_name'] == 'LogisticRegression' and USE_LINEAR_ESTIMATOR:
+                re._estimator = LogisticRegression()
+                re._estimator.set_params(my_args['estimator_params'])
+                if my_args['estimator_coefs'] is not None:
+                    re._estimator.coef_ = np.asarray(my_args['estimator_coefs'])
+                if my_args['estimator_intercept'] is not None:
+                    re._estimator.intercept_ = np.asarray(my_args['estimator_intercept'])
+            elif my_args['estimator_name'] == 'MLPRegressor':
+                re._estimator = MLPRegressor()
+                re._estimator.coefs_ = my_args['coefs_']
+                re._estimator.intercepts_ = my_args['intercepts_']
+                re._estimator.n_features_in_ = my_args['n_features_in_']
+                re._estimator.n_iter_ = my_args['n_iter_']
+                re._estimator.n_layers_ = my_args['n_layers_']
+                re._estimator.n_outputs_ = my_args['n_outputs_']
+                re._estimator.out_activation_ = my_args['out_activation_']
+            else:
+                raise ValueError(f'Unrecognized estimator name: {my_args["estimator_name"]}.')
+        
+            
         
         re._thompson_stats = my_args['thompson_stats']
         
@@ -665,24 +705,30 @@ class PreferenceBanditEmitter(Emitter):
         self._epsilon = self._initial_epsilon
         self._decay = decay
         self._buffer = Buffer(merge_method=mean_merge)
-        self._estimator: LogisticRegression = None
+        self._estimator: Union[LogisticRegression, NonLinearEstimator, MLPRegressor] = None
         self._fitted = False
         
         self._tot_actions = 0
         self.sampling_strategy = 'epsilon_greedy'  # or 'gibbs', 'thompson'
         self._thompson_stats = {}
 
+    @ignore_warnings(category=ConvergenceWarning)
     def _fit(self) -> None:
         xs, ys = self._buffer.get()
         if USE_LINEAR_ESTIMATOR:
             self._estimator = LogisticRegression().fit(X=xs, y=ys)
-        else:
+        elif USE_TORCH:
             self._estimator = NonLinearEstimator(xshape=2,
                                                  yshape=1)
             train_estimator(estimator=self._estimator,
                             xs=xs,
                             ys=ys,
                             n_epochs=20)
+        else:
+            self._estimator = MLPRegressor(hidden_layer_sizes=2,
+                                           activation='relu',
+                                           solver='sgd',
+                                           max_iter=20).fit(X=xs, y=ys)
         self._fitted = True
     
     def _get_valid_bins(self,
@@ -729,7 +775,7 @@ class PreferenceBanditEmitter(Emitter):
     
     def pre_step(self, **kwargs) -> None:
         bins: 'np.ndarray[MAPBin]' = kwargs['bins']
-        idxs: List[Tuple[int, int]] = kwargs['selected_idxs']
+        idxs: List[Tuple[int, int]] = [*kwargs['selected_idxs'], *kwargs['expanded_idxs']]
         bounds: List[Tuple[float, float]] = kwargs['bounds']
         bcs0 = np.cumsum([bounds[0][0]] + [b.bin_size[0] for b in bins[0, :]])[:-1]
         bcs1 = np.cumsum([bounds[1][0]] + [b.bin_size[1] for b in bins[:, 0]])[:-1]
@@ -805,11 +851,20 @@ class PreferenceBanditEmitter(Emitter):
             
             'thompson_stats': self._thompson_stats
         }
+        j['estimator_name'] = self._estimator.__class__.__name__ if self._estimator else None
         if isinstance(self._estimator, LogisticRegression):
             j['estimator_params'] = self._estimator.get_params(),
             j['estimator_coefs'] = self._estimator.coef_.tolist() if self._fitted else None,
             j['estimator_intercept'] = np.asarray(self._estimator.intercept_).tolist() if self._fitted else None,
-        elif isinstance(self._estimator, NonLinearEstimator):
+        elif isinstance(self._estimator, MLPRegressor):
+            j['coefs_'] = self._estimator.coefs_
+            j['intercepts_']: self._estimator.intercepts_
+            j['n_features_in_']: self._estimator.n_features_in_
+            j['n_iter_']: self._estimator.n_iter_
+            j['n_layers_']: self._estimator.n_layers_
+            j['n_outputs_']: self._estimator.n_outputs_
+            j['out_activation_']: self._estimator.out_activation_
+        elif USE_TORCH and isinstance(self._estimator, NonLinearEstimator):
             j['estimator_parameters'] = self._estimator.to_json()
         
         return j
@@ -831,15 +886,27 @@ class PreferenceBanditEmitter(Emitter):
         re._n_features_context = my_args['n_features_context']
         re._fitted = my_args['fitted']
         
-        if 'estimator_parameters' in my_args.keys():
-            re._estimator = NonLinearEstimator.from_json(my_args=my_args['estimator_parameters'])
-        else:
-            re._estimator = LogisticRegression()
-            re._estimator.set_params(my_args['estimator_params'])
-            if my_args['estimator_coefs'] is not None:
-                re._estimator.coef_ = np.asarray(my_args['estimator_coefs'])
-            if my_args['estimator_intercept'] is not None:
-                re._estimator.intercept_ = np.asarray(my_args['estimator_intercept'])
+        if 'estimator_name' in my_args.keys():
+            if my_args['estimator_name'] == 'NonLinearEstimator' and USE_TORCH and not USE_LINEAR_ESTIMATOR:
+                re._estimator = NonLinearEstimator.from_json(my_args=my_args['estimator_parameters'])
+            elif my_args['estimator_name'] == 'LogisticRegression' and USE_LINEAR_ESTIMATOR:
+                re._estimator = LogisticRegression()
+                re._estimator.set_params(my_args['estimator_params'])
+                if my_args['estimator_coefs'] is not None:
+                    re._estimator.coef_ = np.asarray(my_args['estimator_coefs'])
+                if my_args['estimator_intercept'] is not None:
+                    re._estimator.intercept_ = np.asarray(my_args['estimator_intercept'])
+            elif my_args['estimator_name'] == 'MLPRegressor':
+                re._estimator = MLPRegressor()
+                re._estimator.coefs_ = my_args['coefs_']
+                re._estimator.intercepts_ = my_args['intercepts_']
+                re._estimator.n_features_in_ = my_args['n_features_in_']
+                re._estimator.n_iter_ = my_args['n_iter_']
+                re._estimator.n_layers_ = my_args['n_layers_']
+                re._estimator.n_outputs_ = my_args['n_outputs_']
+                re._estimator.out_activation_ = my_args['out_activation_']
+            else:
+                raise ValueError(f'Unrecognized estimator name: {my_args["estimator_name"]}.')
         
         re._thompson_stats = my_args['thompson_stats']
         

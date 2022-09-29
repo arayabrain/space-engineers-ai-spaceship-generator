@@ -1,3 +1,4 @@
+from http.client import GATEWAY_TIMEOUT
 import random
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -9,7 +10,7 @@ from joblib import Parallel, delayed
 from pcgsepy.common.jsonifier import json_dumps, json_loads
 from pcgsepy.config import (ALIGNMENT_INTERVAL, BIN_POP_SIZE, CS_MAX_AGE,
                             EPSILON_F, MAX_X_SIZE, MAX_Y_SIZE, MAX_Z_SIZE,
-                            N_ITERATIONS, N_RETRIES, POP_SIZE)
+                            N_ITERATIONS, N_RETRIES, POP_SIZE, USE_TORCH)
 from pcgsepy.evo.fitness import (Fitness, box_filling_fitness,
                                  func_blocks_fitness, mame_fitness,
                                  mami_fitness)
@@ -26,11 +27,24 @@ from pcgsepy.mapelites.buffer import Buffer, EmptyBufferException
 from pcgsepy.mapelites.emitters import (Emitter, HumanPrefMatrixEmitter,
                                         RandomEmitter, emitters,
                                         get_emitter_by_str)
-from pcgsepy.nn.estimators import (GaussianEstimator, MLPEstimator,
-                                   QuantileEstimator, prepare_dataset,
-                                   train_estimator)
+from pcgsepy.nn.estimators import (GaussianEstimator, prepare_dataset)
 from tqdm import trange
 from typing_extensions import Self
+
+
+if USE_TORCH:
+    from pcgsepy.nn.estimators import MLPEstimator, train_estimator, QuantileEstimator
+else:
+    class MLPEstimator:
+        def __init__(self):
+            raise NotImplementedError('This object should never be instantiated')
+    
+    class QuantileEstimator:
+        def __init__(self):
+            raise NotImplementedError('This object should never be instantiated')
+    
+    def train_estimator(estimator, xs, ys, n_epochs):
+        raise NotImplementedError('This function should never be called')    
 
 
 def coverage_reward(mapelites: 'MAPElites') -> float:
@@ -221,10 +235,10 @@ class MAPElites:
                                                  Fitness(name='MajorMinimumProportions', f=mami_fitness, bounds=(0, 1))]]
             if self.estimator is not None:
                 if isinstance(self.estimator, GaussianEstimator):
-                    return self.estimator.predict(x=np.asarray(cs.fitness)) if self.estimator.is_trained else EPSILON_F
-                elif isinstance(self.estimator, MLPEstimator):
+                    return self.estimator.predict(x=np.asarray(cs.representation)) if self.estimator.is_trained else EPSILON_F
+                elif USE_TORCH and isinstance(self.estimator, MLPEstimator):
                     return self.estimator.predict(cs.representation) if self.estimator.is_trained else EPSILON_F
-                elif isinstance(self.estimator, QuantileEstimator):
+                elif USE_TORCH and isinstance(self.estimator, QuantileEstimator):
                     if self.estimator.is_trained:
                         # set fitness to (3,) array (min, median, max)
                         cs.fitness = self.estimator.predict(cs.representation)
@@ -529,8 +543,7 @@ class MAPElites:
         # if possible, train the estimator for fitness acquirement
         if self.estimator is not None:
             # Prepare dataset for estimator
-            xs, ys = prepare_dataset(
-                f_pop=[x for x in generated if x.is_feasible])
+            xs, ys = prepare_dataset(f_pop=[x for x in generated if x.is_feasible])
             for x, y in zip(xs, ys):
                 self.buffer.insert(x=x,
                                    y=y / self.max_f_fitness)
@@ -539,7 +552,7 @@ class MAPElites:
                 xs, ys = self.buffer.get()
                 if isinstance(self.estimator, GaussianEstimator):
                     self.estimator.fit(xs=xs, ys=ys)
-                elif isinstance(self.estimator, MLPEstimator) or isinstance(self.estimator, QuantileEstimator):
+                elif USE_TORCH and isinstance(self.estimator, MLPEstimator) or isinstance(self.estimator, QuantileEstimator):
                     train_estimator(self.estimator, xs=xs, ys=ys)
                 else:
                     raise NotImplementedError(f'Unrecognized estimator type {type(self.estimator)}.')
@@ -736,10 +749,17 @@ class MAPElites:
             self.bins[i, j] = MAPBin(bin_idx=(i, j),
                                      bin_size=(self.bin_sizes[0][i], self.bin_sizes[1][j]))
         if self.estimator is not None:
-            if isinstance(self.estimator, MLPEstimator):
+            if isinstance(self.estimator, GaussianEstimator):
+                self.estimator = GaussianEstimator(bound=self.estimator.bound,
+                                                   kernel=self.estimator.kernel,
+                                                   max_f=self.estimator.max_f,
+                                                   min_f=self.estimator.min_f,
+                                                   alpha=self.estimator.alpha,
+                                                   normalize_y=self.estimator.normalize_y)
+            if USE_TORCH and isinstance(self.estimator, MLPEstimator):
                 self.estimator = MLPEstimator(xshape=self.estimator.xshape,
                                               yshape=self.estimator.yshape)
-            elif isinstance(self.estimator, QuantileEstimator):
+            elif USE_TORCH and isinstance(self.estimator, QuantileEstimator):
                 self.estimator = QuantileEstimator(xshape=self.estimator.xshape,
                                                    yshape=self.estimator.yshape)
         self.buffer.clear()
@@ -808,6 +828,7 @@ class MAPElites:
             'bin_qnt': list(self.bin_qnt),
             'bins': [b.to_json() for b in self.bins.flatten().tolist()],
             'enforce_qnt': self.enforce_qnt,
+            'estimator_type': self.estimator.__class__.__name__ if self.estimator else None,
             'estimator': self.estimator.to_json() if self.estimator else None,
             'buffer': self.buffer.to_json(),
             'allow_res_increase': self.allow_res_increase,
@@ -834,8 +855,13 @@ class MAPElites:
         if my_args['emitter']:
             me.emitter = emitters[my_args['emitter']
                                   ['name']].from_json(my_args['emitter'])
-        if my_args['estimator']:
-            me.estimator = MLPEstimator.from_json(my_args['estimator'])
+        if my_args['estimator_type']:
+            estimators = {
+                'GaussianEstimator': GaussianEstimator,
+                'MLPEstimator': MLPEstimator,
+                'QuantileEstimator': QuantileEstimator
+            }
+            me.estimator = estimators[my_args['estimator_type']].from_json(my_args['estimator'])
         if my_args['agent']:
             me.agent = EpsilonGreedyAgent.from_json(my_args['agent'])
             me.agent_rewards = [agent_rewards[ar]

@@ -3,6 +3,7 @@ import os
 import sys
 
 from waitress import serve
+from pcgsepy.nn.estimators import GaussianEstimator
 
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     os.chdir(sys._MEIPASS)
@@ -10,7 +11,7 @@ if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
 import argparse
 import webbrowser
 
-from pcgsepy.config import BIN_N
+from pcgsepy.config import BIN_N, USE_TORCH
 from pcgsepy.evo.fitness import (Fitness, box_filling_fitness,
                                  func_blocks_fitness, mame_fitness,
                                  mami_fitness)
@@ -23,7 +24,14 @@ from pcgsepy.setup_utils import get_default_lsystem, setup_matplotlib
 from pcgsepy.mapelites.buffer import Buffer, mean_merge
 from pcgsepy.mapelites.map import MAPElites
 from pcgsepy.mapelites.emitters import RandomEmitter
-from pcgsepy.nn.estimators import MLPEstimator
+from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel
+
+# if USE_TORCH:
+#     from pcgsepy.nn.estimators import MLPEstimator
+# else:
+#     class MLPEstimator:
+#         def __init__(self):
+#             raise NotImplementedError('This object should never be instantiated')
 
 
 parser = argparse.ArgumentParser()
@@ -109,8 +117,11 @@ behavior_descriptors = [
 buffer = Buffer(merge_method=mean_merge)
 mapelites = MAPElites(lsystem=lsystem,
                       feasible_fitnesses=feasible_fitnesses,
-                      estimator=MLPEstimator(xshape=len(feasible_fitnesses),
-                                             yshape=1),
+                    #   estimator=MLPEstimator(xshape=len(feasible_fitnesses),
+                    #                          yshape=1) if USE_TORCH else GaussianEstimator(),
+                      estimator=GaussianEstimator(bound='upper',
+                                                  kernel=DotProduct() + WhiteKernel(),
+                                                  max_f=sum([f.bounds[1] for f in feasible_fitnesses])),
                       buffer=buffer,
                       behavior_descriptors=behavior_descriptors,
                       n_bins=BIN_N,
