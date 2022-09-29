@@ -5,6 +5,9 @@ An Interactive Constrained MAP-Elites system. The scripts and notebooks in this 
 Gallotta, Roberto, Kai Arulkumaran, and L. B. Soros. ‘Surrogate Infeasible Fitness Acquirement FI-2Pop for Procedural Content Generation’. In 2022 IEEE Conference on Games (CoG), ?-?, CASIA, Beijing, China, 2022. 10.48550/arXiv.2205.05834.
 ```
 
+## Building
+Toggle　`use_torch` in the config file in order to reproduce the results of the paper before building the library.
+
 ## Notebooks
 The notebook `spaceships_spawner.ipynb` is used to directly spawn a spaceship in Space Engineers.
 
