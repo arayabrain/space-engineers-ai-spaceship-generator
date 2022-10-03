@@ -325,9 +325,33 @@ def serve_layout() -> dbc.Container:
                            is_open=False,
                            scrollable=True)
     
+    exit_userstudy_modal = dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle("Quit User Study?"),
+                        style={'justify-content': 'center'},
+                        close_button=True),
+        dbc.ModalBody(dcc.Markdown("""
+                                   Do you really want to quit the user study?
+                                   
+                                   If you quit the user study, we won't collect data anymore and you won't be able to complete the experiment.
+                                   Make sure to close the questionnaire afterwards.
+                                   """,
+                                   style={'text-align': 'justify'})),
+        dbc.ModalFooter(children=[dbc.Button("Yes",
+                                             id="qus-y-btn",
+                                             color="primary",
+                                             className="ms-auto",
+                                             n_clicks=0,
+                                             style={'width': '100%'})])
+        ],
+                           id='eus-modal',
+                           centered=True,
+                           backdrop=True,
+                           is_open=False,
+                           scrollable=True)
+    
     modals = html.Div(children=[
         consent_dialog, webapp_info_modal, algo_info_modal, quickstart_modal, quickstart_usermode_modal,
-        no_bins_selected_modal, end_of_experiment_modal, end_of_userstudy_modal
+        no_bins_selected_modal, end_of_experiment_modal, end_of_userstudy_modal, exit_userstudy_modal
     ])
     
     header = dbc.Row(children=[
@@ -376,6 +400,19 @@ def serve_layout() -> dbc.Container:
             
             dbc.Row(
                 dbc.Col(children=[
+                    dbc.Button('Quit User Study',
+                               id='qus-btn',
+                               className='button-fullsize',
+                               color='danger'),
+                    html.Br(),
+                    html.Br()],
+                        width={'size': 4, 'offset': 4}),
+                id='qus-div',
+                style={'text-align': 'center'} if app_settings.app_mode == AppMode.USERSTUDY else hidden_style
+                ),
+            
+            dbc.Row(
+                dbc.Col(children=[
                     dbc.Label(f'Current Iteration',
                               style={'font-size': 'large'}),
                 dbc.Progress(id="gen-progress",
@@ -402,9 +439,7 @@ def serve_layout() -> dbc.Container:
                         align='center',
                         id='exp-progress-div')
             )
-        ],
-        style=hidden_style if app_settings.app_mode == AppMode.USER else {}
-        )
+        ])
     
     mapelites_heatmap = html.Div(children=[
         html.H4('Spaceship Population',
@@ -1027,6 +1062,7 @@ def disable_privacy_modal(ny, nn):
               Output('color-picker', 'disabled'),
               Output('heatmap-plot-container', 'style'),
               Output({'type': 'fitness-sldr', 'index': ALL}, 'disabled'),
+              Output('qus-btn', 'disabled'),
 
               State({'type': 'fitness-sldr', 'index': ALL}, 'disabled'),
               State('method-radio', 'options'),
@@ -1077,7 +1113,8 @@ def interval_updates(fdis, ms, lsysms, symms,
                                         #  'background': '#ffffff11',  # decomment for debugging purposes
                                          'pointer-events': 'auto',
                                          'z-index': 1 if running_something else -1},
-        'fitness-sldr.disabled': [running_something] * len(fdis)
+        'fitness-sldr.disabled': [running_something] * len(fdis),
+        'qus-btn.disabled': running_something
     }
         
     return tuple(btns.values())
@@ -1913,7 +1950,8 @@ def __consent(**kwargs) -> Dict[str, Any]:
         'rand-step-btn-div.style': rand_step_btn_style,
         'reset-btn-div.style': reset_btn_style,
         'exp-progress-div.style': exp_progress_style,
-        'study-progress-div.style': study_style
+        'study-progress-div.style': study_style,
+        'qus-div.style': {} if app_settings.app_mode == AppMode.USERSTUDY else hidden_style
         }
 
 
@@ -1973,6 +2011,50 @@ def __default(**kwargs) -> Dict[str, Any]:
         }
 
 
+def __quit_user_study(**kwargs) -> Dict[str, Any]:
+    global app_settings
+    global n_spaceships_inspected
+    global time_elapsed
+    
+    logging.getLogger('webapp').debug(msg=f'Switching mode from {app_settings.app_mode} to {AppMode.USER}...')
+    app_settings.app_mode = AppMode.USER
+    logging.getLogger('webapp').info(msg=f'No user data will be collected during this session. Please do not refresh the page.')
+    logging.getLogger('webapp').info(msg='Initializing population; this may take a while...')
+    app_settings.current_mapelites.emitter = RandomEmitter()
+    app_settings.current_mapelites.reset()
+    app_settings.current_mapelites.hull_builder.apply_smoothing = False
+    logging.getLogger('webapp').info(msg='Initialization completed.')
+    app_settings.gen_counter = 0    
+    app_settings.selected_bins = []
+    
+    n_spaceships_inspected.reset()
+    time_elapsed.reset()
+    
+    return {
+        'heatmap-plot.figure': _build_heatmap(mapelites=app_settings.current_mapelites,
+                                              pop_name=kwargs['pop_name'],
+                                              metric_name=kwargs['metric_name'],
+                                              method_name=kwargs['method_name']),
+        'consent-modal.is_open': False,
+        'quickstart-usermode-modal.is_open': True,
+        'rand-step-btn-div.style': {},
+        'reset-btn-div.style': {},
+        'exp-progress-div.style': hidden_style,
+        'study-progress-div.style': hidden_style,
+        'qus-div.style': hidden_style,
+        'eus-modal.is_open': False,
+        'content-plot.figure': _get_elite_content(mapelites=app_settings.current_mapelites,
+                                                  bin_idx=None,
+                                                  pop=None),
+        }
+
+
+def __show_quit_user_study_modal(**kwargs) -> Dict[str, Any]:
+    return {
+        'eus-modal.is_open': True
+    }
+
+
 triggers_map = {
     'step-btn': __apply_step,
     'rand-step-btn': __apply_step,
@@ -2013,6 +2095,8 @@ triggers_map = {
     'color-picker': __color,
     'fitness-sldr': __fitness_weights,
     'webapp-quickstart-btn': __show_quickstart_modal,
+    'qus-btn': __show_quit_user_study_modal,
+    'qus-y-btn': __quit_user_study,
     None: __default
 }
 
@@ -2044,6 +2128,8 @@ triggers_map = {
               Output('study-progress-div', 'style'),
               Output('download-btn', 'children'),
               Output('content-legend-div', 'children'),
+              Output('qus-div', 'style'),
+              Output("eus-modal", "is_open"),
               
               State('heatmap-plot', 'figure'),
               State('hl-rules', 'value'),
@@ -2067,7 +2153,8 @@ triggers_map = {
               State('study-progress-div', 'style'),
               State('download-btn', 'children'),
               State('content-legend-div', 'children'),
-              
+              State("eus-modal", "is_open"),
+                            
               Input('population-feasible', 'n_clicks'),
               Input('population-infeasible', 'n_clicks'),
               Input('metric-fitness', 'n_clicks'),
@@ -2105,10 +2192,12 @@ triggers_map = {
               Input("consent-no", "n_clicks"),
               Input("nbs-err-btn", "n_clicks"),
               Input('color-picker', 'value'),
-              Input('webapp-quickstart-btn', 'n_clicks')
+              Input('webapp-quickstart-btn', 'n_clicks'),
+              Input('qus-btn', 'n_clicks'),
+              Input('qus-y-btn', 'n_clicks'),
               )
-def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, qs_modal_show, qs_um_modal_show, cm_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style, study_style, dlbtn_label, curr_legend,
-                     pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights, b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn, color, qs_btn):
+def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, qs_modal_show, qs_um_modal_show, cm_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style, study_style, dlbtn_label, curr_legend, eus_modal_show,
+                     pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights, b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn, color, qs_btn, qus_btn, qus_y_btn):
     global app_settings
     
     ctx = dash.callback_context
@@ -2155,7 +2244,9 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         'exp-progress-div.style': exp_progress_style,
         'study-progress-div.style': study_style,
         'download-btn.children': dlbtn_label,
-        'content-legend-div.children': curr_legend
+        'content-legend-div.children': curr_legend,
+        'qus-div.style': {'text-align': 'center'} if app_settings.app_mode == AppMode.USERSTUDY else hidden_style,
+        'eus-modal.is_open': eus_modal_show
     }
     
     logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {process_semaphore.is_locked=}')
