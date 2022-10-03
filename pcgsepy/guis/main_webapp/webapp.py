@@ -11,7 +11,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from zipfile import ZipFile
-from pcgsepy.guis.utils import AppMode, DashLoggerHandler, Metric, Semaphore
+from pcgsepy.guis.utils import AppMode, AppSettings, DashLoggerHandler, Metric, Semaphore
 
 from pcgsepy.structure import _is_base_block
 
@@ -27,8 +27,7 @@ from dash.dependencies import Input, Output, State
 from pcgsepy.common.api_call import block_definitions
 from pcgsepy.common.jsonifier import json_dumps
 from pcgsepy.common.vecs import Vec
-from pcgsepy.config import (BIN_POP_SIZE, CS_MAX_AGE, MY_EMITTERS, N_EMITTER_STEPS,
-                            N_GENS_ALLOWED)
+from pcgsepy.config import (MY_EMITTERS, N_EMITTER_STEPS, N_GENS_ALLOWED)
 from pcgsepy.guis.main_webapp.modals_msgs import (end_of_experiment,
                                                   end_of_userstudy,
                                                   no_selection_error,
@@ -37,8 +36,6 @@ from pcgsepy.guis.main_webapp.modals_msgs import (end_of_experiment,
 from pcgsepy.hullbuilder import HullBuilder
 from pcgsepy.lsystem.rules import StochasticRules
 from pcgsepy.lsystem.solution import CandidateSolution
-from pcgsepy.mapelites.behaviors import (BehaviorCharacterization, avg_ma,
-                                         mame, mami, symmetry)
 from pcgsepy.mapelites.bin import MAPBin
 from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, Emitter,
                                         GreedyEmitter, HumanEmitter,
@@ -82,74 +79,6 @@ struct_sizes: Dict[int, str] = {1: 'Small',
                                 2: 'Normal',
                                 5: 'Large'}          
 
-
-class AppSettings:
-    def __init__(self) -> None:
-        self.current_mapelites: Optional[MAPElites] = None
-        self.exp_n: int = 0
-        self.gen_counter: int = 0
-        self.hm_callback_props: Dict[str, Any] = {}
-        self.my_emitterslist: List[str] = MY_EMITTERS.copy()
-        self.behavior_descriptors: List[BehaviorCharacterization] = [
-            BehaviorCharacterization(name='Major axis / Medium axis',
-                                    func=mame,
-                                    bounds=(0, 10)),
-            BehaviorCharacterization(name='Major axis / Smallest axis',
-                                    func=mami,
-                                    bounds=(0, 20)),
-            BehaviorCharacterization(name='Average Proportions',
-                                    func=avg_ma,
-                                    bounds=(0, 20)),
-            BehaviorCharacterization(name='Symmetry',
-                                    func=symmetry,
-                                    bounds=(0, 1))
-        ]
-        self.rngseed: int = None
-        self.selected_bins: List[Tuple[int, int]] = []
-        self.step_progress: int = -1
-        self.use_custom_colors: bool = True
-        self.app_mode: AppMode = None
-
-    def initialize(self,
-                   mapelites: MAPElites,
-                   dev_mode: bool = False):
-        self.current_mapelites = mapelites
-        self.app_mode = AppMode.DEV if dev_mode else self.app_mode
-        self.hm_callback_props['pop'] = {
-            'Feasible': 'feasible',
-            'Infeasible': 'infeasible'
-        }
-        self.hm_callback_props['metric'] = {
-            'Fitness': {
-                'name': 'fitness',
-                'zmax': {
-                    'feasible': sum([x.weight * x.bounds[1] for x in self.current_mapelites.feasible_fitnesses]) + self.current_mapelites.nsc,
-                    'infeasible': 1.
-                },
-                'colorscale': 'Inferno'
-            },
-            'Age':  {
-                'name': 'age',
-                'zmax': {
-                    'feasible': CS_MAX_AGE,
-                    'infeasible': CS_MAX_AGE
-                },
-                'colorscale': 'Greys'
-            },
-            'Coverage': {
-                'name': 'size',
-                'zmax': {
-                    'feasible': BIN_POP_SIZE,
-                    'infeasible': BIN_POP_SIZE
-                },
-                'colorscale': 'Hot'
-            }
-        }
-        self.hm_callback_props['method'] = {
-            'Population': True,
-            'Elite': False
-        }
-        
 
 app_settings = AppSettings()
 
@@ -2252,7 +2181,6 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         output['selected-bin.children'] = selected_bins_str
         output['valid-bins.children'] = valid_bins_str
         
-        logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {app_settings.selected_bins=}, {len(curr_content["data"]) == 0=}')
         if app_settings.selected_bins and len(curr_content['data']) == 0:
             output['content-plot.figure'] = _get_elite_content(mapelites=app_settings.current_mapelites,
                                                                bin_idx=_switch([app_settings.selected_bins[-1]])[0],
