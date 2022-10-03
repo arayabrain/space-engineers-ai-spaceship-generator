@@ -15,8 +15,7 @@ from pcgsepy.evo.fitness import (Fitness, box_filling_fitness,
                                  func_blocks_fitness, mame_fitness,
                                  mami_fitness)
 from pcgsepy.evo.genops import expander
-from pcgsepy.guis.main_webapp.webapp import (app, set_app_layout,
-                                             set_callback_props)
+from pcgsepy.guis.main_webapp.webapp import app, serve_layout, app_settings
 from pcgsepy.mapelites.behaviors import (BehaviorCharacterization, avg_ma,
                                          mame, mami, symmetry)
 from pcgsepy.setup_utils import get_default_lsystem, setup_matplotlib
@@ -25,7 +24,6 @@ from pcgsepy.nn.estimators import GaussianEstimator
 from pcgsepy.mapelites.map import MAPElites
 from pcgsepy.mapelites.emitters import RandomEmitter
 from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--mapelites_file", help="Location of the MAP-Elites object",
@@ -123,10 +121,10 @@ mapelites.allow_aging = False
 
 mapelites.hull_builder.apply_smoothing = False
 
-set_callback_props(mapelites=mapelites)
+app_settings.initialize(mapelites=mapelites,
+                        dev_mode=args.dev_mode)
 
-set_app_layout(mapelites=mapelites,
-               dev_mode=args.dev_mode)
+app.layout = serve_layout
 
 webapp_url = f'http://{args.host}:{args.port}/'
 print(f'Serving webapp on http://{args.host}:{args.port}/...')

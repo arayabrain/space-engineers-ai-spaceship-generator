@@ -11,6 +11,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from zipfile import ZipFile
+from pcgsepy.guis.utils import AppMode, DashLoggerHandler, Metric, Semaphore
 
 from pcgsepy.structure import _is_base_block
 
@@ -19,12 +20,10 @@ if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
 
 import dash
 import dash_bootstrap_components as dbc
-import dash_daq as daq
 import numpy as np
 import plotly.graph_objects as go
 from dash import ALL, dcc, html
 from dash.dependencies import Input, Output, State
-from dash.exceptions import PreventUpdate
 from pcgsepy.common.api_call import block_definitions
 from pcgsepy.common.jsonifier import json_dumps
 from pcgsepy.common.vecs import Vec
@@ -50,23 +49,12 @@ from pcgsepy.xml_conversion import convert_structure_to_xml
 from tqdm import trange
 
 
-class DashLoggerHandler(logging.StreamHandler):
-    def __init__(self):
-        logging.StreamHandler.__init__(self)
-        self.queue = []
-
-    def emit(self, record):
-        t = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        msg = self.format(record)
-        self.queue.append(f'[{t}]\t{msg}')
-
-
 dashLoggerHandler = DashLoggerHandler()
 logging.getLogger('webapp').addHandler(dashLoggerHandler)
 
 
 base_color: Vec = Vec.v3f(0.45, 0.45, 0.45)
-block_to_colour = {
+block_to_colour: Dict[str, str] = {
     # colours from https://developer.mozilla.org/en-US/docs/Web/CSS/color_value
     'LargeBlockArmorCorner': '#737373',
     'LargeBlockArmorSlope': '#737373',
@@ -82,40 +70,99 @@ block_to_colour = {
     'Window1x1Flat': '#fffff0',
     'LargeBlockLight_1corner': '#fffaf0'
 }
-consent_ok: Optional[bool] = None
-current_mapelites: Optional[MAPElites] = None
-exp_n: int = 0
-gen_counter: int = 0
-gdev_mode: bool = False
-hidden_style = {'visibility': 'hidden', 'height': '0px', 'display': 'none'}
-circle_style = {
+hidden_style: Dict[str, str] = {'visibility': 'hidden', 'height': '0px', 'display': 'none'}
+circle_style: Dict[str, str] = {
         'height': '10px',
         'width': '10px',
         'border-radius': '50%',
         'vertical-align': 'middle',
         'margin': '0 5px 0 0'
-  }
-hm_callback_props = {}
-my_emitterslist: List[str] = MY_EMITTERS.copy()
-behavior_descriptors = [
-    BehaviorCharacterization(name='Major axis / Medium axis',
-                             func=mame,
-                             bounds=(0, 10)),
-    BehaviorCharacterization(name='Major axis / Smallest axis',
-                             func=mami,
-                             bounds=(0, 20)),
-    BehaviorCharacterization(name='Average Proportions',
-                             func=avg_ma,
-                             bounds=(0, 20)),
-    BehaviorCharacterization(name='Symmetry',
-                             func=symmetry,
-                             bounds=(0, 1))
-]
-rngseed: int = 42
-selected_bins: List[Tuple[int, int]] = []
-step_progress: int = -1
-use_custom_colors = True
-user_study_mode: bool = True
+}
+struct_sizes: Dict[int, str] = {1: 'Small',
+                                2: 'Normal',
+                                5: 'Large'}          
+
+
+class AppSettings:
+    def __init__(self) -> None:
+        self.current_mapelites: Optional[MAPElites] = None
+        self.exp_n: int = 0
+        self.gen_counter: int = 0
+        self.hm_callback_props: Dict[str, Any] = {}
+        self.my_emitterslist: List[str] = MY_EMITTERS.copy()
+        self.behavior_descriptors: List[BehaviorCharacterization] = [
+            BehaviorCharacterization(name='Major axis / Medium axis',
+                                    func=mame,
+                                    bounds=(0, 10)),
+            BehaviorCharacterization(name='Major axis / Smallest axis',
+                                    func=mami,
+                                    bounds=(0, 20)),
+            BehaviorCharacterization(name='Average Proportions',
+                                    func=avg_ma,
+                                    bounds=(0, 20)),
+            BehaviorCharacterization(name='Symmetry',
+                                    func=symmetry,
+                                    bounds=(0, 1))
+        ]
+        self.rngseed: int = None
+        self.selected_bins: List[Tuple[int, int]] = []
+        self.step_progress: int = -1
+        self.use_custom_colors: bool = True
+        self.app_mode: AppMode = None
+
+    def initialize(self,
+                   mapelites: MAPElites,
+                   dev_mode: bool = False):
+        self.current_mapelites = mapelites
+        self.app_mode = AppMode.DEV if dev_mode else self.app_mode
+        self.hm_callback_props['pop'] = {
+            'Feasible': 'feasible',
+            'Infeasible': 'infeasible'
+        }
+        self.hm_callback_props['metric'] = {
+            'Fitness': {
+                'name': 'fitness',
+                'zmax': {
+                    'feasible': sum([x.weight * x.bounds[1] for x in self.current_mapelites.feasible_fitnesses]) + self.current_mapelites.nsc,
+                    'infeasible': 1.
+                },
+                'colorscale': 'Inferno'
+            },
+            'Age':  {
+                'name': 'age',
+                'zmax': {
+                    'feasible': CS_MAX_AGE,
+                    'infeasible': CS_MAX_AGE
+                },
+                'colorscale': 'Greys'
+            },
+            'Coverage': {
+                'name': 'size',
+                'zmax': {
+                    'feasible': BIN_POP_SIZE,
+                    'infeasible': BIN_POP_SIZE
+                },
+                'colorscale': 'Hot'
+            }
+        }
+        self.hm_callback_props['method'] = {
+            'Population': True,
+            'Elite': False
+        }
+        
+
+app_settings = AppSettings()
+
+
+n_spaceships_inspected = Metric(emitters=app_settings.my_emitterslist,
+                                exp_n=app_settings.exp_n)
+time_elapsed = Metric(emitters=app_settings.my_emitterslist,
+                      exp_n=app_settings.exp_n,
+                      multiple_values=True)
+
+
+download_semaphore = Semaphore(locked=True)    
+process_semaphore = Semaphore()
 
 
 def resource_path(relative_path):
@@ -128,65 +175,6 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-class Metric:
-    def __init__(self,
-                 multiple_values: bool = False) -> None:
-        self.current_generation: int = 0
-        self.multiple_values = multiple_values
-        self.history: Dict[int, List[Any]] = {
-            self.current_generation: [] if multiple_values else 0
-        }
-        self.emitter_names: List[str] = [my_emitterslist[exp_n]]
-    
-    def add(self,
-            value: Any):
-        if self.multiple_values:
-            self.history[self.current_generation].append(value)
-        else:
-            self.history[self.current_generation] += value
-    
-    def reset(self):
-        if self.multiple_values:
-            self.history[self.current_generation] = []
-        else:
-            self.history[self.current_generation] = 0
-    
-    def new_generation(self):
-        self.current_generation += 1
-        self.reset()
-        self.emitter_names.append(my_emitterslist[exp_n])
-    
-    def get_averages(self) -> List[Any]:
-        return [np.mean(l) for l in self.history.values()]
-
-
-n_spaceships_inspected = Metric()
-time_elapsed = Metric(multiple_values=True)
-
-
-class Semaphore:
-    def __init__(self,
-                 locked: bool = False) -> None:
-        self._is_locked = locked
-        self._running = ''
-    
-    @property
-    def is_locked(self) -> bool:
-        return self._is_locked
-    
-    def lock(self,
-             name: Optional[str] = ''):
-        self._is_locked = True
-        self._running = name
-    
-    def unlock(self):
-        self._is_locked = False
-        self._running = ''
-
-download_semaphore = Semaphore(locked=True)    
-process_semaphore = Semaphore()
-
-
 app = dash.Dash(__name__,
                 title='AI Spaceship Generator',
                 external_stylesheets=[dbc.themes.DARKLY],
@@ -194,48 +182,12 @@ app = dash.Dash(__name__,
                 update_title=None)
 
 
-def set_callback_props(mapelites: MAPElites):
-    hm_callback_props['pop'] = {
-        'Feasible': 'feasible',
-        'Infeasible': 'infeasible'
-    }
-    hm_callback_props['metric'] = {
-        'Fitness': {
-            'name': 'fitness',
-            'zmax': {
-                'feasible': sum([x.weight * x.bounds[1] for x in mapelites.feasible_fitnesses]) + mapelites.nsc,
-                'infeasible': 1.
-            },
-            'colorscale': 'Inferno'
-        },
-        'Age':  {
-            'name': 'age',
-            'zmax': {
-                'feasible': CS_MAX_AGE,
-                'infeasible': CS_MAX_AGE
-            },
-            'colorscale': 'Greys'
-        },
-        'Coverage': {
-            'name': 'size',
-            'zmax': {
-                'feasible': BIN_POP_SIZE,
-                'infeasible': BIN_POP_SIZE
-            },
-            'colorscale': 'Hot'
-        }
-    }
-    hm_callback_props['method'] = {
-        'Population': True,
-        'Elite': False
-    }
-
-
 def get_properties_table(cs: Optional[CandidateSolution] = None) -> dbc.Table:
     size = str(cs.size) if cs else '-' 
     nblocks = cs.n_blocks if cs else '-'
     vol = cs.content.total_volume if cs else '-'
     mass = cs.content.mass if cs else '-'
+    struct_size = struct_sizes[cs.content.grid_size] if cs else '-'
     
     table_header = [
         html.Thead(html.Tr([html.Th("Property", style={'text-align': 'center'}),
@@ -243,6 +195,7 @@ def get_properties_table(cs: Optional[CandidateSolution] = None) -> dbc.Table:
         ]
     table_body = [html.Tbody([
         html.Tr([html.Td("Spaceship size"), html.Td(f'{size} m', style={'text-align': 'center'})]),
+        html.Tr([html.Td("Grid size"), html.Td(struct_size, style={'text-align': 'center'})]),
         html.Tr([html.Td("Number of blocks"), html.Td(nblocks, style={'text-align': 'center'})]),
         html.Tr([html.Td("Occupied volume"), html.Td(f'{vol} m³', style={'text-align': 'center'})]),
         html.Tr([html.Td("Spaceship mass"), html.Td(f'{mass} kg', style={'text-align': 'center'})]),
@@ -264,7 +217,7 @@ def get_content_legend() -> dbc.Row:
 
 
 def _get_emitter() -> Emitter:
-    curr_emitter = my_emitterslist[exp_n].replace('.json', '').split('_')[1]
+    curr_emitter = app_settings.my_emitterslist[app_settings.exp_n].replace('.json', '').split('_')[1]
     if curr_emitter == 'human':
         return HumanEmitter()
     elif curr_emitter == 'random':
@@ -274,23 +227,16 @@ def _get_emitter() -> Emitter:
     elif curr_emitter == 'contbandit':
         return ContextualBanditEmitter()
     else:
-        raise ValueError(f'Unexpected emitter type: {curr_emitter} (from "{my_emitterslist[exp_n]}"')
+        raise ValueError(f'Unexpected emitter type: {curr_emitter} (from "{app_settings.my_emitterslist[app_settings.exp_n]}"')
    
  
-def set_app_layout(mapelites: Optional[MAPElites] = None,
-                   dev_mode: bool = True):
+def serve_layout() -> dbc.Container:
+    global app_settings
     
-    global current_mapelites
-    global rngseed
-    global consent_ok
-    global gdev_mode
-    global user_study_mode
+    if not app_settings.app_mode:
+        app_settings.consent_ok = False if app_settings.app_mode == AppMode.DEV else None
     
-    gdev_mode = dev_mode
-    user_study_mode = not gdev_mode
-    consent_ok = False if gdev_mode else None
-    
-    webapp_info_file = './assets/webapp_help_dev.md' if dev_mode else './assets/webapp_info.md'
+    webapp_info_file = './assets/webapp_help_dev.md' if app_settings.app_mode == AppMode.DEV else './assets/webapp_info.md'
     with open(webapp_info_file, 'r', encoding='utf-8') as f:
         webapp_info_str = f.read()
         
@@ -306,19 +252,16 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     with open(quickstart_usermode_info_file, 'r', encoding='utf-8') as f:
         quickstart_usermode_info_str = f.read()
     
-    current_mapelites = mapelites
-    
-    rngseed = uuid.uuid4().int
-    if not gdev_mode:
-        random.seed(rngseed)
-        random.shuffle(my_emitterslist)
-        current_mapelites.emitter = _get_emitter()
-    
-    logging.getLogger('webapp').info(msg=f'Your ID is {rngseed}.')
-    
-    logging.getLogger('webapp').debug(msg=f'[{__name__}.set_app_layout] {rngseed=}; {my_emitterslist=}.')
-    
-    
+    if app_settings.rngseed is None:
+        app_settings.rngseed = uuid.uuid4().int
+        logging.getLogger('webapp').info(msg=f'Your ID is {app_settings.rngseed}.')
+    if app_settings.app_mode is None:
+        random.seed(app_settings.rngseed)
+        app_settings.my_emitterslist = MY_EMITTERS.copy()
+        random.shuffle(app_settings.my_emitterslist)
+        app_settings.current_mapelites.emitter = _get_emitter()
+        logging.getLogger('webapp').debug(msg=f'[{__name__}.set_app_layout] {app_settings.app_mode=} {app_settings.rngseed=}; {app_settings.my_emitterslist=}.')
+        
     consent_dialog = dbc.Modal([
             dbc.ModalHeader(dbc.ModalTitle("Privacy Policy"),
                             style={'justify-content': 'center'},
@@ -470,7 +413,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                                            id='webapp-quickstart-btn',
                                            color='info'),
                                 width=4,
-                                style=hidden_style if gdev_mode else {}),
+                                style=hidden_style if app_settings.app_mode == AppMode.DEV else {}),
                         dbc.Col(dbc.Button('Webapp Info',
                                            id='webapp-info-btn',
                                            color='info'),
@@ -494,7 +437,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                     children=[
                         html.H4('Study Progress',
                                 className='section-title',
-                                style=hidden_style if gdev_mode else {}),
+                                style=hidden_style if app_settings.app_mode == AppMode.DEV else {}),
                         html.Br()],
                     width={'size': 12, 'offset': 0},
                     style={'text-align': 'center'}
@@ -526,12 +469,12 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                                  animated=False)
                 ],
                         width={'size': 12, 'offset': 0},
-                        style={**{'text-align': 'center'}, **hidden_style} if gdev_mode else {'text-align': 'center'},
+                        style={**{'text-align': 'center'}, **hidden_style} if app_settings.app_mode == AppMode.DEV else {'text-align': 'center'},
                         align='center',
                         id='exp-progress-div')
             )
         ],
-        style=hidden_style if not user_study_mode and not gdev_mode else {}
+        style=hidden_style if app_settings.app_mode == AppMode.USER else {}
         )
     
     mapelites_heatmap = html.Div(children=[
@@ -587,7 +530,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                         ],
                         value='Population')
             ],
-        style=hidden_style if not gdev_mode else {})
+        style=hidden_style if not app_settings.app_mode == AppMode.DEV else {})
     
     content_plot = html.Div(children=[
         html.H4('Selected Spaceship',
@@ -656,7 +599,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                                     disabled=True,
                                     class_name='content-string-area')
                         ],
-                            style=hidden_style if not gdev_mode else {})
+                            style={} if app_settings.app_mode == AppMode.DEV else hidden_style)
                     ])],
                     align='center')])    
 
@@ -683,34 +626,34 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
             html.Div(children=[
                 html.P(children='Valid bins are: ',
                        id='valid-bins'),
-                html.P(children=f'Selected bin(s): {selected_bins}',
+                html.P(children=f'Selected bin(s): {app_settings.selected_bins}',
                        id='selected-bin')
                 ]),
             html.Br(),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Feature Descriptors (X, Y):'),
-                dbc.DropdownMenu(label=current_mapelites.b_descs[0].name,
+                dbc.DropdownMenu(label=app_settings.current_mapelites.b_descs[0].name,
                              children=[
                                  dbc.DropdownMenuItem(b.name, id=f"bc0-{b.name.replace(' / ', '_').replace(' ', '-')}")
-                                 for b in behavior_descriptors],
+                                 for b in app_settings.behavior_descriptors],
                              id='b0-dropdown'),
-                dbc.DropdownMenu(label=current_mapelites.b_descs[1].name,
+                dbc.DropdownMenu(label=app_settings.current_mapelites.b_descs[1].name,
                              children=[
                                  dbc.DropdownMenuItem(b.name, id=f"bc1-{b.name.replace(' / ', '_').replace(' ', '-')}")
-                                 for b in behavior_descriptors],
+                                 for b in app_settings.behavior_descriptors],
                              id='b1-dropdown')
                 ],
                            className="mb-3",
-                           style=hidden_style if not gdev_mode else {}),
+                           style={} if app_settings.app_mode == AppMode.DEV else hidden_style),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Toggle L-system Modules:'),
                 dbc.Checklist(id='lsystem-modules',
-                              options=[{'label': x.name, 'value': x.name} for x in current_mapelites.lsystem.modules],
-                              value=[x.name for x in current_mapelites.lsystem.modules if x.active],
+                              options=[{'label': x.name, 'value': x.name} for x in app_settings.current_mapelites.lsystem.modules],
+                              value=[x.name for x in app_settings.current_mapelites.lsystem.modules if x.active],
                               inline=True,
                               switch=True)
                 ],
-                           style=hidden_style if not gdev_mode else {},
+                           style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
                            className="mb-3"),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Fitness Weights:'),
@@ -730,10 +673,10 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                                            'index': i})
                         ],
                                  )
-                        ]) for i, f in enumerate(current_mapelites.feasible_fitnesses)
+                        ]) for i, f in enumerate(app_settings.current_mapelites.feasible_fitnesses)
                     ])
                 ],
-                           style={'content-visibility': 'hidden', 'visibility': 'hidden', 'height': '0px'} if not gdev_mode else {},
+                           style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
                            className="mb-3"),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Select Emitter:'),
@@ -749,7 +692,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                              id='emitter-dropdown')
                 ],
                            className="mb-3",
-                           style=hidden_style if not gdev_mode else {}),
+                           style={} if app_settings.app_mode == AppMode.DEV else hidden_style),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Enforce Symmetry:'),
                 dbc.DropdownMenu(label='None',
@@ -760,7 +703,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                                  dbc.DropdownMenuItem('Z-axis', id='symmetry-z'),
                              ],
                              id='symmetry-dropdown',
-                             style=hidden_style if not gdev_mode else {}),
+                             style={} if app_settings.app_mode == AppMode.DEV else hidden_style),
                 dbc.RadioItems(id='symmetry-radio',
                         options=[
                             {'label': 'Upper', 'value': 'Upper'},
@@ -768,7 +711,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                         ],
                         value='Upper')
                 ],
-                           style=hidden_style if not gdev_mode else {},
+                           style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
                            className="mb-3"),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Save/Load Population:'),
@@ -781,9 +724,9 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                     ),
                 ],
                            className="mb-3",
-                           style=hidden_style if not gdev_mode else {})
+                           style={} if app_settings.app_mode == AppMode.DEV else hidden_style)
             ],
-        style=hidden_style if user_study_mode else {})
+        style={} if app_settings.app_mode == AppMode.DEV else hidden_style)
     
     experiment_controls = html.Div(
         children=[
@@ -803,7 +746,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                            className='button-fullsize')
                 ],
                     id='rand-step-btn-div',
-                    style=hidden_style if user_study_mode or gdev_mode else {},
+                    style={} if app_settings.app_mode == AppMode.USER else hidden_style,
                     width={'size': 4, 'offset':4})),
             html.Br(),
             dbc.Row(dbc.Col(children=[
@@ -811,7 +754,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                        children='Clear Selection',
                            className='button-fullsize')
                 ],
-                    style=hidden_style if not gdev_mode else {},
+                    style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
                     width={'size': 4, 'offset':4})),
             html.Br(),
             dbc.Row(dbc.Col(children=[
@@ -819,7 +762,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                        children='Toggle Single Bin Selection',
                            className='button-fullsize')
                 ],
-                    style=hidden_style if not gdev_mode else {},
+                    style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
                     width={'size': 4, 'offset':4})),
             html.Br(),
             dbc.Row(dbc.Col(children=[
@@ -828,7 +771,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                            className='button-fullsize')
                 ],
                     id='reset-btn-div',
-                    style=hidden_style if user_study_mode else {},
+                    style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
                     width={'size': 4, 'offset':4})),
             html.Br(),
             dbc.Row(dbc.Col(children=[
@@ -836,7 +779,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                        children='Subdivide Selected Bin(s)',
                            className='button-fullsize')
                 ],
-                    style=hidden_style if not gdev_mode else {},
+                    style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
                     width={'size': 4, 'offset':4})),
             html.Br(),
             dbc.Row(dbc.Col(children=[
@@ -845,7 +788,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                            className='button-fullsize'),
                 dcc.Download(id='download-mapelites')
                 ],
-                    style=hidden_style if not gdev_mode else {},
+                    style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
                     width={'size': 4, 'offset':4})),
         ])
     
@@ -855,7 +798,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                     className='section-title'),
             html.Br(),
             dbc.Textarea(id='hl-rules',
-                         value=str(current_mapelites.lsystem.hl_solver.parser.rules),
+                         value=str(app_settings.current_mapelites.lsystem.hl_solver.parser.rules),
                          wrap=False,
                          className='rules-area'),
             dbc.Row(
@@ -864,7 +807,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
                         width={'size': 4, 'offset':4}),
                 align='center')
             ],
-        style=hidden_style if not gdev_mode else {})
+        style={} if app_settings.app_mode == AppMode.DEV else hidden_style)
     
     progress = html.Div(
         children=[
@@ -880,8 +823,8 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
             )
         ],
         id='step-progress-div',
-        style={'content-visibility': 'visible' if 0 <= step_progress <= 100 else 'hidden',
-               'display': 'inline-block' if 0 <= step_progress <= 100 else 'none',
+        style={'content-visibility': 'visible' if 0 <= app_settings.step_progress <= 100 else 'hidden',
+               'display': 'inline-block' if 0 <= app_settings.step_progress <= 100 else 'none',
                'width': '100%'})
     
     log = html.Div(
@@ -920,7 +863,7 @@ def set_app_layout(mapelites: Optional[MAPElites] = None,
     content_legend = html.Div([get_content_legend()],
                               id='content-legend-div')
     
-    app.layout = dbc.Container(
+    return dbc.Container(
         children=[
             modals,
             header,
@@ -1006,9 +949,6 @@ def show_webapp_info(n):
     return True
 
 
-
-
-
 @app.callback(
     Output("algo-info-modal", "is_open"),
     Input("ai-info-btn", "n_clicks"),
@@ -1033,9 +973,9 @@ def update_output(n):
     prevent_initial_call=True
 )
 def update_progress(n):  
-    return step_progress, f"{np.round(step_progress, 2)}%", {'content-visibility': 'visible' if 0 <= step_progress <= 100 else 'hidden', 
-                                                             'display': 'inline-block' if 0 <= step_progress <= 100 else 'none',
-                                                             'width': '100%'}
+    return app_settings.step_progress, f"{np.round(app_settings.step_progress, 2)}%", {'content-visibility': 'visible' if 0 <= app_settings.step_progress <= 100 else 'hidden',
+                                                                                       'display': 'inline-block' if 0 <= app_settings.step_progress <= 100 else 'none',
+                                                                                       'width': '100%'}
 
 
 @app.callback(
@@ -1045,11 +985,11 @@ def update_progress(n):
     prevent_initial_call=True
 )
 def update_gen_progress(n):
-    if user_study_mode:
-        val = np.round(100 * ((gen_counter) / N_GENS_ALLOWED), 2)
-        return val, f"{gen_counter} / {N_GENS_ALLOWED}"
+    if app_settings.app_mode != AppMode.DEV:
+        val = np.round(100 * ((app_settings.gen_counter) / N_GENS_ALLOWED), 2)
+        return val, f"{app_settings.gen_counter} / {N_GENS_ALLOWED}"
     else:
-        return 100, f"{gen_counter}"
+        return 100, f"{app_settings.gen_counter}"
 
 
 @app.callback(
@@ -1059,8 +999,8 @@ def update_gen_progress(n):
     prevent_initial_call=True
 )
 def update_exp_progress(n):
-    val = min(100, np.round(100 * ((1 + exp_n) / len(my_emitterslist)), 2))
-    return val, f"{min(exp_n + 1, len(my_emitterslist))} / {len(my_emitterslist)}"
+    val = min(100, np.round(100 * ((1 + app_settings.exp_n) / len(app_settings.my_emitterslist)), 2))
+    return val, f"{min(app_settings.exp_n + 1, len(app_settings.my_emitterslist))} / {len(app_settings.my_emitterslist)}"
 
 
 @app.callback(
@@ -1068,14 +1008,11 @@ def update_exp_progress(n):
     Input("download-mapelites-btn", "n_clicks"),
     prevent_initial_call=True,
 )
-def download_mapelites(n_clicks):
-    global current_mapelites
-    global gen_counter
-    
+def download_mapelites(n_clicks):    
     t = datetime.now().strftime("%Y%m%d%H%M%S")
-    fname = f'{t}_mapelites_{current_mapelites.emitter.name}_gen{str(gen_counter).zfill(2)}'
+    fname = f'{t}_mapelites_{app_settings.current_mapelites.emitter.name}_gen{app_settings.gen_counter:02}'
     logging.getLogger('webapp').info(f'The MAP-Elites object will be downloaded shortly.')
-    return dict(content=json_dumps(current_mapelites), filename=f'{fname}.json')
+    return dict(content=json_dumps(app_settings.current_mapelites), filename=f'{fname}.json')
 
 
 @app.callback(
@@ -1085,8 +1022,6 @@ def download_mapelites(n_clicks):
     prevent_initial_call=True,
 )
 def download_content(n):
-    global selected_bins
-    global current_mapelites
     global base_color
     global download_semaphore
     
@@ -1094,19 +1029,19 @@ def download_content(n):
         with ZipFile(bytes_io, mode="w") as zf:
             # with open('./assets/thumb.png', 'rb') as f:
             #     thumbnail_img = f.read()
-            curr_content = _get_elite_content(mapelites=current_mapelites,
-                                              bin_idx=_switch([selected_bins[-1]])[0],
+            curr_content = _get_elite_content(mapelites=app_settings.current_mapelites,
+                                              bin_idx=_switch([app_settings.selected_bins[-1]])[0],
                                               pop='feasible')
             thumbnail_img = curr_content.to_image(format="png")
             zf.writestr('thumb.png', thumbnail_img)
-            elite = get_elite(mapelites=current_mapelites,
-                              bin_idx=_switch([selected_bins[-1]])[0],
+            elite = get_elite(mapelites=app_settings.current_mapelites,
+                              bin_idx=_switch([app_settings.selected_bins[-1]])[0],
                               pop='feasible')
             tmp = CandidateSolution(string=elite.string)
             tmp.ll_string = elite.ll_string
             tmp.base_color = elite.base_color
-            current_mapelites.lsystem._set_structure(cs=tmp)
-            hullbuilder = HullBuilder(erosion_type=current_mapelites.hull_builder.erosion_type,
+            app_settings.current_mapelites.lsystem._set_structure(cs=tmp)
+            hullbuilder = HullBuilder(erosion_type=app_settings.current_mapelites.hull_builder.erosion_type,
                                       apply_erosion=True,
                                       apply_smoothing=True)
             download_semaphore.unlock()
@@ -1115,17 +1050,17 @@ def download_content(n):
             hullbuilder.add_external_hull(tmp.content)
             tmp.content.set_color(tmp.base_color)
             logging.getLogger('webapp').debug(f'[{__name__}.write_archive] {tmp.string=}; {tmp.content=}; {tmp.base_color=}')
-            zf.writestr('bp.sbc', convert_structure_to_xml(structure=tmp.content, name=f'My Spaceship ({rngseed}) (exp{exp_n})'))
+            zf.writestr('bp.sbc', convert_structure_to_xml(structure=tmp.content, name=f'My Spaceship ({app_settings.rngseed}) (exp{app_settings.exp_n})'))
             content_properties = {
                 'string': tmp.string,
                 'base_color': tmp.base_color.as_dict()
             }
-            zf.writestr(f'spaceship_{rngseed}_exp{exp_n}', json.dumps(content_properties))
+            zf.writestr(f'spaceship_{app_settings.rngseed}_exp{app_settings.exp_n}', json.dumps(content_properties))
             download_semaphore._running = 'NO'
     
-    if selected_bins:
+    if app_settings.selected_bins:
         logging.getLogger('webapp').info(f'Your selected spaceship will be downloaded shortly.')
-        return dcc.send_bytes(write_archive, f'MySpaceship_{rngseed}_exp{exp_n}_gen{gen_counter}.zip'), '\n\n'
+        return dcc.send_bytes(write_archive, f'MySpaceship_{app_settings.rngseed}_exp{app_settings.exp_n}_gen{app_settings.gen_counter}.zip'), '\n\n'
     else:
         return None, '\n\n'
 
@@ -1187,7 +1122,7 @@ def interval_updates(fdis, ms, lsysms, symms,
         o['disabled'] = running_something
     
     btns = {
-        'step-btn.disabled': running_something or (user_study_mode and gen_counter >= N_GENS_ALLOWED),
+        'step-btn.disabled': running_something or (app_settings.app_mode == AppMode.USERSTUDY and app_settings.gen_counter >= N_GENS_ALLOWED),
         'download-btn.disabled': running_something or download_semaphore._running == 'YES',
         'popdownload-btn.disabled': running_something,
         'rand-step-btn.disabled': running_something,
@@ -1227,10 +1162,10 @@ def _switch(ls: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
 
 
 def _format_bins(mapelites: MAPElites,
-                bins_idx_list: List[Tuple[int, int]],
-                str_prefix: str,
-                do_switch: bool = True,
-                filter_out_empty: bool = True) -> Tuple[List[Tuple[int, int]], str]:
+                 bins_idx_list: List[Tuple[int, int]],
+                 str_prefix: str,
+                 do_switch: bool = True,
+                 filter_out_empty: bool = True) -> Tuple[List[Tuple[int, int]], str]:
     bins_list: List[MAPBin] = [mapelites.bins[j, i] if do_switch else mapelites.bins[i, j] for (i, j) in bins_idx_list]
     sel_bins_str = f'{str_prefix}'
     for b in bins_list:
@@ -1253,14 +1188,11 @@ def _format_bins(mapelites: MAPElites,
 def _build_heatmap(mapelites: MAPElites,
                    pop_name: str,
                    metric_name: str,
-                   method_name: str) -> go.Figure:
-    global gen_counter
-    global selected_bins
-    
+                   method_name: str) -> go.Figure:    
     valid_bins = [x.bin_idx for x in mapelites._valid_bins()]
-    metric = hm_callback_props['metric'][metric_name]
-    use_mean = hm_callback_props['method'][method_name]
-    population = hm_callback_props['pop'][pop_name]
+    metric = app_settings.hm_callback_props['metric'][metric_name]
+    use_mean = app_settings.hm_callback_props['method'][method_name]
+    population = app_settings.hm_callback_props['pop'][pop_name]
     # build heatmap
     disp_map = np.zeros(shape=mapelites.bins.shape)
     labels = np.zeros(shape=(mapelites.bins.shape[1], mapelites.bins.shape[0], 2))
@@ -1276,8 +1208,8 @@ def _build_heatmap(mapelites: MAPElites,
             s = ''
             if mapelites.bins[i, j].non_empty(pop='feasible'):
                 if (i, j) in valid_bins:
-                    s = '▣' if gen_counter > 0 and mapelites.bins[i, j].new_elite[population] else s
-                    s = '☑' if (j, i) in selected_bins else s                    
+                    s = '▣' if app_settings.gen_counter > 0 and mapelites.bins[i, j].new_elite[population] else s
+                    s = '☑' if (j, i) in app_settings.selected_bins else s                    
             if j == 0:
                 text.append([s])
             else:
@@ -1291,11 +1223,11 @@ def _build_heatmap(mapelites: MAPElites,
         data=go.Heatmap(
             z=disp_map,
             zmin=0,
-            zmax=hm_callback_props['metric'][metric_name]['zmax'][population],
+            zmax=app_settings.hm_callback_props['metric'][metric_name]['zmax'][population],
             x=np.arange(disp_map.shape[0]),
             y=np.arange(disp_map.shape[1]),
             hoverongaps=False,
-            colorscale=hm_callback_props['metric'][metric_name]['colorscale'],
+            colorscale=app_settings.hm_callback_props['metric'][metric_name]['colorscale'],
             text=text,
             texttemplate='%{text}',
             textfont={"color": 'rgba(238, 238, 238, 1.)'},
@@ -1340,7 +1272,6 @@ def _get_elite_content(mapelites: MAPElites,
         elite = get_elite(mapelites=mapelites,
                           bin_idx=bin_idx,
                           pop=pop)
-        
         structure = elite.content
         content = structure.as_grid_array
         arr = np.nonzero(content)
@@ -1398,7 +1329,6 @@ def _get_elite_content(mapelites: MAPElites,
         )
     else:
         fig = go.Figure()
-        
         fig.add_scatter3d(x=np.zeros(0, dtype=object),
                           y=np.zeros(0, dtype=object),
                           z=np.zeros(0, dtype=object))
@@ -1426,7 +1356,8 @@ def _apply_step(mapelites: MAPElites,
                 gen_counter: int,
                 only_human: bool = False,
                 only_emitter: bool = False) -> bool:
-    global step_progress
+    global app_settings
+    
     perc_step = 100 / (1 + N_EMITTER_STEPS)
     
     valid = True
@@ -1438,22 +1369,22 @@ def _apply_step(mapelites: MAPElites,
         logging.getLogger('webapp').info(msg=f'Started step {gen_counter + 1}...')
         # reset bins new_elite flags
         mapelites.update_elites(reset=True)
-        step_progress = 0
+        app_settings.step_progress = 0
         if not only_emitter:
             mapelites.interactive_step(bin_idxs=selected_bins,
                                        gen=gen_counter)
         
-        step_progress += perc_step
+        app_settings.step_progress += perc_step
         logging.getLogger('webapp').info(msg=f'Completed step {gen_counter + 1} (created {mapelites.n_new_solutions} solutions); running {N_EMITTER_STEPS} additional emitter steps if available...')
         mapelites.n_new_solutions = 0
         with trange(N_EMITTER_STEPS, desc='Emitter steps: ') as iterations:
             for _ in iterations:
                 if not only_human:
                     mapelites.emitter_step(gen=gen_counter)
-                step_progress += perc_step
+                app_settings.step_progress += perc_step
         logging.getLogger('webapp').info(msg=f'Emitter step(s) completed (created {mapelites.n_new_solutions} solutions).')
         mapelites.n_new_solutions = 0
-        step_progress = -1
+        app_settings.step_progress = -1
         mapelites.update_elites()
         return True
     else:
@@ -1462,14 +1393,9 @@ def _apply_step(mapelites: MAPElites,
 
 
 def __apply_step(**kwargs) -> Dict[str, Any]:
-    global consent_ok
-    global current_mapelites
-    global gdev_mode
-    global gen_counter
     global n_spaceships_inspected
-    global selected_bins
     global time_elapsed
-    global user_study_mode
+    global app_settings
     
     cs_properties = kwargs['cs_properties']
     cs_string = kwargs['cs_string']
@@ -1479,61 +1405,61 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
     nbs_err_modal_show = kwargs['nbs_err_modal_show']
     dlbtn_label = kwargs['dlbtn_label']
     
-    if selected_bins or kwargs['event_trig'] == 'rand-step-btn':
+    if app_settings.selected_bins or kwargs['event_trig'] == 'rand-step-btn':
         s = time.perf_counter()
-        res = _apply_step(mapelites=current_mapelites,
-                          selected_bins=_switch(selected_bins),
-                          gen_counter=gen_counter,
-                          only_human=kwargs['event_trig'] == 'step-btn' and not user_study_mode and not gdev_mode,
-                          only_emitter=kwargs['event_trig'] == 'rand-step-btn' and not user_study_mode and not gdev_mode)
+        res = _apply_step(mapelites=app_settings.current_mapelites,
+                          selected_bins=_switch(app_settings.selected_bins),
+                          gen_counter=app_settings.gen_counter,
+                          only_human=kwargs['event_trig'] == 'step-btn' and app_settings.app_mode == AppMode.USER,
+                          only_emitter=kwargs['event_trig'] == 'rand-step-btn' and app_settings.app_mode == AppMode.USER)
         if res:
             elapsed = time.perf_counter() - s
-            gen_counter += 1
+            app_settings.gen_counter += 1
             # update metrics if user consented to privacy
-            if consent_ok:
+            if app_settings.app_mode == AppMode.USERSTUDY:
                 # n_spaceships_inspected.add(1)
                 time_elapsed.add(elapsed)
-            if selected_bins:
+            if app_settings.selected_bins:
                 rem_idxs = []
-                for i, b in enumerate(selected_bins):
+                for i, b in enumerate(app_settings.selected_bins):
                     # remove preview and properties if last selected bin is now invalid
                     lb = _switch([b])[0]
-                    if lb not in [b.bin_idx for b in current_mapelites._valid_bins()]:
+                    if lb not in [b.bin_idx for b in app_settings.current_mapelites._valid_bins()]:
                         rem_idxs.append(i)
                 for i in reversed(rem_idxs):
-                    selected_bins.pop(i)
-                if selected_bins == []:
-                        curr_content = _get_elite_content(mapelites=current_mapelites,
-                                                        bin_idx=None,
-                                                        pop='')
+                    app_settings.selected_bins.pop(i)
+                if app_settings.selected_bins == []:
+                        curr_content = _get_elite_content(mapelites=app_settings.current_mapelites,
+                                                          bin_idx=None,
+                                                          pop='')
                         cs_string = ''
                         cs_properties = get_properties_table()
                 else:
-                    lb = _switch([selected_bins[-1]])[0]
-                    if current_mapelites.bins[selected_bins[-1]].new_elite[hm_callback_props['pop'][kwargs['pop_name']]]:
-                        curr_content = _get_elite_content(mapelites=current_mapelites,
-                                                        bin_idx=lb,
-                                                        pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
-                        elite = get_elite(mapelites=current_mapelites,
-                                        bin_idx=lb,
-                                        pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
+                    lb = _switch([app_settings.selected_bins[-1]])[0]
+                    if app_settings.current_mapelites.bins[app_settings.selected_bins[-1]].new_elite[app_settings.hm_callback_props['pop'][kwargs['pop_name']]]:
+                        curr_content = _get_elite_content(mapelites=app_settings.current_mapelites,
+                                                          bin_idx=lb,
+                                                          pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
+                        elite = get_elite(mapelites=app_settings.current_mapelites,
+                                          bin_idx=lb,
+                                          pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
                         cs_string = elite.string
                         cs_properties = get_properties_table(cs=elite)
             # prompt user to download content if reached end of generations
-            if user_study_mode and gen_counter == N_GENS_ALLOWED:
+            if app_settings.app_mode == AppMode.USERSTUDY and app_settings.gen_counter == N_GENS_ALLOWED:
                 eoe_modal_show = True
             # update heatmap
-            curr_heatmap = _build_heatmap(mapelites=current_mapelites,
+            curr_heatmap = _build_heatmap(mapelites=app_settings.current_mapelites,
                                           pop_name=kwargs['pop_name'],
                                           metric_name=kwargs['metric_name'],
                                           method_name=kwargs['method_name'])
-            logging.getLogger('webapp').debug(msg=f'[{__name__}.__apply_step] {elapsed=}; {gen_counter=}; {selected_bins=}')
+            logging.getLogger('webapp').debug(msg=f'[{__name__}.__apply_step] {elapsed=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}')
     else:
         logging.getLogger('webapp').error(msg=f'Step not applied: no bin(s) selected.')
         nbs_err_modal_show = True
     
-    if user_study_mode and gen_counter == N_GENS_ALLOWED:
-        if exp_n + 1 == len(my_emitterslist):
+    if app_settings.app_mode == AppMode.USERSTUDY and app_settings.gen_counter == N_GENS_ALLOWED:
+        if app_settings.exp_n + 1 == len(app_settings.my_emitterslist):
             dlbtn_label = 'Download and Switch to User Mode'
         else:
             dlbtn_label = 'Download and Start Next Experiment'
@@ -1550,25 +1476,22 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
 
 
 def __reset(**kwargs) -> Dict[str, Any]:
-    global consent_ok
-    global current_mapelites
-    global gen_counter
+    global app_settings
     global n_spaceships_inspected
     global time_elapsed
-    global selected_bins
     
     logging.getLogger('webapp').info(msg='Started resetting all bins (this may take a while)...')
-    current_mapelites.reset()
-    current_mapelites.hull_builder.apply_smoothing = False
+    app_settings.current_mapelites.reset()
+    app_settings.current_mapelites.hull_builder.apply_smoothing = False
     logging.getLogger('webapp').info(msg='Reset completed.')
-    gen_counter = 0
-    selected_bins = []
-    if consent_ok:
+    app_settings.gen_counter = 0
+    app_settings.selected_bins = []
+    if app_settings.app_mode == AppMode.USERSTUDY:
         n_spaceships_inspected.reset()
         time_elapsed.reset()
 
     return {
-        'heatmap-plot.figure': _build_heatmap(mapelites=current_mapelites,
+        'heatmap-plot.figure': _build_heatmap(mapelites=app_settings.current_mapelites,
                                               pop_name=kwargs['pop_name'],
                                               metric_name=kwargs['metric_name'],
                                               method_name=kwargs['method_name'])
@@ -1576,7 +1499,7 @@ def __reset(**kwargs) -> Dict[str, Any]:
 
 
 def __bc_change(**kwargs) -> Dict[str, Any]:
-    global current_mapelites
+    global app_settings
     
     event_trig = kwargs['event_trig']
     b0 = kwargs['b0']
@@ -1589,10 +1512,10 @@ def __bc_change(**kwargs) -> Dict[str, Any]:
         else:
             b1 = event_trig.replace('bc1-', '').replace('_', ' / ').replace('-', ' ')
         logging.getLogger('webapp').info(msg=f'Updating feature descriptors to ({b0}, {b1})...')
-        b0 = behavior_descriptors[[b.name for b in behavior_descriptors].index(b0)]
-        b1 = behavior_descriptors[[b.name for b in behavior_descriptors].index(b1)]
-        current_mapelites.update_behavior_descriptors((b0, b1))
-        curr_heatmap = _build_heatmap(mapelites=current_mapelites,
+        b0 = app_settings.behavior_descriptors[[b.name for b in app_settings.behavior_descriptors].index(b0)]
+        b1 = app_settings.behavior_descriptors[[b.name for b in app_settings.behavior_descriptors].index(b1)]
+        app_settings.current_mapelites.update_behavior_descriptors((b0, b1))
+        curr_heatmap = _build_heatmap(mapelites=app_settings.current_mapelites,
                                       pop_name=kwargs['pop_name'],
                                       metric_name=kwargs['metric_name'],
                                       method_name=kwargs['method_name'])
@@ -1606,21 +1529,20 @@ def __bc_change(**kwargs) -> Dict[str, Any]:
 
 
 def __subdivide(**kwargs) -> Dict[str, Any]:
-    global current_mapelites
-    global selected_bins
+    global app_settings
     
     curr_heatmap = kwargs['curr_heatmap']
     
-    bin_idxs = [(x[1], x[0]) for x in selected_bins]
+    bin_idxs = [(x[1], x[0]) for x in app_settings.selected_bins]
     for bin_idx in bin_idxs:
         logging.getLogger('webapp').debug(msg=f'[{__name__}.__subdivide] Subdividing {bin_idx=}')
-        current_mapelites.subdivide_range(bin_idx=bin_idx)
-    curr_heatmap = _build_heatmap(mapelites=current_mapelites,
-                                    pop_name=kwargs['pop_name'],
-                                    metric_name=kwargs['metric_name'],
-                                    method_name=kwargs['method_name'])
-    logging.getLogger('webapp').info(msg=f'Subdivided bin(s): {selected_bins}.')
-    selected_bins = []
+        app_settings.current_mapelites.subdivide_range(bin_idx=bin_idx)
+    curr_heatmap = _build_heatmap(mapelites=app_settings.current_mapelites,
+                                  pop_name=kwargs['pop_name'],
+                                  metric_name=kwargs['metric_name'],
+                                  method_name=kwargs['method_name'])
+    logging.getLogger('webapp').info(msg=f'Subdivided bin(s): {app_settings.selected_bins}.')
+    app_settings.selected_bins = []
     
     return {
         'heatmap-plot.figure': curr_heatmap,
@@ -1628,21 +1550,21 @@ def __subdivide(**kwargs) -> Dict[str, Any]:
 
 
 def __lsystem_modules(**kwargs) -> Dict[str, Any]:
-    global current_mapelites
+    global app_settings
     
     modules = kwargs['modules']
     
-    all_modules = [x for x in current_mapelites.lsystem.modules]
+    all_modules = [x for x in app_settings.current_mapelites.lsystem.modules]
     names = [x.name for x in all_modules]
     for i, module in enumerate(names):
         if module in modules and not all_modules[i].active:
             # activate module
-            current_mapelites.toggle_module_mutability(module=module)
+            app_settings.current_mapelites.toggle_module_mutability(module=module)
             logging.getLogger('webapp').debug(msg=f'[{__name__}.__subdivide] Enabled {module}')
             break
         elif module not in modules and all_modules[i].active:
             # deactivate module
-            current_mapelites.toggle_module_mutability(module=module)
+            app_settings.current_mapelites.toggle_module_mutability(module=module)
             logging.getLogger('webapp').debug(msg=f'[{__name__}.__subdivide] Disabled {module}')
             break
     logging.getLogger('webapp').info(msg=f'L-system modules updated')
@@ -1651,7 +1573,7 @@ def __lsystem_modules(**kwargs) -> Dict[str, Any]:
 
 
 def __update_rules(**kwargs) -> Dict[str, Any]:
-    global current_mapelites
+    global app_settings
     
     rules = kwargs['rules']
     
@@ -1663,28 +1585,28 @@ def __update_rules(**kwargs) -> Dict[str, Any]:
                         p=float(p))
     try:
         new_rules.validate()
-        current_mapelites.lsystem.hl_solver.parser.rules = new_rules
+        app_settings.current_mapelites.lsystem.hl_solver.parser.rules = new_rules
         logging.getLogger('webapp').info(msg=f'L-system rules updated.')
         return True
     except AssertionError as e:
         logging.getLogger('webapp').info(msg=f'Failed updating L-system rules ({e}).')
     
     return {
-        'hl-rules.value': str(current_mapelites.lsystem.hl_solver.parser.rules)
+        'hl-rules.value': str(app_settings.current_mapelites.lsystem.hl_solver.parser.rules)
     }
 
 
 def __fitness_weights(**kwargs) -> Dict[str, Any]:
-    global current_mapelites
+    global app_settings
 
     curr_heatmap = kwargs['curr_heatmap']
     weights = kwargs['weights']
     
-    current_mapelites.update_fitness_weights(weights=weights)
+    app_settings.current_mapelites.update_fitness_weights(weights=weights)
     logging.getLogger('webapp').info(msg='Updated fitness functions weights.')
-    hm_callback_props['metric']['Fitness']['zmax']['feasible'] = sum([x.weight * x.bounds[1] for x in current_mapelites.feasible_fitnesses]) + current_mapelites.nsc
+    app_settings.hm_callback_props['metric']['Fitness']['zmax']['feasible'] = sum([x.weight * x.bounds[1] for x in app_settings.current_mapelites.feasible_fitnesses]) + app_settings.current_mapelites.nsc
     
-    curr_heatmap = _build_heatmap(mapelites=current_mapelites,
+    curr_heatmap = _build_heatmap(mapelites=app_settings.current_mapelites,
                                     pop_name=kwargs['pop_name'],
                                     metric_name=kwargs['metric_name'],
                                     method_name=kwargs['method_name'])
@@ -1695,7 +1617,7 @@ def __fitness_weights(**kwargs) -> Dict[str, Any]:
 
 
 def __update_heatmap(**kwargs) -> Dict[str, Any]:
-    global current_mapelites
+    global app_settings
     
     event_trig = kwargs['event_trig']
     pop_name = kwargs['pop_name']
@@ -1714,7 +1636,7 @@ def __update_heatmap(**kwargs) -> Dict[str, Any]:
         metric_name = 'Coverage'
     logging.getLogger('webapp').debug(msg=f'[{__name__}.__update_heatmap] {pop_name=}; {metric_name=}; {method_name=}')
 
-    curr_heatmap = _build_heatmap(mapelites=current_mapelites,
+    curr_heatmap = _build_heatmap(mapelites=app_settings.current_mapelites,
                                     pop_name=pop_name,
                                     metric_name=metric_name,
                                     method_name=method_name)
@@ -1724,8 +1646,7 @@ def __update_heatmap(**kwargs) -> Dict[str, Any]:
     
     
 def __apply_symmetry(**kwargs) -> Dict[str, Any]:
-    global current_mapelites
-    global selected_bins
+    global app_settings
     
     event_trig = kwargs['event_trig']
     symm_orientation = kwargs['symm_orientation']
@@ -1741,14 +1662,14 @@ def __apply_symmetry(**kwargs) -> Dict[str, Any]:
         symm_axis = 'Z-axis'
     logging.getLogger('webapp').debug(msg=f'[{__name__}.__apply_symmetry] {symm_axis=}; {symm_orientation=}')
         
-    current_mapelites.reassign_all_content(sym_axis=symm_axis[0].lower() if symm_axis != "None" else None,
-                                           sym_upper=symm_orientation == 'Upper')
-    curr_content = _get_elite_content(mapelites=current_mapelites,
+    app_settings.current_mapelites.reassign_all_content(sym_axis=symm_axis[0].lower() if symm_axis != "None" else None,
+                                                        sym_upper=symm_orientation == 'Upper')
+    curr_content = _get_elite_content(mapelites=app_settings.current_mapelites,
                                       bin_idx=None,
                                       pop=None)
     logging.getLogger('webapp').info(msg=f'Symmetry enforcement completed.')
     
-    selected_bins = []
+    app_settings.selected_bins = []
     
     return {
         'content-plot.figure': curr_content,
@@ -1759,8 +1680,7 @@ def __apply_symmetry(**kwargs) -> Dict[str, Any]:
 
 
 def __update_content(**kwargs) -> Dict[str, Any]:
-    global current_mapelites
-    global selected_bins
+    global app_settings
     
     curr_heatmap = kwargs['curr_heatmap']
     curr_content = kwargs['curr_content']
@@ -1768,29 +1688,29 @@ def __update_content(**kwargs) -> Dict[str, Any]:
     cs_properties = kwargs['cs_properties']
         
     i, j = kwargs['clickData']['points'][0]['x'], kwargs['clickData']['points'][0]['y']
-    if current_mapelites.bins[j, i].non_empty(pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible'):
-        if (j, i) in [b.bin_idx for b in current_mapelites._valid_bins()]:
-            curr_content = _get_elite_content(mapelites=current_mapelites,
+    if app_settings.current_mapelites.bins[j, i].non_empty(pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible'):
+        if (j, i) in [b.bin_idx for b in app_settings.current_mapelites._valid_bins()]:
+            curr_content = _get_elite_content(mapelites=app_settings.current_mapelites,
                                               bin_idx=(j, i),
                                               pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
-            if consent_ok:
+            if app_settings.app_mode == AppMode.USERSTUDY:
                 n_spaceships_inspected.add(1)
-            if not current_mapelites.enforce_qnt and selected_bins != []:
-                if (i, j) not in selected_bins:
-                    selected_bins.append((i, j))
+            if not app_settings.current_mapelites.enforce_qnt and app_settings.selected_bins != []:
+                if (i, j) not in app_settings.selected_bins:
+                    app_settings.selected_bins.append((i, j))
                 else:
-                    selected_bins.remove((i, j))
+                    app_settings.selected_bins.remove((i, j))
             else:
-                selected_bins = [(i, j)]
+                app_settings.selected_bins = [(i, j)]
             cs_string = ''
             cs_properties = get_properties_table()
-            if len(selected_bins) > 0:
-                elite = get_elite(mapelites=current_mapelites,
-                                  bin_idx=_switch([selected_bins[-1]])[0],
+            if len(app_settings.selected_bins) > 0:
+                elite = get_elite(mapelites=app_settings.current_mapelites,
+                                  bin_idx=_switch([app_settings.selected_bins[-1]])[0],
                                   pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
                 cs_string = elite.string
                 cs_properties = get_properties_table(cs=elite)
-                curr_heatmap = _build_heatmap(mapelites=current_mapelites,
+                curr_heatmap = _build_heatmap(mapelites=app_settings.current_mapelites,
                                               pop_name=kwargs['pop_name'],
                                               metric_name=kwargs['metric_name'],
                                               method_name=kwargs['method_name'])
@@ -1806,26 +1726,24 @@ def __update_content(**kwargs) -> Dict[str, Any]:
 
 
 def __selection(**kwargs) -> Dict[str, Any]:
-    global current_mapelites
-    global selected_bins
+    global app_settings
     
-    current_mapelites.enforce_qnt = not current_mapelites.enforce_qnt
-    logging.getLogger('webapp').info(msg=f'MAP-Elites single bin selection set to {current_mapelites.enforce_qnt}.')
-    if current_mapelites.enforce_qnt and selected_bins:
-        selected_bins = [selected_bins[-1]]
+    app_settings.current_mapelites.enforce_qnt = not app_settings.current_mapelites.enforce_qnt
+    logging.getLogger('webapp').info(msg=f'MAP-Elites single bin selection set to {app_settings.current_mapelites.enforce_qnt}.')
+    if app_settings.current_mapelites.enforce_qnt and app_settings.selected_bins:
+        app_settings.selected_bins = [app_settings.selected_bins[-1]]
     
     return {}
 
 
 def __clear_selection(**kwargs) -> Dict[str, Any]:
-    global current_mapelites
-    global selected_bins
+    global app_settings
     
     logging.getLogger('webapp').info(msg='Cleared bins selection.')
-    selected_bins = []
+    app_settings.selected_bins = []
     
     return {
-        'content-plot.figure':  _get_elite_content(mapelites=current_mapelites,
+        'content-plot.figure':  _get_elite_content(mapelites=app_settings.current_mapelites,
                                                    bin_idx=None,
                                                    pop=None),
         'content-string.value': '',
@@ -1834,29 +1752,28 @@ def __clear_selection(**kwargs) -> Dict[str, Any]:
 
 
 def __emitter(**kwargs) -> Dict[str, Any]:
-    global current_mapelites
-    global selected_bins
+    global app_settings
 
     emitter_name = kwargs['emitter_name']
     
     if emitter_name == 'Random':
-        current_mapelites.emitter = RandomEmitter()
+        app_settings.current_mapelites.emitter = RandomEmitter()
         logging.getLogger('webapp').info(msg=f'Emitter set to {emitter_name}')
     if emitter_name == 'Greedy':
-        current_mapelites.emitter = GreedyEmitter()
+        app_settings.current_mapelites.emitter = GreedyEmitter()
         logging.getLogger('webapp').info(msg=f'Emitter set to {emitter_name}')
     elif emitter_name == 'Preference-matrix':
-        current_mapelites.emitter = HumanPrefMatrixEmitter()
-        current_mapelites.emitter._build_pref_matrix(bins=current_mapelites.bins)
+        app_settings.current_mapelites.emitter = HumanPrefMatrixEmitter()
+        app_settings.current_mapelites.emitter._build_pref_matrix(bins=app_settings.current_mapelites.bins)
         logging.getLogger('webapp').info(msg=f'Emitter set to {emitter_name}')
     elif emitter_name == 'Contextual Bandit':
-        current_mapelites.emitter = ContextualBanditEmitter()
+        app_settings.current_mapelites.emitter = ContextualBanditEmitter()
         logging.getLogger('webapp').info(msg=f'Emitter set to {emitter_name}')
     elif emitter_name == 'Preference Bandit':
-        current_mapelites.emitter = PreferenceBanditEmitter()
+        app_settings.current_mapelites.emitter = PreferenceBanditEmitter()
         logging.getLogger('webapp').info(msg=f'Emitter set to {emitter_name}')
     elif emitter_name == 'None':
-        current_mapelites.emitter = HumanEmitter()
+        app_settings.current_mapelites.emitter = HumanEmitter()
         logging.getLogger('webapp').info(msg=f'Emitter set to {emitter_name}')
     else:
         logging.getLogger('webapp').error(msg=f'[{__name__}.__emitter] Unrecognized {emitter_name=}')
@@ -1865,16 +1782,9 @@ def __emitter(**kwargs) -> Dict[str, Any]:
 
 
 def __content_download(**kwargs) -> Dict[str, Any]:
-    global current_mapelites
-    global selected_bins
-    global user_study_mode
-    global gen_counter
-    global exp_n
-    global my_emitterslist
-    global consent_ok
+    global app_settings
     global time_elapsed
     global n_spaceships_inspected
-    global rngseed
     global download_semaphore
 
     cs_string = kwargs['cs_string']
@@ -1891,7 +1801,7 @@ def __content_download(**kwargs) -> Dict[str, Any]:
     dlbtn_label = kwargs['dlbtn_label']
     
     # if cs_string != '':
-    if selected_bins:
+    if app_settings.selected_bins:
         
         logging.getLogger('webapp').debug(f'[{__name__}.__content_download] (pre-check) {download_semaphore.is_locked=}')
         while download_semaphore.is_locked:
@@ -1900,11 +1810,10 @@ def __content_download(**kwargs) -> Dict[str, Any]:
         download_semaphore.lock(name=download_semaphore._running)
         logging.getLogger('webapp').debug(f'[{__name__}.__content_download] (re-lock) {download_semaphore.is_locked=}')
         
-        if user_study_mode and gen_counter == N_GENS_ALLOWED:
-            # time.sleep(2)
-            exp_n += 1
+        if app_settings.app_mode == AppMode.USERSTUDY and app_settings.gen_counter == N_GENS_ALLOWED:
+            app_settings.exp_n += 1
             # check end of user study
-            if exp_n >= len(my_emitterslist):
+            if app_settings.exp_n >= len(app_settings.my_emitterslist):
                 curr_heatmap = go.Figure(
                     data=go.Heatmap(
                         z=np.zeros(0, dtype=object),
@@ -1912,62 +1821,64 @@ def __content_download(**kwargs) -> Dict[str, Any]:
                         y=np.zeros(0, dtype=object),
                         hoverongaps=False,
                         ))
-                curr_content = _get_elite_content(mapelites=current_mapelites,
+                curr_content = _get_elite_content(mapelites=app_settings.current_mapelites,
                                                   bin_idx=None,
                                                   pop=None)
                 cs_string = ''
                 cs_properties = get_properties_table()
-                if consent_ok:
+                if app_settings.app_mode == AppMode.USERSTUDY:
                     metrics_dl = dict(content=json.dumps({
                         'time_elapsed': time_elapsed.get_averages(),
                         'n_interactions': n_spaceships_inspected.get_averages()
                         }),
-                                      filename=f'user_metrics_{rngseed}')
+                                      filename=f'user_metrics_{app_settings.rngseed}')
                 else:
                     metrics_dl = None
                 logging.getLogger('webapp').info(f'Reached end of all experiments! Please go back to the questionnaire to continue the evaluation.')
                 eous_modal_show = True
                 qs_um_modal_show = True
-                user_study_mode = False
+                app_settings.app_mode = AppMode.USER
                 dlbtn_label = 'Download'
-                selected_bins = []
+                app_settings.selected_bins = []
                 logging.getLogger('webapp').info(msg='Initializing a new population; this may take a while...')
-                current_mapelites.reset()
-                current_mapelites.hull_builder.apply_smoothing = False
-                current_mapelites.emitter = RandomEmitter()
+                app_settings.current_mapelites.reset()
+                app_settings.current_mapelites.hull_builder.apply_smoothing = False
+                app_settings.current_mapelites.emitter = RandomEmitter()
                 rand_step_btn_style, reset_btn_style, exp_progress_style = {}, {}, hidden_style
-                curr_heatmap = _build_heatmap(mapelites=current_mapelites,
+                curr_heatmap = _build_heatmap(mapelites=app_settings.current_mapelites,
                                               pop_name=kwargs['pop_name'],
                                               metric_name=kwargs['metric_name'],
                                               method_name=kwargs['method_name'])
-                curr_content = _get_elite_content(mapelites=current_mapelites,
+                curr_content = _get_elite_content(mapelites=app_settings.current_mapelites,
                                                   bin_idx=None,
                                                   pop=None)
                 logging.getLogger('webapp').info(msg='Initialization completed.')
             else:
-                logging.getLogger('webapp').info(msg=f'Reached end of experiment {exp_n}! Loading the next experiment...')
-                gen_counter = 0
+                logging.getLogger('webapp').info(msg=f'Reached end of experiment {app_settings.exp_n}! Loading the next experiment...')
+                app_settings.gen_counter = 0
                 dlbtn_label = 'Download'
-                selected_bins = []
-                if consent_ok:
+                app_settings.selected_bins = []
+                if app_settings.app_mode == AppMode.USERSTUDY:
                     logging.getLogger('webapp').info(msg='Loading next population...')
-                    current_mapelites.reset(lcs=[])
-                    current_mapelites.hull_builder.apply_smoothing = False
-                    current_mapelites.load_population(filename=my_emitterslist[exp_n])
+                    app_settings.current_mapelites.reset(lcs=[])
+                    app_settings.current_mapelites.hull_builder.apply_smoothing = False
+                    app_settings.current_mapelites.load_population(filename=app_settings.my_emitterslist[app_settings.exp_n])
                     logging.getLogger('webapp').info(msg='Next population loaded.')
-                    n_spaceships_inspected.new_generation()
-                    time_elapsed.new_generation()
+                    n_spaceships_inspected.new_generation(emitters=app_settings.my_emitterslist,
+                                                          exp_n=app_settings.exp_n)
+                    time_elapsed.new_generation(emitters=app_settings.my_emitterslist,
+                                                exp_n=app_settings.exp_n)
                     logging.getLogger('webapp').info(msg='Next experiment loaded. Please fill out the questionnaire before continuing.')
                 else:
                     logging.getLogger('webapp').info(msg='Initializing a new population; this may take a while...')
-                    current_mapelites.reset()
-                    current_mapelites.hull_builder.apply_smoothing = False
+                    app_settings.current_mapelites.reset()
+                    app_settings.current_mapelites.hull_builder.apply_smoothing = False
                     logging.getLogger('webapp').info(msg='Initialization completed.')
-                curr_heatmap = _build_heatmap(mapelites=current_mapelites,
+                curr_heatmap = _build_heatmap(mapelites=app_settings.current_mapelites,
                                               pop_name=kwargs['pop_name'],
                                               metric_name=kwargs['metric_name'],
                                               method_name=kwargs['method_name'])
-                curr_content = _get_elite_content(mapelites=current_mapelites,
+                curr_content = _get_elite_content(mapelites=app_settings.current_mapelites,
                                                   bin_idx=None,
                                                   pop=None)
                 cs_string = ''
@@ -1977,7 +1888,7 @@ def __content_download(**kwargs) -> Dict[str, Any]:
     else:
         nbs_err_modal_show = True
 
-    logging.getLogger('webapp').debug(f'[{__name__}.__content_download] {selected_bins=}; {exp_n=}; {gen_counter=}')
+    logging.getLogger('webapp').debug(f'[{__name__}.__content_download] {app_settings.selected_bins=}; {app_settings.exp_n=}; {app_settings.gen_counter=}')
     
     return {
         'heatmap-plot.figure': curr_heatmap,
@@ -1996,11 +1907,10 @@ def __content_download(**kwargs) -> Dict[str, Any]:
 
 
 def __population_download(**kwargs) -> Dict[str, Any]:
-    global current_mapelites
-    global rngseed
+    global app_settings
     
-    content_dl = dict(content=json.dumps([b.to_json() for b in current_mapelites.bins.flatten().tolist()]),
-                      filename=f'population_{rngseed}_exp{exp_n}_{current_mapelites.emitter.name}.json')
+    content_dl = dict(content=json.dumps([b.to_json() for b in app_settings.current_mapelites.bins.flatten().tolist()]),
+                      filename=f'population_{app_settings.rngseed}_exp{app_settings.exp_n}_{app_settings.current_mapelites.emitter.name}.json')
     logging.getLogger('webapp').info(f'The population will be downloaded shortly.')
     return {
         'download-population.data': content_dl
@@ -2008,32 +1918,29 @@ def __population_download(**kwargs) -> Dict[str, Any]:
 
 
 def __population_upload(**kwargs) -> Dict[str, Any]:
-    global current_mapelites
+    global app_settings
     
     upload_contents = kwargs['upload_contents']
     
     _, upload_contents = upload_contents.split(',')
     upload_contents = base64.b64decode(upload_contents).decode()        
     all_bins = np.asarray([MAPBin.from_json(x) for x in json.loads(upload_contents)])
-    current_mapelites.reset(lcs=[])
-    all_bins = all_bins.reshape(current_mapelites.bin_qnt)
-    current_mapelites.bins = all_bins
-    current_mapelites.reassign_all_content()
+    app_settings.current_mapelites.reset(lcs=[])
+    all_bins = all_bins.reshape(app_settings.current_mapelites.bin_qnt)
+    app_settings.current_mapelites.bins = all_bins
+    app_settings.current_mapelites.reassign_all_content()
     logging.getLogger('webapp').info(msg=f'Set population from file successfully.')
 
     return {
-        'heatmap-plot.figure': _build_heatmap(mapelites=current_mapelites,
-                                pop_name=kwargs['pop_name'],
-                                metric_name=kwargs['metric_name'],
-                                method_name=kwargs['method_name'])
+        'heatmap-plot.figure': _build_heatmap(mapelites=app_settings.current_mapelites,
+                                              pop_name=kwargs['pop_name'],
+                                              metric_name=kwargs['metric_name'],
+                                              method_name=kwargs['method_name'])
         }
 
 
 def __consent(**kwargs) -> Dict[str, Any]:
-    global current_mapelites
-    global consent_ok
-    global gen_counter
-    global user_study_mode
+    global app_settings
     
     nclicks_yes = kwargs['nclicks_yes']
     nclicks_no = kwargs['nclicks_no']
@@ -2045,30 +1952,29 @@ def __consent(**kwargs) -> Dict[str, Any]:
     cm_modal_show = kwargs['cm_modal_show']
     study_style = kwargs['study_style']
     
-    consent_ok = True if nclicks_yes else False if nclicks_no else None
+    app_settings.app_mode = AppMode.USERSTUDY if nclicks_yes else AppMode.USER if nclicks_no else None
     if nclicks_yes:
         logging.getLogger('webapp').info(msg=f'Thank you for participating in the user study! Please do not refresh the page.')
         logging.getLogger('webapp').info(msg='Loading population...')
-        current_mapelites.reset(lcs=[])
-        current_mapelites.hull_builder.apply_smoothing = False
-        current_mapelites.load_population(filename=my_emitterslist[exp_n])
+        app_settings.current_mapelites.reset(lcs=[])
+        app_settings.current_mapelites.hull_builder.apply_smoothing = False
+        app_settings.current_mapelites.load_population(filename=app_settings.my_emitterslist[app_settings.exp_n])
         logging.getLogger('webapp').info(msg='Population loaded.')
         qs_modal_show = True
     else:
         logging.getLogger('webapp').info(msg=f'No user data will be collected during this session. Please do not refresh the page.')
         logging.getLogger('webapp').info(msg='Initializing population; this may take a while...')
-        current_mapelites.emitter = RandomEmitter()
-        current_mapelites.reset()
-        current_mapelites.hull_builder.apply_smoothing = False
+        app_settings.current_mapelites.emitter = RandomEmitter()
+        app_settings.current_mapelites.reset()
+        app_settings.current_mapelites.hull_builder.apply_smoothing = False
         logging.getLogger('webapp').info(msg='Initialization completed.')
-        user_study_mode = False
         qs_um_modal_show = True
         rand_step_btn_style, reset_btn_style, exp_progress_style, study_style = {}, {}, hidden_style, hidden_style
     cm_modal_show = False
-    gen_counter = 0
+    app_settings.gen_counter = 0
     
     return {
-        'heatmap-plot.figure': _build_heatmap(mapelites=current_mapelites,
+        'heatmap-plot.figure': _build_heatmap(mapelites=app_settings.current_mapelites,
                                               pop_name=kwargs['pop_name'],
                                               metric_name=kwargs['metric_name'],
                                               method_name=kwargs['method_name']),
@@ -2087,16 +1993,16 @@ def __close_error(**kwargs) -> Dict[str, Any]:
 
 
 def _update_base_color(color: Vec) -> None:
-    global current_mapelites
+    global app_settings
     logging.getLogger('webapp').debug(f'[{__name__}._update_base_color] {color=}')
-    for (_, _), b in np.ndenumerate(current_mapelites.bins):
+    for (_, _), b in np.ndenumerate(app_settings.current_mapelites.bins):
             for cs in [*b._feasible, *b._infeasible]:
                 cs.base_color = color
                 cs.content.set_color(color)
 
 
 def __color(**kwargs) -> Dict[str, Any]:
-    global current_mapelites
+    global app_settings
     global base_color
     
     color = kwargs['color']
@@ -2107,9 +2013,9 @@ def __color(**kwargs) -> Dict[str, Any]:
     base_color = new_color
     logging.getLogger('webapp').debug(msg=f'[{__name__}.__color] {base_color=}')
     _update_base_color(color=base_color)
-    if selected_bins:
-        curr_content =  _get_elite_content(mapelites=current_mapelites,
-                                           bin_idx=_switch([selected_bins[-1]])[0],
+    if app_settings.selected_bins:
+        curr_content =  _get_elite_content(mapelites=app_settings.current_mapelites,
+                                           bin_idx=_switch([app_settings.selected_bins[-1]])[0],
                                            pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
     return {
         'content-plot.figure': curr_content,
@@ -2119,20 +2025,20 @@ def __color(**kwargs) -> Dict[str, Any]:
 
 def __show_quickstart_modal(**kwargs) -> Dict[str, Any]:
     return {
-        'quickstart-modal.is_open': user_study_mode,
-        'quickstart-usermode-modal.is_open': not user_study_mode
+        'quickstart-modal.is_open': app_settings.app_mode == AppMode.USERSTUDY,
+        'quickstart-usermode-modal.is_open': app_settings.app_mode == AppMode.USER
     }
 
 
 def __default(**kwargs) -> Dict[str, Any]:
-    global current_mapelites
+    global app_settings
     
     return {
-        'heatmap-plot.figure': _build_heatmap(mapelites=current_mapelites,
+        'heatmap-plot.figure': _build_heatmap(mapelites=app_settings.current_mapelites,
                                               pop_name=kwargs['pop_name'],
                                               metric_name=kwargs['metric_name'],
                                               method_name=kwargs['method_name']),
-        'content-plot.figure': _get_elite_content(mapelites=current_mapelites,
+        'content-plot.figure': _get_elite_content(mapelites=app_settings.current_mapelites,
                                                   bin_idx=None,
                                                   pop=None)
         }
@@ -2270,12 +2176,11 @@ triggers_map = {
               Input("consent-no", "n_clicks"),
               Input("nbs-err-btn", "n_clicks"),
               Input('color-picker', 'value'),
-              Input('webapp-quickstart-btn', 'n_clicks'),
+              Input('webapp-quickstart-btn', 'n_clicks')
               )
 def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, qs_modal_show, qs_um_modal_show, cm_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style, study_style, dlbtn_label, curr_legend,
                      pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights, b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn, color, qs_btn):
-    global current_mapelites
-    global selected_bins
+    global app_settings
     
     ctx = dash.callback_context
 
@@ -2312,7 +2217,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         'symmetry-dropdown.label': symm_axis,
         'quickstart-modal.is_open': qs_modal_show,
         'quickstart-usermode-modal.is_open': qs_um_modal_show,
-        'consent-modal.is_open': cm_modal_show if consent_ok is not None else True,
+        'consent-modal.is_open': cm_modal_show if app_settings.app_mode is not None else True,
         'nbs-err-modal.is_open': nbs_err_modal_show,
         'eoe-modal.is_open': eoe_modal_show,
         'eous-modal.is_open': eous_modal_show,
@@ -2324,7 +2229,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         'content-legend-div.children': curr_legend
     }
     
-    logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {event_trig=}; {exp_n=}; {gen_counter=}; {selected_bins=}; {process_semaphore.is_locked=}')
+    logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {process_semaphore.is_locked=}')
     
     if not process_semaphore.is_locked:
         process_semaphore.lock(name=event_trig)
@@ -2333,19 +2238,25 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         for k in u.keys():
             output[k] = u[k]
 
-        selected_bins, selected_bins_str = _format_bins(mapelites=current_mapelites,
-                                                        bins_idx_list=selected_bins,
-                                                        do_switch=True,
-                                                        str_prefix='Selected bin(s):',
-                                                        filter_out_empty=True) 
-        _, valid_bins_str = _format_bins(mapelites=current_mapelites,
+        app_settings.selected_bins, selected_bins_str = _format_bins(mapelites=app_settings.current_mapelites,
+                                                                     bins_idx_list=app_settings.selected_bins,
+                                                                     do_switch=True,
+                                                                     str_prefix='Selected bin(s):',
+                                                                     filter_out_empty=True) 
+        _, valid_bins_str = _format_bins(mapelites=app_settings.current_mapelites,
                                          do_switch=False,
-                                         bins_idx_list=_switch([x.bin_idx for x in current_mapelites._valid_bins()]),
+                                         bins_idx_list=_switch([x.bin_idx for x in app_settings.current_mapelites._valid_bins()]),
                                          str_prefix='Valid bins are:',
                                          filter_out_empty=False)
         
         output['selected-bin.children'] = selected_bins_str
         output['valid-bins.children'] = valid_bins_str
+        
+        logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {app_settings.selected_bins=}, {len(curr_content["data"]) == 0=}')
+        if app_settings.selected_bins and len(curr_content['data']) == 0:
+            output['content-plot.figure'] = _get_elite_content(mapelites=app_settings.current_mapelites,
+                                                               bin_idx=_switch([app_settings.selected_bins[-1]])[0],
+                                                               pop='feasible')
         
         process_semaphore.unlock()
     
