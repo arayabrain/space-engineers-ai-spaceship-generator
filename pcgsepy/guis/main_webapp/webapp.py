@@ -508,6 +508,8 @@ def serve_layout() -> dbc.Container:
                   config={
                       'displayModeBar': False,
                       'displaylogo': False}),
+        html.Div([get_content_legend()],
+                 id='content-legend-div')
         ])
     
     color_and_download = html.Div(
@@ -570,19 +572,44 @@ def serve_layout() -> dbc.Container:
                     ])],
                     align='center')])    
 
-    properties_panel = html.Div(
-        children=[dbc.Row(dbc.Col([
-            html.H4('Spaceship Properties',
+    log = html.Div(
+        children=[
+            dcc.Interval(id='interval1',
+                         interval=1 * 1000,
+                         n_intervals=0),
+            html.H4(children='Log',
                     className='section-title'),
-            html.Br()
-            ])),
-                  dbc.Row(
+            html.Br(),
+            dbc.Textarea(id='console-out',
+                         value='',
+                         wrap=False,
+                         contentEditable=False,
+                         disabled=True,
+                         className='log-area'),
+            dcc.Interval(id='interval2',
+                         interval=1 * 10,
+                         n_intervals=0),
+            ])
+    
+    properties_panel = html.Div(
+        children=[
+            dbc.Row(
+                dbc.Col([
+                    html.H4('Spaceship Properties',
+                            className='section-title'),
+                    html.Br()
+                    ])),
+            dbc.Row(
                       [
                           dbc.Col(color_and_download,
                                   align='center'),
                           dbc.Col(content_properties)
                       ]
-                  )]
+                  ),
+            dbc.Row(
+                log
+            )
+            ]
     )
     
     experiment_settings = html.Div(
@@ -697,66 +724,74 @@ def serve_layout() -> dbc.Container:
     
     experiment_controls = html.Div(
         children=[
-            html.H4('Experiment Controls',
+            html.H4('Advanced Controls',
                     className='section-title'),
             html.Br(),
-            dbc.Row(dbc.Col(children=[
-                dbc.Button(id='step-btn',
-                           children='Evolve From Selected Spaceship',
-                           className='button-fullsize')
+            dbc.Row(children=[
+                dbc.Col(children=[
+                    dbc.Button(id='step-btn',
+                               children='Evolve From Selected Spaceship',
+                               className='button-fullsize')
+                    ],
+                        id='step-btn-div',
+                        width=4),
+                dbc.Col(children=[
+                    dbc.Button(id='rand-step-btn',
+                               children='Evolve From Random Spaceship',
+                               className='button-fullsize')
+                    ],
+                        id='rand-step-btn-div',
+                        style={} if app_settings.app_mode == AppMode.USER else hidden_style,
+                        width=4)                
                 ],
-                    width={'size': 4, 'offset':4})),
-            html.Br(),
-            dbc.Row(dbc.Col(children=[
-                dbc.Button(id='rand-step-btn',
-                           children='Evolve From Random Spaceship',
-                           className='button-fullsize')
-                ],
-                    id='rand-step-btn-div',
-                    style={} if app_settings.app_mode == AppMode.USER else hidden_style,
-                    width={'size': 4, 'offset':4})),
-            html.Br(),
-            dbc.Row(dbc.Col(children=[
-                dbc.Button(id='selection-clr-btn',
-                       children='Clear Selection',
-                           className='button-fullsize')
-                ],
-                    style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
-                    width={'size': 4, 'offset':4})),
-            html.Br(),
-            dbc.Row(dbc.Col(children=[
-                dbc.Button(id='selection-btn',
-                       children='Toggle Single Bin Selection',
-                           className='button-fullsize')
-                ],
-                    style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
-                    width={'size': 4, 'offset':4})),
-            html.Br(),
-            dbc.Row(dbc.Col(children=[
-                dbc.Button(id='reset-btn',
-                           children='Reinitialize Population',
-                           className='button-fullsize')
-                ],
-                    id='reset-btn-div',
-                    style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
-                    width={'size': 4, 'offset':4})),
-            html.Br(),
-            dbc.Row(dbc.Col(children=[
-                dbc.Button(id='subdivide-btn',
-                       children='Subdivide Selected Bin(s)',
-                           className='button-fullsize')
-                ],
-                    style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
-                    width={'size': 4, 'offset':4})),
-            html.Br(),
-            dbc.Row(dbc.Col(children=[
-                dbc.Button(id='download-mapelites-btn',
-                           children='Download MAP-Elites',
-                           className='button-fullsize'),
-                dcc.Download(id='download-mapelites')
-                ],
-                    style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
-                    width={'size': 4, 'offset':4})),
+                    style={'justify-content': 'center'}),
+            dbc.Row(children=[
+                html.Br(),
+                dbc.Col(children=[
+                    dbc.Button(id='selection-clr-btn',
+                               children='Clear Selection',
+                               className='button-fullsize')
+                    ],
+                        style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
+                        width={'size': 4, 'offset':4})]),
+            dbc.Row(children=[
+                html.Br(),
+                dbc.Col(children=[
+                    dbc.Button(id='selection-btn',
+                               children='Toggle Single Bin Selection',
+                               className='button-fullsize')
+                    ],
+                        style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
+                        width={'size': 4, 'offset':4})]),
+            dbc.Row(children=[
+                html.Br(),
+                dbc.Col(children=[
+                    dbc.Button(id='reset-btn',
+                               children='Reinitialize Population',
+                               className='button-fullsize')
+                    ],
+                        id='reset-btn-div',
+                        style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
+                        width={'size': 4, 'offset':4})]),
+            dbc.Row(children=[
+                html.Br(),
+                dbc.Col(children=[
+                    dbc.Button(id='subdivide-btn',
+                               children='Subdivide Selected Bin(s)',
+                               className='button-fullsize')
+                    ],
+                        style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
+                        width={'size': 4, 'offset':4})]),
+            dbc.Row(children=[
+                html.Br(),
+                dbc.Col(children=[
+                    dbc.Button(id='download-mapelites-btn',
+                               children='Download MAP-Elites',
+                               className='button-fullsize'),
+                    dcc.Download(id='download-mapelites')
+                    ],
+                        style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
+                        width={'size': 4, 'offset':4})]),
         ])
     
     rules = html.Div(
@@ -794,25 +829,6 @@ def serve_layout() -> dbc.Container:
                'display': 'inline-block' if 0 <= app_settings.step_progress <= 100 else 'none',
                'width': '100%'})
     
-    log = html.Div(
-        children=[
-            dcc.Interval(id='interval1',
-                         interval=1 * 1000,
-                         n_intervals=0),
-            html.H4(children='Log',
-                    className='section-title'),
-            html.Br(),
-            dbc.Textarea(id='console-out',
-                         value='',
-                         wrap=False,
-                         contentEditable=False,
-                         disabled=True,
-                         className='log-area'),
-            dcc.Interval(id='interval2',
-                         interval=1 * 10,
-                         n_intervals=0),
-            ])
-    
     load_spinner = html.Div(children=[
         dbc.Row(
             dbc.Col(children=[
@@ -827,8 +843,8 @@ def serve_layout() -> dbc.Container:
         
     ])
     
-    content_legend = html.Div([get_content_legend()],
-                              id='content-legend-div')
+    # content_legend = html.Div([get_content_legend()],
+    #                           id='content-legend-div')
     
     return dbc.Container(
         children=[
@@ -842,11 +858,11 @@ def serve_layout() -> dbc.Container:
                 dbc.Col(content_plot, width=4),
                 dbc.Col(properties_panel, width=3)],
                     align="start"),
-            html.Br(),
-            dbc.Row(children=[
-                dbc.Col(content_legend, width={'size': 4, 'offset': 4})
-                ],
-                    align='start'),
+            # html.Br(),
+            # dbc.Row(children=[
+            #     dbc.Col(content_legend, width={'size': 4, 'offset': 4})
+            #     ],
+            #         align='start'),
             html.Br(),
             html.Br(),
             dbc.Row(children=[
@@ -859,7 +875,7 @@ def serve_layout() -> dbc.Container:
                                   experiment_settings],
                         width=4),
                 dbc.Col(children=[rules,
-                                  log
+                                #   log
                                   ],
                         width=3)],
                     align="start"),
@@ -1089,6 +1105,7 @@ def interval_updates(fdis, ms, lsysms, symms,
     for o in lsysms:
         o['disabled'] = running_something
     
+    # TODO: Disable modal-toggling buttons as well!
     btns = {
         'step-btn.disabled': running_something or (app_settings.app_mode == AppMode.USERSTUDY and app_settings.gen_counter >= N_GENS_ALLOWED),
         'download-btn.disabled': running_something or download_semaphore._running == 'YES',
@@ -2249,7 +2266,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         'download-btn.children': dlbtn_label,
         'content-legend-div.children': curr_legend,
         'qus-div.style': {'text-align': 'center'} if app_settings.app_mode == AppMode.USERSTUDY else hidden_style,
-        'eus-modal.is_open': eus_modal_show
+        'eus-modal.is_open': eus_modal_show,
     }
     
     logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {process_semaphore.is_locked=}')
