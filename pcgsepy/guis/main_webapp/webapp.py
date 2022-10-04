@@ -365,41 +365,44 @@ def serve_layout() -> dbc.Container:
                                }),
                 dbc.Col(children=[
                     dbc.Row(children=[
-                        dbc.Col(dbc.Button('Quickstart',
+                        dbc.Col(dbc.Button('Tutorial',
+                                           className='button-fullsize',
                                            id='webapp-quickstart-btn',
                                            color='info'),
                                 width=4,
                                 style=hidden_style if app_settings.app_mode == AppMode.DEV else {}),
                         dbc.Col(dbc.Button('Webapp Info',
+                                           className='button-fullsize',
                                            id='webapp-info-btn',
                                            color='info'),
                                 width=4),
                         dbc.Col(dbc.Button('AI Info',
+                                           className='button-fullsize',
                                            id='ai-info-btn',
                                            color='info'),
                                 width=4)
                         ],
-                            align='center', justify='evenly')],
+                            align='center')],
                         align='center', width=2)
     ],
                      className='header',
-                     style={'text-align': 'center'})
+                     style={'content-justify': 'center'})
     
     exp_progress = html.Div(
         id='study-progress-div',
         children=[
-            dbc.Row(
-                dbc.Col(
-                    children=[
-                        html.H4('Study Progress',
-                                className='section-title',
-                                style=hidden_style if app_settings.app_mode == AppMode.DEV else {}),
-                        html.Br()],
-                    width={'size': 12, 'offset': 0},
-                    style={'text-align': 'center'}
-                ),
-                align='center'
-            ),
+            # dbc.Row(
+            #     dbc.Col(
+            #         children=[
+            #             html.H4('Study Progress',
+            #                     className='section-title',
+            #                     style=hidden_style if app_settings.app_mode == AppMode.DEV else {}),
+            #             html.Br()],
+            #         width={'size': 12, 'offset': 0},
+            #         style={'text-align': 'center'}
+            #     ),
+            #     align='center'
+            # ),
             
             dbc.Row(
                 dbc.Col(children=[
@@ -571,12 +574,9 @@ def serve_layout() -> dbc.Container:
                             style={} if app_settings.app_mode == AppMode.DEV else hidden_style)
                     ])],
                     align='center')])    
-
+   
     log = html.Div(
         children=[
-            dcc.Interval(id='interval1',
-                         interval=1 * 1000,
-                         n_intervals=0),
             html.H4(children='Log',
                     className='section-title'),
             html.Br(),
@@ -586,9 +586,6 @@ def serve_layout() -> dbc.Container:
                          contentEditable=False,
                          disabled=True,
                          className='log-area'),
-            dcc.Interval(id='interval2',
-                         interval=1 * 10,
-                         n_intervals=0),
             ])
     
     properties_panel = html.Div(
@@ -821,7 +818,9 @@ def serve_layout() -> dbc.Container:
                                  color='info',
                                  striped=True,
                                  animated=True)
-                ])
+                ],
+                        align='center',
+                        style={'text-align': 'center'})
             )
         ],
         id='step-progress-div',
@@ -843,14 +842,35 @@ def serve_layout() -> dbc.Container:
         
     ])
     
-    # content_legend = html.Div([get_content_legend()],
-    #                           id='content-legend-div')
+    intervals = html.Div(
+        children=[
+            dcc.Interval(id='interval1',
+                         interval=1 * 1000,
+                         n_intervals=0),
+            dcc.Interval(id='interval2',
+                         interval=1 * 10,
+                         n_intervals=0)
+        ]
+    )
     
     return dbc.Container(
         children=[
             modals,
             header,
-            load_spinner,
+            dbc.Row(children=[
+                dbc.Col(children=[
+                    exp_progress,
+                    progress
+                    ],
+                        width={'offset': 4, 'size': 3}
+                ),
+                dbc.Col(children=[
+                    html.Br(),
+                    load_spinner
+                ],
+                        align='center',
+                        width=1)
+            ]),
             html.Br(),
             html.Br(),
             dbc.Row(children=[
@@ -858,24 +878,16 @@ def serve_layout() -> dbc.Container:
                 dbc.Col(content_plot, width=4),
                 dbc.Col(properties_panel, width=3)],
                     align="start"),
-            # html.Br(),
-            # dbc.Row(children=[
-            #     dbc.Col(content_legend, width={'size': 4, 'offset': 4})
-            #     ],
-            #         align='start'),
             html.Br(),
             html.Br(),
             dbc.Row(children=[
-                dbc.Col(children=[mapelites_controls,
-                                  exp_progress,
-                                  html.Br(),
-                                  progress],
+                dbc.Col(children=[mapelites_controls],
                         width={'size': 3, 'offset': 1}),
                 dbc.Col(children=[experiment_controls,
                                   experiment_settings],
                         width=4),
                 dbc.Col(children=[rules,
-                                #   log
+                                  intervals
                                   ],
                         width=3)],
                     align="start"),
