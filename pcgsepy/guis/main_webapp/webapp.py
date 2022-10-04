@@ -502,7 +502,7 @@ def serve_layout() -> dbc.Container:
     content_plot = html.Div(children=[
         html.H4('Selected Spaceship',
                 className='section-title'),
-        html.Br(),
+        html.P(children='Click and drag to rotate the spaceship preview, scroll mousewheel to zoom in/out. Hovering will show the corresponding block.'),
         dcc.Graph(id="content-plot",
                   figure=go.Figure(data=[]),
                   config={
