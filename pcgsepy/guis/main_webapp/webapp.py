@@ -355,7 +355,10 @@ def serve_layout() -> dbc.Container:
     ])
     
     header = dbc.Row(children=[
-                dbc.Col(html.H1(children='🚀Space Engineers AI Spaceship Generator🚀',
+                dbc.Col(html.H1(children=[
+                    html.Span(children='Space Engineers', style={'display': 'inline-block'}),
+                    html.Span(children='🚀AI Spaceship Generator🚀', style={'display': 'inline-block'})
+                    ],
                                 className='title'),
                         width={'size': 6,
                                'offset': 3
@@ -523,7 +526,7 @@ def serve_layout() -> dbc.Container:
             html.Br(),
             dbc.Row(
                 dbc.Col([
-                    dbc.Label("Download Content",
+                    dbc.Label("Download Blueprint",
                               style={'font-size': 'large'}),
                     dbc.Button('Download',
                                id='download-btn',
