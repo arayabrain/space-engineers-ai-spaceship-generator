@@ -361,13 +361,21 @@ def serve_layout() -> dbc.Container:
     
     header = dbc.Row(children=[
                 dbc.Col(html.H1(children=[
-                    html.Span(children='Space Engineers', style={'display': 'inline-block'}),
-                    html.Span(children='🚀AI Spaceship Generator🚀', style={'display': 'inline-block'})
+                    html.Span(children='Space Engineers'),
+                    html.Br(),
+                    html.Span(children='🚀AI Spaceship Generator🚀')
                     ],
                                 className='title'),
                         width={'size': 6,
                                'offset': 3
-                               }),
+                               },
+                        style={
+                            'display': 'inline-flex',
+                            'flex-direction': 'column',
+                            'align-content': 'center',
+                            'justify-content': 'center',
+                            'align-items': 'center'
+                            }),
                 dbc.Col(children=[
                     dbc.Row(children=[
                         dbc.Col(dbc.Button('Tutorial',
@@ -393,6 +401,20 @@ def serve_layout() -> dbc.Container:
                      className='header',
                      style={'content-justify': 'center'})
     
+    quit_user_study_div = html.Div(
+        dbc.Row(
+                dbc.Col(children=[
+                    dbc.Button('Quit User Study',
+                               id='qus-btn',
+                               className='button-fullsize',
+                               color='danger'),
+                    html.Br()],
+                        width={'size': 2, 'offset': 6}),
+                id='qus-div',
+                style={'text-align': 'center'} if app_settings.app_mode == AppMode.USERSTUDY else hidden_style
+                )
+    )
+    
     exp_progress = html.Div(
         id='study-progress-div',
         children=[
@@ -408,20 +430,6 @@ def serve_layout() -> dbc.Container:
             #     ),
             #     align='center'
             # ),
-            
-            dbc.Row(
-                dbc.Col(children=[
-                    dbc.Button('Quit User Study',
-                               id='qus-btn',
-                               className='button-fullsize',
-                               color='danger'),
-                    html.Br(),
-                    html.Br()],
-                        width={'size': 4, 'offset': 4}),
-                id='qus-div',
-                style={'text-align': 'center'} if app_settings.app_mode == AppMode.USERSTUDY else hidden_style
-                ),
-            
             dbc.Row(
                 dbc.Col(children=[
                     dbc.Label(f'Current Iteration',
@@ -863,18 +871,23 @@ def serve_layout() -> dbc.Container:
             modals,
             header,
             dbc.Row(children=[
-                dbc.Col(children=[
-                    exp_progress,
-                    progress
+                dbc.Row(children=[
+                    quit_user_study_div
+                ]),
+                dbc.Row(children=[
+                    dbc.Col(children=[
+                        exp_progress,
+                        progress
+                        ],
+                            width={'offset': 4, 'size': 3}
+                    ),
+                    dbc.Col(children=[
+                        html.Br(),
+                        load_spinner
                     ],
-                        width={'offset': 4, 'size': 3}
-                ),
-                dbc.Col(children=[
-                    html.Br(),
-                    load_spinner
-                ],
-                        align='center',
-                        width=1)
+                            align='center',
+                            width=1)
+                ])
             ]),
             html.Br(),
             html.Br(),
