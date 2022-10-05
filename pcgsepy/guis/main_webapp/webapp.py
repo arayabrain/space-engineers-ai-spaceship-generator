@@ -117,6 +117,8 @@ def get_properties_table(cs: Optional[CandidateSolution] = None) -> dbc.Table:
     vol = cs.content.total_volume if cs else '-'
     mass = cs.content.mass if cs else '-'
     struct_size = struct_sizes[cs.content.grid_size] if cs else '-'
+    armor_blocks, non_armor_blocks = cs.content.blocks_count if cs else ('-', '-')
+    cs_unique_blocks = cs.unique_blocks if cs else {}
     
     table_header = [
         html.Thead(html.Tr([html.Th("Property", style={'text-align': 'center'}),
@@ -126,6 +128,9 @@ def get_properties_table(cs: Optional[CandidateSolution] = None) -> dbc.Table:
         html.Tr([html.Td("Spaceship size"), html.Td(f'{size} m', style={'text-align': 'center'})]),
         html.Tr([html.Td("Grid size"), html.Td(struct_size, style={'text-align': 'center'})]),
         html.Tr([html.Td("Number of blocks"), html.Td(nblocks, style={'text-align': 'center'})]),
+        html.Tr([html.Td("Armor blocks"), html.Td(armor_blocks, style={'text-align': 'center'})]),
+        html.Tr([html.Td("Non-armor blocks"), html.Td(non_armor_blocks, style={'text-align': 'center'})]),
+        *[html.Tr([html.Td(k), html.Td(v, style={'text-align': 'center'})]) for k, v in cs_unique_blocks.items()],
         html.Tr([html.Td("Occupied volume"), html.Td(f'{vol} m³', style={'text-align': 'center'})]),
         html.Tr([html.Td("Spaceship mass"), html.Td(f'{mass} kg', style={'text-align': 'center'})]),
     ])]

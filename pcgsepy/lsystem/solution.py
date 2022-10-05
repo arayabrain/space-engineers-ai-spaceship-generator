@@ -78,6 +78,23 @@ class CandidateSolution:
     def size(self) -> Tuple[int, int, int]:
         return self._content._max_dims
     
+    @property
+    def unique_blocks(self) -> Dict[str, int]:
+        unique_blocks_dict = {
+            'Gyroscopes': ['MyObjectBuilder_Gyro_LargeBlockGyro'],
+            'Reactors': ['MyObjectBuilder_Reactor_LargeBlockSmallGenerator'],
+            'Containers': ['MyObjectBuilder_CargoContainer_LargeBlockSmallContainer'],
+            'Cockpits': ['MyObjectBuilder_Cockpit_OpenCockpitLarge'],
+            'Thrusters': ['MyObjectBuilder_Thrust_LargeBlockSmallThrust'],
+            'Lights': ['MyObjectBuilder_InteriorLight_SmallLight', 'MyObjectBuilder_InteriorLight_LargeBlockLight_1corner']
+        }
+        counts = {}
+        for k, vs in unique_blocks_dict.items():
+            counts[k] = 0
+            for v in vs:
+                counts[k] = counts[k] + self._content.unique_blocks_count(block_type=v)
+        return counts
+    
     def to_json(self) -> Dict[str, Any]:
         return {
             'string': self.string,

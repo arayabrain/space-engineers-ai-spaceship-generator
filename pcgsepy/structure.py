@@ -72,42 +72,71 @@ class Block:
     
     @cached_property
     def cube_size(self) -> float:
+        """Get the size of the cube block, as provided by the API.
+
+        Returns:
+            float: The size of the cube block.
+        """
         return block_definitions[self.block_type]['cube_size']
     
     @cached_property
     def size(self) -> Vec:
+        """Get the size of the block, as provided by the API.
+
+        Returns:
+            float: The size of the block.
+        """
         return Vec.from_json(block_definitions[self.block_type]['size'])
     
     @cached_property
     def mass(self) -> float:
+        """Get the mass of the block, as provided by the API.
+
+        Returns:
+            float: The mass of the block.
+        """
         return float(block_definitions[self.block_type]['mass'])
     
     @cached_property
     def scaled_size(self) -> Vec:
+        """Get the scaled size of the block.
+
+        Returns:
+            float: The scaled size of the block.
+        """
         return self.size.scale(_blocks_sizes[self.cube_size])
 
     @cached_property
     def volume(self) -> float:
+        """Compute the volume of the block.
+
+        Returns:
+            float: The volume of the block.
+        """
         return self.scaled_size.bbox()
     
     @cached_property
     def center(self) -> Vec:
+        """Get the center point of the block.
+
+        Returns:
+            Vec: The center point of the vector.
+        """
         return self.scaled_size.scale(v=0.5)
     
     @cached_property
     def mountpoints(self) -> List[MountPoint]:
+        """Generate the mountpoints of the block.
+
+        Returns:
+            List[MountPoint]: The list of mountpoints, one per face.
+        """
         return [MountPoint(face=v['Normal'],
                            start=v['Start'],
                            end=v['End'],
                            exclusion_mask=v['ExclusionMask'],
                            properties_mask=v['PropertiesMask'],
                            block_size=self.scaled_size) for v in block_definitions[self.block_type]['mountpoints']]
-
-    def __str__(self) -> str:
-        return f'{self.block_type} at {self.position}; OF {self.orientation_forward}; OU {self.orientation_up}'
-
-    def __repr__(self) -> str:
-        return str(self)
 
     def duplicate(self,
                   new_pos: Vec) -> "Block":
@@ -122,6 +151,12 @@ class Block:
         new_block = deepcopy(self)
         new_block.position = new_pos
         return new_block
+
+    def __str__(self) -> str:
+        return f'{self.block_type} at {self.position}; OF {self.orientation_forward}; OU {self.orientation_up}'
+
+    def __repr__(self) -> str:
+        return str(self)
 
 
 class IntersectionException(Exception):
@@ -197,8 +232,13 @@ class Structure:
     
     def set_color(self,
                   color: Vec) -> None:
+        """Set the color of the base blocks in the structure.
+
+        Args:
+            color (Vec): The color as RGB values vector.
+        """
         for block in self._blocks.values():
-            if _is_base_block(block_type=block.block_type.split('_')[2]):
+            if _is_base_block(block_type=self._clean_label(a=block.block_type)):
                 block.color = color
     
     @property
@@ -284,11 +324,44 @@ class Structure:
     
     @property
     def total_volume(self) -> float:
-        return self.grid_size * grid_to_coords * sum([b.volume for b in self._blocks.values()])
+        """Compute the volume of the grid.
+
+        Returns:
+            float: The volume of the grid.
+        """
+        # return self.grid_size * grid_to_coords * sum([b.volume for b in self._blocks.values()])
+        return sum([b.volume for b in self._blocks.values()])
     
     @property
     def mass(self) -> float:
+        """Compute the mass of the grid.
+
+        Returns:
+            float: The mass of the grid.
+        """
         return np.round(sum([b.mass for b in self._blocks.values()]), 2)
+    
+    @property
+    def blocks_count(self) -> Tuple[int, int]:
+        """Count armor blocks and non-armor blocks contained in the grid.
+
+        Returns:
+            Tuple[int, int]: The number of armor and non-armor blocks.
+        """
+        armor_blocks = sum([1 if 'armor' in x.block_type.lower() else 0 for x in self._blocks.values()])
+        return armor_blocks, len(self._blocks) - armor_blocks
+    
+    def unique_blocks_count(self,
+                            block_type: str) -> int:
+        """Count the number of blocks with the given block type.
+
+        Args:
+            block_type (str): The block type.
+
+        Returns:
+            int: The number of blocks with the given block type.
+        """
+        return sum([1 if x.block_type == block_type else 0 for x in self._blocks.values()])
     
     def sanify(self) -> None:
         """Correct the structure's blocks to be >=0 on every axis."""
@@ -357,8 +430,7 @@ class Structure:
             'MyObjectBuilder_CargoContainer_',
             'MyObjectBuilder_Cockpit_',
             'MyObjectBuilder_Thrust_',
-            'MyObjectBuilder_InteriorLight_',
-            'MyObjectBuilder_CubeBlock_',
+            'MyObjectBuilder_InteriorLight_'
         ]:
             a = a.replace(d, '')
         return a
