@@ -144,10 +144,12 @@ def get_content_legend() -> dbc.Row:
             html.Span(children=[
                 html.P('', style={**circle_style,
                                   **{'background-color': '#%02x%02x%02x' % base_color.scale(256).to_veci().as_tuple() if _is_base_block(block_type) else block_to_colour[block_type]}}),
-                dbc.Label(block_type, size='sm', align='start')],
-                      style={'display': 'inline-flex', 'align-items': 'center'}),
-            ]) for block_type in block_to_colour.keys()
-        ])
+                dbc.Label(block_type, align='start')],
+                      style={'display': 'inline-flex', 'align-items': 'baseline', 'font-size': 'x-small'}),
+            ],
+                width=3) for block_type in block_to_colour.keys()
+        ],
+                   justify='start')
 
 
 def _get_emitter() -> Emitter:
@@ -585,8 +587,18 @@ def serve_layout() -> dbc.Container:
                   config={
                       'displayModeBar': False,
                       'displaylogo': False}),
-        html.Div([get_content_legend()],
-                 id='content-legend-div')
+        dbc.Label('Legend',
+                  size='sm'),
+        html.Div(children=[
+            get_content_legend()
+            ],
+                 id='content-legend-div',
+                 style={
+                     'text-align': 'start',
+                     'border-width': 'thin',
+                     'border-color': 'whitesmoke',
+                     'border-style': 'inset'                     
+                     })
         ],
                             style={'text-align': 'center'})
     
