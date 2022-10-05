@@ -690,9 +690,9 @@ def serve_layout() -> dbc.Container:
                           dbc.Col(content_properties)
                       ]
                   ),
-            dbc.Row(
-                log
-            )
+            # dbc.Row(
+            #     log
+            # )
             ]
     )
     
@@ -978,7 +978,8 @@ def serve_layout() -> dbc.Container:
                 dbc.Col(children=[experiment_controls,
                                   experiment_settings],
                         width=4),
-                dbc.Col(children=[rules,
+                dbc.Col(children=[log,
+                                  rules,
                                   intervals
                                   ],
                         width=3)],
