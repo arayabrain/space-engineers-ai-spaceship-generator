@@ -1,8 +1,12 @@
 # -- CARGO SHIP HIGH LEVEL RULES
 #  - head
-head 1 cockpit(1)
+head 0.2 cockpit(1)corridorsimple(1)[RotYcwXcorridorsimple(1)[RotYcwXcorridorsimple(1)thrusters(1)]][RotYccwXcorridorsimple(1)[RotYccwXcorridorsimple(1)thrusters(1)]]
+head 0.2 cockpit(1)corridorsimple(1)[RotYcwXcorridorsimple(1)[RotYcwXcorridorsimple(1)thrusters(1)]][RotYcwZcorridorsimple(1)[RotYcwZcorridorsimple(1)thrusters(1)]]
+head 0.2 cockpit(1)corridorsimple(1)[RotYcwXcorridorsimple(1)[RotYcwXcorridorsimple(1)thrusters(1)]][RotYccwZcorridorsimple(1)[RotYccwZcorridorsimple(1)thrusters(1)]]
+head 0.2 cockpit(1)corridorsimple(1)[RotYccwXcorridorsimple(1)[RotYcwXcorridorsimple(1)thrusters(1)]][RotYcwZcorridorsimple(1)[RotYcwZcorridorsimple(1)thrusters(1)]]
+head 0.2 cockpit(1)corridorsimple(1)[RotYccwXcorridorsimple(1)[RotYcwXcorridorsimple(1)thrusters(1)]][RotYccwZcorridorsimple(1)[RotYccwZcorridorsimple(1)thrusters(1)]]
 #  - tail
-tail 1 thrusters(1)
+tail 1 corridorsimple(1)[RotYcwXcorridorsimple(1)thrusters(1)][RotYccwXcorridorsimple(1)thrusters(1)][RotYcwZcorridorsimple(1)thrusters(1)][RotYccwZcorridorsimple(1)thrusters(1)]thrusters(1)
 #  - body
 body 1 corridorsimple(X)
 #    extension
