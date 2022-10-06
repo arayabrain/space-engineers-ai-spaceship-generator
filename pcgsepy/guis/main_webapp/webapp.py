@@ -611,7 +611,8 @@ def serve_layout() -> dbc.Container:
                     dbc.Input(type="color",
                               id="color-picker",
                               value="#737373",
-                              size='lg')],
+                              size='lg',
+                              debounce=True)],
                         width={'size': 10, 'offset': 1},
                         style={'text-align': 'center'})
             ),
@@ -1205,7 +1206,7 @@ def disable_privacy_modal(ny, nn):
               Output('heatmap-plot-container', 'style'),
               Output({'type': 'fitness-sldr', 'index': ALL}, 'disabled'),
               Output('qus-btn', 'disabled'),
-
+              
               State({'type': 'fitness-sldr', 'index': ALL}, 'disabled'),
               State('method-radio', 'options'),
               State('lsystem-modules', 'options'),
@@ -1257,7 +1258,7 @@ def interval_updates(fdis, ms, lsysms, symms,
                                          'pointer-events': 'auto',
                                          'z-index': 1 if running_something else -1},
         'fitness-sldr.disabled': [running_something] * len(fdis),
-        'qus-btn.disabled': running_something
+        'qus-btn.disabled': running_something,
     }
         
     return tuple(btns.values())
