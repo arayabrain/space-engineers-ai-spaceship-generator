@@ -170,6 +170,11 @@ class LSystem:
         self.modules = [LSystemModule(hl_solver=hl_solver,
                                       ll_solver=ll_solver,
                                       name=name) for name in names]
+        # Default behavior for user study spaceships (temporary)
+        for module in self.modules:
+            if 'head' in module.name.lower() or 'tail' in module.name.lower():
+                module.active = False
+        
         self.all_hl_constraints = set()
         self.all_ll_constraints = set()
 
@@ -239,7 +244,7 @@ class LSystem:
             List[CandidateSolution]: The list of solutions.
         """
         # Cartesian product of all strings, return merged string
-        return [merge_solutions(lcs=x, modules_names=[m.name for m in self.modules]) for x in list(itertools.product(*lcs))]
+        return [merge_solutions(lcs=x, modules_names=[m.name for m in self.modules], modules_active=[m.active for m in self.modules]) for x in list(itertools.product(*lcs))]
 
     def _add_ll_strings(self,
                         cs: CandidateSolution) -> CandidateSolution:

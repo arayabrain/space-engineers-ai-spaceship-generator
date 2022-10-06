@@ -66,7 +66,7 @@ class HullBuilder:
         self.apply_smoothing = apply_smoothing
         
         self.base_block = 'MyObjectBuilder_CubeBlock_LargeBlockArmorBlock'
-        self.obstruction_targets = ['window', 'thruster']
+        self.obstruction_targets = ['window', 'thrust']
         self._blocks_set = {}
         
         self._orientations = [Orientation.FORWARD, Orientation.BACKWARD, Orientation.UP, Orientation.DOWN, Orientation.LEFT, Orientation.RIGHT]

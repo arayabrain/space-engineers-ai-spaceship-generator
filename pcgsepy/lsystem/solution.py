@@ -145,19 +145,22 @@ def string_merging(ls: List[str]) -> str:
 
 
 def merge_solutions(lcs: List[CandidateSolution],
-                    modules_names: List[str]) -> CandidateSolution:
+                    modules_names: List[str],
+                    modules_active: List[bool]) -> CandidateSolution:
         """
         Merge solutions in a single solution, keeping track of modules' solutions.
 
         Args:
             lcs (List[CandidateSolution]): The list of solutions to merge, ordered.
+            modules_names (List[str]): The name of the L-system modules.
+            modules_active: (List[bool]): The default mutability of the L-system modules.
 
         Returns:
             CandidateSolution: The merged solution
         """
         assert len(lcs) == len(modules_names), f'Each solution should be produced by a module! Passed {len(lcs)} solutions and {len(modules_names)} modules.'
         m_cs = CandidateSolution(string=string_merging(ls=[cs.string for cs in lcs]))
-        for i, cs in enumerate(lcs):
+        for i, (cs, default_m) in enumerate(zip(lcs, modules_active)):
             m_cs.hls_mod[modules_names[i]] = {'string': cs.string,
-                                              'mutable': True}
+                                              'mutable': default_m}
         return m_cs

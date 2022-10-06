@@ -64,7 +64,7 @@ class StochasticRules:
         """Ensure all probabilities for each LHS sum up to 1."""
         for lhs in self._rules.keys():
             p = sum(self._rules[lhs][1])
-            assert np.isclose(p, 1.), f'Probability must sum to 1: found {p} for `{lhs}`.'
+            assert np.isclose(p, 1., atol=0.01), f'Probability must sum to 1: found {p} for `{lhs}`.'
 
     def __str__(self) -> str:
         return '\n'.join(['\n'.join([f'{k} {p} {o}' for (o, p) in zip(os, ps)]) for (k, (os, ps)) in self._rules.items()])

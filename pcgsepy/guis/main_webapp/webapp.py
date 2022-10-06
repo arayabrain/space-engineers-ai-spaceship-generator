@@ -1306,8 +1306,8 @@ def _build_heatmap(mapelites: MAPElites,
     disp_map = np.zeros(shape=mapelites.bins.shape)
     labels = np.zeros(shape=(mapelites.bins.shape[1], mapelites.bins.shape[0], 2))
     text = []
-    x_labels = np.cumsum([0] + mapelites.bin_sizes[0][:-1]) + mapelites.b_descs[0].bounds[0]
-    y_labels = np.cumsum([0] + mapelites.bin_sizes[1][:-1]) + mapelites.b_descs[1].bounds[0]
+    x_labels = np.round(np.cumsum([0] + mapelites.bin_sizes[0][:-1]) + mapelites.b_descs[0].bounds[0], 2)
+    y_labels = np.round(np.cumsum([0] + mapelites.bin_sizes[1][:-1]) + mapelites.b_descs[1].bounds[0], 2)
     for i in range(mapelites.bins.shape[0]):
         for j in range(mapelites.bins.shape[1]):
             v = mapelites.bins[i, j].get_metric(metric=metric['name'],
