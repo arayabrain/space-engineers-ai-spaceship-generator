@@ -77,7 +77,7 @@ circle_style: Dict[str, str] = {
 }
 struct_sizes: Dict[int, str] = {1: 'Small',
                                 2: 'Normal',
-                                5: 'Large'}          
+                                5: 'Large'}       
 
 
 app_settings = AppSettings()
@@ -202,12 +202,18 @@ def serve_layout() -> dbc.Container:
             dbc.ModalHeader(dbc.ModalTitle("Privacy Policy"),
                             style={'justify-content': 'center'},
                             close_button=False),
-            dbc.ModalBody(children=[dcc.Markdown(privacy_policy_body,
-                                                 link_target="_blank",
-                                                 style={'text-align': 'justify'}),
-                                    dcc.Markdown(privacy_policy_question,
-                                                 style={'text-align': 'center'})
-                                    ]),
+            dbc.ModalBody(children=[
+                html.Div(id='body-text',
+                         children=[
+                              dcc.Markdown(privacy_policy_body,
+                                           link_target="_blank",
+                                           style={'text-align': 'justify'}),
+                              dcc.Markdown(privacy_policy_question,
+                                           style={'text-align': 'center'})
+                         ]),
+                html.Div(id='consent-body-loading',
+                         children=[])
+            ]),
             dbc.ModalFooter(children=[
                 dbc.Button("No",
                            disabled=False,
@@ -323,14 +329,18 @@ def serve_layout() -> dbc.Container:
         dbc.ModalHeader(dbc.ModalTitle("End of User Study"),
                         style={'justify-content': 'center'},
                         close_button=False),
-        dbc.ModalBody(dcc.Markdown(end_of_userstudy,
-                                   style={'text-align': 'justify'}))
-    ],
-                           id='eous-modal',
-                           centered=True,
-                           backdrop=True,
-                           is_open=False,
-                           scrollable=True)
+        dbc.ModalBody(children=[
+            dcc.Markdown(end_of_userstudy,
+                         style={'text-align': 'justify'}),
+            html.Div(id='eous-body-loading',
+                     children=[])
+            ])
+        ],
+                                       id='eous-modal',
+                                       centered=True,
+                                       backdrop=True,
+                                       is_open=False,
+                                       scrollable=True)
     
     heatmap_help_modal = dbc.Modal([
         dbc.ModalHeader(dbc.ModalTitle("Spaceship Population Help"),
@@ -368,17 +378,21 @@ def serve_layout() -> dbc.Container:
                                    is_open=False,
                                    scrollable=True)
     
-    exit_userstudy_modal = dbc.Modal([
+    exit_userstudy_modal = dbc.Modal(children=[
         dbc.ModalHeader(dbc.ModalTitle("Quit User Study?"),
                         style={'justify-content': 'center'},
                         close_button=True),
-        dbc.ModalBody(dcc.Markdown("""
-                                   Do you really want to quit the user study?
-                                   
-                                   If you quit the user study, we won't collect data anymore and you won't be able to complete the experiment.
-                                   Make sure to close the questionnaire afterwards.
-                                   """,
-                                   style={'text-align': 'justify'})),
+        dbc.ModalBody(children=[
+            dcc.Markdown("""
+                         Do you really want to quit the user study?
+                         
+                         If you quit the user study, we won't collect data anymore and you won't be able to complete the experiment.
+                         Make sure to close the questionnaire afterwards.
+                         """,
+                         style={'text-align': 'justify'}),
+            html.Div(id='eus-body-loading',
+                     children=[])
+        ]),       
         dbc.ModalFooter(children=[dbc.Button("Yes",
                                              id="qus-y-btn",
                                              color="primary",
@@ -386,11 +400,11 @@ def serve_layout() -> dbc.Container:
                                              n_clicks=0,
                                              style={'width': '100%'})])
         ],
-                           id='eus-modal',
-                           centered=True,
-                           backdrop=True,
-                           is_open=False,
-                           scrollable=True)
+                                     id='eus-modal',
+                                     centered=True,
+                                     backdrop=True,
+                                     is_open=False,
+                                     scrollable=True)
     
     modals = html.Div(children=[
         consent_dialog, webapp_info_modal, algo_info_modal, quickstart_modal, quickstart_usermode_modal,
@@ -811,8 +825,8 @@ def serve_layout() -> dbc.Container:
         children=[
             html.H4('Advanced Controls',
                     className='section-title'),
-            html.Br(),
             dbc.Row(children=[
+                html.Br(),
                 dbc.Col(children=[
                     dbc.Button(id='step-btn',
                                children='Evolve From Selected Spaceship',
@@ -831,8 +845,8 @@ def serve_layout() -> dbc.Container:
                 ],
                     style={'justify-content': 'center'}),
             dbc.Row(children=[
-                html.Br(),
                 dbc.Col(children=[
+                    html.Br(),
                     dbc.Button(id='selection-clr-btn',
                                children='Clear Selection',
                                className='button-fullsize')
@@ -840,8 +854,8 @@ def serve_layout() -> dbc.Container:
                         style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
                         width={'size': 4, 'offset':4})]),
             dbc.Row(children=[
-                html.Br(),
                 dbc.Col(children=[
+                    html.Br(),
                     dbc.Button(id='selection-btn',
                                children='Toggle Single Bin Selection',
                                className='button-fullsize')
@@ -849,8 +863,8 @@ def serve_layout() -> dbc.Container:
                         style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
                         width={'size': 4, 'offset':4})]),
             dbc.Row(children=[
-                html.Br(),
                 dbc.Col(children=[
+                    html.Br(),
                     dbc.Button(id='reset-btn',
                                children='Reinitialize Population',
                                className='button-fullsize')
@@ -859,8 +873,8 @@ def serve_layout() -> dbc.Container:
                         style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
                         width={'size': 4, 'offset':4})]),
             dbc.Row(children=[
-                html.Br(),
                 dbc.Col(children=[
+                    html.Br(),
                     dbc.Button(id='subdivide-btn',
                                children='Subdivide Selected Bin(s)',
                                className='button-fullsize')
@@ -868,8 +882,8 @@ def serve_layout() -> dbc.Container:
                         style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
                         width={'size': 4, 'offset':4})]),
             dbc.Row(children=[
-                html.Br(),
                 dbc.Col(children=[
+                    html.Br(),
                     dbc.Button(id='download-mapelites-btn',
                                children='Download MAP-Elites',
                                className='button-fullsize'),
@@ -994,6 +1008,22 @@ def serve_layout() -> dbc.Container:
                      style=hidden_style)
             ],
         fluid=True)
+
+
+loading_data_component = html.Div(children=[
+    dbc.Row(children=[
+        dbc.Col(children=[
+            dbc.Label("Loading necessary data, this may take a while...     ",
+                      size='sm'),
+            dbc.Spinner(color="success",
+                        type="border",
+                        size='sm')
+        ],
+                align='center',
+                style={'justify-content': 'center', 'text-align': 'center'}),
+    ])
+]
+)
 
 
 # clientside callback to open the Google Forms questionnaire on a new page
@@ -1206,15 +1236,21 @@ def disable_privacy_modal(ny, nn):
               Output('heatmap-plot-container', 'style'),
               Output({'type': 'fitness-sldr', 'index': ALL}, 'disabled'),
               Output('qus-btn', 'disabled'),
+              Output('consent-body-loading', 'children'),
+              Output('eous-body-loading', 'children'),
+              Output('eus-body-loading', 'children'),
               
               State({'type': 'fitness-sldr', 'index': ALL}, 'disabled'),
               State('method-radio', 'options'),
               State('lsystem-modules', 'options'),
               State('symmetry-radio', 'options'),
+              State('consent-body-loading', 'children'),
+              State('eous-body-loading', 'children'),
+              State('eus-body-loading', 'children'),
                    
               Input('interval2', 'n_intervals'),
               )
-def interval_updates(fdis, ms, lsysms, symms,
+def interval_updates(fdis, ms, lsysms, symms, consent_loading_data_children, eous_loading_data_children, eus_loading_data_children,
                       ni):
     # non-definitive solution, see: https://github.com/plotly/dash-table/issues/925, https://github.com/plotly/dash/issues/1861
     # long_callback and background callback also do not work (infinite redeployment of webapp)
@@ -1259,8 +1295,26 @@ def interval_updates(fdis, ms, lsysms, symms,
                                          'z-index': 1 if running_something else -1},
         'fitness-sldr.disabled': [running_something] * len(fdis),
         'qus-btn.disabled': running_something,
+        'consent-body-loading.children': [],
+        'eous-body-loading.children': [],
+        'eus-body-loading.children': []
     }
-        
+    
+    if running_something and consent_loading_data_children == []:
+        btns['consent-body-loading.children'] = loading_data_component
+    elif running_something and consent_loading_data_children != []:
+        btns['consent-body-loading.children'] = dash.no_update
+    
+    if running_something and eous_loading_data_children == []:
+        btns['eous-body-loading.children'] = loading_data_component
+    elif running_something and eous_loading_data_children != []:
+        btns['eous-body-loading.children'] = dash.no_update
+    
+    if running_something and eus_loading_data_children == []:
+        btns['eus-body-loading.children'] = loading_data_component
+    elif running_something and eus_loading_data_children != []:
+        btns['eus-body-loading.children'] = dash.no_update
+    
     return tuple(btns.values())
 
 
