@@ -378,6 +378,25 @@ def serve_layout() -> dbc.Container:
                                    is_open=False,
                                    scrollable=True)
     
+    download_help_modal = dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle("Download Help"),
+                        style={'justify-content': 'center'},
+                        close_button=False),
+        dbc.ModalBody(dcc.Markdown("""
+                                   You can download the currently selected spaceship as a `.zip` file by clicking the **Download** button. 
+                                   The compressed folder, located in your default download directory, contains the files needed to load the spaceship in Space Engineers as a blueprint (`bp.sbc` and `thumb.png`), as well as a program-specific file used in the "Spaceship Comparator" application.
+                                   
+                                   Simply place the unzipped folder in `..\AppData\Roaming\SpaceEngineers\Blueprints\local` and load Space Engineers.
+                                   In a scenario world, press `Ctrl+F10` to bring up the **Blueprints** window and you will see the spaceship listed among the local blueprints.
+                                   """,
+                                   style={'text-align': 'justify'}))
+        ],
+                                   id='dh-modal',
+                                   centered=True,
+                                   backdrop=True,
+                                   is_open=False,
+                                   scrollable=True)
+    
     exit_userstudy_modal = dbc.Modal(children=[
         dbc.ModalHeader(dbc.ModalTitle("Quit User Study?"),
                         style={'justify-content': 'center'},
@@ -409,7 +428,7 @@ def serve_layout() -> dbc.Container:
     modals = html.Div(children=[
         consent_dialog, webapp_info_modal, algo_info_modal, quickstart_modal, quickstart_usermode_modal,
         no_bins_selected_modal, end_of_experiment_modal, end_of_userstudy_modal, exit_userstudy_modal,
-        heatmap_help_modal, content_help_modal
+        heatmap_help_modal, content_help_modal, download_help_modal
     ])
     
     header = dbc.Row(children=[
@@ -519,7 +538,8 @@ def serve_layout() -> dbc.Container:
             html.H4('Spaceship Population',
                     className='section-title'),
             html.P('🛈',
-                   id='heatmap-help')
+                   id='heatmap-help',
+                   className='help')
             ],
                   style={
                       'display': 'inline-flex',
@@ -586,7 +606,8 @@ def serve_layout() -> dbc.Container:
             html.H4('Selected Spaceship',
                     className='section-title'),
             html.P('🛈',
-                   id='content-help')
+                   id='content-help',
+                   className='help')
             ],
                   style={
                       'display': 'inline-flex',
@@ -633,8 +654,20 @@ def serve_layout() -> dbc.Container:
             html.Br(),
             dbc.Row(
                 dbc.Col([
-                    dbc.Label("Download Blueprint",
-                              style={'font-size': 'large'}),
+                    html.Span(children=[
+                        dbc.Label("Download Blueprint",
+                                  style={'font-size': 'large'}),
+                        html.P('🛈',
+                               id='download-help',
+                               className='help')
+                    ],
+                              style={
+                                  'display': 'inline-flex',
+                                  'justify-content': 'center',
+                                  'align-content': 'center',
+                                  'flex-direction': 'row',
+                                  'align-items': 'center'
+                                  }),                    
                     dbc.Button('Download',
                                id='download-btn',
                                disabled=False),
@@ -1091,7 +1124,15 @@ def show_heatmap_help(n):
     Input("content-help", "n_clicks"),
     prevent_initial_call=True
 )
-def show_heatmap_help(n):
+def show_content_help(n):
+    return True
+
+@app.callback(
+    Output("dh-modal", "is_open"),
+    Input("download-help", "n_clicks"),
+    prevent_initial_call=True
+)
+def show_download_help(n):
     return True
 
 

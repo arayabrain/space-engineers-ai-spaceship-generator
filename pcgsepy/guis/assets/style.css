@@ -39,3 +39,6 @@
     position: relative;
     grid-area: 1 / 1;
 }
+.help {
+    cursor: help
+}
