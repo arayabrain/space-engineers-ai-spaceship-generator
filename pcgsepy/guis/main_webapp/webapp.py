@@ -1236,6 +1236,10 @@ def disable_privacy_modal(ny, nn):
               Output('heatmap-plot-container', 'style'),
               Output({'type': 'fitness-sldr', 'index': ALL}, 'disabled'),
               Output('qus-btn', 'disabled'),
+              Output('webapp-quickstart-btn', 'disabled'),
+              Output('webapp-info-btn', 'disabled'),
+              Output('ai-info-btn', 'disabled'),
+              Output('qus-y-btn', 'disabled'),
               Output('consent-body-loading', 'children'),
               Output('eous-body-loading', 'children'),
               Output('eus-body-loading', 'children'),
@@ -1265,7 +1269,6 @@ def interval_updates(fdis, ms, lsysms, symms, consent_loading_data_children, eou
     for o in lsysms:
         o['disabled'] = running_something
     
-    # TODO: Disable modal-toggling buttons as well!
     btns = {
         'step-btn.disabled': running_something or (app_settings.app_mode == AppMode.USERSTUDY and app_settings.gen_counter >= N_GENS_ALLOWED),
         'download-btn.disabled': running_something or download_semaphore._running == 'YES',
@@ -1295,6 +1298,10 @@ def interval_updates(fdis, ms, lsysms, symms, consent_loading_data_children, eou
                                          'z-index': 1 if running_something else -1},
         'fitness-sldr.disabled': [running_something] * len(fdis),
         'qus-btn.disabled': running_something,
+        'webapp-quickstart-btn.disabled': running_something,
+        'webapp-info-btn.disabled': running_something,
+        'ai-info-btn.disabled': running_something,
+        'qus-y-btn.disabled': running_something,
         'consent-body-loading.children': [],
         'eous-body-loading.children': [],
         'eus-body-loading.children': []
