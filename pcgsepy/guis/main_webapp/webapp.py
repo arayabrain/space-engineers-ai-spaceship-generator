@@ -39,8 +39,8 @@ from pcgsepy.lsystem.solution import CandidateSolution
 from pcgsepy.mapelites.bin import MAPBin
 from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, Emitter,
                                         GreedyEmitter, HumanEmitter,
-                                        HumanPrefMatrixEmitter,
-                                        PreferenceBanditEmitter, RandomEmitter)
+                                        HumanPrefMatrixEmitter, KNNEmitter, LinearKernelEmitter,
+                                        PreferenceBanditEmitter, RBFKernelEmitter, RandomEmitter)
 from pcgsepy.mapelites.map import MAPElites, get_elite
 from pcgsepy.xml_conversion import convert_structure_to_xml
 from tqdm import trange
@@ -749,9 +749,6 @@ def serve_layout() -> dbc.Container:
                           dbc.Col(content_properties)
                       ]
                   ),
-            # dbc.Row(
-            #     log
-            # )
             ]
     )
     
@@ -761,8 +758,6 @@ def serve_layout() -> dbc.Container:
                     className='section-title'),
             html.Br(),
             html.Div(children=[
-                html.P(children='Valid bins are: ',
-                       id='valid-bins'),
                 html.P(children=f'Selected bin(s): {app_settings.selected_bins}',
                        id='selected-bin')
                 ]),
@@ -817,16 +812,19 @@ def serve_layout() -> dbc.Container:
                            className="mb-3"),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Select Emitter:'),
-                dbc.DropdownMenu(label='Human',
-                             children=[
-                                 dbc.DropdownMenuItem('Human'),
-                                 dbc.DropdownMenuItem('Random'),
-                                 dbc.DropdownMenuItem('Greedy'),
-                                 dbc.DropdownMenuItem('Preference Matrix'),
-                                 dbc.DropdownMenuItem('Preference Bandit'),
-                                 dbc.DropdownMenuItem('Contextual Bandit'),
-                             ],
-                             id='emitter-dropdown')
+                dbc.DropdownMenu(label='Random',
+                                 children=[
+                                     dbc.DropdownMenuItem('Human', id='emitter-human'),
+                                     dbc.DropdownMenuItem('Random', id='emitter-random'),
+                                     dbc.DropdownMenuItem('Greedy', id='emitter-greedy'),
+                                     dbc.DropdownMenuItem('Preference Matrix', id='emitter-prefmatrix'),
+                                     dbc.DropdownMenuItem('Preference Bandit', id='emitter-prefbandit'),
+                                     dbc.DropdownMenuItem('Contextual Bandit', id='emitter-conbandit'),
+                                     dbc.DropdownMenuItem('KNN', id='emitter-knn'),
+                                     dbc.DropdownMenuItem('Linear Kernel', id='emitter-linkernel'),
+                                     dbc.DropdownMenuItem('RBF Kernel', id='emitter-rbfkernel')
+                                     ],
+                                 id='emitter-dropdown')
                 ],
                            className="mb-3",
                            style={} if app_settings.app_mode == AppMode.DEV else hidden_style),
@@ -895,8 +893,8 @@ def serve_layout() -> dbc.Container:
                                children='Clear Selection',
                                className='button-fullsize')
                     ],
-                        style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
-                        width={'size': 4, 'offset':4})]),
+                        width=6)],
+                        style={'justify-content': 'center'} if app_settings.app_mode == AppMode.DEV else {**{'justify-content': 'center'}, **hidden_style}),
             dbc.Row(children=[
                 dbc.Col(children=[
                     html.Br(),
@@ -904,8 +902,8 @@ def serve_layout() -> dbc.Container:
                                children='Toggle Single Bin Selection',
                                className='button-fullsize')
                     ],
-                        style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
-                        width={'size': 4, 'offset':4})]),
+                        width=6)],
+                        style={'justify-content': 'center'} if app_settings.app_mode == AppMode.DEV else {**{'justify-content': 'center'}, **hidden_style}),
             dbc.Row(children=[
                 dbc.Col(children=[
                     html.Br(),
@@ -914,8 +912,8 @@ def serve_layout() -> dbc.Container:
                                className='button-fullsize')
                     ],
                         id='reset-btn-div',
-                        style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
-                        width={'size': 4, 'offset':4})]),
+                        width=6)],
+                        style={'justify-content': 'center'} if app_settings.app_mode == AppMode.DEV else {**{'justify-content': 'center'}, **hidden_style}),
             dbc.Row(children=[
                 dbc.Col(children=[
                     html.Br(),
@@ -923,8 +921,8 @@ def serve_layout() -> dbc.Container:
                                children='Subdivide Selected Bin(s)',
                                className='button-fullsize')
                     ],
-                        style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
-                        width={'size': 4, 'offset':4})]),
+                        width=6)],
+                        style={'justify-content': 'center'} if app_settings.app_mode == AppMode.DEV else {**{'justify-content': 'center'}, **hidden_style}),
             dbc.Row(children=[
                 dbc.Col(children=[
                     html.Br(),
@@ -933,8 +931,8 @@ def serve_layout() -> dbc.Container:
                                className='button-fullsize'),
                     dcc.Download(id='download-mapelites')
                     ],
-                        style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
-                        width={'size': 4, 'offset':4})]),
+                        width=6)],
+                        style={'justify-content': 'center'} if app_settings.app_mode == AppMode.DEV else {**{'justify-content': 'center'}, **hidden_style}),
         ])
     
     rules = html.Div(
@@ -1988,7 +1986,17 @@ def __clear_selection(**kwargs) -> Dict[str, Any]:
 def __emitter(**kwargs) -> Dict[str, Any]:
     global app_settings
 
-    emitter_name = kwargs['emitter_name']
+    emitter_name = {
+        'emitter-human': 'Human',
+        'emitter-random': 'Random',
+        'emitter-greedy': 'Greedy',
+        'emitter-prefmatrix': 'Preference Matrix',
+        'emitter-prefbandit': 'Preference Bandit',
+        'emitter-conbandit': 'Contextual Bandit',
+        'emitter-knn': 'KNN',
+        'emitter-linkernel': 'Linear Kernel',
+        'emitter-rbfkernel': 'RBF Kernel'
+    }[kwargs['event_trig']]
     
     if emitter_name == 'Random':
         app_settings.current_mapelites.emitter = RandomEmitter()
@@ -2006,13 +2014,24 @@ def __emitter(**kwargs) -> Dict[str, Any]:
     elif emitter_name == 'Preference Bandit':
         app_settings.current_mapelites.emitter = PreferenceBanditEmitter()
         logging.getLogger('webapp').info(msg=f'Emitter set to {emitter_name}')
-    elif emitter_name == 'None':
+    elif emitter_name == 'KNN':
+        app_settings.current_mapelites.emitter = KNNEmitter()
+        logging.getLogger('webapp').info(msg=f'Emitter set to {emitter_name}')
+    elif emitter_name == 'Linear Kernel':
+        app_settings.current_mapelites.emitter = LinearKernelEmitter()
+        logging.getLogger('webapp').info(msg=f'Emitter set to {emitter_name}')
+    elif emitter_name == 'RBF Kernel':
+        app_settings.current_mapelites.emitter = RBFKernelEmitter()
+        logging.getLogger('webapp').info(msg=f'Emitter set to {emitter_name}')
+    elif emitter_name == 'Human':
         app_settings.current_mapelites.emitter = HumanEmitter()
         logging.getLogger('webapp').info(msg=f'Emitter set to {emitter_name}')
     else:
         logging.getLogger('webapp').error(msg=f'[{__name__}.__emitter] Unrecognized {emitter_name=}')
 
-    return {}
+    return {
+        'emitter-dropdown.label': emitter_name
+    }
 
 
 def __content_download(**kwargs) -> Dict[str, Any]:
@@ -2362,7 +2381,15 @@ triggers_map = {
     'population_dropdown': __update_content,
     'selection-btn': __selection,
     'selection-clr-btn': __clear_selection,
-    'emitter-dropdown': __emitter,
+    'emitter-human': __emitter,
+    'emitter-random': __emitter,
+    'emitter-greedy': __emitter,
+    'emitter-prefmatrix': __emitter,
+    'emitter-prefbandit': __emitter,
+    'emitter-conbandit': __emitter,
+    'emitter-knn': __emitter,
+    'emitter-linkernel': __emitter,
+    'emitter-rbfkernel': __emitter,
     'download-btn': __content_download,
     'popdownload-btn': __population_download,
     'popupload-data': __population_upload,
@@ -2380,7 +2407,6 @@ triggers_map = {
 
 @app.callback(Output('heatmap-plot', 'figure'),
               Output('content-plot', 'figure'),
-              Output('valid-bins', 'children'),
               Output('hl-rules', 'value'),
               Output('selected-bin', 'children'),
               Output('content-string', 'value'),
@@ -2407,7 +2433,8 @@ triggers_map = {
               Output('content-legend-div', 'children'),
               Output('qus-div', 'style'),
               Output("eus-modal", "is_open"),
-              
+              Output('emitter-dropdown', 'label'),
+                            
               State('heatmap-plot', 'figure'),
               State('hl-rules', 'value'),
               State('content-plot', 'figure'),
@@ -2418,6 +2445,7 @@ triggers_map = {
               State('b0-dropdown', 'label'),
               State('b1-dropdown', 'label'),
               State('symmetry-dropdown', 'label'),
+              State('emitter-dropdown', 'label'),
               State("quickstart-modal", "is_open"),
               State("quickstart-usermode-modal", "is_open"),
               State("consent-modal", "is_open"),
@@ -2457,7 +2485,15 @@ triggers_map = {
               Input('heatmap-plot', 'clickData'),
               Input('selection-btn', 'n_clicks'),
               Input('selection-clr-btn', 'n_clicks'),
-              Input('emitter-dropdown', 'label'),
+              Input('emitter-human', 'n_clicks'),
+              Input('emitter-random', 'n_clicks'),
+              Input('emitter-greedy', 'n_clicks'),
+              Input('emitter-prefmatrix', 'n_clicks'),
+              Input('emitter-prefbandit', 'n_clicks'),
+              Input('emitter-conbandit', 'n_clicks'),
+              Input('emitter-knn', 'n_clicks'),
+              Input('emitter-linkernel', 'n_clicks'),
+              Input('emitter-rbfkernel', 'n_clicks'),
               Input("download-btn", "n_clicks"),
               Input('popdownload-btn', 'n_clicks'),
               Input('popupload-data', 'contents'),
@@ -2474,8 +2510,8 @@ triggers_map = {
               Input('qus-btn', 'n_clicks'),
               Input('qus-y-btn', 'n_clicks'),
               )
-def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, qs_modal_show, qs_um_modal_show, cm_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style, study_style, dlbtn_label, curr_legend, eus_modal_show, color,
-                     pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights, b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn, color_btn, qs_btn, qus_btn, qus_y_btn):
+def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, emitter_name, qs_modal_show, qs_um_modal_show, cm_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style, study_style, dlbtn_label, curr_legend, eus_modal_show, color,
+                     pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights, b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter1_nclicks, emitter2_nclicks, emitter3_nclicks, emitter4_nclicks, emitter5_nclicks, emitter6_nclicks, emitter7_nclicks, emitter8_nclicks, emitter9_nclicks, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn, color_btn, qs_btn, qus_btn, qus_y_btn):
     global app_settings
     
     ctx = dash.callback_context
@@ -2498,7 +2534,6 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     output = {
         'heatmap-plot.figure': curr_heatmap,
         'content-plot.figure': curr_content,
-        'valid-bins.children': '',
         'hl-rules.value': rules,
         'selected-bin.children': '',
         'content-string.value': cs_string,
@@ -2525,9 +2560,10 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         'content-legend-div.children': curr_legend,
         'qus-div.style': {'text-align': 'center'} if app_settings.app_mode == AppMode.USERSTUDY else hidden_style,
         'eus-modal.is_open': eus_modal_show,
+        'emitter-dropdown.label': emitter_name
     }
     
-    logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {process_semaphore.is_locked=}')
+    logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {app_settings.current_mapelites.emitter.name=} {process_semaphore.is_locked=}')
     
     if not process_semaphore.is_locked:
         process_semaphore.lock(name=event_trig)
@@ -2541,14 +2577,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
                                                                      do_switch=True,
                                                                      str_prefix='Selected bin(s):',
                                                                      filter_out_empty=True) 
-        _, valid_bins_str = _format_bins(mapelites=app_settings.current_mapelites,
-                                         do_switch=False,
-                                         bins_idx_list=_switch([x.bin_idx for x in app_settings.current_mapelites._valid_bins()]),
-                                         str_prefix='Valid bins are:',
-                                         filter_out_empty=False)
         
         output['selected-bin.children'] = selected_bins_str
-        output['valid-bins.children'] = valid_bins_str
         
         if app_settings.selected_bins and len(curr_content['data']) == 0:
             output['content-plot.figure'] = _get_elite_content(mapelites=app_settings.current_mapelites,

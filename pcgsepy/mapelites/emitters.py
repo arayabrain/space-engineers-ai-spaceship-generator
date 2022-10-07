@@ -12,6 +12,8 @@ from scipy.stats import boltzmann
 from sklearn.linear_model import LogisticRegression
 from sklearn.utils._testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
+from sklearn.kernel_ridge import KernelRidge
+from sklearn.neighbors import KNeighborsRegressor
 
 if USE_TORCH:
     from pcgsepy.nn.estimators import NonLinearEstimator, train_estimator
@@ -870,8 +872,8 @@ class PreferenceBanditEmitter(Emitter):
         return j
     
     @staticmethod
-    def from_json(my_args: Dict[str, Any]) -> 'ContextualBanditEmitter':
-        re = ContextualBanditEmitter()
+    def from_json(my_args: Dict[str, Any]) -> 'PreferenceBanditEmitter':
+        re = PreferenceBanditEmitter()
         re.name = my_args['name']
         re.requires_init = my_args['requires_init']
         re.requires_pre = my_args['requires_pre']
@@ -912,6 +914,538 @@ class PreferenceBanditEmitter(Emitter):
         
         return re
 
+
+class KNNEmitter(Emitter):
+    def __init__(self,
+                 epsilon: float = 0.2,
+                 decay: float = 0.01) -> None:
+        super().__init__()
+        self.name = 'knn-emitter'
+        self.requires_pre = True
+        
+        self._initial_epsilon = epsilon
+        self._epsilon = self._initial_epsilon
+        self._decay = decay
+        self._buffer = Buffer(merge_method=mean_merge)
+        self._estimator: KNeighborsRegressor = None
+        self._fitted = False
+        
+        self._tot_actions = 0
+        self.sampling_strategy = 'epsilon_greedy'  # or 'gibbs', 'thompson'
+        self._thompson_stats = {}
+
+    @ignore_warnings(category=ConvergenceWarning)
+    def _fit(self) -> None:
+        xs, ys = self._buffer.get()
+        self._estimator = KNeighborsRegressor().fit(X=xs, y=ys)
+        self._fitted = True
+    
+    def _get_valid_bins(self,
+                        bins: 'np.ndarray[MAPBin]') -> npt.NDArray[np.float32]:
+        valid = np.zeros_like(bins, dtype=np.uint8)
+        for i in range(bins.shape[0]):
+            for j in range(bins.shape[1]):
+                if bins[i, j].non_empty(pop='feasible'):
+                    valid[i, j] = 1
+        return valid
+    
+    def _get_bins_index(self,
+                        bins: 'np.ndarray[MAPBin]',
+                        normalize: bool = True) -> npt.NDArray[np.float32]:
+        bin_idxs = np.zeros(shape=(bins.shape[0], bins.shape[1], 2))
+        for i in range(bins.shape[0]):
+            for j in range(bins.shape[1]):
+                bin_idxs[i, j, :] = [i, j]
+        if normalize:
+            bin_idxs[:, :, 0] = bin_idxs[:, :, 0] / bins.shape[0]
+            bin_idxs[:, :, 1] = bin_idxs[:, :, 1] / bins.shape[1]
+        return bin_idxs
+    
+    def _predict(self,
+                 bins: 'np.ndarray[MAPBin]') -> Tuple[int, int]:
+        mask = self._get_valid_bins(bins=bins)
+        preferences = self._get_bins_index(bins=bins, normalize=True)
+        mask3d = np.zeros(preferences.shape, dtype=bool)
+        mask3d[:,:,:] = mask[:,:, np.newaxis] == 1
+        preferences = preferences[mask3d].reshape(-1, 2)
+        choose_from = self._estimator.predict(X=preferences)
+        out = np.zeros_like(bins, dtype=np.float32)
+        out[mask == 1] = choose_from[:]
+        if self.sampling_strategy == 'thompson':
+            for i in range(bins.shape[0]):
+                for j in range(bins.shape[1]):
+                    n_i = i / bins.shape[0]
+                    n_j = j / bins.shape[1]
+                    scale_factor = np.random.beta(a=BETA_A + (self._thompson_stats[n_i, n_j][0] if (n_i, n_j) in self._thompson_stats else 1),
+                                                  b=BETA_B + (self._thompson_stats[n_i, n_j][1] if (n_i, n_j) in self._thompson_stats else 1 + self._tot_actions),
+                                                  size=1)
+                    out[i, j] *= scale_factor        
+        return np.flip(np.argsort(out, axis=None))
+    
+    def pre_step(self, **kwargs) -> None:
+        bins: 'np.ndarray[MAPBin]' = kwargs['bins']
+        idxs: List[Tuple[int, int]] = [*kwargs['selected_idxs'], *kwargs['expanded_idxs']]
+        bounds: List[Tuple[float, float]] = kwargs['bounds']
+        bcs0 = np.cumsum([bounds[0][0]] + [b.bin_size[0] for b in bins[0, :]])[:-1]
+        bcs1 = np.cumsum([bounds[1][0]] + [b.bin_size[1] for b in bins[:, 0]])[:-1]
+        for i in range(bins.shape[0]):
+            for j in range(bins.shape[1]):
+                if bins[i, j].non_empty(pop='feasible'):
+                    self._buffer.insert(x=np.asarray([bcs0[i] / bounds[0][1], bcs1[j] / bounds[1][1]]),
+                                        y=1. if (i, j) in idxs else 0.)
+            n_i = i / bins.shape[0]
+            n_j = j / bins.shape[1]
+            if (i, j) in idxs:
+                if (n_i, n_j) not in self._thompson_stats:
+                    self._thompson_stats[n_i, n_j] = [2, 1]
+                else:
+                    self._thompson_stats[n_i, n_j][0] += 1
+            else:
+                if (n_i, n_j) not in self._thompson_stats:
+                    self._thompson_stats[n_i, n_j] = [1, 2]
+                else:
+                    self._thompson_stats[n_i, n_j][1] += 1
+        self._fit()
+        
+    def pick_bin(self,
+                 bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
+        assert self._fitted, f'{self.name} requires fitting and has not been fit yet!'
+        sorted_bins = np.transpose(np.unravel_index(self._predict(bins=bins), bins.shape))
+        if self.sampling_strategy == 'epsilon_greedy':
+            p = np.random.uniform(low=0, high=1, size=1) < self._epsilon
+            self._epsilon -= self._epsilon * self._decay
+        elif self.sampling_strategy == 'gibbs':
+            lambda_, N = 1.4, self._tot_actions
+            p = np.random.uniform(low=0, high=1, size=1) < boltzmann.rvs(lambda_, N, loc=0, size=1)
+            self._tot_actions += 1
+        elif self.sampling_strategy == 'thompson':
+            p = None
+        else:
+            raise Exception(f'Unknown sampling method for emitter: {self.sampling_strategy}.')
+        if p:
+            np.random.shuffle(sorted_bins)
+        fcs, ics, i = 0, 0, 0
+        selected_bins = []
+        while fcs < 2 or ics < 2:
+            b = bins[sorted_bins[i][0], sorted_bins[i][1]]
+            fcs += len(b._feasible)
+            ics += len(b._infeasible)
+            selected_bins.append(b)
+            i += 1
+        return selected_bins
+
+    def reset(self) -> None:
+        self._epsilon = self._initial_epsilon
+        self._buffer.clear()
+        self._thompson_stats = {}
+        self._estimator = None
+        self._fitted = False
+        self._tot_actions = 0
+
+    def to_json(self) -> Dict[str, Any]:
+        j = {
+            'name': self.name,
+            'requires_init': self.requires_init,
+            'requires_pre': self.requires_pre,
+            'requires_post': self.requires_post,
+            'diversity_weight': self.diversity_weight,
+            'tot_actions': self._tot_actions,
+            
+            'initial_epsilon': self._initial_epsilon,
+            'epsilon': self._epsilon,
+            'decay': self._decay,
+            'buffer': self._buffer.to_json(),
+            'diversity_weight': self.diversity_weight,
+            'fitted': self._fitted,
+            
+            'thompson_stats': self._thompson_stats
+        }
+        j['estimator_name'] = self._estimator.__class__.__name__ if self._estimator else None
+        if isinstance(self._estimator, KNeighborsRegressor):
+            pass
+        
+        return j
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'KNNEmitter':
+        re = KNNEmitter()
+        re.name = my_args['name']
+        re.requires_init = my_args['requires_init']
+        re.requires_pre = my_args['requires_pre']
+        re.requires_post = my_args['requires_post']
+        re.diversity_weight = my_args['diversity_weight']
+        re._tot_actions = my_args['tot_actions']
+        
+        re._initial_epsilon = my_args['initial_epsilon']
+        re._epsilon = my_args['epsilon']
+        re._decay = my_args['decay']
+        re.buffer = Buffer.from_json(my_args['buffer'])
+        re._n_features_context = my_args['n_features_context']
+        re._fitted = my_args['fitted']
+        
+        if 'estimator_name' in my_args.keys():
+                re._estimator = KNeighborsRegressor()
+                # TODO: load parameters
+        
+        re._thompson_stats = my_args['thompson_stats']
+        
+        return re
+
+
+class LinearKernelEmitter(Emitter):
+    def __init__(self,
+                 epsilon: float = 0.2,
+                 decay: float = 0.01) -> None:
+        super().__init__()
+        self.name = 'linear-kernel-emitter'
+        self.requires_pre = True
+        
+        self._initial_epsilon = epsilon
+        self._epsilon = self._initial_epsilon
+        self._decay = decay
+        self._buffer = Buffer(merge_method=mean_merge)
+        self._estimator: KNeighborsRegressor = None
+        self._fitted = False
+        
+        self._tot_actions = 0
+        self.sampling_strategy = 'epsilon_greedy'  # or 'gibbs', 'thompson'
+        self._thompson_stats = {}
+
+    @ignore_warnings(category=ConvergenceWarning)
+    def _fit(self) -> None:
+        xs, ys = self._buffer.get()
+        self._estimator = KernelRidge(kernel='linear').fit(X=xs, y=ys)
+        self._fitted = True
+    
+    def _get_valid_bins(self,
+                        bins: 'np.ndarray[MAPBin]') -> npt.NDArray[np.float32]:
+        valid = np.zeros_like(bins, dtype=np.uint8)
+        for i in range(bins.shape[0]):
+            for j in range(bins.shape[1]):
+                if bins[i, j].non_empty(pop='feasible'):
+                    valid[i, j] = 1
+        return valid
+    
+    def _get_bins_index(self,
+                        bins: 'np.ndarray[MAPBin]',
+                        normalize: bool = True) -> npt.NDArray[np.float32]:
+        bin_idxs = np.zeros(shape=(bins.shape[0], bins.shape[1], 2))
+        for i in range(bins.shape[0]):
+            for j in range(bins.shape[1]):
+                bin_idxs[i, j, :] = [i, j]
+        if normalize:
+            bin_idxs[:, :, 0] = bin_idxs[:, :, 0] / bins.shape[0]
+            bin_idxs[:, :, 1] = bin_idxs[:, :, 1] / bins.shape[1]
+        return bin_idxs
+    
+    def _predict(self,
+                 bins: 'np.ndarray[MAPBin]') -> Tuple[int, int]:
+        mask = self._get_valid_bins(bins=bins)
+        preferences = self._get_bins_index(bins=bins, normalize=True)
+        mask3d = np.zeros(preferences.shape, dtype=bool)
+        mask3d[:,:,:] = mask[:,:, np.newaxis] == 1
+        preferences = preferences[mask3d].reshape(-1, 2)
+        choose_from = self._estimator.predict(X=preferences)
+        out = np.zeros_like(bins, dtype=np.float32)
+        out[mask == 1] = choose_from[:]
+        if self.sampling_strategy == 'thompson':
+            for i in range(bins.shape[0]):
+                for j in range(bins.shape[1]):
+                    n_i = i / bins.shape[0]
+                    n_j = j / bins.shape[1]
+                    scale_factor = np.random.beta(a=BETA_A + (self._thompson_stats[n_i, n_j][0] if (n_i, n_j) in self._thompson_stats else 1),
+                                                  b=BETA_B + (self._thompson_stats[n_i, n_j][1] if (n_i, n_j) in self._thompson_stats else 1 + self._tot_actions),
+                                                  size=1)
+                    out[i, j] *= scale_factor        
+        return np.flip(np.argsort(out, axis=None))
+    
+    def pre_step(self, **kwargs) -> None:
+        bins: 'np.ndarray[MAPBin]' = kwargs['bins']
+        idxs: List[Tuple[int, int]] = [*kwargs['selected_idxs'], *kwargs['expanded_idxs']]
+        bounds: List[Tuple[float, float]] = kwargs['bounds']
+        bcs0 = np.cumsum([bounds[0][0]] + [b.bin_size[0] for b in bins[0, :]])[:-1]
+        bcs1 = np.cumsum([bounds[1][0]] + [b.bin_size[1] for b in bins[:, 0]])[:-1]
+        for i in range(bins.shape[0]):
+            for j in range(bins.shape[1]):
+                if bins[i, j].non_empty(pop='feasible'):
+                    self._buffer.insert(x=np.asarray([bcs0[i] / bounds[0][1], bcs1[j] / bounds[1][1]]),
+                                        y=1. if (i, j) in idxs else 0.)
+            n_i = i / bins.shape[0]
+            n_j = j / bins.shape[1]
+            if (i, j) in idxs:
+                if (n_i, n_j) not in self._thompson_stats:
+                    self._thompson_stats[n_i, n_j] = [2, 1]
+                else:
+                    self._thompson_stats[n_i, n_j][0] += 1
+            else:
+                if (n_i, n_j) not in self._thompson_stats:
+                    self._thompson_stats[n_i, n_j] = [1, 2]
+                else:
+                    self._thompson_stats[n_i, n_j][1] += 1
+        self._fit()
+        
+    def pick_bin(self,
+                 bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
+        assert self._fitted, f'{self.name} requires fitting and has not been fit yet!'
+        sorted_bins = np.transpose(np.unravel_index(self._predict(bins=bins), bins.shape))
+        if self.sampling_strategy == 'epsilon_greedy':
+            p = np.random.uniform(low=0, high=1, size=1) < self._epsilon
+            self._epsilon -= self._epsilon * self._decay
+        elif self.sampling_strategy == 'gibbs':
+            lambda_, N = 1.4, self._tot_actions
+            p = np.random.uniform(low=0, high=1, size=1) < boltzmann.rvs(lambda_, N, loc=0, size=1)
+            self._tot_actions += 1
+        elif self.sampling_strategy == 'thompson':
+            p = None
+        else:
+            raise Exception(f'Unknown sampling method for emitter: {self.sampling_strategy}.')
+        if p:
+            np.random.shuffle(sorted_bins)
+        fcs, ics, i = 0, 0, 0
+        selected_bins = []
+        while fcs < 2 or ics < 2:
+            b = bins[sorted_bins[i][0], sorted_bins[i][1]]
+            fcs += len(b._feasible)
+            ics += len(b._infeasible)
+            selected_bins.append(b)
+            i += 1
+        return selected_bins
+
+    def reset(self) -> None:
+        self._epsilon = self._initial_epsilon
+        self._buffer.clear()
+        self._thompson_stats = {}
+        self._estimator = None
+        self._fitted = False
+        self._tot_actions = 0
+
+    def to_json(self) -> Dict[str, Any]:
+        j = {
+            'name': self.name,
+            'requires_init': self.requires_init,
+            'requires_pre': self.requires_pre,
+            'requires_post': self.requires_post,
+            'diversity_weight': self.diversity_weight,
+            'tot_actions': self._tot_actions,
+            
+            'initial_epsilon': self._initial_epsilon,
+            'epsilon': self._epsilon,
+            'decay': self._decay,
+            'buffer': self._buffer.to_json(),
+            'diversity_weight': self.diversity_weight,
+            'fitted': self._fitted,
+            
+            'thompson_stats': self._thompson_stats
+        }
+        j['estimator_name'] = self._estimator.__class__.__name__ if self._estimator else None
+        if isinstance(self._estimator, KernelRidge):
+            pass
+        
+        return j
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'LinearKernelEmitter':
+        re = LinearKernelEmitter()
+        re.name = my_args['name']
+        re.requires_init = my_args['requires_init']
+        re.requires_pre = my_args['requires_pre']
+        re.requires_post = my_args['requires_post']
+        re.diversity_weight = my_args['diversity_weight']
+        re._tot_actions = my_args['tot_actions']
+        
+        re._initial_epsilon = my_args['initial_epsilon']
+        re._epsilon = my_args['epsilon']
+        re._decay = my_args['decay']
+        re.buffer = Buffer.from_json(my_args['buffer'])
+        re._n_features_context = my_args['n_features_context']
+        re._fitted = my_args['fitted']
+        
+        if 'estimator_name' in my_args.keys():
+                re._estimator = KernelRidge()
+                # TODO: load parameters
+        
+        re._thompson_stats = my_args['thompson_stats']
+        
+        return re
+
+
+class RBFKernelEmitter(Emitter):
+    def __init__(self,
+                 epsilon: float = 0.2,
+                 decay: float = 0.01) -> None:
+        super().__init__()
+        self.name = 'rbf-kernel-emitter'
+        self.requires_pre = True
+        
+        self._initial_epsilon = epsilon
+        self._epsilon = self._initial_epsilon
+        self._decay = decay
+        self._buffer = Buffer(merge_method=mean_merge)
+        self._estimator: KNeighborsRegressor = None
+        self._fitted = False
+        
+        self._tot_actions = 0
+        self.sampling_strategy = 'epsilon_greedy'  # or 'gibbs', 'thompson'
+        self._thompson_stats = {}
+
+    @ignore_warnings(category=ConvergenceWarning)
+    def _fit(self) -> None:
+        xs, ys = self._buffer.get()
+        self._estimator = KernelRidge(kernel='rbf').fit(X=xs, y=ys)
+        self._fitted = True
+    
+    def _get_valid_bins(self,
+                        bins: 'np.ndarray[MAPBin]') -> npt.NDArray[np.float32]:
+        valid = np.zeros_like(bins, dtype=np.uint8)
+        for i in range(bins.shape[0]):
+            for j in range(bins.shape[1]):
+                if bins[i, j].non_empty(pop='feasible'):
+                    valid[i, j] = 1
+        return valid
+    
+    def _get_bins_index(self,
+                        bins: 'np.ndarray[MAPBin]',
+                        normalize: bool = True) -> npt.NDArray[np.float32]:
+        bin_idxs = np.zeros(shape=(bins.shape[0], bins.shape[1], 2))
+        for i in range(bins.shape[0]):
+            for j in range(bins.shape[1]):
+                bin_idxs[i, j, :] = [i, j]
+        if normalize:
+            bin_idxs[:, :, 0] = bin_idxs[:, :, 0] / bins.shape[0]
+            bin_idxs[:, :, 1] = bin_idxs[:, :, 1] / bins.shape[1]
+        return bin_idxs
+    
+    def _predict(self,
+                 bins: 'np.ndarray[MAPBin]') -> Tuple[int, int]:
+        mask = self._get_valid_bins(bins=bins)
+        preferences = self._get_bins_index(bins=bins, normalize=True)
+        mask3d = np.zeros(preferences.shape, dtype=bool)
+        mask3d[:,:,:] = mask[:,:, np.newaxis] == 1
+        preferences = preferences[mask3d].reshape(-1, 2)
+        choose_from = self._estimator.predict(X=preferences)
+        out = np.zeros_like(bins, dtype=np.float32)
+        out[mask == 1] = choose_from[:]
+        if self.sampling_strategy == 'thompson':
+            for i in range(bins.shape[0]):
+                for j in range(bins.shape[1]):
+                    n_i = i / bins.shape[0]
+                    n_j = j / bins.shape[1]
+                    scale_factor = np.random.beta(a=BETA_A + (self._thompson_stats[n_i, n_j][0] if (n_i, n_j) in self._thompson_stats else 1),
+                                                  b=BETA_B + (self._thompson_stats[n_i, n_j][1] if (n_i, n_j) in self._thompson_stats else 1 + self._tot_actions),
+                                                  size=1)
+                    out[i, j] *= scale_factor        
+        return np.flip(np.argsort(out, axis=None))
+    
+    def pre_step(self, **kwargs) -> None:
+        bins: 'np.ndarray[MAPBin]' = kwargs['bins']
+        idxs: List[Tuple[int, int]] = [*kwargs['selected_idxs'], *kwargs['expanded_idxs']]
+        bounds: List[Tuple[float, float]] = kwargs['bounds']
+        bcs0 = np.cumsum([bounds[0][0]] + [b.bin_size[0] for b in bins[0, :]])[:-1]
+        bcs1 = np.cumsum([bounds[1][0]] + [b.bin_size[1] for b in bins[:, 0]])[:-1]
+        for i in range(bins.shape[0]):
+            for j in range(bins.shape[1]):
+                if bins[i, j].non_empty(pop='feasible'):
+                    self._buffer.insert(x=np.asarray([bcs0[i] / bounds[0][1], bcs1[j] / bounds[1][1]]),
+                                        y=1. if (i, j) in idxs else 0.)
+            n_i = i / bins.shape[0]
+            n_j = j / bins.shape[1]
+            if (i, j) in idxs:
+                if (n_i, n_j) not in self._thompson_stats:
+                    self._thompson_stats[n_i, n_j] = [2, 1]
+                else:
+                    self._thompson_stats[n_i, n_j][0] += 1
+            else:
+                if (n_i, n_j) not in self._thompson_stats:
+                    self._thompson_stats[n_i, n_j] = [1, 2]
+                else:
+                    self._thompson_stats[n_i, n_j][1] += 1
+        self._fit()
+        
+    def pick_bin(self,
+                 bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
+        assert self._fitted, f'{self.name} requires fitting and has not been fit yet!'
+        sorted_bins = np.transpose(np.unravel_index(self._predict(bins=bins), bins.shape))
+        if self.sampling_strategy == 'epsilon_greedy':
+            p = np.random.uniform(low=0, high=1, size=1) < self._epsilon
+            self._epsilon -= self._epsilon * self._decay
+        elif self.sampling_strategy == 'gibbs':
+            lambda_, N = 1.4, self._tot_actions
+            p = np.random.uniform(low=0, high=1, size=1) < boltzmann.rvs(lambda_, N, loc=0, size=1)
+            self._tot_actions += 1
+        elif self.sampling_strategy == 'thompson':
+            p = None
+        else:
+            raise Exception(f'Unknown sampling method for emitter: {self.sampling_strategy}.')
+        if p:
+            np.random.shuffle(sorted_bins)
+        fcs, ics, i = 0, 0, 0
+        selected_bins = []
+        while fcs < 2 or ics < 2:
+            b = bins[sorted_bins[i][0], sorted_bins[i][1]]
+            fcs += len(b._feasible)
+            ics += len(b._infeasible)
+            selected_bins.append(b)
+            i += 1
+        return selected_bins
+
+    def reset(self) -> None:
+        self._epsilon = self._initial_epsilon
+        self._buffer.clear()
+        self._thompson_stats = {}
+        self._estimator = None
+        self._fitted = False
+        self._tot_actions = 0
+
+    def to_json(self) -> Dict[str, Any]:
+        j = {
+            'name': self.name,
+            'requires_init': self.requires_init,
+            'requires_pre': self.requires_pre,
+            'requires_post': self.requires_post,
+            'diversity_weight': self.diversity_weight,
+            'tot_actions': self._tot_actions,
+            
+            'initial_epsilon': self._initial_epsilon,
+            'epsilon': self._epsilon,
+            'decay': self._decay,
+            'buffer': self._buffer.to_json(),
+            'diversity_weight': self.diversity_weight,
+            'fitted': self._fitted,
+            
+            'thompson_stats': self._thompson_stats
+        }
+        j['estimator_name'] = self._estimator.__class__.__name__ if self._estimator else None
+        if isinstance(self._estimator, KernelRidge):
+            pass
+        
+        return j
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -> 'RBFKernelEmitter':
+        re = RBFKernelEmitter()
+        re.name = my_args['name']
+        re.requires_init = my_args['requires_init']
+        re.requires_pre = my_args['requires_pre']
+        re.requires_post = my_args['requires_post']
+        re.diversity_weight = my_args['diversity_weight']
+        re._tot_actions = my_args['tot_actions']
+        
+        re._initial_epsilon = my_args['initial_epsilon']
+        re._epsilon = my_args['epsilon']
+        re._decay = my_args['decay']
+        re.buffer = Buffer.from_json(my_args['buffer'])
+        re._n_features_context = my_args['n_features_context']
+        re._fitted = my_args['fitted']
+        
+        if 'estimator_name' in my_args.keys():
+                re._estimator = KernelRidge()
+                # TODO: load parameters
+        
+        re._thompson_stats = my_args['thompson_stats']
+        
+        return re
+
+
 class HumanEmitter(Emitter):
     def __init__(self) -> None:
         super().__init__()
@@ -943,5 +1477,8 @@ emitters = {
     'human-preference-matrix-emitter': HumanPrefMatrixEmitter,
     'contextual-bandit-emitter': ContextualBanditEmitter,
     'preference-bandit-emitter': PreferenceBanditEmitter,
-    'human-emitter': HumanEmitter
+    'human-emitter': HumanEmitter,
+    'knn-emitter': KNNEmitter,
+    'linear-kernel-emitter': LinearKernelEmitter,
+    'rbf-kernel-emitter': RBFKernelEmitter
 }
