@@ -491,18 +491,6 @@ def serve_layout() -> dbc.Container:
     exp_progress = html.Div(
         id='study-progress-div',
         children=[
-            # dbc.Row(
-            #     dbc.Col(
-            #         children=[
-            #             html.H4('Study Progress',
-            #                     className='section-title',
-            #                     style=hidden_style if app_settings.app_mode == AppMode.DEV else {}),
-            #             html.Br()],
-            #         width={'size': 12, 'offset': 0},
-            #         style={'text-align': 'center'}
-            #     ),
-            #     align='center'
-            # ),
             dbc.Row(
                 dbc.Col(children=[
                     dbc.Label(f'Current Iteration',
@@ -648,7 +636,7 @@ def serve_layout() -> dbc.Container:
                               value="#737373",
                               size='lg',
                               debounce=True)],
-                        width={'size': 10, 'offset': 1},
+                        width={'size': 6, 'offset': 3},
                         style={'text-align': 'center'})
             ),
             html.Br(),
@@ -667,7 +655,8 @@ def serve_layout() -> dbc.Container:
                                   'align-content': 'center',
                                   'flex-direction': 'row',
                                   'align-items': 'center'
-                                  }),                    
+                                  }),
+                    html.Br(),                   
                     dbc.Button('Download',
                                id='download-btn',
                                disabled=False),
@@ -681,8 +670,8 @@ def serve_layout() -> dbc.Container:
                                 type='default',
                                 style={'justify-content': 'center'})
                     ],
-                        width={'size': 10, 'offset': 1},
-                        style={'text-align': 'center'})
+                        width={'size': 6, 'offset': 3},
+                        style={'text-align': 'center', 'justify-content': 'center'})
             )
         ]
     )
@@ -692,12 +681,14 @@ def serve_layout() -> dbc.Container:
             dbc.Row(children=[
                 dbc.Col(children=[
                     dbc.Table(children=get_properties_table(),
-                            id='spaceship-properties',
-                            bordered=True,
-                            dark=True,
-                            hover=True,
-                            responsive=True,
-                            striped=True),
+                              id='spaceship-properties',
+                              bordered=True,
+                              color='dark',
+                              hover=True,
+                              size='sm',
+                              responsive=True,
+                              striped=True),
+                    # TODO move Content String above High-level Rules (on the same row, so pushing it down)
                     html.Div([
                         html.P(children='Content String: '),
                         dbc.Textarea(id='content-string',
@@ -707,7 +698,11 @@ def serve_layout() -> dbc.Container:
                                     class_name='content-string-area')
                         ],
                             style={} if app_settings.app_mode == AppMode.DEV else hidden_style)
-                    ])],
+                    ],
+                        style={
+                            'max-height': '30vh',
+                            'overflow': 'auto'
+                            })],
                     align='center')])    
    
     log = html.Div(
@@ -733,8 +728,8 @@ def serve_layout() -> dbc.Container:
                     ])),
             dbc.Row(
                       [
-                          dbc.Col(color_and_download,
-                                  align='center'),
+                        #   dbc.Col(color_and_download,
+                        #           align='center'),
                           dbc.Col(content_properties)
                       ]
                   ),
@@ -972,7 +967,8 @@ def serve_layout() -> dbc.Container:
                             color='#eeeeee',
                             type='circle')
             ],
-                width={'size': 2, 'offset': 5}   )
+                # width={'size': 2, 'offset': 5}
+                )
         )
         
     ])
@@ -1001,29 +997,36 @@ def serve_layout() -> dbc.Container:
                         exp_progress,
                         progress
                         ],
-                            width={'offset': 4, 'size': 3}
+                            width={'offset': 4, 'size': 4}
                     ),
                     dbc.Col(children=[
-                        html.Br(),
+                        # html.Br(),
                         load_spinner
                     ],
                             align='center',
-                            width=1)
+                            width=3)
                 ])
             ]),
             html.Br(),
             html.Br(),
             dbc.Row(children=[
-                dbc.Col(mapelites_heatmap, width={'size': 3, 'offset': 1}),
-                dbc.Col(content_plot, width=4),
+                dbc.Col(mapelites_heatmap, width={'size': 3, 'offset': 1}, style={'overflow': 'auto'}),
+                dbc.Col(content_plot, width=4, style={'overflow': 'auto'}),
                 dbc.Col(properties_panel, width=3)],
-                    align="start"),
+                    align="start", style={'overflow': 'auto'}),
             html.Br(),
             html.Br(),
             dbc.Row(children=[
-                dbc.Col(children=[mapelites_controls],
+                dbc.Col(children=[mapelites_controls,
+                                  experiment_controls],
                         width={'size': 3, 'offset': 1}),
-                dbc.Col(children=[experiment_controls,
+                dbc.Col(children=[dbc.Col(children=[
+                    html.H4(children='Spaceship Controls',
+                            className='section-title'),
+                    html.Br(),
+                    color_and_download
+                    ],
+                                          align='center'),
                                   experiment_settings],
                         width=4),
                 dbc.Col(children=[log,
@@ -1701,12 +1704,17 @@ def __reset(**kwargs) -> Dict[str, Any]:
     if app_settings.app_mode == AppMode.USERSTUDY:
         n_spaceships_inspected.reset()
         time_elapsed.reset()
-
+    _update_base_color(color=base_color)
+    
     return {
         'heatmap-plot.figure': _build_heatmap(mapelites=app_settings.current_mapelites,
                                               pop_name=kwargs['pop_name'],
                                               metric_name=kwargs['metric_name'],
-                                              method_name=kwargs['method_name'])
+                                              method_name=kwargs['method_name']),
+        'content-plot.figure': _get_elite_content(mapelites=app_settings.current_mapelites,
+                                                  bin_idx=None,
+                                                  pop=None),
+        'spaceship-properties.children': get_properties_table(cs=None)
     }
 
 
@@ -2142,12 +2150,19 @@ def __population_upload(**kwargs) -> Dict[str, Any]:
     app_settings.current_mapelites.bins = all_bins
     app_settings.current_mapelites.reassign_all_content()
     logging.getLogger('webapp').info(msg=f'Set population from file successfully.')
+    app_settings.gen_counter = 0
+    app_settings.selected_bins = []
+    _update_base_color(color=base_color)
 
     return {
         'heatmap-plot.figure': _build_heatmap(mapelites=app_settings.current_mapelites,
                                               pop_name=kwargs['pop_name'],
                                               metric_name=kwargs['metric_name'],
-                                              method_name=kwargs['method_name'])
+                                              method_name=kwargs['method_name']),
+        'content-plot.figure': _get_elite_content(mapelites=app_settings.current_mapelites,
+                                                  bin_idx=None,
+                                                  pop=None),
+        'spaceship-properties.children': get_properties_table(cs=None)
         }
 
 
@@ -2272,6 +2287,7 @@ def __quit_user_study(**kwargs) -> Dict[str, Any]:
     logging.getLogger('webapp').info(msg='Initialization completed.')
     app_settings.gen_counter = 0    
     app_settings.selected_bins = []
+    _update_base_color(color=base_color)
     
     n_spaceships_inspected.reset()
     time_elapsed.reset()
@@ -2292,6 +2308,7 @@ def __quit_user_study(**kwargs) -> Dict[str, Any]:
         'content-plot.figure': _get_elite_content(mapelites=app_settings.current_mapelites,
                                                   bin_idx=None,
                                                   pop=None),
+        'spaceship-properties.children': get_properties_table(cs=None)
         }
 
 

@@ -28,6 +28,7 @@
 }
 .button-fullsize {
     width: 100%;
+    overflow: auto;
 }
 .spacer {
     margin-top: 1%;
