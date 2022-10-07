@@ -1299,7 +1299,8 @@ def disable_privacy_modal(ny, nn):
               Output('consent-body-loading', 'children'),
               Output('eous-body-loading', 'children'),
               Output('eus-body-loading', 'children'),
-              
+              Output('color-picker-btn', 'disabled'),
+
               State({'type': 'fitness-sldr', 'index': ALL}, 'disabled'),
               State('method-radio', 'options'),
               State('lsystem-modules', 'options'),
@@ -1360,7 +1361,8 @@ def interval_updates(fdis, ms, lsysms, symms, consent_loading_data_children, eou
         'qus-y-btn.disabled': running_something,
         'consent-body-loading.children': [],
         'eous-body-loading.children': [],
-        'eus-body-loading.children': []
+        'eus-body-loading.children': [],
+        'color-picker-btn.disabled': running_something,
     }
     
     if running_something and consent_loading_data_children == []:
