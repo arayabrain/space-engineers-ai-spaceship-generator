@@ -823,8 +823,12 @@ class MAPElites:
 
         Returns:
             float: The population complexity.
-        """                        
-        return np.average([len(cs.content._blocks) for cs in [b._feasible if pop == 'feasible' else b._infeasible for (_, _), b in np.ndenumerate(self.bins)]])
+        """
+        all_lenghts = []
+        for (_, _), b in np.ndenumerate(self.bins):
+            for cs in b._feasible if pop == 'feasible' else b._infeasible:
+                all_lenghts.append(len(cs.content._blocks))
+        return np.average(all_lenghts)
         
     
     def to_json(self) -> Dict[str, Any]:

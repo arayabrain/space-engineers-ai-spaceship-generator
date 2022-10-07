@@ -85,9 +85,12 @@ app_settings = AppSettings()
 
 n_spaceships_inspected = Metric(emitters=app_settings.my_emitterslist,
                                 exp_n=app_settings.exp_n)
-time_elapsed = Metric(emitters=app_settings.my_emitterslist,
-                      exp_n=app_settings.exp_n,
-                      multiple_values=True)
+time_elapsed_user = Metric(emitters=app_settings.my_emitterslist,
+                           exp_n=app_settings.exp_n,
+                           multiple_values=True)
+time_elapsed_emitter = Metric(emitters=app_settings.my_emitterslist,
+                              exp_n=app_settings.exp_n,
+                              multiple_values=True)
 population_complexity = Metric(emitters=app_settings.my_emitterslist,
                                exp_n=app_settings.exp_n,
                                multiple_values=True)
@@ -1593,6 +1596,8 @@ def _apply_step(mapelites: MAPElites,
                 only_human: bool = False,
                 only_emitter: bool = False) -> bool:
     global app_settings
+    global time_elapsed_user
+    global time_elapsed_emitter
     
     perc_step = 100 / (1 + N_EMITTER_STEPS)
     
@@ -1607,17 +1612,26 @@ def _apply_step(mapelites: MAPElites,
         mapelites.update_elites(reset=True)
         app_settings.step_progress = 0
         if not only_emitter:
+            s = time.perf_counter()
             mapelites.interactive_step(bin_idxs=selected_bins,
                                        gen=gen_counter)
+            elapsed_user = time.perf_counter() - s
+            if app_settings.app_mode == AppMode.USERSTUDY:
+                time_elapsed_user.add(elapsed_user)
         
         app_settings.step_progress += perc_step
         logging.getLogger('webapp').info(msg=f'Completed step {gen_counter + 1} (created {mapelites.n_new_solutions} solutions); running {N_EMITTER_STEPS} additional emitter steps if available...')
         mapelites.n_new_solutions = 0
+        all_elapsed_emitter = []
         with trange(N_EMITTER_STEPS, desc='Emitter steps: ') as iterations:
             for _ in iterations:
                 if not only_human:
+                    s = time.perf_counter()
                     mapelites.emitter_step(gen=gen_counter)
+                    all_elapsed_emitter.append(time.perf_counter() - s)
                 app_settings.step_progress += perc_step
+        if app_settings.app_mode == AppMode.USERSTUDY:
+            time_elapsed_emitter.add(np.average(all_elapsed_emitter))
         logging.getLogger('webapp').info(msg=f'Emitter step(s) completed (created {mapelites.n_new_solutions} solutions).')
         mapelites.n_new_solutions = 0
         app_settings.step_progress = -1
@@ -1629,7 +1643,6 @@ def _apply_step(mapelites: MAPElites,
 
 
 def __apply_step(**kwargs) -> Dict[str, Any]:
-    global time_elapsed
     global population_complexity
     global app_settings
     
@@ -1654,7 +1667,6 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
             app_settings.gen_counter += 1
             # update metrics if user consented to privacy
             if app_settings.app_mode == AppMode.USERSTUDY:
-                time_elapsed.add(elapsed)
                 population_complexity.add(new_complexity)
             if app_settings.selected_bins:
                 rem_idxs = []
@@ -1717,7 +1729,8 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
 def __reset(**kwargs) -> Dict[str, Any]:
     global app_settings
     global n_spaceships_inspected
-    global time_elapsed
+    global time_elapsed_user
+    global time_elapsed_emitter
     global population_complexity
     
     logging.getLogger('webapp').info(msg='Started resetting all bins (this may take a while)...')
@@ -1728,7 +1741,8 @@ def __reset(**kwargs) -> Dict[str, Any]:
     app_settings.selected_bins = []
     if app_settings.app_mode == AppMode.USERSTUDY:
         n_spaceships_inspected.reset()
-        time_elapsed.reset()
+        time_elapsed_user.reset()
+        time_elapsed_emitter.reset()
         population_complexity.reset()
     _update_base_color(color=base_color)
     
@@ -2050,7 +2064,8 @@ def __emitter(**kwargs) -> Dict[str, Any]:
 
 def __content_download(**kwargs) -> Dict[str, Any]:
     global app_settings
-    global time_elapsed
+    global time_elapsed_user
+    global time_elapsed_emitter
     global population_complexity
     global n_spaceships_inspected
     global download_semaphore
@@ -2096,7 +2111,8 @@ def __content_download(**kwargs) -> Dict[str, Any]:
                 cs_properties = get_properties_table()
                 if app_settings.app_mode == AppMode.USERSTUDY:
                     metrics_dl = dict(content=json.dumps({
-                        'time_elapsed': time_elapsed.history,
+                        'time_elapsed_user': time_elapsed_user.history,
+                        'time_elapsed_emitter': time_elapsed_emitter.history,
                         'n_interactions': n_spaceships_inspected.get_averages(),
                         'avg_complexity': population_complexity.history
                         }),
@@ -2135,8 +2151,10 @@ def __content_download(**kwargs) -> Dict[str, Any]:
                     logging.getLogger('webapp').info(msg='Next population loaded.')
                     n_spaceships_inspected.new_generation(emitters=app_settings.my_emitterslist,
                                                           exp_n=app_settings.exp_n)
-                    time_elapsed.new_generation(emitters=app_settings.my_emitterslist,
-                                                exp_n=app_settings.exp_n)
+                    time_elapsed_user.new_generation(emitters=app_settings.my_emitterslist,
+                                                     exp_n=app_settings.exp_n)
+                    time_elapsed_emitter.new_generation(emitters=app_settings.my_emitterslist,
+                                                        exp_n=app_settings.exp_n)
                     population_complexity.new_generation(emitters=app_settings.my_emitterslist,
                                                          exp_n=app_settings.exp_n)
                     logging.getLogger('webapp').info(msg='Next experiment loaded. Please fill out the questionnaire before continuing.')
@@ -2326,7 +2344,8 @@ def __default(**kwargs) -> Dict[str, Any]:
 def __quit_user_study(**kwargs) -> Dict[str, Any]:
     global app_settings
     global n_spaceships_inspected
-    global time_elapsed
+    global time_elapsed_user
+    global time_elapsed_emitter
     global population_complexity
     
     logging.getLogger('webapp').debug(msg=f'Switching mode from {app_settings.app_mode} to {AppMode.USER}...')
@@ -2342,7 +2361,8 @@ def __quit_user_study(**kwargs) -> Dict[str, Any]:
     _update_base_color(color=base_color)
     
     n_spaceships_inspected.reset()
-    time_elapsed.reset()
+    time_elapsed_user.reset()
+    time_elapsed_emitter.reset()
     population_complexity.reset()
     
     return {
