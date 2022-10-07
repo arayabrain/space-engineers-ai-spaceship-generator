@@ -144,9 +144,14 @@ def get_content_legend() -> dbc.Row:
             html.Span(children=[
                 html.P('', style={**circle_style,
                                   **{'background-color': '#%02x%02x%02x' % base_color.scale(256).to_veci().as_tuple() if _is_base_block(block_type) else block_to_colour[block_type]}}),
-                dbc.Label(block_type, align='start')],
-                      style={'display': 'inline-flex', 'align-items': 'baseline', 'font-size': 'x-small'}),
+                dbc.Label(block_type,
+                          align='start',
+                        #   style={'text-overflow': 'ellipsis', 'text-align': 'left', 'font-size': 'x-small'}
+                          )],
+                      style={'display': 'inline-flex', 'align-items': 'baseline', 'font-size': 'x-small', 'text-align': 'left'}
+                      ),
             ],
+                style={'overflow': 'hidden', 'text-overflow': 'ellipsis', 'display': 'block', 'white-space': 'nowrap'},
                 width=3) for block_type in block_to_colour.keys()
         ],
                    justify='start')
@@ -546,7 +551,7 @@ def serve_layout() -> dbc.Container:
                                    'displaylogo': False,
                                    'scrollZoom': True},
                                className='content',
-                               style={'z-index': 0}),
+                               style={'z-index': 0, 'overflow': 'auto'}),
                      html.Div(id='heatmap-plot-container',
                               className='overlay',
                               style={'visibility': 'hidden',
@@ -609,7 +614,8 @@ def serve_layout() -> dbc.Container:
                   figure=go.Figure(data=[]),
                   config={
                       'displayModeBar': False,
-                      'displaylogo': False}),
+                      'displaylogo': False},
+                  style={'overflow': 'auto'}),
         dbc.Label('Legend',
                   size='sm'),
         html.Div(children=[
@@ -871,7 +877,7 @@ def serve_layout() -> dbc.Container:
                                className='button-fullsize')
                     ],
                         id='step-btn-div',
-                        width=4),
+                        width=6),
                 dbc.Col(children=[
                     dbc.Button(id='rand-step-btn',
                                children='Evolve From Random Spaceship',
@@ -879,7 +885,7 @@ def serve_layout() -> dbc.Container:
                     ],
                         id='rand-step-btn-div',
                         style={} if app_settings.app_mode == AppMode.USER else hidden_style,
-                        width=4)                
+                        width=6)                
                 ],
                     style={'justify-content': 'center'}),
             dbc.Row(children=[
@@ -977,7 +983,6 @@ def serve_layout() -> dbc.Container:
                             color='#eeeeee',
                             type='circle')
             ],
-                # width={'size': 2, 'offset': 5}
                 )
         )
         
@@ -1010,7 +1015,6 @@ def serve_layout() -> dbc.Container:
                             width={'offset': 4, 'size': 4}
                     ),
                     dbc.Col(children=[
-                        # html.Br(),
                         load_spinner
                     ],
                             align='center',

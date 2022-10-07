@@ -28,12 +28,15 @@
 }
 .button-fullsize {
     width: 100%;
-    overflow: auto;
+    overflow: hidden;
+    white-space: nowrap;
+    display: block;
+    text-overflow: ellipsis;
+    text-align: center;
 }
 .spacer {
     margin-top: 1%;
 }
-
 .container {
     display: grid;
 }
