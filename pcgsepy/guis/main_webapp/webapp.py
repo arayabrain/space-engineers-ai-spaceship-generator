@@ -912,8 +912,8 @@ def serve_layout() -> dbc.Container:
                                className='button-fullsize')
                     ],
                         id='reset-btn-div',
-                        width=6)],
-                        style={'justify-content': 'center'} if app_settings.app_mode == AppMode.DEV else {**{'justify-content': 'center'}, **hidden_style}),
+                        style={'justify-content': 'center'} if app_settings.app_mode == AppMode.USER else {**{'justify-content': 'center'}, **hidden_style},
+                        width={'offset': 3, 'size': 6})]),
             dbc.Row(children=[
                 dbc.Col(children=[
                     html.Br(),
@@ -2097,7 +2097,7 @@ def __content_download(**kwargs) -> Dict[str, Any]:
                 app_settings.current_mapelites.reset()
                 app_settings.current_mapelites.hull_builder.apply_smoothing = False
                 app_settings.current_mapelites.emitter = RandomEmitter()
-                rand_step_btn_style, reset_btn_style, exp_progress_style = {}, {}, hidden_style
+                rand_step_btn_style, reset_btn_style, exp_progress_style = {}, {'justify-content': 'center'}, hidden_style
                 curr_heatmap = _build_heatmap(mapelites=app_settings.current_mapelites,
                                               pop_name=kwargs['pop_name'],
                                               metric_name=kwargs['metric_name'],
@@ -2229,7 +2229,7 @@ def __consent(**kwargs) -> Dict[str, Any]:
         app_settings.current_mapelites.hull_builder.apply_smoothing = False
         logging.getLogger('webapp').info(msg='Initialization completed.')
         qs_um_modal_show = True
-        rand_step_btn_style, reset_btn_style, exp_progress_style, study_style = {}, {}, hidden_style, hidden_style
+        rand_step_btn_style, reset_btn_style, exp_progress_style, study_style = {}, {'justify-content': 'center'}, hidden_style, hidden_style
     cm_modal_show = False
     app_settings.gen_counter = 0
     
@@ -2333,7 +2333,7 @@ def __quit_user_study(**kwargs) -> Dict[str, Any]:
         'consent-modal.is_open': False,
         'quickstart-usermode-modal.is_open': True,
         'rand-step-btn-div.style': {},
-        'reset-btn-div.style': {},
+        'reset-btn-div.style': {'justify-content': 'center'},
         'exp-progress-div.style': hidden_style,
         'study-progress-div.style': hidden_style,
         'qus-div.style': hidden_style,
@@ -2563,7 +2563,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         'emitter-dropdown.label': emitter_name
     }
     
-    logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {app_settings.current_mapelites.emitter.name=}; {app_settings.current_mapelites.emitter.sampling_strategy=}; {process_semaphore.is_locked=}')
+    # logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {app_settings.current_mapelites.emitter.name=}; {app_settings.current_mapelites.emitter.sampling_strategy=}; {process_semaphore.is_locked=}')
+    logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {app_settings.current_mapelites.emitter.name=}; {process_semaphore.is_locked=}')
     
     if not process_semaphore.is_locked:
         process_semaphore.lock(name=event_trig)
