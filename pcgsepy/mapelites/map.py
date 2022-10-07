@@ -816,6 +816,17 @@ class MAPElites:
                     b.check_new_elite(pop=pop)
                 # logging.getLogger('mapelites').debug(f'[{__name__}.update_elites] {reset=}; {b.bin_idx} -> {b.new_elite[pop]}')
     
+    def population_complexity(self,
+                              pop: str = 'feasible') -> float:
+        """Compute the average complexity of the selected population.
+        The complexity in this case is defined as the number of blocks.
+
+        Returns:
+            float: The population complexity.
+        """                        
+        return np.average([len(cs.content._blocks) for cs in [b._feasible if pop == 'feasible' else b._infeasible for (_, _), b in np.ndenumerate(self.bins)]])
+        
+    
     def to_json(self) -> Dict[str, Any]:
         return {
             'lsystem': self.lsystem.to_json(),

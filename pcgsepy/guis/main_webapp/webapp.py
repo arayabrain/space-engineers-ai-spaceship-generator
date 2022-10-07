@@ -88,6 +88,9 @@ n_spaceships_inspected = Metric(emitters=app_settings.my_emitterslist,
 time_elapsed = Metric(emitters=app_settings.my_emitterslist,
                       exp_n=app_settings.exp_n,
                       multiple_values=True)
+population_complexity = Metric(emitters=app_settings.my_emitterslist,
+                               exp_n=app_settings.exp_n,
+                               multiple_values=True)
 
 
 download_semaphore = Semaphore(locked=True)    
@@ -272,7 +275,7 @@ def serve_layout() -> dbc.Container:
                            size='lg')
     
     quickstart_modal = dbc.Modal([
-        dbc.ModalHeader(dbc.ModalTitle("Quickstart"),
+        dbc.ModalHeader(dbc.ModalTitle("Tutorial"),
                         style={'flex-direction': 'column-reverse'},
                         close_button=True),
         dbc.ModalBody(dcc.Markdown(quickstart_info_str,
@@ -287,7 +290,7 @@ def serve_layout() -> dbc.Container:
                            size='lg')
     
     quickstart_usermode_modal = dbc.Modal([
-        dbc.ModalHeader(dbc.ModalTitle("Quickstart"),
+        dbc.ModalHeader(dbc.ModalTitle("Tutorial"),
                         style={'flex-direction': 'column-reverse'},
                         close_button=True),
         dbc.ModalBody(dcc.Markdown(quickstart_usermode_info_str,
@@ -1626,8 +1629,8 @@ def _apply_step(mapelites: MAPElites,
 
 
 def __apply_step(**kwargs) -> Dict[str, Any]:
-    global n_spaceships_inspected
     global time_elapsed
+    global population_complexity
     global app_settings
     
     cs_properties = kwargs['cs_properties']
@@ -1647,11 +1650,12 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
                           only_emitter=kwargs['event_trig'] == 'rand-step-btn' and app_settings.app_mode == AppMode.USER)
         if res:
             elapsed = time.perf_counter() - s
+            new_complexity = app_settings.current_mapelites.population_complexity(pop='feasible')
             app_settings.gen_counter += 1
             # update metrics if user consented to privacy
             if app_settings.app_mode == AppMode.USERSTUDY:
-                # n_spaceships_inspected.add(1)
                 time_elapsed.add(elapsed)
+                population_complexity.add(new_complexity)
             if app_settings.selected_bins:
                 rem_idxs = []
                 for i, b in enumerate(app_settings.selected_bins):
@@ -1686,7 +1690,9 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
                                           pop_name=kwargs['pop_name'],
                                           metric_name=kwargs['metric_name'],
                                           method_name=kwargs['method_name'])
-            logging.getLogger('webapp').debug(msg=f'[{__name__}.__apply_step] {elapsed=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}')
+            logging.getLogger('webapp').debug(msg=f'[{__name__}.__apply_step] {elapsed=}; {new_complexity=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}')
+            
+            
     else:
         logging.getLogger('webapp').error(msg=f'Step not applied: no bin(s) selected.')
         nbs_err_modal_show = True
@@ -1712,6 +1718,7 @@ def __reset(**kwargs) -> Dict[str, Any]:
     global app_settings
     global n_spaceships_inspected
     global time_elapsed
+    global population_complexity
     
     logging.getLogger('webapp').info(msg='Started resetting all bins (this may take a while)...')
     app_settings.current_mapelites.reset()
@@ -1722,6 +1729,7 @@ def __reset(**kwargs) -> Dict[str, Any]:
     if app_settings.app_mode == AppMode.USERSTUDY:
         n_spaceships_inspected.reset()
         time_elapsed.reset()
+        population_complexity.reset()
     _update_base_color(color=base_color)
     
     return {
@@ -2043,6 +2051,7 @@ def __emitter(**kwargs) -> Dict[str, Any]:
 def __content_download(**kwargs) -> Dict[str, Any]:
     global app_settings
     global time_elapsed
+    global population_complexity
     global n_spaceships_inspected
     global download_semaphore
 
@@ -2087,8 +2096,9 @@ def __content_download(**kwargs) -> Dict[str, Any]:
                 cs_properties = get_properties_table()
                 if app_settings.app_mode == AppMode.USERSTUDY:
                     metrics_dl = dict(content=json.dumps({
-                        'time_elapsed': time_elapsed.get_averages(),
-                        'n_interactions': n_spaceships_inspected.get_averages()
+                        'time_elapsed': time_elapsed.history,
+                        'n_interactions': n_spaceships_inspected.get_averages(),
+                        'avg_complexity': population_complexity.history
                         }),
                                       filename=f'user_metrics_{app_settings.rngseed}')
                 else:
@@ -2127,6 +2137,8 @@ def __content_download(**kwargs) -> Dict[str, Any]:
                                                           exp_n=app_settings.exp_n)
                     time_elapsed.new_generation(emitters=app_settings.my_emitterslist,
                                                 exp_n=app_settings.exp_n)
+                    population_complexity.new_generation(emitters=app_settings.my_emitterslist,
+                                                         exp_n=app_settings.exp_n)
                     logging.getLogger('webapp').info(msg='Next experiment loaded. Please fill out the questionnaire before continuing.')
                 else:
                     logging.getLogger('webapp').info(msg='Initializing a new population; this may take a while...')
@@ -2315,6 +2327,7 @@ def __quit_user_study(**kwargs) -> Dict[str, Any]:
     global app_settings
     global n_spaceships_inspected
     global time_elapsed
+    global population_complexity
     
     logging.getLogger('webapp').debug(msg=f'Switching mode from {app_settings.app_mode} to {AppMode.USER}...')
     app_settings.app_mode = AppMode.USER
@@ -2330,6 +2343,7 @@ def __quit_user_study(**kwargs) -> Dict[str, Any]:
     
     n_spaceships_inspected.reset()
     time_elapsed.reset()
+    population_complexity.reset()
     
     return {
         'heatmap-plot.figure': _build_heatmap(mapelites=app_settings.current_mapelites,
