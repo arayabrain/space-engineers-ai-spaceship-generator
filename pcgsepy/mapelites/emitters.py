@@ -1,6 +1,7 @@
 import warnings
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Tuple, Union
+import logging
 
 import numpy as np
 import numpy.typing as npt
@@ -14,6 +15,8 @@ from sklearn.utils._testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.neighbors import KNeighborsRegressor
+
+logging.getLogger('mapelites').info(msg=f'PyTorch set to {USE_TORCH}')
 
 if USE_TORCH:
     from pcgsepy.nn.estimators import NonLinearEstimator, train_estimator
@@ -324,7 +327,7 @@ class HumanPrefMatrixEmitter(Emitter):
         choose_from = self._prefs * (1 - self.diversity_weight) #+ diversity_builder(bins=bins, n_features=7) * self.diversity_weight
         idxs = np.argwhere(choose_from > 0)
         np.random.shuffle(idxs)
-        while fcs < 2 or ics < 2:
+        while fcs < 1 or ics < 1:
             self._last_selected.append(idxs[0, :])
             idxs = idxs[1:, :]
             b = bins[self._last_selected[-1][0], self._last_selected[-1][1]]
@@ -341,7 +344,7 @@ class HumanPrefMatrixEmitter(Emitter):
         prefs = prefs if prefs is not None else self._prefs
         choose_from = prefs * (1 - self.diversity_weight) #+ diversity_builder(bins=bins, n_features=7) * self.diversity_weight
         idxs = np.transpose(np.unravel_index(np.flip(np.argsort(choose_from, axis=None)), prefs.shape))
-        while fcs < 2 or ics < 2:
+        while fcs < 1 or ics < 1:
             self._last_selected.append(idxs[0, :])
             idxs = idxs[1:, :]
             b = bins[self._last_selected[-1][0], self._last_selected[-1][1]]
@@ -599,7 +602,7 @@ class ContextualBanditEmitter(Emitter):
             np.random.shuffle(sorted_bins)
         fcs, ics, i = 0, 0, 0
         selected_bins = []
-        while fcs < 2 or ics < 2:
+        while fcs < 1 or ics < 1:
             b = bins[sorted_bins[i][0], sorted_bins[i][1]]
             fcs += len(b._feasible)
             ics += len(b._infeasible)
@@ -819,7 +822,7 @@ class PreferenceBanditEmitter(Emitter):
             np.random.shuffle(sorted_bins)
         fcs, ics, i = 0, 0, 0
         selected_bins = []
-        while fcs < 2 or ics < 2:
+        while fcs < 1 or ics < 1:
             b = bins[sorted_bins[i][0], sorted_bins[i][1]]
             fcs += len(b._feasible)
             ics += len(b._infeasible)
@@ -931,13 +934,14 @@ class KNNEmitter(Emitter):
         self._fitted = False
         
         self._tot_actions = 0
-        self.sampling_strategy = 'epsilon_greedy'  # or 'gibbs', 'thompson'
+        self.sampling_strategy = 'thompson'  # or 'gibbs', 'thompson'
         self._thompson_stats = {}
 
     @ignore_warnings(category=ConvergenceWarning)
     def _fit(self) -> None:
         xs, ys = self._buffer.get()
         self._estimator = KNeighborsRegressor().fit(X=xs, y=ys)
+        logging.getLogger('mapelites').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self._estimator.score(xs, ys):.2%}')
         self._fitted = True
     
     def _get_valid_bins(self,
@@ -967,30 +971,38 @@ class KNNEmitter(Emitter):
         preferences = self._get_bins_index(bins=bins, normalize=True)
         mask3d = np.zeros(preferences.shape, dtype=bool)
         mask3d[:,:,:] = mask[:,:, np.newaxis] == 1
-        preferences = preferences[mask3d].reshape(-1, 2)
-        choose_from = self._estimator.predict(X=preferences)
+        predictions = self._estimator.predict(X=preferences[mask3d].reshape(-1, 2))
+        logging.getLogger('mapelites').debug(f'[{__name__}._predict] {predictions=}')
         out = np.zeros_like(bins, dtype=np.float32)
-        out[mask == 1] = choose_from[:]
+        ii, jj = np.nonzero(mask)
+        for i, j, v in zip(ii, jj, predictions):
+            out[i, j] = v
         if self.sampling_strategy == 'thompson':
-            for i in range(bins.shape[0]):
-                for j in range(bins.shape[1]):
-                    n_i = i / bins.shape[0]
-                    n_j = j / bins.shape[1]
-                    scale_factor = np.random.beta(a=BETA_A + (self._thompson_stats[n_i, n_j][0] if (n_i, n_j) in self._thompson_stats else 1),
-                                                  b=BETA_B + (self._thompson_stats[n_i, n_j][1] if (n_i, n_j) in self._thompson_stats else 1 + self._tot_actions),
-                                                  size=1)
-                    out[i, j] *= scale_factor        
-        return np.flip(np.argsort(out, axis=None))
+            for i, j in zip(ii, jj):
+                n_i = i / bins.shape[0]
+                n_j = j / bins.shape[1]
+                scale_factor = np.random.beta(a=BETA_A + (self._thompson_stats[n_i, n_j][0] if (n_i, n_j) in self._thompson_stats else 1),
+                                                b=BETA_B + (self._thompson_stats[n_i, n_j][1] if (n_i, n_j) in self._thompson_stats else 1 + self._tot_actions),
+                                                size=1)
+                out[i, j] *= scale_factor
+        out = out.flatten()
+        order = np.flip(np.argsort(out, axis=None))
+        out = out[order]
+        out_idxs = np.arange(len(out))[order][out != 0.]
+        logging.getLogger('mapelites').debug(f'[{__name__}._predict] sorted predicted indices={out_idxs}; predicted values={out[out != 0.]}')
+        return out_idxs
     
     def pre_step(self, **kwargs) -> None:
         bins: 'np.ndarray[MAPBin]' = kwargs['bins']
         idxs: List[Tuple[int, int]] = [*kwargs['selected_idxs'], *kwargs['expanded_idxs']]
         bounds: List[Tuple[float, float]] = kwargs['bounds']
+        logging.getLogger('mapelites').debug(f'[{__name__}.pre_step] {idxs=}')
         bcs0 = np.cumsum([bounds[0][0]] + [b.bin_size[0] for b in bins[0, :]])[:-1]
         bcs1 = np.cumsum([bounds[1][0]] + [b.bin_size[1] for b in bins[:, 0]])[:-1]
         for i in range(bins.shape[0]):
             for j in range(bins.shape[1]):
                 if bins[i, j].non_empty(pop='feasible'):
+                    logging.getLogger('mapelites').debug(f'[{__name__}.pre_step] {(i, j)=}; x={np.asarray([bcs0[i] / bounds[0][1], bcs1[j] / bounds[1][1]])}; dy={1. if (i, j) in idxs else 0.}')
                     self._buffer.insert(x=np.asarray([bcs0[i] / bounds[0][1], bcs1[j] / bounds[1][1]]),
                                         y=1. if (i, j) in idxs else 0.)
             n_i = i / bins.shape[0]
@@ -1011,6 +1023,7 @@ class KNNEmitter(Emitter):
                  bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
         assert self._fitted, f'{self.name} requires fitting and has not been fit yet!'
         sorted_bins = np.transpose(np.unravel_index(self._predict(bins=bins), bins.shape))
+        logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {sorted_bins=}')
         if self.sampling_strategy == 'epsilon_greedy':
             p = np.random.uniform(low=0, high=1, size=1) < self._epsilon
             self._epsilon -= self._epsilon * self._decay
@@ -1024,14 +1037,16 @@ class KNNEmitter(Emitter):
             raise Exception(f'Unknown sampling method for emitter: {self.sampling_strategy}.')
         if p:
             np.random.shuffle(sorted_bins)
+            logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {p=}; {sorted_bins=}')
         fcs, ics, i = 0, 0, 0
         selected_bins = []
-        while fcs < 2 or ics < 2:
+        while fcs < 1 or ics < 1:
             b = bins[sorted_bins[i][0], sorted_bins[i][1]]
             fcs += len(b._feasible)
             ics += len(b._infeasible)
             selected_bins.append(b)
             i += 1
+            logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {fcs=}; {ics=}; {i=}')
         return selected_bins
 
     def reset(self) -> None:
@@ -1115,6 +1130,7 @@ class LinearKernelEmitter(Emitter):
     def _fit(self) -> None:
         xs, ys = self._buffer.get()
         self._estimator = KernelRidge(kernel='linear').fit(X=xs, y=ys)
+        logging.getLogger('mapelites').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self._estimator.score(xs, ys):.2%}')
         self._fitted = True
     
     def _get_valid_bins(self,
@@ -1144,30 +1160,38 @@ class LinearKernelEmitter(Emitter):
         preferences = self._get_bins_index(bins=bins, normalize=True)
         mask3d = np.zeros(preferences.shape, dtype=bool)
         mask3d[:,:,:] = mask[:,:, np.newaxis] == 1
-        preferences = preferences[mask3d].reshape(-1, 2)
-        choose_from = self._estimator.predict(X=preferences)
+        predictions = self._estimator.predict(X=preferences[mask3d].reshape(-1, 2))
+        logging.getLogger('mapelites').debug(f'[{__name__}._predict] {predictions=}')
         out = np.zeros_like(bins, dtype=np.float32)
-        out[mask == 1] = choose_from[:]
+        ii, jj = np.nonzero(mask)
+        for i, j, v in zip(ii, jj, predictions):
+            out[i, j] = v
         if self.sampling_strategy == 'thompson':
-            for i in range(bins.shape[0]):
-                for j in range(bins.shape[1]):
-                    n_i = i / bins.shape[0]
-                    n_j = j / bins.shape[1]
-                    scale_factor = np.random.beta(a=BETA_A + (self._thompson_stats[n_i, n_j][0] if (n_i, n_j) in self._thompson_stats else 1),
-                                                  b=BETA_B + (self._thompson_stats[n_i, n_j][1] if (n_i, n_j) in self._thompson_stats else 1 + self._tot_actions),
-                                                  size=1)
-                    out[i, j] *= scale_factor        
-        return np.flip(np.argsort(out, axis=None))
+            for i, j in zip(ii, jj):
+                n_i = i / bins.shape[0]
+                n_j = j / bins.shape[1]
+                scale_factor = np.random.beta(a=BETA_A + (self._thompson_stats[n_i, n_j][0] if (n_i, n_j) in self._thompson_stats else 1),
+                                                b=BETA_B + (self._thompson_stats[n_i, n_j][1] if (n_i, n_j) in self._thompson_stats else 1 + self._tot_actions),
+                                                size=1)
+                out[i, j] *= scale_factor
+        out = out.flatten()
+        order = np.flip(np.argsort(out, axis=None))
+        out = out[order]
+        out_idxs = np.arange(len(out))[order][out != 0.]
+        logging.getLogger('mapelites').debug(f'[{__name__}._predict] sorted predicted indices={out_idxs}; predicted values={out[out != 0.]}')
+        return out_idxs
     
     def pre_step(self, **kwargs) -> None:
         bins: 'np.ndarray[MAPBin]' = kwargs['bins']
         idxs: List[Tuple[int, int]] = [*kwargs['selected_idxs'], *kwargs['expanded_idxs']]
         bounds: List[Tuple[float, float]] = kwargs['bounds']
+        logging.getLogger('mapelites').debug(f'[{__name__}.pre_step] {idxs=}')
         bcs0 = np.cumsum([bounds[0][0]] + [b.bin_size[0] for b in bins[0, :]])[:-1]
         bcs1 = np.cumsum([bounds[1][0]] + [b.bin_size[1] for b in bins[:, 0]])[:-1]
         for i in range(bins.shape[0]):
             for j in range(bins.shape[1]):
                 if bins[i, j].non_empty(pop='feasible'):
+                    logging.getLogger('mapelites').debug(f'[{__name__}.pre_step] {(i, j)=}; x={np.asarray([bcs0[i] / bounds[0][1], bcs1[j] / bounds[1][1]])}; dy={1. if (i, j) in idxs else 0.}')
                     self._buffer.insert(x=np.asarray([bcs0[i] / bounds[0][1], bcs1[j] / bounds[1][1]]),
                                         y=1. if (i, j) in idxs else 0.)
             n_i = i / bins.shape[0]
@@ -1188,6 +1212,7 @@ class LinearKernelEmitter(Emitter):
                  bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
         assert self._fitted, f'{self.name} requires fitting and has not been fit yet!'
         sorted_bins = np.transpose(np.unravel_index(self._predict(bins=bins), bins.shape))
+        logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {sorted_bins=}')
         if self.sampling_strategy == 'epsilon_greedy':
             p = np.random.uniform(low=0, high=1, size=1) < self._epsilon
             self._epsilon -= self._epsilon * self._decay
@@ -1201,14 +1226,16 @@ class LinearKernelEmitter(Emitter):
             raise Exception(f'Unknown sampling method for emitter: {self.sampling_strategy}.')
         if p:
             np.random.shuffle(sorted_bins)
+            logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {p=}; {sorted_bins=}')
         fcs, ics, i = 0, 0, 0
         selected_bins = []
-        while fcs < 2 or ics < 2:
+        while fcs < 1 or ics < 1:
             b = bins[sorted_bins[i][0], sorted_bins[i][1]]
             fcs += len(b._feasible)
             ics += len(b._infeasible)
             selected_bins.append(b)
             i += 1
+            logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {fcs=}; {ics=}; {i=}')
         return selected_bins
 
     def reset(self) -> None:
@@ -1292,6 +1319,7 @@ class RBFKernelEmitter(Emitter):
     def _fit(self) -> None:
         xs, ys = self._buffer.get()
         self._estimator = KernelRidge(kernel='rbf').fit(X=xs, y=ys)
+        logging.getLogger('mapelites').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self._estimator.score(xs, ys):.2%}')
         self._fitted = True
     
     def _get_valid_bins(self,
@@ -1321,30 +1349,38 @@ class RBFKernelEmitter(Emitter):
         preferences = self._get_bins_index(bins=bins, normalize=True)
         mask3d = np.zeros(preferences.shape, dtype=bool)
         mask3d[:,:,:] = mask[:,:, np.newaxis] == 1
-        preferences = preferences[mask3d].reshape(-1, 2)
-        choose_from = self._estimator.predict(X=preferences)
+        predictions = self._estimator.predict(X=preferences[mask3d].reshape(-1, 2))
+        logging.getLogger('mapelites').debug(f'[{__name__}._predict] {predictions=}')
         out = np.zeros_like(bins, dtype=np.float32)
-        out[mask == 1] = choose_from[:]
+        ii, jj = np.nonzero(mask)
+        for i, j, v in zip(ii, jj, predictions):
+            out[i, j] = v
         if self.sampling_strategy == 'thompson':
-            for i in range(bins.shape[0]):
-                for j in range(bins.shape[1]):
-                    n_i = i / bins.shape[0]
-                    n_j = j / bins.shape[1]
-                    scale_factor = np.random.beta(a=BETA_A + (self._thompson_stats[n_i, n_j][0] if (n_i, n_j) in self._thompson_stats else 1),
-                                                  b=BETA_B + (self._thompson_stats[n_i, n_j][1] if (n_i, n_j) in self._thompson_stats else 1 + self._tot_actions),
-                                                  size=1)
-                    out[i, j] *= scale_factor        
-        return np.flip(np.argsort(out, axis=None))
+            for i, j in zip(ii, jj):
+                n_i = i / bins.shape[0]
+                n_j = j / bins.shape[1]
+                scale_factor = np.random.beta(a=BETA_A + (self._thompson_stats[n_i, n_j][0] if (n_i, n_j) in self._thompson_stats else 1),
+                                                b=BETA_B + (self._thompson_stats[n_i, n_j][1] if (n_i, n_j) in self._thompson_stats else 1 + self._tot_actions),
+                                                size=1)
+                out[i, j] *= scale_factor
+        out = out.flatten()
+        order = np.flip(np.argsort(out, axis=None))
+        out = out[order]
+        out_idxs = np.arange(len(out))[order][out != 0.]
+        logging.getLogger('mapelites').debug(f'[{__name__}._predict] sorted predicted indices={out_idxs}; predicted values={out[out != 0.]}')
+        return out_idxs
     
     def pre_step(self, **kwargs) -> None:
         bins: 'np.ndarray[MAPBin]' = kwargs['bins']
         idxs: List[Tuple[int, int]] = [*kwargs['selected_idxs'], *kwargs['expanded_idxs']]
         bounds: List[Tuple[float, float]] = kwargs['bounds']
+        logging.getLogger('mapelites').debug(f'[{__name__}.pre_step] {idxs=}')
         bcs0 = np.cumsum([bounds[0][0]] + [b.bin_size[0] for b in bins[0, :]])[:-1]
         bcs1 = np.cumsum([bounds[1][0]] + [b.bin_size[1] for b in bins[:, 0]])[:-1]
         for i in range(bins.shape[0]):
             for j in range(bins.shape[1]):
                 if bins[i, j].non_empty(pop='feasible'):
+                    logging.getLogger('mapelites').debug(f'[{__name__}.pre_step] {(i, j)=}; x={np.asarray([bcs0[i] / bounds[0][1], bcs1[j] / bounds[1][1]])}; dy={1. if (i, j) in idxs else 0.}')
                     self._buffer.insert(x=np.asarray([bcs0[i] / bounds[0][1], bcs1[j] / bounds[1][1]]),
                                         y=1. if (i, j) in idxs else 0.)
             n_i = i / bins.shape[0]
@@ -1365,6 +1401,7 @@ class RBFKernelEmitter(Emitter):
                  bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
         assert self._fitted, f'{self.name} requires fitting and has not been fit yet!'
         sorted_bins = np.transpose(np.unravel_index(self._predict(bins=bins), bins.shape))
+        logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {sorted_bins=}')
         if self.sampling_strategy == 'epsilon_greedy':
             p = np.random.uniform(low=0, high=1, size=1) < self._epsilon
             self._epsilon -= self._epsilon * self._decay
@@ -1378,14 +1415,16 @@ class RBFKernelEmitter(Emitter):
             raise Exception(f'Unknown sampling method for emitter: {self.sampling_strategy}.')
         if p:
             np.random.shuffle(sorted_bins)
+            logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {p=}; {sorted_bins=}')
         fcs, ics, i = 0, 0, 0
         selected_bins = []
-        while fcs < 2 or ics < 2:
+        while fcs < 1 or ics < 1:
             b = bins[sorted_bins[i][0], sorted_bins[i][1]]
             fcs += len(b._feasible)
             ics += len(b._infeasible)
             selected_bins.append(b)
             i += 1
+            logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {fcs=}; {ics=}; {i=}')
         return selected_bins
 
     def reset(self) -> None:

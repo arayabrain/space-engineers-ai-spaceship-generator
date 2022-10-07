@@ -2563,7 +2563,7 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         'emitter-dropdown.label': emitter_name
     }
     
-    logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {app_settings.current_mapelites.emitter.name=} {process_semaphore.is_locked=}')
+    logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {app_settings.current_mapelites.emitter.name=}; {app_settings.current_mapelites.emitter.sampling_strategy=}; {process_semaphore.is_locked=}')
     
     if not process_semaphore.is_locked:
         process_semaphore.lock(name=event_trig)
