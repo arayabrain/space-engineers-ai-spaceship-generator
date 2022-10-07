@@ -1433,7 +1433,7 @@ def _build_heatmap(mapelites: MAPElites,
             v = mapelites.bins[i, j].get_metric(metric=metric['name'],
                                                 use_mean=use_mean,
                                                 population=population)
-            disp_map[i, j] = v
+            disp_map[i, j] = v if v != 0 else None
             s = ''
             if mapelites.bins[i, j].non_empty(pop='feasible'):
                 if (i, j) in valid_bins:
@@ -1470,8 +1470,12 @@ def _build_heatmap(mapelites: MAPElites,
                           dragmode='pan',
                           clickmode='event+select',
                           paper_bgcolor='rgba(0,0,0,0)',
-                          plot_bgcolor='rgba(0,0,0,0)',
+                          plot_bgcolor='rgba(0,0,0,1)',
                           template='plotly_dark',
+                          xaxis_showgrid=False,
+                          yaxis_showgrid=False,
+                          xaxis_zeroline=False,
+                          yaxis_zeroline=False,
                           margin=go.layout.Margin(
                               l=0,
                               r=0,
