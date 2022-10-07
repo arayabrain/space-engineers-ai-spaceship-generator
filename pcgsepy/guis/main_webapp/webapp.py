@@ -631,11 +631,23 @@ def serve_layout() -> dbc.Container:
                 dbc.Col([
                     dbc.Label("Spaceship Color",
                               style={'font-size': 'large'}),
-                    dbc.Input(type="color",
-                              id="color-picker",
-                              value="#737373",
-                              size='lg',
-                              debounce=True)],
+                    dbc.Row(children=[
+                        dbc.Col(
+                            dbc.Input(type="color",
+                                      id="color-picker",
+                                      value="#737373",
+                                      size='lg'),
+                            width=9
+                            ),
+                        dbc.Col(
+                            dbc.Button(children='Apply',
+                                       id='color-picker-btn',
+                                       color='primary',
+                                       class_name='button-fullsize'),
+                            width=3
+                        )
+                    ],
+                            align='center')],
                         width={'size': 6, 'offset': 3},
                         style={'text-align': 'center'})
             ),
@@ -728,8 +740,6 @@ def serve_layout() -> dbc.Container:
                     ])),
             dbc.Row(
                       [
-                        #   dbc.Col(color_and_download,
-                        #           align='center'),
                           dbc.Col(content_properties)
                       ]
                   ),
@@ -2355,7 +2365,7 @@ triggers_map = {
     'consent-yes': __consent,
     'consent-no': __consent,
     'nbs-err-btn': __close_error,
-    'color-picker': __color,
+    'color-picker-btn': __color,
     'fitness-sldr': __fitness_weights,
     'webapp-quickstart-btn': __show_quickstart_modal,
     'qus-btn': __show_quit_user_study_modal,
@@ -2417,6 +2427,7 @@ triggers_map = {
               State('download-btn', 'children'),
               State('content-legend-div', 'children'),
               State("eus-modal", "is_open"),
+              State('color-picker', 'value'),
                             
               Input('population-feasible', 'n_clicks'),
               Input('population-infeasible', 'n_clicks'),
@@ -2454,13 +2465,13 @@ triggers_map = {
               Input("consent-yes", "n_clicks"),
               Input("consent-no", "n_clicks"),
               Input("nbs-err-btn", "n_clicks"),
-              Input('color-picker', 'value'),
+              Input('color-picker-btn', 'n_clicks'),
               Input('webapp-quickstart-btn', 'n_clicks'),
               Input('qus-btn', 'n_clicks'),
               Input('qus-y-btn', 'n_clicks'),
               )
-def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, qs_modal_show, qs_um_modal_show, cm_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style, study_style, dlbtn_label, curr_legend, eus_modal_show,
-                     pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights, b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn, color, qs_btn, qus_btn, qus_y_btn):
+def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, qs_modal_show, qs_um_modal_show, cm_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style, study_style, dlbtn_label, curr_legend, eus_modal_show, color,
+                     pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights, b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter_name, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn, color_btn, qs_btn, qus_btn, qus_y_btn):
     global app_settings
     
     ctx = dash.callback_context
