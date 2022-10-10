@@ -871,7 +871,7 @@ def serve_layout() -> dbc.Container:
     
     experiment_controls = html.Div(
         children=[
-            html.H4('Advanced Controls',
+            html.H4('Population Controls',
                     className='section-title'),
             dbc.Row(children=[
                 html.Br(),
@@ -1613,6 +1613,7 @@ def _apply_step(mapelites: MAPElites,
         app_settings.step_progress = 0
         if not only_emitter:
             s = time.perf_counter()
+            logging.getLogger('webapp').debug(msg=f'[{__name__}._apply_step] human; {selected_bins=}')
             mapelites.interactive_step(bin_idxs=selected_bins,
                                        gen=gen_counter)
             elapsed_user = time.perf_counter() - s
@@ -2605,6 +2606,9 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     
     # logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {app_settings.current_mapelites.emitter.name=}; {app_settings.current_mapelites.emitter.sampling_strategy=}; {process_semaphore.is_locked=}')
     logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {app_settings.current_mapelites.emitter.name=}; {process_semaphore.is_locked=}')
+    
+    if app_settings.selected_bins:
+        logging.getLogger('webapp').debug(f'[{__name__}.general_callback] bins={[app_settings.current_mapelites.bins[_switch([idx])[0]] for idx in app_settings.selected_bins]}')
     
     if not process_semaphore.is_locked:
         process_semaphore.lock(name=event_trig)

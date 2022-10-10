@@ -516,6 +516,7 @@ class MAPElites:
         # generate solutions from both populations
         generated = []
         for pop in populations:
+            logging.getLogger('mapelites').debug(msg=f'[{__name__}._step] {len(pop)=}')
             if len(pop) > 0:
                 try:
                     minimize = False if pop[0].is_feasible else False if self.estimator is not None else True
@@ -529,6 +530,7 @@ class MAPElites:
                                                                                make_graph=False), new_pool))
                     subdivide_solutions(lcs=new_pool,
                                         lsystem=self.lsystem)
+                    # TODO: This (hull+color) can be parallelized!
                     # add hull
                     if self.hull_builder is not None:
                         for cs in new_pool:
@@ -605,15 +607,16 @@ class MAPElites:
         inspecting = [idx for idx in bin_idxs]
         offsets = [(-1, -1), (-1, 0), (-1,1), (0, -1), (0, 1), (1, -1),  (1, 0), (1, 1)]
         np.random.shuffle(offsets)
+        logging.getLogger('mapelites').debug(msg=f'[{__name__}.seek_nearest_valid] {pop=}; {inspecting=}')
         while new_pop == []:
             to_inspect = []
             past_idxs = []
             for idx in inspecting:
-                past_idxs.append(idx)
                 for offset in offsets:
                     new_idx = (idx[0] + offset[0], idx[1] + offset[1])
                     if 0 <= new_idx[0] < self.bins.shape[0] and 0 <= new_idx[1] < self.bins.shape[1]:
                         pool = self.bins[new_idx]._feasible if pop == 'feasible' else self.bins[new_idx]._infeasible
+                        logging.getLogger('mapelites').debug(msg=f'[{__name__}.seek_nearest_valid] {new_idx=}; {pool=}; {len(new_pop)=}; {to_inspect=}')
                         if pool:
                             new_pop.extend(pool) 
                             break
@@ -623,6 +626,7 @@ class MAPElites:
             if to_inspect == []:
                 break
             inspecting = to_inspect
+        logging.getLogger('mapelites').debug(msg=f'[{__name__}.seek_nearest_valid] {new_pop=}')
         return new_pop
     
     def interactive_step(self,
@@ -699,6 +703,7 @@ class MAPElites:
                 for cs in cbin._infeasible:
                     cs.c_fitness = cs.fitness[self.infeas_fitness_idx]
         selected_bins = self.emitter.pick_bin(bins=self.bins)
+        logging.getLogger('mapelites').debug(msg=f'[{__name__}.emitter_step] {selected_bins=}')
         if selected_bins:
             fpop, ipop = [], []
             # TODO: this could be handled better
@@ -713,7 +718,7 @@ class MAPElites:
                     ipop.extend(selected_bin._infeasible)
             else:
                 raise NotImplementedError(f'Unrecognized emitter output: {selected_bins}.')
-            
+            logging.getLogger('mapelites').debug(msg=f'[{__name__}.emitter_step] {fpop=}; {ipop=}')
             if ipop == []:
                 if isinstance(selected_bins[0], MAPBin):
                     ipop = self.seek_nearest_valid(bin_idxs=[b.bin_idx for b in selected_bins],

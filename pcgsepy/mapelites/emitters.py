@@ -604,9 +604,11 @@ class ContextualBanditEmitter(Emitter):
         selected_bins = []
         while fcs < 1 or ics < 1:
             b = bins[sorted_bins[i][0], sorted_bins[i][1]]
-            fcs += len(b._feasible)
-            ics += len(b._infeasible)
-            selected_bins.append(b)
+            df, di = len(b._feasible), len(b._infeasible)
+            if df > 0 or di > 0:
+                fcs += df
+                ics += di
+                selected_bins.append(b)
             i += 1
         return selected_bins
 
