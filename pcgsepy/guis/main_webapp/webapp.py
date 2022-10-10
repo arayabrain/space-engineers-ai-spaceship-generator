@@ -533,18 +533,23 @@ def serve_layout() -> dbc.Container:
         ])
     
     mapelites_heatmap = html.Div(children=[
-        html.Span(children=[
-            html.H4('Spaceship Population',
-                    className='section-title'),
-            html.P('🛈',
-                   id='heatmap-help',
-                   className='help')
+        dbc.Row(children=[
+            dbc.Col(
+                html.H4('Spaceship Population',
+                        className='section-title'),
+                width={'size': 8, 'offset': 2}),
+            dbc.Col(
+                dbc.Button('🛈',
+                           color='info',
+                           id='heatmap-help',
+                           className='help'),
+                width=1,
+                style={'justify-content': 'left'}
+                )
             ],
                   style={
-                      'display': 'inline-flex',
                       'justify-content': 'center',
                       'align-content': 'center',
-                      'flex-direction': 'row',
                       'align-items': 'center'
                       }),
         html.Br(),
@@ -601,18 +606,23 @@ def serve_layout() -> dbc.Container:
         style=hidden_style if not app_settings.app_mode == AppMode.DEV else {})
     
     content_plot = html.Div(children=[
-        html.Span(children=[
-            html.H4('Selected Spaceship',
-                    className='section-title'),
-            html.P('🛈',
-                   id='content-help',
-                   className='help')
+        dbc.Row(children=[
+            dbc.Col(
+                html.H4('Selected Spaceship',
+                        className='section-title'),
+                width={'size': 8, 'offset': 2}),
+            dbc.Col(
+                dbc.Button('🛈',
+                           color='info',
+                           id='content-help',
+                           className='help'),
+                width=1,
+                style={'justify-content': 'left'}
+            )
             ],
                   style={
-                      'display': 'inline-flex',
                       'justify-content': 'center',
                       'align-content': 'center',
-                      'flex-direction': 'row',
                       'align-items': 'center'
                       }),
         html.Br(),
@@ -666,18 +676,23 @@ def serve_layout() -> dbc.Container:
             html.Br(),
             dbc.Row(
                 dbc.Col([
-                    html.Span(children=[
-                        dbc.Label("Download Blueprint",
-                                  style={'font-size': 'large'}),
-                        html.P('🛈',
-                               id='download-help',
-                               className='help')
+                    dbc.Row(children=[
+                        dbc.Col(
+                            dbc.Label("Download Blueprint",
+                                      style={'font-size': 'large'}),
+                            width=4),
+                        dbc.Col(
+                            dbc.Button('🛈',
+                                       color='info',
+                                       id='download-help',
+                                       className='help'),
+                            width=1,
+                            style={'justify-content': 'left'}
+                        )
                     ],
                               style={
-                                  'display': 'inline-flex',
                                   'justify-content': 'center',
                                   'align-content': 'center',
-                                  'flex-direction': 'row',
                                   'align-items': 'center'
                                   }),
                     html.Br(),                   
