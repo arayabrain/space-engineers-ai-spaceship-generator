@@ -22,6 +22,7 @@ import dash
 import dash_bootstrap_components as dbc
 import numpy as np
 import plotly.graph_objects as go
+from plotly.graph_objs.layout.scene._camera import Camera
 from dash import ALL, dcc, html
 from dash.dependencies import Input, Output, State
 from pcgsepy.common.api_call import block_definitions
@@ -1520,7 +1521,8 @@ def _build_heatmap(mapelites: MAPElites,
 
 def _get_elite_content(mapelites: MAPElites,
                        bin_idx: Optional[Tuple[int, int]],
-                       pop: str) -> go.Scatter3d:
+                       pop: str,
+                       camera: Optional[Dict[str, Any]] = None) -> go.Scatter3d:
     if bin_idx is not None:
         # get elite content
         elite = get_elite(mapelites=mapelites,
@@ -1595,11 +1597,13 @@ def _get_elite_content(mapelites: MAPElites,
         fig.add_scatter3d(x=np.zeros(0, dtype=object),
                           y=np.zeros(0, dtype=object),
                           z=np.zeros(0, dtype=object))
-    camera = dict(
-        up=dict(x=0, y=0, z=1),
-        center=dict(x=0, y=0, z=0),
-        eye=dict(x=2, y=2, z=2)
-        )
+    if camera is None:
+        camera = dict(
+            up=dict(x=0, y=0, z=1),
+            center=dict(x=0, y=0, z=0),
+            eye=dict(x=2, y=2, z=2)
+            )
+    
     fig.update_layout(scene=dict(aspectmode='data'),
                       scene_camera=camera,
                       template='plotly_dark',
@@ -1678,6 +1682,7 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
     eoe_modal_show = kwargs['eoe_modal_show']
     nbs_err_modal_show = kwargs['nbs_err_modal_show']
     dlbtn_label = kwargs['dlbtn_label']
+    curr_camera = kwargs['curr_camera']
     
     if app_settings.selected_bins or kwargs['event_trig'] == 'rand-step-btn':
         s = time.perf_counter()
@@ -1713,7 +1718,8 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
                     if app_settings.current_mapelites.bins[app_settings.selected_bins[-1]].new_elite[app_settings.hm_callback_props['pop'][kwargs['pop_name']]]:
                         curr_content = _get_elite_content(mapelites=app_settings.current_mapelites,
                                                           bin_idx=lb,
-                                                          pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
+                                                          pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible',
+                                                          camera=curr_camera.get('scene.camera', None))
                         elite = get_elite(mapelites=app_settings.current_mapelites,
                                           bin_idx=lb,
                                           pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
@@ -1977,7 +1983,8 @@ def __update_content(**kwargs) -> Dict[str, Any]:
         if (j, i) in [b.bin_idx for b in app_settings.current_mapelites._valid_bins()]:
             curr_content = _get_elite_content(mapelites=app_settings.current_mapelites,
                                               bin_idx=(j, i),
-                                              pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
+                                              pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible',
+                                              camera=None)
             if app_settings.app_mode == AppMode.USERSTUDY:
                 n_spaceships_inspected.add(1)
             if not app_settings.current_mapelites.enforce_qnt and app_settings.selected_bins != []:
@@ -2329,6 +2336,7 @@ def __color(**kwargs) -> Dict[str, Any]:
     
     color = kwargs['color']
     curr_content = kwargs['curr_content']
+    curr_camera = kwargs['curr_camera']
     
     r, g, b = tuple(int(color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
     new_color = Vec.v3f(r, g, b).scale(1 / 256)
@@ -2338,7 +2346,8 @@ def __color(**kwargs) -> Dict[str, Any]:
     if app_settings.selected_bins:
         curr_content =  _get_elite_content(mapelites=app_settings.current_mapelites,
                                            bin_idx=_switch([app_settings.selected_bins[-1]])[0],
-                                           pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
+                                           pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible',
+                                           camera=curr_camera.get('scene.camera', None))
     return {
         'content-plot.figure': curr_content,
         'content-legend-div.children': get_content_legend()
@@ -2525,6 +2534,7 @@ triggers_map = {
               State('content-legend-div', 'children'),
               State("eus-modal", "is_open"),
               State('color-picker', 'value'),
+              State("content-plot", "relayoutData"),
                             
               Input('population-feasible', 'n_clicks'),
               Input('population-infeasible', 'n_clicks'),
@@ -2575,7 +2585,7 @@ triggers_map = {
               Input('qus-btn', 'n_clicks'),
               Input('qus-y-btn', 'n_clicks'),
               )
-def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, emitter_name, qs_modal_show, qs_um_modal_show, cm_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style, study_style, dlbtn_label, curr_legend, eus_modal_show, color,
+def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, emitter_name, qs_modal_show, qs_um_modal_show, cm_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style, study_style, dlbtn_label, curr_legend, eus_modal_show, color, curr_camera,
                      pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights, b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter1_nclicks, emitter2_nclicks, emitter3_nclicks, emitter4_nclicks, emitter5_nclicks, emitter6_nclicks, emitter7_nclicks, emitter8_nclicks, emitter9_nclicks, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn, color_btn, qs_btn, qus_btn, qus_y_btn):
     global app_settings
     
@@ -2652,7 +2662,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
         if app_settings.selected_bins and len(curr_content['data']) == 0:
             output['content-plot.figure'] = _get_elite_content(mapelites=app_settings.current_mapelites,
                                                                bin_idx=_switch([app_settings.selected_bins[-1]])[0],
-                                                               pop='feasible')
+                                                               pop='feasible',
+                                                               camera=curr_camera.get('scene.camera', None))
         
         process_semaphore.unlock()
     
