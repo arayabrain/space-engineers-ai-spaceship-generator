@@ -1,4 +1,4 @@
-# 🚀 AI Spaceship Generator for Space Engineers 🚀
+# 🚀 Space Engineers AI Spaceship Generator 🚀
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Lines of code](https://img.shields.io/tokei/lines/github/arayabrain/space-engineers-ai-spaceship-generator)
 ![GitHub issues](https://img.shields.io/github/issues-raw/arayabrain/space-engineers-ai-spaceship-generator)
@@ -9,7 +9,7 @@
 <p align="center">
   <img src="media/pcgsepy_banner.png" alt="pcgsepy_banner" height="120"/>
 </p>
-Research code for the Space Engineers PCG project developed under the GoodAI research grant.
+Projects developed as part of the Space Engineers PCG project, supported by a [GoodAI research grant](https://www.goodai.com/using-open-ended-algorithms-to-generate-video-game-content-in-space-engineers/).
 
 ## Code availability
 The code is open source and is currently under development on the [Araya Inc. repository](https://github.com/arayabrain/space-engineers-ai-spaceship-generator) for the purposes of the user study. After the user study is completed, any issue or PR should be addressed to the [GoodAI fork repository](https://github.com/martinpoliak-goodai/space-engineers-ai-spaceship-generator).
