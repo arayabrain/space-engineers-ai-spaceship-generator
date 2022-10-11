@@ -95,6 +95,10 @@ time_elapsed_emitter = Metric(emitters=app_settings.my_emitterslist,
 population_complexity = Metric(emitters=app_settings.my_emitterslist,
                                exp_n=app_settings.exp_n,
                                multiple_values=True)
+n_solutions_feas = Metric(emitters=app_settings.my_emitterslist,
+                          exp_n=app_settings.exp_n)
+n_solutions_infeas = Metric(emitters=app_settings.my_emitterslist,
+                            exp_n=app_settings.exp_n)
 
 
 download_semaphore = Semaphore(locked=True)    
@@ -1673,6 +1677,8 @@ def _apply_step(mapelites: MAPElites,
 
 def __apply_step(**kwargs) -> Dict[str, Any]:
     global population_complexity
+    global n_solutions_feas
+    global n_solutions_infeas
     global app_settings
     
     cs_properties = kwargs['cs_properties']
@@ -1698,6 +1704,8 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
             # update metrics if user consented to privacy
             if app_settings.app_mode == AppMode.USERSTUDY:
                 population_complexity.add(new_complexity)
+                n_solutions_feas.add(app_settings.current_mapelites.n_new_solutions('feasible'))
+                n_solutions_infeas.add(app_settings.current_mapelites.n_new_solutions('infeasible'))
             if app_settings.selected_bins:
                 rem_idxs = []
                 for i, b in enumerate(app_settings.selected_bins):
@@ -1763,6 +1771,8 @@ def __reset(**kwargs) -> Dict[str, Any]:
     global time_elapsed_user
     global time_elapsed_emitter
     global population_complexity
+    global n_solutions_feas
+    global n_solutions_infeas
     
     logging.getLogger('webapp').info(msg='Started resetting all bins (this may take a while)...')
     app_settings.current_mapelites.reset()
@@ -1775,6 +1785,8 @@ def __reset(**kwargs) -> Dict[str, Any]:
         time_elapsed_user.reset()
         time_elapsed_emitter.reset()
         population_complexity.reset()
+        n_solutions_feas.reset()
+        n_solutions_infeas.reset()
     _update_base_color(color=base_color)
     
     return {
@@ -2099,6 +2111,8 @@ def __content_download(**kwargs) -> Dict[str, Any]:
     global time_elapsed_user
     global time_elapsed_emitter
     global population_complexity
+    global n_solutions_feas
+    global n_solutions_infeas
     global n_spaceships_inspected
     global download_semaphore
 
@@ -2146,7 +2160,9 @@ def __content_download(**kwargs) -> Dict[str, Any]:
                         'time_elapsed_user': time_elapsed_user.history,
                         'time_elapsed_emitter': time_elapsed_emitter.history,
                         'n_interactions': n_spaceships_inspected.get_averages(),
-                        'avg_complexity': population_complexity.history
+                        'avg_complexity': population_complexity.history,
+                        'n_solutions_feas': n_solutions_feas.history,
+                        'n_solutions_infeas': n_solutions_feas.history
                         }),
                                       filename=f'user_metrics_{app_settings.rngseed}')
                 else:
@@ -2189,6 +2205,10 @@ def __content_download(**kwargs) -> Dict[str, Any]:
                                                         exp_n=app_settings.exp_n)
                     population_complexity.new_generation(emitters=app_settings.my_emitterslist,
                                                          exp_n=app_settings.exp_n)
+                    n_solutions_feas.new_generation(emitters=app_settings.my_emitterslist,
+                                                    exp_n=app_settings.exp_n)
+                    n_solutions_infeas.new_generation(emitters=app_settings.my_emitterslist,
+                                                      exp_n=app_settings.exp_n)
                     logging.getLogger('webapp').info(msg='Next experiment loaded. Please fill out the questionnaire before continuing.')
                 else:
                     logging.getLogger('webapp').info(msg='Initializing a new population; this may take a while...')
@@ -2381,6 +2401,8 @@ def __quit_user_study(**kwargs) -> Dict[str, Any]:
     global time_elapsed_user
     global time_elapsed_emitter
     global population_complexity
+    global n_solutions_feas
+    global n_solutions_infeas
     
     logging.getLogger('webapp').debug(msg=f'Switching mode from {app_settings.app_mode} to {AppMode.USER}...')
     app_settings.app_mode = AppMode.USER
@@ -2398,6 +2420,8 @@ def __quit_user_study(**kwargs) -> Dict[str, Any]:
     time_elapsed_user.reset()
     time_elapsed_emitter.reset()
     population_complexity.reset()
+    n_solutions_feas.reset()
+    n_solutions_infeas.reset()
     
     return {
         'heatmap-plot.figure': _build_heatmap(mapelites=app_settings.current_mapelites,

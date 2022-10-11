@@ -834,7 +834,20 @@ class MAPElites:
             for cs in b._feasible if pop == 'feasible' else b._infeasible:
                 all_lenghts.append(len(cs.content._blocks))
         return np.average(all_lenghts)
-        
+    
+    
+    def total_solutions(self,
+                        pop: str = 'feasible') -> int:
+        """Compute the total number of solutions currently in the archive for the selected population.
+
+        Args:
+            pop (str, optional): The population type. Defaults to 'feasible'.
+
+        Returns:
+            int: The total number of solutions in the archive for the selected population.
+        """
+        return np.sum([b.get_metric(metric='size', pop=pop) for (_, _), b in np.ndenumerate(self.bins)])
+    
     
     def to_json(self) -> Dict[str, Any]:
         return {
