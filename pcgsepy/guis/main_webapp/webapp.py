@@ -904,9 +904,9 @@ def serve_layout() -> dbc.Container:
                     ],
                         id='rand-step-btn-div',
                         style={} if app_settings.app_mode == AppMode.USER else hidden_style,
-                        width=6)                
+                        width=6)
                 ],
-                    style={'justify-content': 'center'}),
+                    style={'justify-content': 'center', 'flex-wrap': 'inherit'}),
             dbc.Row(children=[
                 dbc.Col(children=[
                     html.Br(),
