@@ -11,6 +11,11 @@
 </p>
 Research code for the Space Engineers PCG project developed under the GoodAI research grant.
 
+## Code availability
+The code is open source and is currently under development on the [Araya Inc. repository](https://github.com/arayabrain/space-engineers-ai-spaceship-generator) for the purposes of the user study. After the user study is completed, any issue or PR should be addressed to the [GoodAI fork repository](https://github.com/martinpoliak-goodai/space-engineers-ai-spaceship-generator).
+
+The user study is expected to end around mid-November, 2022. This README will be updated in case of changes to the end date.
+
 ## Installation
 The application can be built using the provided `.py` files placed in the `user-study` folder. The executable files will be created in the `user-study\dist` folder.
 
