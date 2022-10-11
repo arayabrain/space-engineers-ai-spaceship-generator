@@ -37,6 +37,9 @@ class Vec:
         else:
             return False
 
+    def __hash__(self) -> int:
+        return hash(self.as_tuple())
+    
     @classmethod
     def v2i(cls,
             x: int,

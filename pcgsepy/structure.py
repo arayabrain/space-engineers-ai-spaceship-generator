@@ -2,7 +2,7 @@ import json
 import os
 from copy import deepcopy
 from functools import cached_property
-from typing import Dict, List, Tuple
+from typing import Dict, List, Set, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -182,7 +182,7 @@ def _is_base_block(block_type: str) -> bool:
 
 class Structure:
     __slots__ = ['origin_coords', 'orientation_forward', 'orientation_up', 'grid_size', '_blocks',
-                 '_has_intersections', '_scaled_arr', '_arr']
+                 '_has_intersections', '_scaled_arr', '_air_gridmask', '_arr']
     
     def __init__(self, origin: Vec,
                  orientation_forward: Vec,
@@ -204,6 +204,7 @@ class Structure:
         self._blocks: Dict[Tuple(int, int, int), Block] = {}
         self._has_intersections: bool = None
         self._scaled_arr: npt.NDArray[np.uint32] = None
+        self._air_gridmask: npt.NDArray[np.bool8] = None
         self._arr: npt.NDArray[np.uint32] = None
 
     def __repr__(self) -> str:
@@ -362,6 +363,41 @@ class Structure:
             int: The number of blocks with the given block type.
         """
         return sum([1 if x.block_type == block_type else 0 for x in self._blocks.values()])
+    
+    @property
+    def air_blocks_gridmask(self) -> npt.NDArray[np.bool8]:
+        if self._air_gridmask is None:
+            self._air_gridmask = np.zeros_like(self.as_grid_array, dtype=np.bool8)
+            # ds = [Vec.v3i(1, 0, 0), Vec.v3i(0, 1, 0), Vec.v3i(0, 0, 1),
+            #     Vec.v3i(-1, 0, 0), Vec.v3i(0, -1, 0), Vec.v3i(0, 0, -1)]
+            # # get existing blocks indices
+            # blocks_idxs = [Vec.from_tuple(k).scale(v=1 / self.grid_size).to_veci() for k in self._blocks.keys()]
+            # # get all indices attached to the blocks indices
+            # next_to_idxs = [b.sum(d) for d in ds for b in blocks_idxs if b.sum(d) not in blocks_idxs]
+            # # internal air cotner blocks have at least 3 blocks next to them
+            # internal_air = [Vec.from_tuple(t) for t in  list({b.as_tuple() : next_to_idxs.count(b) for b in next_to_idxs if next_to_idxs.count(b) > 2}.keys())]
+            # # checking loop
+            # past = blocks_idxs
+            # while internal_air:
+            #     to_check = []
+            #     for idx in internal_air:
+            #         if 0 <= idx.x < self._air_gridmask.shape[0] and 0 <= idx.y < self._air_gridmask.shape[1] and 0 <= idx.z < self._air_gridmask.shape[2] and\
+            #             not self._air_gridmask[idx.as_tuple()]:
+            #                 past.append(idx)
+            #                 if self._blocks.get(idx.scale(self.grid_size).as_tuple(), None) is None:
+            #                     self._air_gridmask[idx.as_tuple()] = True
+            #                     to_check.extend([idx.sum(d) for d in ds if idx.sum(d) not in past])
+            #     internal_air = list(set(to_check))
+            i1, j1, k1 = self.as_grid_array.shape
+            for (i, j, k) in zip(*np.nonzero(self.as_grid_array == 0)):
+                self._air_gridmask[i, j, k] = np.sum(self.as_grid_array[0:i, j, k]) != 0 and \
+                    np.sum(self.as_grid_array[i:i1, j, k]) != 0 and \
+                    np.sum(self.as_grid_array[i, 0:j, k]) != 0 and \
+                    np.sum(self.as_grid_array[i, j:j1, k]) != 0 and \
+                    np.sum(self.as_grid_array[i, j, 0:k]) != 0 and \
+                    np.sum(self.as_grid_array[i, j, k:k1]) != 0
+        return self._air_gridmask
+    
     
     def sanify(self) -> None:
         """Correct the structure's blocks to be >=0 on every axis."""

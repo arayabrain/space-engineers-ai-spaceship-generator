@@ -121,29 +121,6 @@ class HullBuilder:
                       orientation_up=orientation_up)
         block.position = pos
         self._blocks_set[idx] = block
-
-    def _tag_internal_air_blocks(self,
-                                 arr: np.ndarray) -> npt.NDArray[np.uint8]:
-        """Create a mask for air blocks within the structure.
-
-        Args:
-            arr (np.ndarray): The array representation of the structure.
-
-        Returns:
-            npt.NDArray[np.uint8]: The mask array.
-        """
-        air_blocks = np.zeros(shape=arr.shape, dtype=np.uint8)
-        # TODO: this could be improved--need a way to check if an air block is surrounded on all 6 (extended) sides by non-air blocks
-        i1, j1, k1 = arr.shape
-        for (i, j, k) in zip(*np.nonzero(arr == 0)):
-            if np.sum(arr[0:i, j, k]) != 0 and \
-                np.sum(arr[i:i1, j, k]) != 0 and \
-                np.sum(arr[i, 0:j, k]) != 0 and \
-                np.sum(arr[i, j:j1, k]) != 0 and \
-                np.sum(arr[i, j, 0:k]) != 0 and \
-                np.sum(arr[i, j, k:k1]) != 0:
-                    air_blocks[i, j, k] = BlockValue.BASE_BLOCK
-        return air_blocks
         
     def _exists_block(self,
                       idx: Tuple[int, int, int],
@@ -657,7 +634,7 @@ class HullBuilder:
         self._blocks_set = {}
         
         arr = structure.as_grid_array
-        air = self._tag_internal_air_blocks(arr=arr)
+        air = structure.air_blocks_gridmask
         hull = self._get_convex_hull(arr=arr)
         hull[np.nonzero(air)] = BlockValue.AIR_BLOCK
         hull[np.nonzero(arr)] = BlockValue.AIR_BLOCK

@@ -1539,6 +1539,15 @@ def _get_elite_content(mapelites: MAPElites,
                 custom_colors.append(f'rgb{b.color.as_tuple()}')
             else:
                 custom_colors.append(block_to_colour.get(structure._clean_label(b.block_type), '#ff0000'))
+        # black points for internal air blocks
+        air = np.nonzero(structure.air_blocks_gridmask)
+        air_x, air_y, air_z = air
+        x = np.asarray(x.tolist() + air_x.tolist())
+        y = np.asarray(y.tolist() + air_y.tolist())
+        z = np.asarray(z.tolist() + air_z.tolist())
+        custom_colors.extend(['#000000' for _ in range(len(air_x))])
+        ss.extend(['' for _ in range(len(air_x))])
+        # create scatter 3d plot
         fig = go.Figure()
         fig.add_scatter3d(x=x,
                           y=y,
