@@ -6,7 +6,7 @@ curr_dir = os.getcwd()
 config.read(os.path.join(curr_dir, 'configs.ini'))
 
 USE_TORCH = config['LIBRARY'].getboolean('use_torch')
-ACTIVE_LOGGERS = [f'{x}.json' for x in config['LIBRARY'].get('active_loggers').split(',')]
+ACTIVE_LOGGERS = [x for x in config['LIBRARY'].get('active_loggers').split(',')]
 
 HOST = config['API'].get('host')
 PORT = config['API'].getint('port')
