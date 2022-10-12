@@ -10,6 +10,8 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from zipfile import ZipFile
 
+from pcgsepy.guis.voxel import VoxelData
+
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     os.chdir(sys._MEIPASS)
 
@@ -1534,32 +1536,56 @@ def _get_elite_content(mapelites: MAPElites,
         x, y, z = arr
         cs = [content[i, j, k] for i, j, k in zip(x, y, z)]
         ss = [structure._clean_label(list(block_definitions.keys())[v - 1]) for v in cs]
-        custom_colors = []
-        for (i, j, k) in zip(x, y, z):
-            b = structure._blocks[(i * structure.grid_size, j * structure.grid_size, k * structure.grid_size)]
-            if _is_base_block(block_type=structure._clean_label(b.block_type)):
-                custom_colors.append(f'rgb{b.color.as_tuple()}')
-            else:
-                custom_colors.append(block_to_colour.get(structure._clean_label(b.block_type), block_to_colour['Unrecognized']))
-        # black points for internal air blocks
-        air = np.nonzero(structure.air_blocks_gridmask)
-        air_x, air_y, air_z = air
-        x = np.asarray(x.tolist() + air_x.tolist())
-        y = np.asarray(y.tolist() + air_y.tolist())
-        z = np.asarray(z.tolist() + air_z.tolist())
-        custom_colors.extend([block_to_colour['Air'] for _ in range(len(air_x))])
-        ss.extend(['' for _ in range(len(air_x))])
-        # create scatter 3d plot
+        
+        # custom_colors = []
+        # for (i, j, k) in zip(x, y, z):
+        #     b = structure._blocks[(i * structure.grid_size, j * structure.grid_size, k * structure.grid_size)]
+        #     if _is_base_block(block_type=structure._clean_label(b.block_type)):
+        #         custom_colors.append(f'rgb{b.color.as_tuple()}')
+        #     else:
+        #         custom_colors.append(block_to_colour.get(structure._clean_label(b.block_type), block_to_colour['Unrecognized']))
+        # # black points for internal air blocks
+        # air = np.nonzero(structure.air_blocks_gridmask)
+        # air_x, air_y, air_z = air
+        # x = np.asarray(x.tolist() + air_x.tolist())
+        # y = np.asarray(y.tolist() + air_y.tolist())
+        # z = np.asarray(z.tolist() + air_z.tolist())
+        # custom_colors.extend([block_to_colour['Air'] for _ in range(len(air_x))])
+        # ss.extend(['' for _ in range(len(air_x))])
+        # # create scatter 3d plot
+        # fig = go.Figure()
+        # fig.add_scatter3d(x=x,
+        #                   y=y,
+        #                   z=z,
+        #                   mode='markers',
+        #                   marker=dict(size=4,
+        #                               line=dict(width=3,
+        #                                         color='DarkSlateGrey'),
+        #                               color=custom_colors),
+        #                   showlegend=False)
+        
+        voxels = VoxelData(content)
+        indices = {structure._clean_label(n):i + 1 for i, n in enumerate(list(block_definitions.keys()))}
+        custom_colors = {}
+        for k, v in block_to_colour.items():
+            if k in indices:
+                if _is_base_block(k):
+                    custom_colors[indices[k]] = f'rgb{base_color.as_tuple()}'
+                else:
+                    custom_colors[indices[k]] = v
         fig = go.Figure()
-        fig.add_scatter3d(x=x,
-                          y=y,
-                          z=z,
-                          mode='markers',
-                          marker=dict(size=4,
-                                      line=dict(width=3,
-                                                color='DarkSlateGrey'),
-                                      color=custom_colors),
-                          showlegend=False)
+        fig.add_mesh3d(x=voxels.vertices[0],
+                       y=voxels.vertices[1],
+                       z=voxels.vertices[2], 
+                       i=voxels.triangles[0],
+                       j=voxels.triangles[1],
+                       k=voxels.triangles[2],
+                       facecolor=[custom_colors[ix] for ix in voxels.intensities],
+                       opacity=.8,
+                       flatshading=False,
+                       showlegend=False
+                       )
+        
         fig.update_traces(hoverinfo='text',
                           hovertext=ss)
         ux, uy, uz = np.unique(x), np.unique(y), np.unique(z)
@@ -1588,9 +1614,9 @@ def _get_elite_content(mapelites: MAPElites,
         )
     else:
         fig = go.Figure()
-        fig.add_scatter3d(x=np.zeros(0, dtype=object),
-                          y=np.zeros(0, dtype=object),
-                          z=np.zeros(0, dtype=object))
+        fig.add_mesh3d(x=np.zeros(0, dtype=object),
+                       y=np.zeros(0, dtype=object),
+                       z=np.zeros(0, dtype=object))
     
     camera = camera if camera is not None else dict(up=dict(x=0, y=0, z=1),
                                                     center=dict(x=0, y=0, z=0),
