@@ -877,6 +877,7 @@ def serve_layout() -> dbc.Container:
                 dcc.Upload(
                     id='popupload-data',
                     children='Upload Population',
+                    className='upload',
                     multiple=False
                     ),
                 ],
@@ -2247,15 +2248,17 @@ def __population_download(**kwargs) -> Dict[str, Any]:
 def __population_upload(**kwargs) -> Dict[str, Any]:
     global app_settings
     
-    upload_contents = kwargs['upload_contents']
+    upload_filename = kwargs['upload_filename']
     
-    _, upload_contents = upload_contents.split(',')
-    upload_contents = base64.b64decode(upload_contents).decode()        
-    all_bins = np.asarray([MAPBin.from_json(x) for x in json.loads(upload_contents)])
-    app_settings.current_mapelites.reset(lcs=[])
-    all_bins = all_bins.reshape(app_settings.current_mapelites.bin_qnt)
-    app_settings.current_mapelites.bins = all_bins
-    app_settings.current_mapelites.reassign_all_content()
+    logging.getLogger('webapp').info(msg=f'Setting population from file...')
+    # _, upload_contents = upload_contents.split(',')
+    # upload_contents = base64.b64decode(upload_contents).decode()
+    app_settings.current_mapelites.load_population(filename=upload_filename)       
+    # all_bins = np.asarray([MAPBin.from_json(x) for x in json.loads(upload_contents)])
+    # app_settings.current_mapelites.reset(lcs=[])
+    # all_bins = all_bins.reshape(app_settings.current_mapelites.bin_qnt)
+    # app_settings.current_mapelites.bins = all_bins
+    # app_settings.current_mapelites.reassign_all_content()
     logging.getLogger('webapp').info(msg=f'Set population from file successfully.')
     app_settings.gen_counter = 0
     app_settings.selected_bins = []
@@ -2581,7 +2584,7 @@ triggers_map = {
               Input('emitter-rbfkernel', 'n_clicks'),
               Input("download-btn", "n_clicks"),
               Input('popdownload-btn', 'n_clicks'),
-              Input('popupload-data', 'contents'),
+              Input('popupload-data', 'filename'),
               Input('symmetry-none', 'n_clicks'),
               Input('symmetry-x', 'n_clicks'),
               Input('symmetry-y', 'n_clicks'),
@@ -2596,7 +2599,7 @@ triggers_map = {
               Input('qus-y-btn', 'n_clicks'),
               )
 def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, emitter_name, qs_modal_show, qs_um_modal_show, cm_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style, study_style, dlbtn_label, curr_legend, eus_modal_show, color, curr_camera,
-                     pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights, b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter1_nclicks, emitter2_nclicks, emitter3_nclicks, emitter4_nclicks, emitter5_nclicks, emitter6_nclicks, emitter7_nclicks, emitter8_nclicks, emitter9_nclicks, n_clicks_cs_download, n_clicks_popdownload, upload_contents, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn, color_btn, qs_btn, qus_btn, qus_y_btn):
+                     pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights, b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter1_nclicks, emitter2_nclicks, emitter3_nclicks, emitter4_nclicks, emitter5_nclicks, emitter6_nclicks, emitter7_nclicks, emitter8_nclicks, emitter9_nclicks, n_clicks_cs_download, n_clicks_popdownload, upload_filename, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn, color_btn, qs_btn, qus_btn, qus_y_btn):
     global app_settings
     
     ctx = dash.callback_context

@@ -1125,7 +1125,7 @@ class LinearKernelEmitter(Emitter):
         self._fitted = False
         
         self._tot_actions = 0
-        self.sampling_strategy = 'epsilon_greedy'  # or 'gibbs', 'thompson'
+        self.sampling_strategy = 'thompson'  # or 'gibbs', 'thompson'
         self._thompson_stats = {}
 
     @ignore_warnings(category=ConvergenceWarning)
@@ -1314,7 +1314,7 @@ class RBFKernelEmitter(Emitter):
         self._fitted = False
         
         self._tot_actions = 0
-        self.sampling_strategy = 'epsilon_greedy'  # or 'gibbs', 'thompson'
+        self.sampling_strategy = 'thompson'  # or 'gibbs', 'thompson'
         self._thompson_stats = {}
 
     @ignore_warnings(category=ConvergenceWarning)

@@ -292,7 +292,7 @@ class MAPElites:
         all_cs = []
         for (_, _), cbin in np.ndenumerate(self.bins):
             all_cs.extend([*cbin._feasible, *cbin._infeasible])
-            logging.getLogger('mapelites').debug(f'[{__name__}.subdivide_range] {bin_idx=} (pre) - {cbin.bin_idx=}; {cbin.new_elite=}')
+            # logging.getLogger('mapelites').debug(f'[{__name__}.subdivide_range] {bin_idx=} (pre) - {cbin.bin_idx=}; {cbin.new_elite=}')
         # update bin sizes
         v_i, v_j = self.bin_sizes[0][i], self.bin_sizes[1][j]
         self.bin_sizes[0][i] = v_i / 2
@@ -316,7 +316,7 @@ class MAPElites:
                 x = i
                 y = j
             new_bins[m, n].new_elite = self.bins[x, y].new_elite.copy()
-            logging.getLogger('mapelites').debug(f'[{__name__}.subdivide_range] {bin_idx=} (post) - {(m, n)=}; {new_bins[m, n].new_elite=}')
+            # logging.getLogger('mapelites').debug(f'[{__name__}.subdivide_range] {bin_idx=} (post) - {(m, n)=}; {new_bins[m, n].new_elite=}')
         # assign new bin map
         self.bins = new_bins
         # assign solutions to bins
@@ -386,13 +386,22 @@ class MAPElites:
         Returns:
             List[Tuple[int, int]]: The processed indices of expanded bins.
         """
-        expanded_idxs = set(selected_idxs) - set(expanded_idxs)
-        if expanded_idxs:
-            for i, (m, n) in enumerate(list(expanded_idxs)):
-                expanded_idxs.add((m + i + 1, n + i))
-                expanded_idxs.add((m + i, n + i + 1))
-                expanded_idxs.add((m + i + 1, n + i + 1))
-        return list(expanded_idxs - set(selected_idxs))
+        logging.getLogger('mapelites').debug(msg=f'[{__name__}._process_expanded_idxs] pre {selected_idxs=}; {expanded_idxs=}')
+        processed_idxs = [idx for idx in selected_idxs]
+        for (m, n) in selected_idxs:
+            for (i, j) in expanded_idxs:
+                if m == i:
+                    processed_idxs.append((m + 1, n))
+                if n == j:
+                    processed_idxs.append((m, n + 1))
+                if m == i and n == j:
+                    processed_idxs.append((m + 1, n + 1))
+        for i, (m, n) in enumerate(processed_idxs):
+            lm = len([x[0] for x in expanded_idxs if x[0] < m])
+            ln = len([x[1] for x in expanded_idxs if x[1] < n])
+            processed_idxs[i] = (m + lm, n + ln)
+        logging.getLogger('mapelites').debug(msg=f'[{__name__}._process_expanded_idxs] post {processed_idxs=}')
+        return processed_idxs
 
     def update_behavior_descriptors(self,
                                     bs: Tuple[BehaviorCharacterization]) -> None:
@@ -528,6 +537,7 @@ class MAPElites:
                     new_pool = list(map(lambda cs: self.lsystem._add_ll_strings(cs=cs), new_pool))
                     new_pool = list(map(lambda cs: self.lsystem._set_structure(cs=cs,
                                                                                make_graph=False), new_pool))
+                    logging.getLogger('mapelites').debug(msg=f'[{__name__}._step] {len(new_pool)=}')
                     subdivide_solutions(lcs=new_pool,
                                         lsystem=self.lsystem)
                     # TODO: This (hull+color) can be parallelized!
@@ -538,9 +548,11 @@ class MAPElites:
                     for cs in new_pool:
                         cs.content.set_color(color=cs.base_color)
                     # assign fitness
+                    logging.getLogger('mapelites').debug(msg=f'[{__name__}._step] Started assigning fitnesses')
                     generated.extend(Parallel(n_jobs=-1, prefer="threads")(delayed(self._assign_fitness)(cs) for cs in new_pool))
                 # evoexceptions are ignored, though it is possible to get stuck here
-                except EvoException:
+                except EvoException as e:
+                    logging.getLogger('mapelites').error(msg=f'[{__name__}._step] {e}')
                     pass
         # if possible, train the estimator for fitness acquirement
         if self.estimator is not None:

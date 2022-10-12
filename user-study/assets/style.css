@@ -47,3 +47,15 @@
 .help {
     cursor: help
 }
+.upload {
+    text-align: center;
+    display: inline-flex;
+    flex-wrap: nowrap;
+    flex-direction: column-reverse;
+    justify-content: center;
+    align-items: center;
+    border: deepskyblue;
+    border-width: thick;
+    border-style: dotted;
+    border-radius: 10%;
+}

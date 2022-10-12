@@ -343,12 +343,9 @@ def set_app_layout():
                        'width': '60%',
                        'height': '60px',
                        'lineHeight': '60px',
-                       'borderWidth': '1px',
-                       'borderStyle': 'dashed',
-                       'borderRadius': '5px',
-                       'textAlign': 'center',
                        'margin': '10px auto'
                    },
+                   className='upload',
                    multiple=True
                    )])
     upload_progress = html.Div(
