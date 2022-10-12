@@ -10,34 +10,34 @@
   <img src="media/pcgsepy_banner.png" alt="pcgsepy_banner" height="120"/>
 </p>
 
-Apps and code developed for the [Space Engineers](https://www.spaceengineersgame.com/) PCG project, supported by a [GoodAI research grant](https://www.goodai.com/using-open-ended-algorithms-to-generate-video-game-content-in-space-engineers/). The main app is a Spaceship Generator, which creates spaceships for Space Engineers using AI (for more information, see the [publications](#publications)). The second app is a Spaceship Ranker, which is used for conducting a user study. The Spaceship Generator and Spaceship Ranker apps are available for Windows on the [releases page](https://github.com/martinpoliak-goodai/space-engineers-ai-spaceship-generator/releases).
+Apps and code developed for the [Space Engineers](https://www.spaceengineersgame.com/) PCG project, supported by a [GoodAI research grant](https://www.goodai.com/using-open-ended-algorithms-to-generate-video-game-content-in-space-engineers/). The main app is the AI Spaceship Generator, which creates spaceships for Space Engineers using AI (for more information, see the [publications](#publications)). The second app is a Spaceships Ranker, which is used for conducting a user study. The AI Spaceship Generator and Spaceships Ranker apps are available for Windows on the [releases page](https://github.com/martinpoliak-goodai/space-engineers-ai-spaceship-generator/releases).
 
 ## Apps
-The following is a quick overview of the apps (Spaceship Generator and Spaceship Ranker). Further documentation is available within the apps themselves.
+The following is a quick overview of the apps (AI Spaceship Generator and Spaceships Ranker). Further documentation is available within the apps themselves.
 
-### Spaceship Generator (user mode)
+### AI Spaceship Generator (user mode)
 <p align="center">
   <img src="media/UI_usermode_preview.jpg" alt="ui_usermode_preview" height="300"/>
 </p>
 The default mode for the app outside of the user study period. The AI generates an initial "population" of spaceships (top left). When a spaceship is selected from the population it is visualised (top middle) and its properties are displayed (top right). You can choose to "evolve" a new set of spaceships based on either the selected spaceship or a random spaceship (the "evolution" process tries to construct new spaceships based on an existing spaceship). You can also re-initialise the population of spaceships.
 
-### Spaceship Generator (user study mode)
+### AI Spaceship Generator (user study mode)
 <p align="center">
   <img src="media/UI_userstudy_preview.jpg" alt="ui_userstudy_preview" height="300"/>
 </p>
 The default mode for the app during the user study period. You evolve spaceships for a fixed number of iterations, for different configurations of the AI system. At the end of the user study, the app automatically switches to user mode. The data collected from the user study will be used to improve the AI system in the next app release.
 
-### Spaceship Generator (developer mode)
+### AI Spaceship Generator (developer mode)
 <p align="center">
   <img src="media/UI_devmode_preview.jpg" alt="ui_devmode_preview" height="300"/>
 </p>
 An advanced mode, with full access to every part of the system that can be changed during the evolution process.
 
-### Spaceship Ranker
+### Spaceships Ranker
 <p align="center">
   <img src="media/UI_comparator_preview.jpg" alt="ui_comparator_preview" height="300"/>
 </p>
-This app is used only for the user study. You can upload and rank different spaceships from the Spaceship Generator.
+This app is used only for the user study. You can upload and rank different spaceships from the AI Spaceship Generator.
 
 ## Roadmap
 This project is under active development in the [Araya Inc. repository](https://github.com/arayabrain/space-engineers-ai-spaceship-generator) until the end of October 2022. This project will then transition to maintenance support in the [GoodAI fork repository](https://github.com/martinpoliak-goodai/space-engineers-ai-spaceship-generator) until the end of December 2022.
@@ -58,7 +58,7 @@ Set the `use_torch` flag in `configs.ini` if you want to use the PyTorch library
 ## Building the apps
 The apps can be built using the provided `.py` files placed in the `user-study` folder. The executable files will be created in the `user-study\dist` folder.
 
-You can build just the main application (running `python build_main_webapp.py`) or also the spaceships ranker (running `python build_comparator.py`). Keep in mind that the latter is used *only* for the user study.
+The AI Spaceship Generator can be built by running `python build_main_webapp.py`. The Spaceships Ranker can be built by running `python build_comparator.py` (note that this is only used for the user study).
 
 ### Modifiable files
 Some files can be modified before building the application. These are:
