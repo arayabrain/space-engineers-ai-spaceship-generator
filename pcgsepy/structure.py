@@ -330,7 +330,6 @@ class Structure:
         Returns:
             float: The volume of the grid.
         """
-        # return self.grid_size * grid_to_coords * sum([b.volume for b in self._blocks.values()])
         return sum([b.volume for b in self._blocks.values()])
     
     @property
@@ -366,8 +365,14 @@ class Structure:
     
     @property
     def air_blocks_gridmask(self) -> npt.NDArray[np.bool8]:
+        """Get the grid array of internal air blocks in the structure.
+
+        Returns:
+            npt.NDArray[np.bool8]: A boolean array where `True` elements are internal air blocks in the grid array.
+        """
         if self._air_gridmask is None:
             self._air_gridmask = np.zeros_like(self.as_grid_array, dtype=np.bool8)
+            # Old code, reliable but very slow
             # ds = [Vec.v3i(1, 0, 0), Vec.v3i(0, 1, 0), Vec.v3i(0, 0, 1),
             #     Vec.v3i(-1, 0, 0), Vec.v3i(0, -1, 0), Vec.v3i(0, 0, -1)]
             # # get existing blocks indices
@@ -388,8 +393,10 @@ class Structure:
             #                     self._air_gridmask[idx.as_tuple()] = True
             #                     to_check.extend([idx.sum(d) for d in ds if idx.sum(d) not in past])
             #     internal_air = list(set(to_check))
+            # new code, faster but less readable
             i1, j1, k1 = self.as_grid_array.shape
             for (i, j, k) in zip(*np.nonzero(self.as_grid_array == 0)):
+                # basically, check for every empty block index if it's surrounded on all 6 sides by at least a block
                 self._air_gridmask[i, j, k] = np.sum(self.as_grid_array[0:i, j, k]) != 0 and \
                     np.sum(self.as_grid_array[i:i1, j, k]) != 0 and \
                     np.sum(self.as_grid_array[i, 0:j, k]) != 0 and \
@@ -397,7 +404,6 @@ class Structure:
                     np.sum(self.as_grid_array[i, j, 0:k]) != 0 and \
                     np.sum(self.as_grid_array[i, j, k:k1]) != 0
         return self._air_gridmask
-    
     
     def sanify(self) -> None:
         """Correct the structure's blocks to be >=0 on every axis."""

@@ -15,7 +15,9 @@ class Metric:
     def __init__(self,
                  emitters: List[str],
                  exp_n: int,
+                 name: str,
                  multiple_values: bool = False) -> None:
+        self.name = name
         self.current_generation: int = 0
         self.multiple_values = multiple_values
         self.history: Dict[int, List[Any]] = {

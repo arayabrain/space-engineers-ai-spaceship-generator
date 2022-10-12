@@ -1,19 +1,14 @@
 import base64
-from cProfile import run
 import json
 import logging
 import os
 import random
-from re import A
 import sys
 import time
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from zipfile import ZipFile
-from pcgsepy.guis.utils import AppMode, AppSettings, DashLoggerHandler, Metric, Semaphore
-
-from pcgsepy.structure import _is_base_block
 
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     os.chdir(sys._MEIPASS)
@@ -22,7 +17,6 @@ import dash
 import dash_bootstrap_components as dbc
 import numpy as np
 import plotly.graph_objects as go
-from plotly.graph_objs.layout.scene._camera import Camera
 from dash import ALL, dcc, html
 from dash.dependencies import Input, Output, State
 from pcgsepy.common.api_call import block_definitions
@@ -33,7 +27,12 @@ from pcgsepy.guis.main_webapp.modals_msgs import (end_of_experiment,
                                                   end_of_userstudy,
                                                   no_selection_error,
                                                   privacy_policy_body,
-                                                  privacy_policy_question)
+                                                  privacy_policy_question,
+                                                  spaceship_population_help,
+                                                  spaceship_preview_help,
+                                                  download_help,
+                                                  user_study_quit_msg)
+from pcgsepy.guis.utils import AppMode, AppSettings, DashLoggerHandler, Metric, Semaphore
 from pcgsepy.hullbuilder import HullBuilder
 from pcgsepy.lsystem.rules import StochasticRules
 from pcgsepy.lsystem.solution import CandidateSolution
@@ -41,8 +40,10 @@ from pcgsepy.mapelites.bin import MAPBin
 from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, Emitter,
                                         GreedyEmitter, HumanEmitter,
                                         HumanPrefMatrixEmitter, KNNEmitter, LinearKernelEmitter,
-                                        PreferenceBanditEmitter, RBFKernelEmitter, RandomEmitter)
+                                        PreferenceBanditEmitter, RBFKernelEmitter, RandomEmitter,
+                                        emitters)
 from pcgsepy.mapelites.map import MAPElites, get_elite
+from pcgsepy.structure import _is_base_block
 from pcgsepy.xml_conversion import convert_structure_to_xml
 from tqdm import trange
 
@@ -66,7 +67,9 @@ block_to_colour: Dict[str, str] = {
     'SmallLight': '#fffaf0',
     'Window1x1Slope': '#fffff0',
     'Window1x1Flat': '#fffff0',
-    'LargeBlockLight_1corner': '#fffaf0'
+    'LargeBlockLight_1corner': '#fffaf0',
+    'Unrecognized': '#ff0000',
+    'Air': '#000000'
 }
 hidden_style: Dict[str, str] = {'visibility': 'hidden', 'height': '0px', 'display': 'none'}
 circle_style: Dict[str, str] = {
@@ -84,21 +87,35 @@ struct_sizes: Dict[int, str] = {1: 'Small',
 app_settings = AppSettings()
 
 
-n_spaceships_inspected = Metric(emitters=app_settings.my_emitterslist,
+n_spaceships_inspected = Metric(name='n_spaceships_inspected',
+                                emitters=app_settings.my_emitterslist,
                                 exp_n=app_settings.exp_n)
-time_elapsed_user = Metric(emitters=app_settings.my_emitterslist,
+time_elapsed_user = Metric(name='time_elapsed_user',
+                           emitters=app_settings.my_emitterslist,
                            exp_n=app_settings.exp_n,
                            multiple_values=True)
-time_elapsed_emitter = Metric(emitters=app_settings.my_emitterslist,
+time_elapsed_emitter = Metric(name='time_elapsed_emitter',
+                              emitters=app_settings.my_emitterslist,
                               exp_n=app_settings.exp_n,
                               multiple_values=True)
-population_complexity = Metric(emitters=app_settings.my_emitterslist,
+population_complexity = Metric(name='population_complexity',
+                               emitters=app_settings.my_emitterslist,
                                exp_n=app_settings.exp_n,
                                multiple_values=True)
-n_solutions_feas = Metric(emitters=app_settings.my_emitterslist,
+n_solutions_feas = Metric(name='n_solutions_feas',
+                          emitters=app_settings.my_emitterslist,
                           exp_n=app_settings.exp_n)
-n_solutions_infeas = Metric(emitters=app_settings.my_emitterslist,
+n_solutions_infeas = Metric(name='n_solutions_infeas',
+                            emitters=app_settings.my_emitterslist,
                             exp_n=app_settings.exp_n)
+
+
+all_metrics = [n_spaceships_inspected,
+               time_elapsed_user,
+               time_elapsed_emitter,
+               population_complexity,
+               n_solutions_feas,
+               n_solutions_infeas]
 
 
 download_semaphore = Semaphore(locked=True)    
@@ -362,13 +379,7 @@ def serve_layout() -> dbc.Container:
         dbc.ModalHeader(dbc.ModalTitle("Spaceship Population Help"),
                         style={'justify-content': 'center'},
                         close_button=False),
-        dbc.ModalBody(dcc.Markdown("""
-                                   The population is the collection of all spaceships generated by the program. The spaceships are subdivided according to the ratios of their dimensions (axis).
-                                   
-                                   Each cell in the grid corresponds to a small collection of spaceships with similar shape properties. By clicking a cell, the best spaceship in the cell is displayed in the "Spaceship Preview".
-                                   
-                                   Each spaceship has a "fitness" value assigned, which measures how _good_ the spaceship is according to different metrics. The higher the fitness, the better the spaceship is.
-                                   """,
+        dbc.ModalBody(dcc.Markdown(spaceship_population_help,
                                    style={'text-align': 'justify'}))
         ],
                                    id='hh-modal',
@@ -381,11 +392,7 @@ def serve_layout() -> dbc.Container:
         dbc.ModalHeader(dbc.ModalTitle("Selected Spaceship Help"),
                         style={'justify-content': 'center'},
                         close_button=False),
-        dbc.ModalBody(dcc.Markdown("""
-                                   You can click and drag the preview to rotate the spaceship, and use the mouse scrollwheel to zoom in or out.
-                                   
-                                   Hovering over the spaceship blocks preview will show the corresponding block type.
-                                   """,
+        dbc.ModalBody(dcc.Markdown(spaceship_preview_help,
                                    style={'text-align': 'justify'}))
         ],
                                    id='ch-modal',
@@ -398,13 +405,7 @@ def serve_layout() -> dbc.Container:
         dbc.ModalHeader(dbc.ModalTitle("Download Help"),
                         style={'justify-content': 'center'},
                         close_button=False),
-        dbc.ModalBody(dcc.Markdown("""
-                                   You can download the currently selected spaceship as a `.zip` file by clicking the **Download** button. 
-                                   The compressed folder, located in your default download directory, contains the files needed to load the spaceship in Space Engineers as a blueprint (`bp.sbc` and `thumb.png`), as well as a program-specific file used in the "Spaceship Comparator" application.
-                                   
-                                   Simply place the unzipped folder in `..\AppData\Roaming\SpaceEngineers\Blueprints\local` and load Space Engineers.
-                                   In a scenario world, press `Ctrl+F10` to bring up the **Blueprints** window and you will see the spaceship listed among the local blueprints.
-                                   """,
+        dbc.ModalBody(dcc.Markdown(download_help,
                                    style={'text-align': 'justify'}))
         ],
                                    id='dh-modal',
@@ -418,12 +419,7 @@ def serve_layout() -> dbc.Container:
                         style={'justify-content': 'center'},
                         close_button=True),
         dbc.ModalBody(children=[
-            dcc.Markdown("""
-                         Do you really want to quit the user study?
-                         
-                         If you quit the user study, we won't collect data anymore and you won't be able to complete the experiment.
-                         Make sure to close the questionnaire afterwards.
-                         """,
+            dcc.Markdown(user_study_quit_msg,
                          style={'text-align': 'justify'}),
             html.Div(id='eus-body-loading',
                      children=[])
@@ -1410,10 +1406,7 @@ def interval_updates(fdis, ms, lsysms, symms, consent_loading_data_children, eou
 
 
 def _switch(ls: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
-    res = []
-    for e in ls:
-        res.append((e[1], e[0]))
-    return res
+    return [(e[1], e[0]) for e in ls]
 
 
 def _format_bins(mapelites: MAPElites,
@@ -1463,8 +1456,10 @@ def _build_heatmap(mapelites: MAPElites,
             s = ''
             if mapelites.bins[i, j].non_empty(pop='feasible'):
                 if (i, j) in valid_bins:
-                    s = '▣' if app_settings.gen_counter > 0 and mapelites.bins[i, j].new_elite[population] else s
-                    s = '☑' if (j, i) in app_settings.selected_bins else s                    
+                    if (j, i) in app_settings.selected_bins:
+                        s = '☑'
+                    elif app_settings.gen_counter > 0 and mapelites.bins[i, j].new_elite[population]:
+                        s = '▣'                
             if j == 0:
                 text.append([s])
             else:
@@ -1517,7 +1512,7 @@ def _build_heatmap(mapelites: MAPElites,
         yaxis={
             'tickvals': np.arange(disp_map.shape[1]),
             'ticktext': y_labels
-        },
+        }
     )
     
     return heatmap
@@ -1541,17 +1536,17 @@ def _get_elite_content(mapelites: MAPElites,
         custom_colors = []
         for (i, j, k) in zip(x, y, z):
             b = structure._blocks[(i * structure.grid_size, j * structure.grid_size, k * structure.grid_size)]
-            if _is_base_block(block_type=b.block_type.split('_')[2]):
+            if _is_base_block(block_type=structure._clean_label(b.block_type)):
                 custom_colors.append(f'rgb{b.color.as_tuple()}')
             else:
-                custom_colors.append(block_to_colour.get(structure._clean_label(b.block_type), '#ff0000'))
+                custom_colors.append(block_to_colour.get(structure._clean_label(b.block_type), block_to_colour['Unrecognized']))
         # black points for internal air blocks
         air = np.nonzero(structure.air_blocks_gridmask)
         air_x, air_y, air_z = air
         x = np.asarray(x.tolist() + air_x.tolist())
         y = np.asarray(y.tolist() + air_y.tolist())
         z = np.asarray(z.tolist() + air_z.tolist())
-        custom_colors.extend(['#000000' for _ in range(len(air_x))])
+        custom_colors.extend([block_to_colour['Air'] for _ in range(len(air_x))])
         ss.extend(['' for _ in range(len(air_x))])
         # create scatter 3d plot
         fig = go.Figure()
@@ -1563,12 +1558,9 @@ def _get_elite_content(mapelites: MAPElites,
                                       line=dict(width=3,
                                                 color='DarkSlateGrey'),
                                       color=custom_colors),
-                          showlegend=False
-                          )
-        fig.update_traces(
-            hoverinfo='text',
-            hovertext=ss
-        )
+                          showlegend=False)
+        fig.update_traces(hoverinfo='text',
+                          hovertext=ss)
         ux, uy, uz = np.unique(x), np.unique(y), np.unique(z)
         ptg = .2
         show_x = [v for i, v in enumerate(ux) if i % (1 / ptg) == 0]
@@ -1580,17 +1572,14 @@ def _get_elite_content(mapelites: MAPElites,
                 yaxis_title='m',
                 zaxis_title='',
                 xaxis={
-                    # 'tickmode': 'array',
                     'tickvals': show_x,
                     'ticktext': [structure.grid_size * i for i in show_x],
                 },
                 yaxis={
-                    # 'tickmode': 'array',
                     'tickvals': show_y,
                     'ticktext': [structure.grid_size * i for i in show_y],
                 },
                 zaxis={
-                    # 'tickmode': 'array',
                     'tickvals': show_z,
                     'ticktext': [structure.grid_size * i for i in show_z],
                 }
@@ -1601,24 +1590,20 @@ def _get_elite_content(mapelites: MAPElites,
         fig.add_scatter3d(x=np.zeros(0, dtype=object),
                           y=np.zeros(0, dtype=object),
                           z=np.zeros(0, dtype=object))
-    if camera is None:
-        camera = dict(
-            up=dict(x=0, y=0, z=1),
-            center=dict(x=0, y=0, z=0),
-            eye=dict(x=2, y=2, z=2)
-            )
     
+    camera = camera if camera is not None else dict(up=dict(x=0, y=0, z=1),
+                                                    center=dict(x=0, y=0, z=0),
+                                                    eye=dict(x=2, y=2, z=2))
     fig.update_layout(scene=dict(aspectmode='data'),
                       scene_camera=camera,
                       template='plotly_dark',
                     #   paper_bgcolor='rgba(0,0,0,0)',
                     #   plot_bgcolor='rgba(0,0,0,0)',
-                      margin=go.layout.Margin(
-                          l=0,
-                          r=0,
-                          b=0,
-                          t=0)
-                      )
+                      margin=go.layout.Margin(l=0,
+                                              r=0,
+                                              b=0,
+                                              t=0))
+    
     return fig
 
 
@@ -1704,8 +1689,8 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
             # update metrics if user consented to privacy
             if app_settings.app_mode == AppMode.USERSTUDY:
                 population_complexity.add(new_complexity)
-                n_solutions_feas.add(app_settings.current_mapelites.n_new_solutions('feasible'))
-                n_solutions_infeas.add(app_settings.current_mapelites.n_new_solutions('infeasible'))
+                n_solutions_feas.add(float(app_settings.current_mapelites.total_solutions('feasible')))
+                n_solutions_infeas.add(float(app_settings.current_mapelites.total_solutions('infeasible')))
             if app_settings.selected_bins:
                 rem_idxs = []
                 for i, b in enumerate(app_settings.selected_bins):
@@ -2196,6 +2181,7 @@ def __content_download(**kwargs) -> Dict[str, Any]:
                     app_settings.current_mapelites.reset(lcs=[])
                     app_settings.current_mapelites.hull_builder.apply_smoothing = False
                     app_settings.current_mapelites.load_population(filename=app_settings.my_emitterslist[app_settings.exp_n])
+                    app_settings.current_mapelites.emitter = _get_emitter()
                     logging.getLogger('webapp').info(msg='Next population loaded.')
                     n_spaceships_inspected.new_generation(emitters=app_settings.my_emitterslist,
                                                           exp_n=app_settings.exp_n)
@@ -2665,8 +2651,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
     # logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {app_settings.current_mapelites.emitter.name=}; {app_settings.current_mapelites.emitter.sampling_strategy=}; {process_semaphore.is_locked=}')
     logging.getLogger('webapp').debug(f'[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {app_settings.current_mapelites.emitter.name=}; {process_semaphore.is_locked=}')
     
-    if app_settings.selected_bins:
-        logging.getLogger('webapp').debug(f'[{__name__}.general_callback] bins={[app_settings.current_mapelites.bins[_switch([idx])[0]] for idx in app_settings.selected_bins]}')
+    for metric in all_metrics:
+        logging.getLogger('webapp').debug(f'[{__name__}.general_callback] metric={metric.name}; {metric.history=}')
     
     if not process_semaphore.is_locked:
         process_semaphore.lock(name=event_trig)
