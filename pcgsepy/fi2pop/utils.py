@@ -91,7 +91,7 @@ def create_new_pool(population: List[CandidateSolution],
                 # set base color
                 o1.base_color = np.random.choice([p1.base_color, p2.base_color])
                 o2.base_color = np.random.choice([p1.base_color, p2.base_color])
-                logging.getLogger('mapelites').debug(f'[{__name__}.create_new_pool] xover2p: Parents: {p1.string=},{p1.base_color}; {p2.string=},{p2.base_color}; Offsprings: {o1.string=},{o1.base_color}; {o2.string=},{o2.base_color}')
+                logging.getLogger('fi2pop').debug(f'[{__name__}.create_new_pool] xover2p: Parents: {p1.string=},{p1.base_color}; {p2.string=},{p2.base_color}; Offsprings: {o1.string=},{o1.base_color}; {o2.string=},{o2.base_color}')
                 childs = [o1, o2]
             else:
                 raise EvoException('Picked same parents, this should never happen.')
@@ -109,15 +109,15 @@ def create_new_pool(population: List[CandidateSolution],
                 p.parents[1].n_offspring += 2
             o1.base_color = p.base_color
             o2.base_color = p.base_color
-            logging.getLogger('mapelites').debug(f'[{__name__}.create_new_pool] xover1p: Parent: {p.string=},{p.base_color}; Offsprings: {o1.string=},{o1.base_color}; {o2.string=},{o2.base_color}')
+            logging.getLogger('fi2pop').debug(f'[{__name__}.create_new_pool] xover1p: Parent: {p.string=},{p.base_color}; Offsprings: {o1.string=},{o1.base_color}; {o2.string=},{o2.base_color}')
             childs = [o1, o2]
         for o in childs:
             if MAX_STRING_LEN == -1 or len(o.string) <= MAX_STRING_LEN:
                 # mutation
                 try:
                     mutate(cs=o, n_iteration=generation)
-                except EvoException:
-                    pass
+                except EvoException as e:
+                    logging.getLogger('fi2pop').error(f'[{__name__}.create_new_pool] xover1p: Parent: {e=}')
                 if o not in pool:
                     pool.append(o)
         if len(pool) == prev_len_pool:

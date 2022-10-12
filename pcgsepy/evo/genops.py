@@ -1,3 +1,4 @@
+import logging
 import math
 from random import choices, random, sample
 import re
@@ -76,6 +77,7 @@ def mutate(cs: CandidateSolution,
     """
     mutated = False
     for module in cs.hls_mod.keys():
+        logging.getLogger('genops').debug(f'[{__name__}.mutate] {module=}; mutable={cs.hls_mod[module]["mutable"]}')
         if cs.hls_mod[module]['mutable']:
             # TODO: for enforcing symmetry automatically, should check if the atom to expand
             # is within a bracketed along the symmetry axis. If it is, mutate and copy the mutation
@@ -91,19 +93,23 @@ def mutate(cs: CandidateSolution,
                 matches.extend([MyMatch(lhs=rule,
                                         span=match.span(),
                                         lhs_string=match.group()) for match in r.finditer(string=cs.hls_mod[module]['string'])])
+            logging.getLogger('genops').debug(f'[{__name__}.mutate] {len(matches)=}')
             # sort matches in-place
             matches.sort()
             if matches:
                 # filter out matches
                 filtered_matches = [matches[0]]
                 for match in matches:
+                    logging.getLogger('genops').debug(f'[{__name__}.mutate] {match=}; {filtered_matches=}')
                     if match.start != filtered_matches[-1].start:
                         filtered_matches.append(match)
+                        logging.getLogger('genops').debug(f'[{__name__}.mutate] {match=} appended')
                 p = max(MUTATION_INITIAL_P / math.exp(n_iteration * MUTATION_DECAY), 0)
-                to_mutate = int(p * len(filtered_matches))
+                to_mutate = math.ceil(p * len(filtered_matches))
                 for_mutation = sample(population=filtered_matches,
                                       k=to_mutate)
                 for_mutation = sorted(for_mutation)
+                logging.getLogger('genops').debug(f'[{__name__}.mutate] {p=}; {to_mutate=} {len(for_mutation)=}')
                 offset = 0
                 for match in for_mutation:
                     rhs = expander.rules.get_rhs(lhs=match.lhs)
