@@ -10,7 +10,7 @@ if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
 import argparse
 import webbrowser
 
-from pcgsepy.config import BIN_N
+from pcgsepy.config import ACTIVE_LOGGERS, BIN_N
 from pcgsepy.evo.fitness import (Fitness, box_filling_fitness,
                                  func_blocks_fitness, mame_fitness,
                                  mami_fitness)
@@ -32,27 +32,16 @@ parser.add_argument("--dev_mode", help="Launch the webapp in developer mode",
                     action='store_true')
 parser.add_argument("--debug", help="Launch the webapp in debug mode",
                     action='store_true')
-parser.add_argument("--emitter", help="Specify the emitter type",
-                    type=str, choices=['random', 'preference-matrix', 'contextual-bandit'], default='random')
 parser.add_argument("--host", help="Specify host address",
                     type=str, default='127.0.0.1')
 parser.add_argument("--port", help="Specify port",
                     type=int, default=8050)
-parser.add_argument("--use_reloader", help="Use reloader (set to True when using Jupyter Notebooks)",
-                    action='store_false')
 
 args = parser.parse_args()
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
-available_loggers = [
-    # 'mapelites',
-    'webapp',
-    # 'fi2pop',
-    # 'genops'
-    ]
-
-for logger_name in available_loggers:
+for logger_name in ACTIVE_LOGGERS:
     logging.getLogger(logger_name).setLevel(logging.DEBUG if args.debug else logging.INFO)    
 
 setup_matplotlib(larger_fonts=False)
