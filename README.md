@@ -9,39 +9,40 @@
 <p align="center">
   <img src="media/pcgsepy_banner.png" alt="pcgsepy_banner" height="120"/>
 </p>
-Projects developed as part of the Space Engineers PCG project, supported by a [GoodAI research grant](https://www.goodai.com/using-open-ended-algorithms-to-generate-video-game-content-in-space-engineers/). The Spaceship Generator and Spaceship Ranker apps are available on the [releases page](https://github.com/martinpoliak-goodai/space-engineers-ai-spaceship-generator/releases).
 
-## Usage
+Apps and code developed for the [Space Engineers](https://www.spaceengineersgame.com/) PCG project, supported by a [GoodAI research grant](https://www.goodai.com/using-open-ended-algorithms-to-generate-video-game-content-in-space-engineers/). The main app is a Spaceship Generator, which creates spaceships for Space Engineers using AI (for more information, see the [publications](#publications)). The second app is a Spaceship Ranker, which is used for conducting a user study. The Spaceship Generator and Spaceship Ranker apps are available for Windows on the [releases page](https://github.com/martinpoliak-goodai/space-engineers-ai-spaceship-generator/releases).
+
+## Apps
 The following is a quick overview of the apps (Spaceship Generator and Spaceship Ranker). Further documentation is available within the apps themselves.
-
-### Spaceship Generator (user study mode)
-<p align="center">
-  <img src="media/UI_userstudy_preview.jpg" alt="ui_userstudy_preview" height="300"/>
-</p>
-This mode is used during the user study and allows only to evolve spaceships after selecting a valid bin. The user study has a predefined number of generations (iterations) allowed and spans different configurations of the MAP-Elites emitter. At the end of the user study, the application automatically switches over to `user mode`.
 
 ### Spaceship Generator (user mode)
 <p align="center">
   <img src="media/UI_usermode_preview.jpg" alt="ui_usermode_preview" height="300"/>
 </p>
-In this mode, the user is allowed to evolve spaceships indefinitely, choosing between evolving from the selected bin or running multiple steps of the random emitter at once. Additionally, the user is allowed to reset the population of solutions.
+The default mode for the app outside of the user study period. The AI generates an initial "population" of spaceships (top left). When a spaceship is selected from the population it is visualised (top middle) and its properties are displayed (top right). You can choose to "evolve" a new set of spaceships based on either the selected spaceship or a random spaceship (the "evolution" process tries to construct new spaceships based on an existing spaceship). You can also re-initialise the population of spaceships.
+
+### Spaceship Generator (user study mode)
+<p align="center">
+  <img src="media/UI_userstudy_preview.jpg" alt="ui_userstudy_preview" height="300"/>
+</p>
+The default mode for the app during the user study period. You evolve spaceships for a fixed number of iterations, for different configurations of the AI system. At the end of the user study, the app automatically switches to user mode. The data collected from the user study will be used to improve the AI system in the next app release.
 
 ### Spaceship Generator (developer mode)
 <p align="center">
   <img src="media/UI_devmode_preview.jpg" alt="ui_devmode_preview" height="300"/>
 </p>
-This is the most advanced mode, giving the user full access to every part of the system that can be changed during the evolution process.
+An advanced mode, with full access to every part of the system that can be changed during the evolution process.
 
 ### Spaceship Ranker
 <p align="center">
   <img src="media/UI_comparator_preview.jpg" alt="ui_comparator_preview" height="300"/>
 </p>
-This app is used only for the user study and allows the user to upload and rank different spaceships.
+This app is used only for the user study. You can upload and rank different spaceships from the Spaceship Generator.
 
-## Code availability
-The code is open source and is currently under development on the [Araya Inc. repository](https://github.com/arayabrain/space-engineers-ai-spaceship-generator) for the purposes of the user study. After the user study is completed, any issue or PR should be addressed to the [GoodAI fork repository](https://github.com/martinpoliak-goodai/space-engineers-ai-spaceship-generator).
+## Roadmap
+This project is under active development in the [Araya Inc. repository](https://github.com/arayabrain/space-engineers-ai-spaceship-generator) until the end of October 2022. This project will then transition to maintenance support in the [GoodAI fork repository](https://github.com/martinpoliak-goodai/space-engineers-ai-spaceship-generator) until the end of December 2022.
 
-The user study is expected to end around mid-November, 2022. This README will be updated in case of changes to the end date.
+The user study is planned to run from mid-October to mid-November 2022.
 
 ## Development
 Install the `PCGSEPy` library by first installing the requirements (optional):
@@ -54,8 +55,8 @@ pip install -e .
 ```
 Set the `use_torch` flag in `configs.ini` if you want to use the PyTorch library.
 
-## Installation
-The application can be built using the provided `.py` files placed in the `user-study` folder. The executable files will be created in the `user-study\dist` folder.
+## Building the apps
+The apps can be built using the provided `.py` files placed in the `user-study` folder. The executable files will be created in the `user-study\dist` folder.
 
 You can build just the main application (running `python build_main_webapp.py`) or also the spaceships ranker (running `python build_comparator.py`). Keep in mind that the latter is used *only* for the user study.
 
@@ -66,7 +67,7 @@ Some files can be modified before building the application. These are:
 - `block_definitions.json`: this file can be excluded from the application building file (`user-study\build_main_webapp.bat`), but it is required to run the application. It can be recreated when the application is first launched if an instance of Space Engineers is open and the [iv4xr API](https://github.com/iv4xr-project/iv4xr-se-plugin) is installed.
 - `hlrules`, `llrules`: these files define the expansion rules of the underlying L-system used in the application. `hlrules` determines the tile placements when creating spaceships, whereas `llrules` determines the game blocks used in a tile. If you want to add your own tiles in the application, please follow the instructions reported in `l-system\rules-extractor.ipynb` and remember to also update the `hl_atoms.json` file.
 
-## Contents overview
+## Codebase overview
 - `pcgsepy`: this directory contains the main Python PCGSEPy library.
 - `steam-workshop-downloader`: this directory contains the code used to download the spaceships from the Steam Workshop and extract the metrics of interest.
 - `l-system`: this directory contains the code used for the L-system and FI-2Pop experiments.
@@ -78,6 +79,6 @@ For more information, refer to the `README`s in each directory.
 ## Publications
 This code was developed for use in the following research publications:
 
-> [Gallotta, R., Arulkumaran, K., & Soros, L. B. (2022). Evolving Spaceships with a Hybrid L-system Constrained Optimisation Evolutionary Algorithm. In _Proceedings of the Genetic and Evolutionary Computation Conference Companion_.](https://dl.acm.org/doi/abs/10.1145/3520304.3528775)
+> [Gallotta, R., Arulkumaran, K., & Soros, L. B. (2022). Evolving Spaceships with a Hybrid L-system Constrained Optimisation Evolutionary Algorithm. In _Genetic and Evolutionary Computation Conference Companion_.](https://dl.acm.org/doi/abs/10.1145/3520304.3528775)
 
 > [Gallotta, R., Arulkumaran, K., & Soros, L. B. (2022). Surrogate Infeasible Fitness Acquirement FI-2Pop for Procedural Content Generation. In _IEEE Conference on Games_.](https://ieeexplore.ieee.org/document/9893592)
