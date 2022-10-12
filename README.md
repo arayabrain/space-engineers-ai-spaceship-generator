@@ -10,7 +10,7 @@
   <img src="media/pcgsepy_banner.png" alt="pcgsepy_banner" height="120"/>
 </p>
 
-Apps and code developed for the [Space Engineers](https://www.spaceengineersgame.com/) PCG project, supported by a [GoodAI research grant](https://www.goodai.com/using-open-ended-algorithms-to-generate-video-game-content-in-space-engineers/). The main app is the AI Spaceship Generator, which creates spaceships for Space Engineers using AI (for more information, see the [publications](#publications)). The second app is a Spaceships Ranker, which is used for conducting a user study. The AI Spaceship Generator and Spaceships Ranker apps are available for Windows on the [releases page](https://github.com/martinpoliak-goodai/space-engineers-ai-spaceship-generator/releases).
+Apps and code (`PCGSEPy` library) developed for the [Space Engineers](https://www.spaceengineersgame.com/) PCG project, supported by a [GoodAI research grant](https://www.goodai.com/using-open-ended-algorithms-to-generate-video-game-content-in-space-engineers/). The main app is the AI Spaceship Generator, which creates spaceships for Space Engineers using AI (for more information, see the [publications](#publications)). The second app is a Spaceships Ranker, which is used for conducting a user study. The AI Spaceship Generator and Spaceships Ranker apps are available for Windows on the [releases page](https://github.com/martinpoliak-goodai/space-engineers-ai-spaceship-generator/releases).
 
 ## Apps
 The following is a quick overview of the apps (AI Spaceship Generator and Spaceships Ranker). Further documentation is available within the apps themselves.
@@ -19,13 +19,13 @@ The following is a quick overview of the apps (AI Spaceship Generator and Spaces
 <p align="center">
   <img src="media/UI_usermode_preview.jpg" alt="ui_usermode_preview" height="300"/>
 </p>
-The default mode for the app outside of the user study period. The AI generates an initial "population" of spaceships (top left). When a spaceship is selected from the population it is visualised (top middle) and its properties are displayed (top right). You can choose to "evolve" a new set of spaceships based on either the selected spaceship or a random spaceship (the "evolution" process tries to construct new spaceships based on an existing spaceship). You can also re-initialise the population of spaceships.
+The default mode for the app (outside of the user study period). The AI generates an initial "population" of spaceships (top left). When a spaceship is selected from the population it is visualised (top middle) and its properties are displayed (top right). You can choose to "evolve" a new set of spaceships based on either the selected spaceship or a random spaceship (the "evolution" process tries to construct new spaceships based on an existing spaceship). You can also re-initialise the population of spaceships.
 
 ### AI Spaceship Generator (user study mode)
 <p align="center">
   <img src="media/UI_userstudy_preview.jpg" alt="ui_userstudy_preview" height="300"/>
 </p>
-The default mode for the app during the user study period. You evolve spaceships for a fixed number of iterations, for different configurations of the AI system. At the end of the user study, the app automatically switches to user mode. The data collected from the user study will be used to improve the AI system in the next app release.
+The default mode for the app (during the user study period). You evolve spaceships for a fixed number of iterations, for different configurations of the AI system. At the end of the user study, the app automatically switches to user mode. The data collected from the user study will be used to improve the AI system in the next app release.
 
 ### AI Spaceship Generator (developer mode)
 <p align="center">
@@ -37,7 +37,7 @@ An advanced mode, with full access to every part of the system that can be chang
 <p align="center">
   <img src="media/UI_comparator_preview.jpg" alt="ui_comparator_preview" height="300"/>
 </p>
-This app is used only for the user study. You can upload and rank different spaceships from the AI Spaceship Generator.
+This app is used for the user study. You can upload and rank different spaceships from the AI Spaceship Generator.
 
 ## Roadmap
 This project is under active development in the [Araya Inc. repository](https://github.com/arayabrain/space-engineers-ai-spaceship-generator) until the end of October 2022. This project will then transition to maintenance support in the [GoodAI fork repository](https://github.com/martinpoliak-goodai/space-engineers-ai-spaceship-generator) until the end of December 2022.
@@ -45,29 +45,21 @@ This project is under active development in the [Araya Inc. repository](https://
 The user study is planned to run from mid-October to mid-November 2022.
 
 ## Development
-Install the `PCGSEPy` library by first installing the requirements (optional):
-```
-pip install -r requirements.txt
-```
-And then install the library:
-```
-pip install -e .
-```
-Set the `use_torch` flag in `configs.ini` if you want to use the PyTorch library.
+This project requires Python 3. The `PCGSEPy` library (including its requirements) can be installed by running `pip install -e .`. To use PyTorch in the library (required for some research experiments, but not the apps), first set the `use_torch` flag in `configs.ini`.
 
-## Building the apps
+### Building the apps
 The apps can be built using the provided `.py` files placed in the `user-study` folder. The executable files will be created in the `user-study\dist` folder.
 
-The AI Spaceship Generator can be built by running `python build_main_webapp.py`. The Spaceships Ranker can be built by running `python build_comparator.py` (note that this is only used for the user study).
+The AI Spaceship Generator can be built by running `python build_main_webapp.py`. The Spaceships Ranker can be built by running `python build_comparator.py`.
 
-### Modifiable files
-Some files can be modified before building the application. These are:
-- the estimators under the `estimators` folders: these are `.pkl` files and can be generated by running the `steam-workshop-downloader\spaceships-analyzer.ipynb` notebook (additional details are provided in the notebook itself).
-- the `configs.ini` file: different settings can be specified in this file, making sure to respect the setting formats specified in `pcgsepy\config.py`.
+#### Modifiable files
+Some files can be modified before building the apps. These are:
+- The estimators under the `estimators` folders: these are `.pkl` files and can be generated by running the `steam-workshop-downloader\spaceships-analyzer.ipynb` notebook (additional details are provided in the notebook itself).
+- The `configs.ini` file: different settings can be specified in this file, making sure to respect the setting formats specified in `pcgsepy\config.py`.
 - `block_definitions.json`: this file can be excluded from the application building file (`user-study\build_main_webapp.bat`), but it is required to run the application. It can be recreated when the application is first launched if an instance of Space Engineers is open and the [iv4xr API](https://github.com/iv4xr-project/iv4xr-se-plugin) is installed.
 - `hlrules`, `llrules`: these files define the expansion rules of the underlying L-system used in the application. `hlrules` determines the tile placements when creating spaceships, whereas `llrules` determines the game blocks used in a tile. If you want to add your own tiles in the application, please follow the instructions reported in `l-system\rules-extractor.ipynb` and remember to also update the `hl_atoms.json` file.
 
-## Codebase overview
+### Codebase overview
 - `pcgsepy`: this directory contains the main Python PCGSEPy library.
 - `steam-workshop-downloader`: this directory contains the code used to download the spaceships from the Steam Workshop and extract the metrics of interest.
 - `l-system`: this directory contains the code used for the L-system and FI-2Pop experiments.
