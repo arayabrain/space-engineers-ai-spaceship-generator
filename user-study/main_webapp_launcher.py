@@ -47,7 +47,9 @@ logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
 available_loggers = [
     # 'mapelites',
-    'webapp'
+    'webapp',
+    # 'fi2pop',
+    # 'genops'
     ]
 
 for logger_name in available_loggers:
