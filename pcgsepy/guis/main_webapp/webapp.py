@@ -10,6 +10,8 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from zipfile import ZipFile
 
+from click import style
+
 from pcgsepy.guis.voxel import VoxelData
 
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
@@ -273,7 +275,7 @@ def serve_layout() -> dbc.Container:
         is_open=False)
     
     webapp_info_modal = dbc.Modal([
-        dbc.ModalHeader(dbc.ModalTitle("Webapp Info"),
+        dbc.ModalHeader(dbc.ModalTitle("App Info"),
                         style={'flex-direction': 'column-reverse'},
                         close_button=True),
         dbc.ModalBody(dcc.Markdown(webapp_info_str,
@@ -536,25 +538,24 @@ def serve_layout() -> dbc.Container:
         ])
     
     mapelites_heatmap = html.Div(children=[
-        dbc.Row(children=[
-            dbc.Col(
+        
+        html.Div(children=[
                 html.H4('Spaceship Population',
                         className='section-title'),
-                width={'size': 8, 'offset': 2}),
-            dbc.Col(
                 dbc.Button('🛈',
                            color='info',
                            id='heatmap-help',
                            className='help'),
-                width=1,
-                style={'justify-content': 'left'}
-                )
-            ],
+                ],
                   style={
+                      'display': 'inline-flex',
+                      'flex-direction': 'row',
                       'justify-content': 'center',
                       'align-content': 'center',
-                      'align-items': 'center'
+                      'align-items': 'center',
+                      'text-align': 'center'
                       }),
+        
         html.Br(),
         html.Div(className='container',
                  children=[
@@ -609,25 +610,24 @@ def serve_layout() -> dbc.Container:
         style=hidden_style if not app_settings.app_mode == AppMode.DEV else {})
     
     content_plot = html.Div(children=[
-        dbc.Row(children=[
-            dbc.Col(
+        
+        html.Div(children=[
                 html.H4('Selected Spaceship',
                         className='section-title'),
-                width={'size': 8, 'offset': 2}),
-            dbc.Col(
                 dbc.Button('🛈',
                            color='info',
                            id='content-help',
-                           className='help'),
-                width=1,
-                style={'justify-content': 'left'}
-            )
+                           className='help')
             ],
                   style={
+                      'display': 'inline-flex',
+                      'flex-direction': 'row',
                       'justify-content': 'center',
                       'align-content': 'center',
-                      'align-items': 'center'
+                      'align-items': 'center',
+                      'text-align': 'center'
                       }),
+        
         html.Br(),
         dcc.Graph(id="content-plot",
                   figure=go.Figure(data=[]),
@@ -679,25 +679,8 @@ def serve_layout() -> dbc.Container:
             html.Br(),
             dbc.Row(
                 dbc.Col([
-                    dbc.Row(children=[
-                        dbc.Col(
-                            dbc.Label("Download Blueprint",
-                                      style={'font-size': 'large'}),
-                            width=4),
-                        dbc.Col(
-                            dbc.Button('🛈',
-                                       color='info',
-                                       id='download-help',
-                                       className='help'),
-                            width=1,
-                            style={'justify-content': 'left'}
-                        )
-                    ],
-                              style={
-                                  'justify-content': 'center',
-                                  'align-content': 'center',
-                                  'align-items': 'center'
-                                  }),
+                    dbc.Label("Download Blueprint",
+                              style={'font-size': 'large'}),
                     html.Br(),                   
                     dbc.Button('Download',
                                id='download-btn',
@@ -717,7 +700,27 @@ def serve_layout() -> dbc.Container:
             )
         ]
     )
-     
+    
+    spaceship_controls = html.Div(
+        dbc.Row(
+            children=[dbc.Col(children=[
+                html.Div(children=[
+                    html.H4(children='Spaceship Controls',
+                            className='section-title'),
+                    dbc.Button('🛈',
+                               color='info',
+                               id='download-help',
+                               className='help')
+                ],
+                         style={'display': 'inline-flex', 'flex-direction': 'row', 'justify-content': 'center', 'text-align': 'center'}
+                ),
+                    
+                    html.Br(),
+                    color_and_download
+                    ],
+                              style={'text-align': 'center'})
+            ]))
+    
     content_properties = html.Div(
         children=[
             dbc.Row(children=[
@@ -1057,14 +1060,9 @@ def serve_layout() -> dbc.Container:
                 dbc.Col(children=[mapelites_controls,
                                   experiment_controls],
                         width={'size': 3, 'offset': 1}),
-                dbc.Col(children=[dbc.Col(children=[
-                    html.H4(children='Spaceship Controls',
-                            className='section-title'),
-                    html.Br(),
-                    color_and_download
-                    ],
-                                          align='center'),
-                                  experiment_settings],
+                dbc.Col(children=[
+                    spaceship_controls,
+                    experiment_settings],
                         width=4),
                 dbc.Col(children=[log,
                                   rules,
