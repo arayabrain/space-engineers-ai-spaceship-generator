@@ -254,13 +254,13 @@ class MAPElites:
 
     def _assign_fitness(self,
                         cs: CandidateSolution) -> CandidateSolution:
-        """Assign the fitness to a solution.
+        """Assign the fitness and BCs to a candidate solution.
 
         Args:
             cs (CandidateSolution): The candidate solution.
 
         Returns:
-            CandidateSolution: The candidate solution with fitness and BCs assigned.
+            CandidateSolution: The updated candidate solution.
         """
         # assign fitness
         cs.c_fitness = self.compute_fitness(cs=cs) + ((self.nsc - cs.ncv) if cs.is_feasible else 0)
@@ -270,6 +270,27 @@ class MAPElites:
         cs.age = CS_MAX_AGE
         return cs
 
+    def _prepare_cs_content(self,
+                            cs: CandidateSolution) -> CandidateSolution:
+        """Prepare a candidate solution for fitness computation.
+        Add a hull if possible and set the blocks colors.
+
+        Args:
+            cs (CandidateSolution): The candidate solution.
+
+        Returns:
+            CandidateSolution: The updated candidate solution.
+        """
+        # add hull if possible
+        if self.hull_builder:
+            threadsafe_hullbuilder = HullBuilder(erosion_type=self.hull_builder.erosion_type,
+                                                 apply_erosion=self.hull_builder.apply_erosion,
+                                                 apply_smoothing=self.hull_builder.apply_smoothing)
+            threadsafe_hullbuilder.add_external_hull(structure=cs.content)
+        # set the color
+        cs.content.set_color(color=cs.base_color)
+        return cs
+    
     def _set_behavior_descriptors(self,
                                   cs: CandidateSolution) -> None:
         """Set the behavior descriptors of the solution.
@@ -540,14 +561,8 @@ class MAPElites:
                     logging.getLogger('mapelites').debug(msg=f'[{__name__}._step] {len(new_pool)=}')
                     subdivide_solutions(lcs=new_pool,
                                         lsystem=self.lsystem)
-                    # TODO: This (hull+color) can be parallelized!
-                    # add hull
-                    if self.hull_builder is not None:
-                        for cs in new_pool:
-                            self.hull_builder.add_external_hull(cs.content)
-                    for cs in new_pool:
-                        cs.content.set_color(color=cs.base_color)
-                    # assign fitness
+                    logging.getLogger('mapelites').debug(msg=f'[{__name__}._step] Started preparing solutions')
+                    new_pool = Parallel(n_jobs=-1, prefer="threads")(delayed(self._prepare_cs_content)(cs) for cs in new_pool)
                     logging.getLogger('mapelites').debug(msg=f'[{__name__}._step] Started assigning fitnesses')
                     generated.extend(Parallel(n_jobs=-1, prefer="threads")(delayed(self._assign_fitness)(cs) for cs in new_pool))
                 # evoexceptions are ignored, though it is possible to get stuck here
