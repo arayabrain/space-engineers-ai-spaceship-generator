@@ -16,6 +16,9 @@ from pcgsepy.guis.voxel import VoxelData
 
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     os.chdir(sys._MEIPASS)
+    curr_folder = os.path.dirname(sys.executable)
+else:
+    curr_folder = os.path.dirname(sys.path[0])
 
 import dash
 import dash_bootstrap_components as dbc
@@ -208,6 +211,13 @@ def serve_layout() -> dbc.Container:
     
     if not app_settings.app_mode:
         app_settings.consent_ok = False if app_settings.app_mode == AppMode.DEV else None
+    
+    # check if user has completed the user study already
+    if not app_settings.app_mode:
+        if os.path.isfile(os.path.join(curr_folder, '.userstudyover')):
+            app_settings.consent_ok = False
+            app_settings.app_mode = AppMode.USER
+    
     
     webapp_info_file = './assets/webapp_help_dev.md' if app_settings.app_mode == AppMode.DEV else './assets/webapp_info.md'
     with open(webapp_info_file, 'r', encoding='utf-8') as f:
@@ -531,7 +541,7 @@ def serve_layout() -> dbc.Container:
                                  animated=False)
                 ],
                         width={'size': 12, 'offset': 0},
-                        style={**{'text-align': 'center'}, **hidden_style} if app_settings.app_mode == AppMode.DEV else {'text-align': 'center'},
+                        style={'text-align': 'center'} if app_settings.app_mode == AppMode.USERSTUDY else {**{'text-align': 'center'}, **hidden_style},
                         align='center',
                         id='exp-progress-div')
             )
@@ -1579,7 +1589,7 @@ def _get_elite_content(mapelites: MAPElites,
                        j=voxels.triangles[1],
                        k=voxels.triangles[2],
                        facecolor=[custom_colors[ix] for ix in voxels.intensities],
-                       opacity=.8,
+                       opacity=1.,
                        flatshading=False,
                        showlegend=False
                        )
@@ -2183,6 +2193,7 @@ def __content_download(**kwargs) -> Dict[str, Any]:
                 app_settings.app_mode = AppMode.USER
                 dlbtn_label = 'Download'
                 app_settings.selected_bins = []
+                with open(os.path.join(curr_folder, '.userstudyover'), 'w'): pass
                 logging.getLogger('webapp').info(msg='Initializing a new population; this may take a while...')
                 app_settings.current_mapelites.reset()
                 app_settings.current_mapelites.hull_builder.apply_smoothing = False
