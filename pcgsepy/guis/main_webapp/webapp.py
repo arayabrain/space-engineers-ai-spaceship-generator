@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from zipfile import ZipFile
 
 from click import style
+from torch import conv_tbc
 
 from pcgsepy.guis.voxel import VoxelData
 
@@ -50,7 +51,7 @@ from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, Emitter,
                                         PreferenceBanditEmitter, RBFKernelEmitter, RandomEmitter,
                                         emitters)
 from pcgsepy.mapelites.map import MAPElites, get_elite
-from pcgsepy.structure import _is_base_block
+from pcgsepy.structure import _is_base_block, _is_transparent_block
 from pcgsepy.xml_conversion import convert_structure_to_xml
 from tqdm import trange
 
@@ -645,6 +646,19 @@ def serve_layout() -> dbc.Container:
                       'displayModeBar': False,
                       'displaylogo': False},
                   style={'overflow': 'auto'}),
+        html.Div(children=[
+            dbc.InputGroup(children=[
+                dbc.InputGroupText('Toggle Voxel Preview:'),
+                dbc.Switch(
+                    id="voxel-preview-toggle",
+                    label="",
+                    value=False,
+                )],
+                           className="mb-3"),
+            ],
+                 style={'display': 'inline-flex', 'justify-content': 'center'}
+                 ),
+        html.Br(),
         dbc.Label('Legend',
                   size='sm'),
         html.Div(children=[
@@ -1257,7 +1271,8 @@ def download_content(n):
             #     thumbnail_img = f.read()
             curr_content = _get_elite_content(mapelites=app_settings.current_mapelites,
                                               bin_idx=_switch([app_settings.selected_bins[-1]])[0],
-                                              pop='feasible')
+                                              pop='feasible',
+                                              show_voxel=True)
             thumbnail_img = curr_content.to_image(format="png")
             zf.writestr('thumb.png', thumbnail_img)
             elite = get_elite(mapelites=app_settings.current_mapelites,
@@ -1532,7 +1547,8 @@ def _build_heatmap(mapelites: MAPElites,
 def _get_elite_content(mapelites: MAPElites,
                        bin_idx: Optional[Tuple[int, int]],
                        pop: str,
-                       camera: Optional[Dict[str, Any]] = None) -> go.Scatter3d:
+                       camera: Optional[Dict[str, Any]] = None,
+                       show_voxel: bool = True) -> go.Scatter3d:
     if bin_idx is not None:
         # get elite content
         elite = get_elite(mapelites=mapelites,
@@ -1545,64 +1561,108 @@ def _get_elite_content(mapelites: MAPElites,
         fig = go.Figure()
         
         cs = [content[i, j, k] for i, j, k in zip(x, y, z)]
-        ss = [structure._clean_label(list(block_definitions.keys())[v - 1]) for v in cs]
-        custom_colors = []
-        for (i, j, k) in zip(x, y, z):
-            b = structure._blocks[(i * structure.grid_size, j * structure.grid_size, k * structure.grid_size)]
-            if _is_base_block(block_type=structure._clean_label(b.block_type)):
-                custom_colors.append(f'rgb{b.color.as_tuple()}')
-            else:
-                custom_colors.append(block_to_colour.get(structure._clean_label(b.block_type), block_to_colour['Unrecognized']))
-        # black points for internal air blocks
-        air = np.nonzero(structure.air_blocks_gridmask)
-        air_x, air_y, air_z = air
-        x = np.asarray(x.tolist() + air_x.tolist())
-        y = np.asarray(y.tolist() + air_y.tolist())
-        z = np.asarray(z.tolist() + air_z.tolist())
-        custom_colors.extend([block_to_colour['Air'] for _ in range(len(air_x))])
-        ss.extend(['' for _ in range(len(air_x))])
-        # create scatter 3d plot
-        fig.add_scatter3d(x=x,
-                          y=y,
-                          z=z,
-                          mode='markers',
-                          marker=dict(size=4,
-                                      line=dict(width=3,
-                                                color='DarkSlateGrey'),
-                                      color=custom_colors),
-                          opacity=1.,
-                          showlegend=False)
-        # add voxel plot
-        voxels = VoxelData(content)
-        ss = [structure._clean_label(list(block_definitions.keys())[v - 1]) for v in voxels.intensities]
-        indices = {structure._clean_label(n):i + 1 for i, n in enumerate(list(block_definitions.keys()))}
-        custom_colors = {}
-        for k, v in block_to_colour.items():
-            if k in indices:
-                if _is_base_block(k):
-                    custom_colors[indices[k]] = f'rgb{base_color.as_tuple()}'
+        unique_blocks = {v: structure._clean_label(list(block_definitions.keys())[v - 1]) for v in cs}
+        
+        if not show_voxel:
+            ss = [structure._clean_label(list(block_definitions.keys())[v - 1]) for v in cs]
+            custom_colors = []
+            for (i, j, k) in zip(x, y, z):
+                b = structure._blocks[(i * structure.grid_size, j * structure.grid_size, k * structure.grid_size)]
+                if _is_base_block(block_type=structure._clean_label(b.block_type)):
+                    custom_colors.append(f'rgb{b.color.as_tuple()}')
                 else:
-                    custom_colors[indices[k]] = v
+                    custom_colors.append(block_to_colour.get(structure._clean_label(b.block_type), block_to_colour['Unrecognized']))
+            # black points for internal air blocks
+            air = np.nonzero(structure.air_blocks_gridmask)
+            air_x, air_y, air_z = air
+            x = np.asarray(x.tolist() + air_x.tolist())
+            y = np.asarray(y.tolist() + air_y.tolist())
+            z = np.asarray(z.tolist() + air_z.tolist())
+            custom_colors.extend([block_to_colour['Air'] for _ in range(len(air_x))])
+            ss.extend(['' for _ in range(len(air_x))])
+            # create scatter 3d plot
+            fig.add_scatter3d(x=x,
+                            y=y,
+                            z=z,
+                            mode='markers',
+                            marker=dict(size=2,
+                                        line=dict(width=3,
+                                                    color='DarkSlateGrey'),
+                                        color=custom_colors),
+                            opacity=1. if not show_voxel else 0.,
+                            showlegend=False)
         
-        fig.add_mesh3d(x=voxels.vertices[0] - 0.5,
-                       y=voxels.vertices[1] - 0.5,
-                       z=voxels.vertices[2] - 0.5, 
-                       i=voxels.triangles[0],
-                       j=voxels.triangles[1],
-                       k=voxels.triangles[2],
-                       facecolor=[custom_colors[ix] for ix in voxels.intensities],
-                       opacity=0.9,
-                       flatshading=True,
-                       showlegend=False,
-                       hoverinfo='text',
-                       hovertext=ss
-                       )
+        else:
+            transparent_blocks = np.zeros_like(content)
+            opaque_blocks = np.zeros_like(content)
+            for v, block_type in unique_blocks.items():
+                if _is_transparent_block(block_type=block_type):
+                    transparent_blocks[content == v] = v
+                else:
+                    opaque_blocks[content == v] = v
         
-        fig.data[1].update(lighting=dict(ambient= 0.55,
-                                         diffuse= 0.5,
-                                         specular= 0.75,
-                                         roughness=0.25,
-                                         fresnel= 0.25))
+            # add voxel plot
+            voxels = VoxelData(opaque_blocks)
+            ss = [structure._clean_label(list(block_definitions.keys())[v - 1]) for v in voxels.intensities]
+            indices = {structure._clean_label(n):i + 1 for i, n in enumerate(list(block_definitions.keys()))}
+            custom_colors = {}
+            for k, v in block_to_colour.items():
+                if k in indices:
+                    if _is_base_block(k):
+                        custom_colors[indices[k]] = f'rgb{base_color.as_tuple()}'
+                    else:
+                        custom_colors[indices[k]] = v
+            
+            fig.add_mesh3d(x=voxels.vertices[0] - 0.5,
+                        y=voxels.vertices[1] - 0.5,
+                        z=voxels.vertices[2] - 0.5, 
+                        i=voxels.triangles[0],
+                        j=voxels.triangles[1],
+                        k=voxels.triangles[2],
+                        facecolor=[custom_colors[ix] for ix in voxels.intensities],
+                        opacity=1.,
+                        flatshading=True,
+                        showlegend=False,
+                        hoverinfo='text',
+                        hovertext=ss
+                        )
+            
+            fig.data[0].update(lighting=dict(ambient= 0.55,
+                                            diffuse= 0.5,
+                                            specular= 0.75,
+                                            roughness=0.25,
+                                            fresnel= 0.25))
+            
+            voxels = VoxelData(transparent_blocks)
+            ss = [structure._clean_label(list(block_definitions.keys())[v - 1]) for v in voxels.intensities]
+            indices = {structure._clean_label(n):i + 1 for i, n in enumerate(list(block_definitions.keys()))}
+            custom_colors = {}
+            for k, v in block_to_colour.items():
+                if k in indices:
+                    if _is_base_block(k):
+                        custom_colors[indices[k]] = f'rgb{base_color.as_tuple()}'
+                    else:
+                        custom_colors[indices[k]] = v
+            
+            fig.add_mesh3d(x=voxels.vertices[0] - 0.5,
+                        y=voxels.vertices[1] - 0.5,
+                        z=voxels.vertices[2] - 0.5, 
+                        i=voxels.triangles[0],
+                        j=voxels.triangles[1],
+                        k=voxels.triangles[2],
+                        facecolor=[custom_colors[ix] for ix in voxels.intensities],
+                        opacity=0.75,
+                        flatshading=True,
+                        showlegend=False,
+                        hoverinfo='text',
+                        hovertext=ss
+                        )
+            
+            fig.data[1].update(lighting=dict(ambient= 0.55,
+                                            diffuse= 0.5,
+                                            specular= 0.75,
+                                            roughness=0.25,
+                                            fresnel= 0.25))
         
         # fig.update_traces()
         ux, uy, uz = np.unique(x), np.unique(y), np.unique(z)
@@ -1717,7 +1777,8 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
     eoe_modal_show = kwargs['eoe_modal_show']
     nbs_err_modal_show = kwargs['nbs_err_modal_show']
     dlbtn_label = kwargs['dlbtn_label']
-    curr_camera = kwargs['curr_camera']
+    curr_camera = kwargs['curr_camera']    
+    voxel_display = kwargs['curr_voxel_display']
     
     if app_settings.selected_bins or kwargs['event_trig'] == 'rand-step-btn':
         s = time.perf_counter()
@@ -1756,7 +1817,8 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
                         curr_content = _get_elite_content(mapelites=app_settings.current_mapelites,
                                                           bin_idx=lb,
                                                           pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible',
-                                                          camera=curr_camera.get('scene.camera', None))
+                                                          camera=curr_camera.get('scene.camera', None),
+                                                          show_voxel=voxel_display)
                         elite = get_elite(mapelites=app_settings.current_mapelites,
                                           bin_idx=lb,
                                           pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible')
@@ -2018,6 +2080,7 @@ def __update_content(**kwargs) -> Dict[str, Any]:
     curr_content = kwargs['curr_content']
     cs_string = kwargs['cs_string']
     cs_properties = kwargs['cs_properties']
+    voxel_display = kwargs['curr_voxel_display']
         
     i, j = kwargs['clickData']['points'][0]['x'], kwargs['clickData']['points'][0]['y']
     if app_settings.current_mapelites.bins[j, i].non_empty(pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible'):
@@ -2025,7 +2088,8 @@ def __update_content(**kwargs) -> Dict[str, Any]:
             curr_content = _get_elite_content(mapelites=app_settings.current_mapelites,
                                               bin_idx=(j, i),
                                               pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible',
-                                              camera=None)
+                                              camera=None,
+                                              show_voxel=voxel_display)
             if app_settings.app_mode == AppMode.USERSTUDY:
                 n_spaceships_inspected.add(1)
             if not app_settings.current_mapelites.enforce_qnt and app_settings.selected_bins != []:
@@ -2390,6 +2454,7 @@ def __color(**kwargs) -> Dict[str, Any]:
     color = kwargs['color']
     curr_content = kwargs['curr_content']
     curr_camera = kwargs['curr_camera']
+    voxel_display = kwargs['curr_voxel_display']
     
     r, g, b = tuple(int(color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
     new_color = Vec.v3f(r, g, b).scale(1 / 256)
@@ -2400,7 +2465,8 @@ def __color(**kwargs) -> Dict[str, Any]:
         curr_content =  _get_elite_content(mapelites=app_settings.current_mapelites,
                                            bin_idx=_switch([app_settings.selected_bins[-1]])[0],
                                            pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible',
-                                           camera=curr_camera.get('scene.camera', None))
+                                           camera=curr_camera.get('scene.camera', None),
+                                           show_voxel=voxel_display)
     return {
         'content-plot.figure': curr_content,
         'content-legend-div.children': get_content_legend()
@@ -2532,6 +2598,7 @@ triggers_map = {
     'webapp-quickstart-btn': __show_quickstart_modal,
     'qus-btn': __show_quit_user_study_modal,
     'qus-y-btn': __quit_user_study,
+    'voxel-preview-toggle': __update_content,
     None: __default
 }
 
@@ -2592,6 +2659,7 @@ triggers_map = {
               State("eus-modal", "is_open"),
               State('color-picker', 'value'),
               State("content-plot", "relayoutData"),
+              State("voxel-preview-toggle", "value"),
                             
               Input('population-feasible', 'n_clicks'),
               Input('population-infeasible', 'n_clicks'),
@@ -2641,9 +2709,10 @@ triggers_map = {
               Input('webapp-quickstart-btn', 'n_clicks'),
               Input('qus-btn', 'n_clicks'),
               Input('qus-y-btn', 'n_clicks'),
+              Input("voxel-preview-toggle", "value"),
               )
-def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, emitter_name, qs_modal_show, qs_um_modal_show, cm_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style, study_style, dlbtn_label, curr_legend, eus_modal_show, color, curr_camera,
-                     pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights, b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter1_nclicks, emitter2_nclicks, emitter3_nclicks, emitter4_nclicks, emitter5_nclicks, emitter6_nclicks, emitter7_nclicks, emitter8_nclicks, emitter9_nclicks, n_clicks_cs_download, n_clicks_popdownload, upload_filename, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn, color_btn, qs_btn, qus_btn, qus_y_btn):
+def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties, pop_name, metric_name, b0, b1, symm_axis, emitter_name, qs_modal_show, qs_um_modal_show, cm_modal_show, nbs_err_modal_show, eoe_modal_show, eous_modal_show, rand_step_btn_style, reset_btn_style, exp_progress_style, study_style, dlbtn_label, curr_legend, eus_modal_show, color, curr_camera, curr_voxel_display,
+                     pop_feas, pop_infeas, metric_fitness, metric_age, metric_coverage, method_name, n_clicks_step, n_clicks_rand_step, n_clicks_reset, n_clicks_sub, weights, b0_mame, b0_mami, b0_avgp, b0_sym, b1_mame, b1_mami, b1_avgp, b1_sym, modules, n_clicks_rules, clickData, selection_btn, clear_btn, emitter1_nclicks, emitter2_nclicks, emitter3_nclicks, emitter4_nclicks, emitter5_nclicks, emitter6_nclicks, emitter7_nclicks, emitter8_nclicks, emitter9_nclicks, n_clicks_cs_download, n_clicks_popdownload, upload_filename, symm_none, symm_x, symm_y, symm_z, symm_orientation, nclicks_yes, nclicks_no, nbs_btn, color_btn, qs_btn, qus_btn, qus_y_btn, switch_voxel_display):
     global app_settings
     
     ctx = dash.callback_context
@@ -2720,7 +2789,8 @@ def general_callback(curr_heatmap, rules, curr_content, cs_string, cs_properties
             output['content-plot.figure'] = _get_elite_content(mapelites=app_settings.current_mapelites,
                                                                bin_idx=_switch([app_settings.selected_bins[-1]])[0],
                                                                pop='feasible',
-                                                               camera=curr_camera.get('scene.camera', None))
+                                                               camera=curr_camera.get('scene.camera', None),
+                                                               show_voxel=curr_voxel_display)
         
         process_semaphore.unlock()
     

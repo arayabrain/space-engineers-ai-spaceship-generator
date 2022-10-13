@@ -179,6 +179,17 @@ def _is_base_block(block_type: str) -> bool:
                           'LargeBlockArmorCornerInv', 'LargeBlockArmorBlock']
 
 
+def _is_transparent_block(block_type: str) -> bool:
+    """Check if the block is a transparent block.
+
+    Args:
+        block_type (str): The type of the block.
+
+    Returns:
+        bool: Whether the block is a transparent block.
+    """
+    return block_type in ["Window1x1Slope", "Window1x1Flat"]
+
 
 class Structure:
     __slots__ = ['origin_coords', 'orientation_forward', 'orientation_up', 'grid_size', '_blocks',
