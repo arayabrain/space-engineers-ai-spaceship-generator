@@ -1364,7 +1364,7 @@ def update_gen_progress(n: int) -> Tuple[int, str]:
     Returns:
         Tuple[int, str]: The current progress value and string percentage representation.
     """
-    if app_settings.app_mode != AppMode.DEV:
+    if app_settings.app_mode == AppMode.USERSTUDY:
         val = np.round(100 * ((app_settings.gen_counter) / N_GENS_ALLOWED), 2)
         return val, f"{app_settings.gen_counter} / {N_GENS_ALLOWED}"
     else:
