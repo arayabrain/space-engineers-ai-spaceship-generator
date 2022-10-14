@@ -32,8 +32,7 @@ import logging
 import os
 import random
 import sys
-from turtle import width
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import dash
 import dash_bootstrap_components as dbc
@@ -50,9 +49,22 @@ from pcgsepy.guis.ships_comparator.modals_msgs import (rankings_assigned,
 from pcgsepy.hullbuilder import HullBuilder
 from pcgsepy.lsystem.solution import CandidateSolution
 from pcgsepy.setup_utils import get_default_lsystem
+from pcgsepy.structure import _is_base_block
 
 
 def resource_path(relative_path):
+    &#34;&#34;&#34;Get the path of the resources. This differs if the app is being launched via script
+    or after being compiled to an executable with PyInstaller.
+
+    Args:
+        relative_path (str): The relative path to the folder.
+
+    Raises:
+        ValueError: Raised if invalid path.
+
+    Returns:
+        str: The corrected path to the resources.
+    &#34;&#34;&#34;
     # get absolute path to resource
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
@@ -115,18 +127,6 @@ app = dash.Dash(__name__,
                 external_stylesheets=[dbc.themes.DARKLY],
                 assets_folder=resource_path(&#34;assets&#34;),
                 update_title=None)
-
-
-def is_base_block(block_type: str) -&gt; bool:
-    &#34;&#34;&#34;Check if the block is a base block. Base blocks are non-functional, structural blocks.
-
-    Args:
-        block_type (str): The type of the block.
-
-    Returns:
-        bool: Whether the block is a base block.
-    &#34;&#34;&#34;
-    return block_type.endswith(&#34;Block&#34;) or block_type.endswith(&#34;Slope&#34;) or block_type.endswith(&#34;Corner&#34;) or block_type.endswith(&#34;CornerInv&#34;)
 
 
 def get_content_div(content_n: int) -&gt; html.Div:
@@ -238,7 +238,7 @@ def get_content_plot(spaceship: CandidateSolution) -&gt; go.Figure:
     custom_colors = []
     for (i, j, k) in zip(x, y, z):
         b = spaceship.content._blocks[(i * spaceship.content.grid_size, j * spaceship.content.grid_size, k * spaceship.content.grid_size)]
-        if is_base_block(block_type=b.block_type):
+        if _is_base_block(block_type=b.block_type):
             custom_colors.append(f&#39;rgb{base_color.as_tuple()}&#39;)
         else:
             custom_colors.append(block_to_colour.get(spaceship.content._clean_label(b.block_type), &#39;#ff0000&#39;))
@@ -450,7 +450,15 @@ def set_app_layout():
     Input(&#34;info-btn&#34;, &#34;n_clicks&#34;),
     prevent_initial_call=True
 )
-def show_webapp_info(n):
+def show_webapp_info(n: int) -&gt; bool:
+    &#34;&#34;&#34;Display the &#34;App Info&#34; modal window.
+
+    Args:
+        n (int): Number of button clicks.
+
+    Returns:
+        bool: `is_open` modal property value.
+    &#34;&#34;&#34;
     return True
 
 
@@ -460,7 +468,15 @@ def show_webapp_info(n):
      Output(&#39;upload-progress-div&#39;, &#39;style&#39;)],
     [Input(&#34;interval&#34;, &#34;n_intervals&#34;)],
 )
-def update_progress(n):
+def update_progress(n) -&gt; Tuple[int, str, Dict[str, Any]]:
+    &#34;&#34;&#34;Update the files upload progress bar.
+
+    Args:
+        n (int): Interval time.
+
+    Returns:
+        Tuple[int, str]: The current progress value, string percentage representation, and the container style.
+    &#34;&#34;&#34;
     return progress, f&#34;{progress}%&#34;, {&#39;content-visibility&#39;: &#39;visible&#39; if 0 &lt;= progress &lt;= 100 else &#39;hidden&#39;}
 
 
@@ -472,7 +488,16 @@ def update_progress(n):
     prevent_initial_call=True
 )
 def update_dropdown_value(labels: List[str],
-                          vs: List[Optional[int]]):
+                          vs: List[Optional[int]]) -&gt; Tuple[List[str], List[None]]:
+    &#34;&#34;&#34;Update the dropdowns values.
+
+    Args:
+        labels (List[str]): The dropdown labels.
+        vs (List[Optional[int]]): The dropdown values.
+
+    Returns:
+        Tuple[List[str], List[None]]: The list of dropdown names, and the list of zeroed values.
+    &#34;&#34;&#34;
     # super hacky but Dash&#39;s pattern matching fails in this case
     label_changed = vs.index(1) // len(labels)
     new_label = chr(ord(&#34;A&#34;) + (vs.index(1) % len(labels)))
@@ -492,6 +517,15 @@ def update_dropdown_value(labels: List[str],
 )
 def download_scores(n_clicks: int,
                     rankings: List[str]) -&gt; Tuple[Optional[Dict[str, str]], bool, bool]:
+    &#34;&#34;&#34;Download the ranking scores.
+
+    Args:
+        n_clicks (int): Number of button clicks.
+        rankings (List[str]): The list of rankings.
+
+    Returns:
+        Tuple[Optional[Dict[str, str]], bool, bool]: The download file, whether to display the Error modal, and whether to display the Success modal.
+    &#34;&#34;&#34;
     random.seed(rng_seed)
     my_emitterslist = emitters.copy()
     random.shuffle(my_emitterslist)
@@ -515,7 +549,17 @@ def download_scores(n_clicks: int,
 )
 def general_callback(list_of_contents: List[str],
                      list_of_names: List[str],
-                     spaceship_plot: List[go.Figure]) -&gt; Tuple[List[go.Figure], str, str]:
+                     spaceship_plot: List[Dict[str, Any]]) -&gt; Tuple[List[Dict[str, Any]], str, str]:
+    &#34;&#34;&#34;General callback for the application. 
+
+    Args:
+        list_of_contents (List[str]): The list of spaceships strings.
+        list_of_names (List[str]): The list of filenames.
+        spaceship_plot (List[Dict[str, Any]): The list of spaceship preview plots.
+
+    Returns:
+        Tuple[List[Dict[str, Any], str, str]: The updated application components.
+    &#34;&#34;&#34;
     global rng_seed
     global progress
     global base_color
@@ -557,7 +601,19 @@ def general_callback(list_of_contents: List[str],
 <span>def <span class="ident">download_scores</span></span>(<span>n_clicks: int, rankings: List[str]) ‑> Tuple[Optional[Dict[str, str]], bool, bool]</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Download the ranking scores.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>n_clicks</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of button clicks.</dd>
+<dt><strong><code>rankings</code></strong> :&ensp;<code>List[str]</code></dt>
+<dd>The list of rankings.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[Optional[Dict[str, str]], bool, bool]</code></dt>
+<dd>The download file, whether to display the Error modal, and whether to display the Success modal.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -574,6 +630,15 @@ def general_callback(list_of_contents: List[str],
 )
 def download_scores(n_clicks: int,
                     rankings: List[str]) -&gt; Tuple[Optional[Dict[str, str]], bool, bool]:
+    &#34;&#34;&#34;Download the ranking scores.
+
+    Args:
+        n_clicks (int): Number of button clicks.
+        rankings (List[str]): The list of rankings.
+
+    Returns:
+        Tuple[Optional[Dict[str, str]], bool, bool]: The download file, whether to display the Error modal, and whether to display the Success modal.
+    &#34;&#34;&#34;
     random.seed(rng_seed)
     my_emitterslist = emitters.copy()
     random.shuffle(my_emitterslist)
@@ -585,10 +650,24 @@ def download_scores(n_clicks: int,
 </details>
 </dd>
 <dt id="pcgsepy.guis.ships_comparator.webapp.general_callback"><code class="name flex">
-<span>def <span class="ident">general_callback</span></span>(<span>list_of_contents: List[str], list_of_names: List[str], spaceship_plot: List[plotly.graph_objs._figure.Figure]) ‑> Tuple[List[plotly.graph_objs._figure.Figure], str, str]</span>
+<span>def <span class="ident">general_callback</span></span>(<span>list_of_contents: List[str], list_of_names: List[str], spaceship_plot: List[Dict[str, Any]]) ‑> Tuple[List[Dict[str, Any]], str, str]</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>General callback for the application. </p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>list_of_contents</code></strong> :&ensp;<code>List[str]</code></dt>
+<dd>The list of spaceships strings.</dd>
+<dt><strong><code>list_of_names</code></strong> :&ensp;<code>List[str]</code></dt>
+<dd>The list of filenames.</dd>
+<dt><strong><code>spaceship_plot</code></strong> :&ensp;<code>List[Dict[str, Any]</code></dt>
+<dd>The list of spaceship preview plots.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[List[Dict[str, Any], str, str]</code></dt>
+<dd>The updated application components.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -606,7 +685,17 @@ def download_scores(n_clicks: int,
 )
 def general_callback(list_of_contents: List[str],
                      list_of_names: List[str],
-                     spaceship_plot: List[go.Figure]) -&gt; Tuple[List[go.Figure], str, str]:
+                     spaceship_plot: List[Dict[str, Any]]) -&gt; Tuple[List[Dict[str, Any]], str, str]:
+    &#34;&#34;&#34;General callback for the application. 
+
+    Args:
+        list_of_contents (List[str]): The list of spaceships strings.
+        list_of_names (List[str]): The list of filenames.
+        spaceship_plot (List[Dict[str, Any]): The list of spaceship preview plots.
+
+    Returns:
+        Tuple[List[Dict[str, Any], str, str]: The updated application components.
+    &#34;&#34;&#34;
     global rng_seed
     global progress
     global base_color
@@ -726,7 +815,7 @@ def general_callback(list_of_contents: List[str],
     custom_colors = []
     for (i, j, k) in zip(x, y, z):
         b = spaceship.content._blocks[(i * spaceship.content.grid_size, j * spaceship.content.grid_size, k * spaceship.content.grid_size)]
-        if is_base_block(block_type=b.block_type):
+        if _is_base_block(block_type=b.block_type):
             custom_colors.append(f&#39;rgb{base_color.as_tuple()}&#39;)
         else:
             custom_colors.append(block_to_colour.get(spaceship.content._clean_label(b.block_type), &#39;#ff0000&#39;))
@@ -848,37 +937,6 @@ def general_callback(list_of_contents: List[str],
     return rankings_div</code></pre>
 </details>
 </dd>
-<dt id="pcgsepy.guis.ships_comparator.webapp.is_base_block"><code class="name flex">
-<span>def <span class="ident">is_base_block</span></span>(<span>block_type: str) ‑> bool</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Check if the block is a base block. Base blocks are non-functional, structural blocks.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>block_type</code></strong> :&ensp;<code>str</code></dt>
-<dd>The type of the block.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>bool</code></dt>
-<dd>Whether the block is a base block.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def is_base_block(block_type: str) -&gt; bool:
-    &#34;&#34;&#34;Check if the block is a base block. Base blocks are non-functional, structural blocks.
-
-    Args:
-        block_type (str): The type of the block.
-
-    Returns:
-        bool: Whether the block is a base block.
-    &#34;&#34;&#34;
-    return block_type.endswith(&#34;Block&#34;) or block_type.endswith(&#34;Slope&#34;) or block_type.endswith(&#34;Corner&#34;) or block_type.endswith(&#34;CornerInv&#34;)</code></pre>
-</details>
-</dd>
 <dt id="pcgsepy.guis.ships_comparator.webapp.parse_contents"><code class="name flex">
 <span>def <span class="ident">parse_contents</span></span>(<span>filename: str, contents: str) ‑> Tuple[int, int, str, <a title="pcgsepy.common.vecs.Vec" href="../../common/vecs.html#pcgsepy.common.vecs.Vec">Vec</a>]</span>
 </code></dt>
@@ -925,12 +983,40 @@ def general_callback(list_of_contents: List[str],
 <span>def <span class="ident">resource_path</span></span>(<span>relative_path)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Get the path of the resources. This differs if the app is being launched via script
+or after being compiled to an executable with PyInstaller.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>relative_path</code></strong> :&ensp;<code>str</code></dt>
+<dd>The relative path to the folder.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>Raised if invalid path.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>The corrected path to the resources.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def resource_path(relative_path):
+    &#34;&#34;&#34;Get the path of the resources. This differs if the app is being launched via script
+    or after being compiled to an executable with PyInstaller.
+
+    Args:
+        relative_path (str): The relative path to the folder.
+
+    Raises:
+        ValueError: Raised if invalid path.
+
+    Returns:
+        str: The corrected path to the resources.
+    &#34;&#34;&#34;
     # get absolute path to resource
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
@@ -1087,10 +1173,20 @@ def general_callback(list_of_contents: List[str],
 </details>
 </dd>
 <dt id="pcgsepy.guis.ships_comparator.webapp.show_webapp_info"><code class="name flex">
-<span>def <span class="ident">show_webapp_info</span></span>(<span>n)</span>
+<span>def <span class="ident">show_webapp_info</span></span>(<span>n: int) ‑> bool</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Display the "App Info" modal window.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>n</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of button clicks.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd><code>is_open</code> modal property value.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1100,15 +1196,35 @@ def general_callback(list_of_contents: List[str],
     Input(&#34;info-btn&#34;, &#34;n_clicks&#34;),
     prevent_initial_call=True
 )
-def show_webapp_info(n):
+def show_webapp_info(n: int) -&gt; bool:
+    &#34;&#34;&#34;Display the &#34;App Info&#34; modal window.
+
+    Args:
+        n (int): Number of button clicks.
+
+    Returns:
+        bool: `is_open` modal property value.
+    &#34;&#34;&#34;
     return True</code></pre>
 </details>
 </dd>
 <dt id="pcgsepy.guis.ships_comparator.webapp.update_dropdown_value"><code class="name flex">
-<span>def <span class="ident">update_dropdown_value</span></span>(<span>labels: List[str], vs: List[Optional[int]])</span>
+<span>def <span class="ident">update_dropdown_value</span></span>(<span>labels: List[str], vs: List[Optional[int]]) ‑> Tuple[List[str], List[None]]</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Update the dropdowns values.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>labels</code></strong> :&ensp;<code>List[str]</code></dt>
+<dd>The dropdown labels.</dd>
+<dt><strong><code>vs</code></strong> :&ensp;<code>List[Optional[int]]</code></dt>
+<dd>The dropdown values.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[List[str], List[None]]</code></dt>
+<dd>The list of dropdown names, and the list of zeroed values.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1121,7 +1237,16 @@ def show_webapp_info(n):
     prevent_initial_call=True
 )
 def update_dropdown_value(labels: List[str],
-                          vs: List[Optional[int]]):
+                          vs: List[Optional[int]]) -&gt; Tuple[List[str], List[None]]:
+    &#34;&#34;&#34;Update the dropdowns values.
+
+    Args:
+        labels (List[str]): The dropdown labels.
+        vs (List[Optional[int]]): The dropdown values.
+
+    Returns:
+        Tuple[List[str], List[None]]: The list of dropdown names, and the list of zeroed values.
+    &#34;&#34;&#34;
     # super hacky but Dash&#39;s pattern matching fails in this case
     label_changed = vs.index(1) // len(labels)
     new_label = chr(ord(&#34;A&#34;) + (vs.index(1) % len(labels)))
@@ -1130,10 +1255,20 @@ def update_dropdown_value(labels: List[str],
 </details>
 </dd>
 <dt id="pcgsepy.guis.ships_comparator.webapp.update_progress"><code class="name flex">
-<span>def <span class="ident">update_progress</span></span>(<span>n)</span>
+<span>def <span class="ident">update_progress</span></span>(<span>n) ‑> Tuple[int, str, Dict[str, Any]]</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Update the files upload progress bar.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>n</code></strong> :&ensp;<code>int</code></dt>
+<dd>Interval time.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[int, str]</code></dt>
+<dd>The current progress value, string percentage representation, and the container style.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1144,7 +1279,15 @@ def update_dropdown_value(labels: List[str],
      Output(&#39;upload-progress-div&#39;, &#39;style&#39;)],
     [Input(&#34;interval&#34;, &#34;n_intervals&#34;)],
 )
-def update_progress(n):
+def update_progress(n) -&gt; Tuple[int, str, Dict[str, Any]]:
+    &#34;&#34;&#34;Update the files upload progress bar.
+
+    Args:
+        n (int): Interval time.
+
+    Returns:
+        Tuple[int, str]: The current progress value, string percentage representation, and the container style.
+    &#34;&#34;&#34;
     return progress, f&#34;{progress}%&#34;, {&#39;content-visibility&#39;: &#39;visible&#39; if 0 &lt;= progress &lt;= 100 else &#39;hidden&#39;}</code></pre>
 </details>
 </dd>
@@ -1171,7 +1314,6 @@ def update_progress(n):
 <li><code><a title="pcgsepy.guis.ships_comparator.webapp.get_content_div" href="#pcgsepy.guis.ships_comparator.webapp.get_content_div">get_content_div</a></code></li>
 <li><code><a title="pcgsepy.guis.ships_comparator.webapp.get_content_plot" href="#pcgsepy.guis.ships_comparator.webapp.get_content_plot">get_content_plot</a></code></li>
 <li><code><a title="pcgsepy.guis.ships_comparator.webapp.get_rankings_div" href="#pcgsepy.guis.ships_comparator.webapp.get_rankings_div">get_rankings_div</a></code></li>
-<li><code><a title="pcgsepy.guis.ships_comparator.webapp.is_base_block" href="#pcgsepy.guis.ships_comparator.webapp.is_base_block">is_base_block</a></code></li>
 <li><code><a title="pcgsepy.guis.ships_comparator.webapp.parse_contents" href="#pcgsepy.guis.ships_comparator.webapp.parse_contents">parse_contents</a></code></li>
 <li><code><a title="pcgsepy.guis.ships_comparator.webapp.resource_path" href="#pcgsepy.guis.ships_comparator.webapp.resource_path">resource_path</a></code></li>
 <li><code><a title="pcgsepy.guis.ships_comparator.webapp.set_app_layout" href="#pcgsepy.guis.ships_comparator.webapp.set_app_layout">set_app_layout</a></code></li>

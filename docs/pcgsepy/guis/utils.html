@@ -27,7 +27,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from datetime import datetime
-from enum import Enum, auto
+from enum import Enum
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -45,6 +45,14 @@ class Metric:
                  exp_n: int,
                  name: str,
                  multiple_values: bool = False) -&gt; None:
+        &#34;&#34;&#34;Create a `Metric` object.
+
+        Args:
+            emitters (List[str]): The list of emitters names.
+            exp_n (int): The current experiment number.
+            name (str): The name of the metric.
+            multiple_values (bool, optional): Whether this metric tracks multiple values per generation or a sum. Defaults to False.
+        &#34;&#34;&#34;
         self.name = name
         self.current_generation: int = 0
         self.multiple_values = multiple_values
@@ -55,12 +63,18 @@ class Metric:
     
     def add(self,
             value: Any):
+        &#34;&#34;&#34;Add a new value to the current generation.
+
+        Args:
+            value (Any): The new value.
+        &#34;&#34;&#34;
         if self.multiple_values:
             self.history[self.current_generation].append(value)
         else:
             self.history[self.current_generation] += value
     
     def reset(self):
+        &#34;&#34;&#34;Clear the metric trackings.&#34;&#34;&#34;
         if self.multiple_values:
             self.history[self.current_generation] = []
         else:
@@ -69,46 +83,82 @@ class Metric:
     def new_generation(self,
                        emitters: List[str],
                        exp_n: int):
+        &#34;&#34;&#34;Start a new generation to track.
+
+        Args:
+            emitters (List[str]): The list of emitter names.
+            exp_n (int): The current experiment number.
+        &#34;&#34;&#34;
         self.current_generation += 1
         self.reset()
         self.emitter_names.append(emitters[exp_n])
     
     def get_averages(self) -&gt; List[Any]:
+        &#34;&#34;&#34;Get the metric averages over the history.
+
+        Returns:
+            List[Any]: The list of averages.
+        &#34;&#34;&#34;
         return [np.mean(l) for l in self.history.values()]
 
 
 class Semaphore:
     def __init__(self,
                  locked: bool = False) -&gt; None:
+        &#34;&#34;&#34;Create a `Semamphore` object.
+
+        Args:
+            locked (bool, optional): Initial locked value. Defaults to False.
+        &#34;&#34;&#34;
         self._is_locked = locked
         self._running = &#39;&#39;
     
     @property
     def is_locked(self) -&gt; bool:
+        &#34;&#34;&#34;Check if the semaphore is currently locked.
+
+        Returns:
+            bool: The locked value.
+        &#34;&#34;&#34;
         return self._is_locked
     
     def lock(self,
-             name: Optional[str] = &#39;&#39;):
+             name: Optional[str] = &#39;&#39;) -&gt; None:
+        &#34;&#34;&#34;Lock the semaphore.
+
+        Args:
+            name (Optional[str], optional): The locking process name. Defaults to &#39;&#39;.
+        &#34;&#34;&#34;
         self._is_locked = True
         self._running = name
     
-    def unlock(self):
+    def unlock(self) -&gt; None:
+        &#34;&#34;&#34;Unlock the semaphore&#34;&#34;&#34;
         self._is_locked = False
         self._running = &#39;&#39;
 
 
 class DashLoggerHandler(logging.StreamHandler):
     def __init__(self):
+        &#34;&#34;&#34;Create a new logging handler.
+        &#34;&#34;&#34;
         logging.StreamHandler.__init__(self)
         self.queue = []
 
-    def emit(self, record):
+    def emit(self,
+             record: Any) -&gt; None:
+        &#34;&#34;&#34;Process the incoming record.
+
+        Args:
+            record (Any): The new logging record.
+        &#34;&#34;&#34;
         t = datetime.now().strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
         msg = self.format(record)
         self.queue.append(f&#39;[{t}]\t{msg}&#39;)
 
 
 class AppMode(Enum):
+    &#34;&#34;&#34;Enumerator for the application mode.&#34;&#34;&#34;
     USERSTUDY = 0
     USER = 1
     DEV = 2
@@ -116,6 +166,7 @@ class AppMode(Enum):
 
 class AppSettings:
     def __init__(self) -&gt; None:
+        &#34;&#34;&#34;Generate a new `AppSettings` object.&#34;&#34;&#34;
         self.current_mapelites: Optional[MAPElites] = None
         self.exp_n: int = 0
         self.gen_counter: int = 0
@@ -144,6 +195,12 @@ class AppSettings:
     def initialize(self,
                    mapelites: MAPElites,
                    dev_mode: bool = False):
+        &#34;&#34;&#34;Initialize the object.
+
+        Args:
+            mapelites (MAPElites): The MAP-Elites object.
+            dev_mode (bool, optional): Whether to set the application to developer mode. Defaults to False.
+        &#34;&#34;&#34;
         self.current_mapelites = mapelites
         self.app_mode = AppMode.DEV if dev_mode else self.app_mode
         self.hm_callback_props[&#39;pop&#39;] = {
@@ -196,12 +253,13 @@ class AppSettings:
 <span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>An enumeration.</p></div>
+<div class="desc"><p>Enumerator for the application mode.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AppMode(Enum):
+    &#34;&#34;&#34;Enumerator for the application mode.&#34;&#34;&#34;
     USERSTUDY = 0
     USER = 1
     DEV = 2</code></pre>
@@ -230,13 +288,14 @@ class AppSettings:
 <span>class <span class="ident">AppSettings</span></span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Generate a new <code><a title="pcgsepy.guis.utils.AppSettings" href="#pcgsepy.guis.utils.AppSettings">AppSettings</a></code> object.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AppSettings:
     def __init__(self) -&gt; None:
+        &#34;&#34;&#34;Generate a new `AppSettings` object.&#34;&#34;&#34;
         self.current_mapelites: Optional[MAPElites] = None
         self.exp_n: int = 0
         self.gen_counter: int = 0
@@ -265,6 +324,12 @@ class AppSettings:
     def initialize(self,
                    mapelites: MAPElites,
                    dev_mode: bool = False):
+        &#34;&#34;&#34;Initialize the object.
+
+        Args:
+            mapelites (MAPElites): The MAP-Elites object.
+            dev_mode (bool, optional): Whether to set the application to developer mode. Defaults to False.
+        &#34;&#34;&#34;
         self.current_mapelites = mapelites
         self.app_mode = AppMode.DEV if dev_mode else self.app_mode
         self.hm_callback_props[&#39;pop&#39;] = {
@@ -308,7 +373,14 @@ class AppSettings:
 <span>def <span class="ident">initialize</span></span>(<span>self, mapelites: <a title="pcgsepy.mapelites.map.MAPElites" href="../mapelites/map.html#pcgsepy.mapelites.map.MAPElites">MAPElites</a>, dev_mode: bool = False)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Initialize the object.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>mapelites</code></strong> :&ensp;<code>MAPElites</code></dt>
+<dd>The MAP-Elites object.</dd>
+<dt><strong><code>dev_mode</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether to set the application to developer mode. Defaults to False.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -316,6 +388,12 @@ class AppSettings:
 <pre><code class="python">def initialize(self,
                mapelites: MAPElites,
                dev_mode: bool = False):
+    &#34;&#34;&#34;Initialize the object.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+        dev_mode (bool, optional): Whether to set the application to developer mode. Defaults to False.
+    &#34;&#34;&#34;
     self.current_mapelites = mapelites
     self.app_mode = AppMode.DEV if dev_mode else self.app_mode
     self.hm_callback_props[&#39;pop&#39;] = {
@@ -363,18 +441,25 @@ class AppSettings:
 <div class="desc"><p>A handler class which writes logging records, appropriately formatted,
 to a stream. Note that this class does not close the stream, as
 sys.stdout or sys.stderr may be used.</p>
-<p>Initialize the handler.</p>
-<p>If stream is not specified, sys.stderr is used.</p></div>
+<p>Create a new logging handler.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DashLoggerHandler(logging.StreamHandler):
     def __init__(self):
+        &#34;&#34;&#34;Create a new logging handler.
+        &#34;&#34;&#34;
         logging.StreamHandler.__init__(self)
         self.queue = []
 
-    def emit(self, record):
+    def emit(self,
+             record: Any) -&gt; None:
+        &#34;&#34;&#34;Process the incoming record.
+
+        Args:
+            record (Any): The new logging record.
+        &#34;&#34;&#34;
         t = datetime.now().strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
         msg = self.format(record)
         self.queue.append(f&#39;[{t}]\t{msg}&#39;)</code></pre>
@@ -388,23 +473,26 @@ sys.stdout or sys.stderr may be used.</p>
 <h3>Methods</h3>
 <dl>
 <dt id="pcgsepy.guis.utils.DashLoggerHandler.emit"><code class="name flex">
-<span>def <span class="ident">emit</span></span>(<span>self, record)</span>
+<span>def <span class="ident">emit</span></span>(<span>self, record: Any) ‑> None</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Emit a record.</p>
-<p>If a formatter is specified, it is used to format the record.
-The record is then written to the stream with a trailing newline.
-If
-exception information is present, it is formatted using
-traceback.print_exception and appended to the stream.
-If the stream
-has an 'encoding' attribute, it is used to determine how to do the
-output to the stream.</p></div>
+<div class="desc"><p>Process the incoming record.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>record</code></strong> :&ensp;<code>Any</code></dt>
+<dd>The new logging record.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def emit(self, record):
+<pre><code class="python">def emit(self,
+         record: Any) -&gt; None:
+    &#34;&#34;&#34;Process the incoming record.
+
+    Args:
+        record (Any): The new logging record.
+    &#34;&#34;&#34;
     t = datetime.now().strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
     msg = self.format(record)
     self.queue.append(f&#39;[{t}]\t{msg}&#39;)</code></pre>
@@ -417,7 +505,18 @@ output to the stream.</p></div>
 <span>(</span><span>emitters: List[str], exp_n: int, name: str, multiple_values: bool = False)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Create a <code><a title="pcgsepy.guis.utils.Metric" href="#pcgsepy.guis.utils.Metric">Metric</a></code> object.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>emitters</code></strong> :&ensp;<code>List[str]</code></dt>
+<dd>The list of emitters names.</dd>
+<dt><strong><code>exp_n</code></strong> :&ensp;<code>int</code></dt>
+<dd>The current experiment number.</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
+<dd>The name of the metric.</dd>
+<dt><strong><code>multiple_values</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether this metric tracks multiple values per generation or a sum. Defaults to False.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -428,6 +527,14 @@ output to the stream.</p></div>
                  exp_n: int,
                  name: str,
                  multiple_values: bool = False) -&gt; None:
+        &#34;&#34;&#34;Create a `Metric` object.
+
+        Args:
+            emitters (List[str]): The list of emitters names.
+            exp_n (int): The current experiment number.
+            name (str): The name of the metric.
+            multiple_values (bool, optional): Whether this metric tracks multiple values per generation or a sum. Defaults to False.
+        &#34;&#34;&#34;
         self.name = name
         self.current_generation: int = 0
         self.multiple_values = multiple_values
@@ -438,12 +545,18 @@ output to the stream.</p></div>
     
     def add(self,
             value: Any):
+        &#34;&#34;&#34;Add a new value to the current generation.
+
+        Args:
+            value (Any): The new value.
+        &#34;&#34;&#34;
         if self.multiple_values:
             self.history[self.current_generation].append(value)
         else:
             self.history[self.current_generation] += value
     
     def reset(self):
+        &#34;&#34;&#34;Clear the metric trackings.&#34;&#34;&#34;
         if self.multiple_values:
             self.history[self.current_generation] = []
         else:
@@ -452,11 +565,22 @@ output to the stream.</p></div>
     def new_generation(self,
                        emitters: List[str],
                        exp_n: int):
+        &#34;&#34;&#34;Start a new generation to track.
+
+        Args:
+            emitters (List[str]): The list of emitter names.
+            exp_n (int): The current experiment number.
+        &#34;&#34;&#34;
         self.current_generation += 1
         self.reset()
         self.emitter_names.append(emitters[exp_n])
     
     def get_averages(self) -&gt; List[Any]:
+        &#34;&#34;&#34;Get the metric averages over the history.
+
+        Returns:
+            List[Any]: The list of averages.
+        &#34;&#34;&#34;
         return [np.mean(l) for l in self.history.values()]</code></pre>
 </details>
 <h3>Methods</h3>
@@ -465,13 +589,23 @@ output to the stream.</p></div>
 <span>def <span class="ident">add</span></span>(<span>self, value: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Add a new value to the current generation.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>value</code></strong> :&ensp;<code>Any</code></dt>
+<dd>The new value.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def add(self,
         value: Any):
+    &#34;&#34;&#34;Add a new value to the current generation.
+
+    Args:
+        value (Any): The new value.
+    &#34;&#34;&#34;
     if self.multiple_values:
         self.history[self.current_generation].append(value)
     else:
@@ -482,12 +616,22 @@ output to the stream.</p></div>
 <span>def <span class="ident">get_averages</span></span>(<span>self) ‑> List[Any]</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Get the metric averages over the history.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[Any]</code></dt>
+<dd>The list of averages.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_averages(self) -&gt; List[Any]:
+    &#34;&#34;&#34;Get the metric averages over the history.
+
+    Returns:
+        List[Any]: The list of averages.
+    &#34;&#34;&#34;
     return [np.mean(l) for l in self.history.values()]</code></pre>
 </details>
 </dd>
@@ -495,7 +639,14 @@ output to the stream.</p></div>
 <span>def <span class="ident">new_generation</span></span>(<span>self, emitters: List[str], exp_n: int)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Start a new generation to track.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>emitters</code></strong> :&ensp;<code>List[str]</code></dt>
+<dd>The list of emitter names.</dd>
+<dt><strong><code>exp_n</code></strong> :&ensp;<code>int</code></dt>
+<dd>The current experiment number.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -503,6 +654,12 @@ output to the stream.</p></div>
 <pre><code class="python">def new_generation(self,
                    emitters: List[str],
                    exp_n: int):
+    &#34;&#34;&#34;Start a new generation to track.
+
+    Args:
+        emitters (List[str]): The list of emitter names.
+        exp_n (int): The current experiment number.
+    &#34;&#34;&#34;
     self.current_generation += 1
     self.reset()
     self.emitter_names.append(emitters[exp_n])</code></pre>
@@ -512,12 +669,13 @@ output to the stream.</p></div>
 <span>def <span class="ident">reset</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Clear the metric trackings.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def reset(self):
+    &#34;&#34;&#34;Clear the metric trackings.&#34;&#34;&#34;
     if self.multiple_values:
         self.history[self.current_generation] = []
     else:
@@ -531,7 +689,12 @@ output to the stream.</p></div>
 <span>(</span><span>locked: bool = False)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Create a <code>Semamphore</code> object.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>locked</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Initial locked value. Defaults to False.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -539,19 +702,35 @@ output to the stream.</p></div>
 <pre><code class="python">class Semaphore:
     def __init__(self,
                  locked: bool = False) -&gt; None:
+        &#34;&#34;&#34;Create a `Semamphore` object.
+
+        Args:
+            locked (bool, optional): Initial locked value. Defaults to False.
+        &#34;&#34;&#34;
         self._is_locked = locked
         self._running = &#39;&#39;
     
     @property
     def is_locked(self) -&gt; bool:
+        &#34;&#34;&#34;Check if the semaphore is currently locked.
+
+        Returns:
+            bool: The locked value.
+        &#34;&#34;&#34;
         return self._is_locked
     
     def lock(self,
-             name: Optional[str] = &#39;&#39;):
+             name: Optional[str] = &#39;&#39;) -&gt; None:
+        &#34;&#34;&#34;Lock the semaphore.
+
+        Args:
+            name (Optional[str], optional): The locking process name. Defaults to &#39;&#39;.
+        &#34;&#34;&#34;
         self._is_locked = True
         self._running = name
     
-    def unlock(self):
+    def unlock(self) -&gt; None:
+        &#34;&#34;&#34;Unlock the semaphore&#34;&#34;&#34;
         self._is_locked = False
         self._running = &#39;&#39;</code></pre>
 </details>
@@ -559,13 +738,23 @@ output to the stream.</p></div>
 <dl>
 <dt id="pcgsepy.guis.utils.Semaphore.is_locked"><code class="name">var <span class="ident">is_locked</span> : bool</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Check if the semaphore is currently locked.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd>The locked value.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
 def is_locked(self) -&gt; bool:
+    &#34;&#34;&#34;Check if the semaphore is currently locked.
+
+    Returns:
+        bool: The locked value.
+    &#34;&#34;&#34;
     return self._is_locked</code></pre>
 </details>
 </dd>
@@ -573,30 +762,41 @@ def is_locked(self) -&gt; bool:
 <h3>Methods</h3>
 <dl>
 <dt id="pcgsepy.guis.utils.Semaphore.lock"><code class="name flex">
-<span>def <span class="ident">lock</span></span>(<span>self, name: Optional[str] = '')</span>
+<span>def <span class="ident">lock</span></span>(<span>self, name: Optional[str] = '') ‑> None</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Lock the semaphore.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>name</code></strong> :&ensp;<code>Optional[str]</code>, optional</dt>
+<dd>The locking process name. Defaults to ''.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def lock(self,
-         name: Optional[str] = &#39;&#39;):
+         name: Optional[str] = &#39;&#39;) -&gt; None:
+    &#34;&#34;&#34;Lock the semaphore.
+
+    Args:
+        name (Optional[str], optional): The locking process name. Defaults to &#39;&#39;.
+    &#34;&#34;&#34;
     self._is_locked = True
     self._running = name</code></pre>
 </details>
 </dd>
 <dt id="pcgsepy.guis.utils.Semaphore.unlock"><code class="name flex">
-<span>def <span class="ident">unlock</span></span>(<span>self)</span>
+<span>def <span class="ident">unlock</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Unlock the semaphore</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def unlock(self):
+<pre><code class="python">def unlock(self) -&gt; None:
+    &#34;&#34;&#34;Unlock the semaphore&#34;&#34;&#34;
     self._is_locked = False
     self._running = &#39;&#39;</code></pre>
 </details>

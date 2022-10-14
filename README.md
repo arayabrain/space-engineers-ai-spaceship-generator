@@ -53,7 +53,7 @@ The apps can be built using the provided `.py` files placed in the `user-study` 
 The AI Spaceship Generator can be built by running `python build_main_webapp.py`. The Spaceships Ranker can be built by running `python build_comparator.py`.
 
 ### Documentation
-An explorable documentation is provided in `docs`. You can build the documentation by first installing `pdoc3` (`pip install pdoc3`) and then running the command `pdoc --html pcgsepy --output-dir ./docs`.
+An explorable documentation is provided in `docs`. You can build the documentation by first installing `pdoc3` (`pip install pdoc3`) and then running the command `pdoc --html pcgsepy --output-dir --force ./docs`.
 
 #### Modifiable files
 Some files can be modified before building the apps. These are:

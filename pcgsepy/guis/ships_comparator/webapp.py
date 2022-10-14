@@ -4,8 +4,7 @@ import logging
 import os
 import random
 import sys
-from turtle import width
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import dash
 import dash_bootstrap_components as dbc
@@ -22,9 +21,22 @@ from pcgsepy.guis.ships_comparator.modals_msgs import (rankings_assigned,
 from pcgsepy.hullbuilder import HullBuilder
 from pcgsepy.lsystem.solution import CandidateSolution
 from pcgsepy.setup_utils import get_default_lsystem
+from pcgsepy.structure import _is_base_block
 
 
 def resource_path(relative_path):
+    """Get the path of the resources. This differs if the app is being launched via script
+    or after being compiled to an executable with PyInstaller.
+
+    Args:
+        relative_path (str): The relative path to the folder.
+
+    Raises:
+        ValueError: Raised if invalid path.
+
+    Returns:
+        str: The corrected path to the resources.
+    """
     # get absolute path to resource
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
@@ -87,18 +99,6 @@ app = dash.Dash(__name__,
                 external_stylesheets=[dbc.themes.DARKLY],
                 assets_folder=resource_path("assets"),
                 update_title=None)
-
-
-def is_base_block(block_type: str) -> bool:
-    """Check if the block is a base block. Base blocks are non-functional, structural blocks.
-
-    Args:
-        block_type (str): The type of the block.
-
-    Returns:
-        bool: Whether the block is a base block.
-    """
-    return block_type.endswith("Block") or block_type.endswith("Slope") or block_type.endswith("Corner") or block_type.endswith("CornerInv")
 
 
 def get_content_div(content_n: int) -> html.Div:
@@ -210,7 +210,7 @@ def get_content_plot(spaceship: CandidateSolution) -> go.Figure:
     custom_colors = []
     for (i, j, k) in zip(x, y, z):
         b = spaceship.content._blocks[(i * spaceship.content.grid_size, j * spaceship.content.grid_size, k * spaceship.content.grid_size)]
-        if is_base_block(block_type=b.block_type):
+        if _is_base_block(block_type=b.block_type):
             custom_colors.append(f'rgb{base_color.as_tuple()}')
         else:
             custom_colors.append(block_to_colour.get(spaceship.content._clean_label(b.block_type), '#ff0000'))
@@ -422,7 +422,15 @@ def set_app_layout():
     Input("info-btn", "n_clicks"),
     prevent_initial_call=True
 )
-def show_webapp_info(n):
+def show_webapp_info(n: int) -> bool:
+    """Display the "App Info" modal window.
+
+    Args:
+        n (int): Number of button clicks.
+
+    Returns:
+        bool: `is_open` modal property value.
+    """
     return True
 
 
@@ -432,7 +440,15 @@ def show_webapp_info(n):
      Output('upload-progress-div', 'style')],
     [Input("interval", "n_intervals")],
 )
-def update_progress(n):
+def update_progress(n) -> Tuple[int, str, Dict[str, Any]]:
+    """Update the files upload progress bar.
+
+    Args:
+        n (int): Interval time.
+
+    Returns:
+        Tuple[int, str]: The current progress value, string percentage representation, and the container style.
+    """
     return progress, f"{progress}%", {'content-visibility': 'visible' if 0 <= progress <= 100 else 'hidden'}
 
 
@@ -444,7 +460,16 @@ def update_progress(n):
     prevent_initial_call=True
 )
 def update_dropdown_value(labels: List[str],
-                          vs: List[Optional[int]]):
+                          vs: List[Optional[int]]) -> Tuple[List[str], List[None]]:
+    """Update the dropdowns values.
+
+    Args:
+        labels (List[str]): The dropdown labels.
+        vs (List[Optional[int]]): The dropdown values.
+
+    Returns:
+        Tuple[List[str], List[None]]: The list of dropdown names, and the list of zeroed values.
+    """
     # super hacky but Dash's pattern matching fails in this case
     label_changed = vs.index(1) // len(labels)
     new_label = chr(ord("A") + (vs.index(1) % len(labels)))
@@ -464,6 +489,15 @@ def update_dropdown_value(labels: List[str],
 )
 def download_scores(n_clicks: int,
                     rankings: List[str]) -> Tuple[Optional[Dict[str, str]], bool, bool]:
+    """Download the ranking scores.
+
+    Args:
+        n_clicks (int): Number of button clicks.
+        rankings (List[str]): The list of rankings.
+
+    Returns:
+        Tuple[Optional[Dict[str, str]], bool, bool]: The download file, whether to display the Error modal, and whether to display the Success modal.
+    """
     random.seed(rng_seed)
     my_emitterslist = emitters.copy()
     random.shuffle(my_emitterslist)
@@ -487,7 +521,17 @@ def download_scores(n_clicks: int,
 )
 def general_callback(list_of_contents: List[str],
                      list_of_names: List[str],
-                     spaceship_plot: List[go.Figure]) -> Tuple[List[go.Figure], str, str]:
+                     spaceship_plot: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], str, str]:
+    """General callback for the application. 
+
+    Args:
+        list_of_contents (List[str]): The list of spaceships strings.
+        list_of_names (List[str]): The list of filenames.
+        spaceship_plot (List[Dict[str, Any]): The list of spaceship preview plots.
+
+    Returns:
+        Tuple[List[Dict[str, Any], str, str]: The updated application components.
+    """
     global rng_seed
     global progress
     global base_color
