@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>pcgsepy.lsystem.parser API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pcgsepy.lsystem.parser</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import re
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List
+
+import numpy as np
+from pcgsepy.common.regex_handler import MyMatch, extract_regex
+from pcgsepy.config import PL_HIGH, PL_LOW
+from pcgsepy.lsystem.actions import Rotations
+from pcgsepy.lsystem.rules import StochasticRules
+
+
+class LParser(ABC):
+    def __init__(self,
+                 rules: StochasticRules):
+        &#34;&#34;&#34;Create a parser.
+
+        Args:
+            rules (StochasticRules): The set of expansion rules.
+        &#34;&#34;&#34;
+        self.rules = rules
+        self.compiled_lhs = [extract_regex(lhs) for lhs in rules.get_lhs()]
+
+    @abstractmethod
+    def expand(self,
+               string: str) -&gt; str:
+        &#34;&#34;&#34;Expand a string using the parser rules.
+
+        Args:
+            string (str): The string to expand.
+
+        Returns:
+            str: The expanded string.
+        &#34;&#34;&#34;
+        pass
+
+
+class HLParser(LParser):
+    def expand(self,
+               string: str) -&gt; str:
+
+        # get all matches with regex
+        matches: List[MyMatch] = []
+        for r, rule in zip(self.compiled_lhs, self.rules.get_lhs()):
+            matches.extend([MyMatch(lhs=rule,
+                                    span=match.span(),
+                                    lhs_string=match.group()) for match in r.finditer(string=string)])
+        # sort matches in-place
+        matches.sort()
+        # filter out matches
+        filtered_matches = [matches[0]]
+        for match in matches:
+            if match.start != filtered_matches[-1].start:
+                filtered_matches.append(match)
+        # expand using filtered_matches
+        offset = 0
+        for match in filtered_matches:
+            rhs = self.rules.get_rhs(lhs=match.lhs)
+            # update numerical parameters
+            if &#39;(x)&#39; in rhs or &#39;(X)&#39; in rhs or &#39;(Y)&#39; in rhs:
+                n = [m for m in re.compile(r&#39;\d&#39;).finditer(match.lhs_string)]
+                n = int(n[0].group()) if n else None
+                # update rhs to include parameters
+                rhs = rhs.replace(&#39;(x)&#39;, f&#39;({n})&#39;)
+                rhs_n = np.random.randint(PL_LOW, PL_HIGH)
+                rhs = rhs.replace(&#39;(X)&#39;, f&#39;({rhs_n})&#39;)
+                if n is not None:
+                    rhs = rhs.replace(&#39;(Y)&#39;, f&#39;({max(1, n - rhs_n)})&#39;)
+            # apply expansion in string
+            string = string[:match.start + offset] + rhs + string[match.end + offset:]
+            offset += len(rhs) - len(match.lhs_string)
+
+        return string
+
+
+class HLtoMLTranslator:
+
+    def __init__(self,
+                 alphabet: Dict[str, Any],
+                 tiles_dims: Dict[str, Any],
+                 tiles_block_offset: Dict[str, Any]):
+        self.alphabet = alphabet
+        self.td = tiles_dims
+        self.tbo = tiles_block_offset
+
+    def _string_as_list(self,
+                        string: str) -&gt; List[Dict[str, Any]]:
+        atoms_list = []
+        i = 0
+        while i &lt; len(string):
+            offset = 0
+            for k in self.alphabet.keys():
+                if string[i:].startswith(k):
+                    offset += len(k)
+                    n = None
+                    # check if there are parameters (multiplicity)
+                    if i + offset &lt; len(string) and string[i + offset] == &#39;(&#39;:
+                        params = string[i + offset:
+                                        string.index(&#39;)&#39;, i + offset + 1) + 1]
+                        offset += len(params)
+                        n = int(params.replace(&#39;(&#39;, &#39;&#39;).replace(&#39;)&#39;, &#39;&#39;))
+                    atoms_list.append({&#39;atom&#39;: k})
+                    if k in self.td.keys():
+                        atoms_list[-1][&#39;n&#39;] = n if n is not None else 1
+
+                    i += len(k) + (len(f&#39;({n})&#39;) if n is not None else 0) - 1
+                    break
+            i += 1
+        return atoms_list
+
+    def _to_midlvl(self,
+                   atoms_list: List[Dict[str, Any]]) -&gt; str:
+        last_parents = []
+        new_string = &#39;&#39;
+        rotations = []
+
+        for i, atom in enumerate(atoms_list):
+            a = atom[&#39;atom&#39;]
+            n = atom.get(&#39;n&#39;, None)
+            # tile dimensions (either current or parent&#39;s)
+            if n is None:
+                dims = self.td[last_parents[-1]]
+            else:
+                dims = self.td[a]
+            # Translate w/ correction to mid-level
+            # Placeable tile
+            if a in self.td.keys():
+                new = [f&#34;{a}!({dims.y})&#34; for _ in range(n)]
+                new_string += &#39;&#39;.join(new)
+                # Add closing wall
+                if i + 1 &lt; len(atoms_list) and a.startswith(
+                        &#39;corridor&#39;) and atoms_list[i + 1][&#39;atom&#39;] == &#39;]&#39;:
+                    new_string += &#39;corridorwall!(10)&#39;
+            # Position stack manipulation
+            elif a == &#39;[&#39; or a == &#39;]&#39;:
+                new_string += a
+            # Rotation
+            elif a.startswith(&#39;Rot&#39;):
+                next_tile = None
+                for j in range(i + 1, len(atoms_list)):
+                    if atoms_list[j].get(&#39;n&#39;, None) is not None:
+                        next_tile = atoms_list[j][&#39;atom&#39;]
+                        break
+                rotations.append(a)
+                last_dims = self.td[last_parents[-1]]
+                next_dims = self.td[next_tile]
+                next_offset = self.tbo[next_tile]
+                c = &#39;&#39;
+                if a == &#39;RotZccwX&#39;:
+                    c = f&#34;+({dims.x})&gt;({next_dims.x - next_offset})&#34;
+                elif a == &#39;RotZcwX&#39;:
+                    c = f&#34;-({next_offset})&#34;
+                elif a == &#39;RotZcwY&#39;:
+                    c = f&#34;?({next_offset})&#34;
+                elif a == &#39;RotZccwY&#39;:
+                    c = f&#34;!({dims.y})&gt;({dims.z -  - next_offset})&#34;
+                elif a == &#39;RotXcwY&#39;:
+                    c = f&#34;?({next_offset})&#34;
+                elif a == &#39;RotXccwY&#39;:
+                    c = f&#34;-({next_offset})&#34;
+                elif a == &#39;RotXcwZ&#39;:
+                    c = f&#34;-({next_offset})&#34;
+                elif a == &#39;RotXccwZ&#39;:
+                    c = f&#34;+({dims.x})&gt;({next_dims.x - dims.z})&#34;
+                elif a == &#39;RotYcwX&#39;:
+                    c = f&#34;-({next_offset})&#34;
+                elif a == &#39;RotYccwX&#39;:
+                    c = f&#39;+({dims.x})!({dims.x - next_offset})&#39;
+                elif a == &#39;RotYcwZ&#39;:
+                    c = f&#39;&gt;({next_offset})&#39;
+                elif a == &#39;RotYccwZ&#39;:
+                    c = f&#34;!({dims.z - next_offset})&lt;({last_dims.z})&#34;
+                new_string += &#39;&#39;.join([c, a])
+
+            # Parent&#39;s stack manipulation
+            if i + 1 &lt; len(atoms_list):
+                if a != &#39;]&#39; and atoms_list[i + 1][&#39;atom&#39;] == &#39;[&#39;:
+                    last_parents.append(a)
+                if a == &#39;]&#39; and atoms_list[i + 1].get(&#39;n&#39;, None) is not None:
+                    last_parents.pop(-1)
+
+        return new_string
+
+    def _add_intersections(self,
+                           string: str) -&gt; str:
+        brackets = []
+        for i, c in enumerate(string):
+            if c == &#39;[&#39;:
+                # find first closing bracket
+                idx_c = string.index(&#39;]&#39;, i)
+                # update closing bracket position in case of nested brackets
+                ni_o = string.find(&#39;[&#39;, i + 1)
+                while ni_o != -1 and string.find(&#39;[&#39;, ni_o) &lt; idx_c:
+                    idx_c = string.index(&#39;]&#39;, idx_c + 1)
+                    ni_o = string.find(&#39;[&#39;, ni_o + 1)
+                # add to list of brackets
+                brackets.append((i, idx_c))
+        to_add = {}
+        # add intersection types
+        for i, b in enumerate(brackets):
+            # get rotation
+            for r in [x.value for x in Rotations]:
+                if string.find(r, b[0], b[1]) != -1:
+                    rot = r
+                    break
+            # check for neighboring rotations
+            has_neighbours = False
+            for t0, t1 in brackets[i:]:
+                if b[1] == t0 - 1:
+                    has_neighbours = True
+                    if b[1] not in to_add.keys():
+                        to_add[t1] = [rot]
+                    else:
+                        to_add[t1] = [*to_add[b[1]], rot]
+                        to_add.pop(b[1])
+                    break
+            if not has_neighbours:
+                if b[1] not in to_add:
+                    to_add[b[1]] = [rot]
+                else:
+                    to_add[b[1]].append(rot)
+        # add to the string
+        offset = 0
+        for i in sorted(list(to_add.keys())):
+            rot = &#39;&#39;.join(sorted(list(set(to_add[i]))))
+            s = f&#39;{rot}intersection!(25)&#39;
+            string = string[:i + 1 + offset] + s + string[i + 1 + offset:]
+            offset += len(s)
+        return string
+
+    def transform(self,
+                  string: str) -&gt; str:
+        atoms_list = self._string_as_list(string)
+        try:
+            new_string = self._to_midlvl(atoms_list)
+            new_string = self._add_intersections(new_string)
+        except Exception as e:
+            print(string)
+            raise e
+        return new_string
+
+
+class LLParser(LParser):
+    def expand(self,
+               string: str) -&gt; str:
+        i = 0
+        while i &lt; len(string):
+            for k in reversed(list(self.rules.lhs_alphabet)):
+                if string[i:].startswith(k):
+                    rhs = self.rules.get_rhs(lhs=k)
+                    string = string[:i] + rhs + string[i + len(k):]
+                    i += len(rhs) - 1
+                    break
+            i += 1
+        return string</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pcgsepy.lsystem.parser.HLParser"><code class="flex name class">
+<span>class <span class="ident">HLParser</span></span>
+<span>(</span><span>rules: <a title="pcgsepy.lsystem.rules.StochasticRules" href="rules.html#pcgsepy.lsystem.rules.StochasticRules">StochasticRules</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>Create a parser.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>rules</code></strong> :&ensp;<code>StochasticRules</code></dt>
+<dd>The set of expansion rules.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class HLParser(LParser):
+    def expand(self,
+               string: str) -&gt; str:
+
+        # get all matches with regex
+        matches: List[MyMatch] = []
+        for r, rule in zip(self.compiled_lhs, self.rules.get_lhs()):
+            matches.extend([MyMatch(lhs=rule,
+                                    span=match.span(),
+                                    lhs_string=match.group()) for match in r.finditer(string=string)])
+        # sort matches in-place
+        matches.sort()
+        # filter out matches
+        filtered_matches = [matches[0]]
+        for match in matches:
+            if match.start != filtered_matches[-1].start:
+                filtered_matches.append(match)
+        # expand using filtered_matches
+        offset = 0
+        for match in filtered_matches:
+            rhs = self.rules.get_rhs(lhs=match.lhs)
+            # update numerical parameters
+            if &#39;(x)&#39; in rhs or &#39;(X)&#39; in rhs or &#39;(Y)&#39; in rhs:
+                n = [m for m in re.compile(r&#39;\d&#39;).finditer(match.lhs_string)]
+                n = int(n[0].group()) if n else None
+                # update rhs to include parameters
+                rhs = rhs.replace(&#39;(x)&#39;, f&#39;({n})&#39;)
+                rhs_n = np.random.randint(PL_LOW, PL_HIGH)
+                rhs = rhs.replace(&#39;(X)&#39;, f&#39;({rhs_n})&#39;)
+                if n is not None:
+                    rhs = rhs.replace(&#39;(Y)&#39;, f&#39;({max(1, n - rhs_n)})&#39;)
+            # apply expansion in string
+            string = string[:match.start + offset] + rhs + string[match.end + offset:]
+            offset += len(rhs) - len(match.lhs_string)
+
+        return string</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.lsystem.parser.LParser" href="#pcgsepy.lsystem.parser.LParser">LParser</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="pcgsepy.lsystem.parser.LParser" href="#pcgsepy.lsystem.parser.LParser">LParser</a></b></code>:
+<ul class="hlist">
+<li><code><a title="pcgsepy.lsystem.parser.LParser.expand" href="#pcgsepy.lsystem.parser.LParser.expand">expand</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="pcgsepy.lsystem.parser.HLtoMLTranslator"><code class="flex name class">
+<span>class <span class="ident">HLtoMLTranslator</span></span>
+<span>(</span><span>alphabet: Dict[str, Any], tiles_dims: Dict[str, Any], tiles_block_offset: Dict[str, Any])</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class HLtoMLTranslator:
+
+    def __init__(self,
+                 alphabet: Dict[str, Any],
+                 tiles_dims: Dict[str, Any],
+                 tiles_block_offset: Dict[str, Any]):
+        self.alphabet = alphabet
+        self.td = tiles_dims
+        self.tbo = tiles_block_offset
+
+    def _string_as_list(self,
+                        string: str) -&gt; List[Dict[str, Any]]:
+        atoms_list = []
+        i = 0
+        while i &lt; len(string):
+            offset = 0
+            for k in self.alphabet.keys():
+                if string[i:].startswith(k):
+                    offset += len(k)
+                    n = None
+                    # check if there are parameters (multiplicity)
+                    if i + offset &lt; len(string) and string[i + offset] == &#39;(&#39;:
+                        params = string[i + offset:
+                                        string.index(&#39;)&#39;, i + offset + 1) + 1]
+                        offset += len(params)
+                        n = int(params.replace(&#39;(&#39;, &#39;&#39;).replace(&#39;)&#39;, &#39;&#39;))
+                    atoms_list.append({&#39;atom&#39;: k})
+                    if k in self.td.keys():
+                        atoms_list[-1][&#39;n&#39;] = n if n is not None else 1
+
+                    i += len(k) + (len(f&#39;({n})&#39;) if n is not None else 0) - 1
+                    break
+            i += 1
+        return atoms_list
+
+    def _to_midlvl(self,
+                   atoms_list: List[Dict[str, Any]]) -&gt; str:
+        last_parents = []
+        new_string = &#39;&#39;
+        rotations = []
+
+        for i, atom in enumerate(atoms_list):
+            a = atom[&#39;atom&#39;]
+            n = atom.get(&#39;n&#39;, None)
+            # tile dimensions (either current or parent&#39;s)
+            if n is None:
+                dims = self.td[last_parents[-1]]
+            else:
+                dims = self.td[a]
+            # Translate w/ correction to mid-level
+            # Placeable tile
+            if a in self.td.keys():
+                new = [f&#34;{a}!({dims.y})&#34; for _ in range(n)]
+                new_string += &#39;&#39;.join(new)
+                # Add closing wall
+                if i + 1 &lt; len(atoms_list) and a.startswith(
+                        &#39;corridor&#39;) and atoms_list[i + 1][&#39;atom&#39;] == &#39;]&#39;:
+                    new_string += &#39;corridorwall!(10)&#39;
+            # Position stack manipulation
+            elif a == &#39;[&#39; or a == &#39;]&#39;:
+                new_string += a
+            # Rotation
+            elif a.startswith(&#39;Rot&#39;):
+                next_tile = None
+                for j in range(i + 1, len(atoms_list)):
+                    if atoms_list[j].get(&#39;n&#39;, None) is not None:
+                        next_tile = atoms_list[j][&#39;atom&#39;]
+                        break
+                rotations.append(a)
+                last_dims = self.td[last_parents[-1]]
+                next_dims = self.td[next_tile]
+                next_offset = self.tbo[next_tile]
+                c = &#39;&#39;
+                if a == &#39;RotZccwX&#39;:
+                    c = f&#34;+({dims.x})&gt;({next_dims.x - next_offset})&#34;
+                elif a == &#39;RotZcwX&#39;:
+                    c = f&#34;-({next_offset})&#34;
+                elif a == &#39;RotZcwY&#39;:
+                    c = f&#34;?({next_offset})&#34;
+                elif a == &#39;RotZccwY&#39;:
+                    c = f&#34;!({dims.y})&gt;({dims.z -  - next_offset})&#34;
+                elif a == &#39;RotXcwY&#39;:
+                    c = f&#34;?({next_offset})&#34;
+                elif a == &#39;RotXccwY&#39;:
+                    c = f&#34;-({next_offset})&#34;
+                elif a == &#39;RotXcwZ&#39;:
+                    c = f&#34;-({next_offset})&#34;
+                elif a == &#39;RotXccwZ&#39;:
+                    c = f&#34;+({dims.x})&gt;({next_dims.x - dims.z})&#34;
+                elif a == &#39;RotYcwX&#39;:
+                    c = f&#34;-({next_offset})&#34;
+                elif a == &#39;RotYccwX&#39;:
+                    c = f&#39;+({dims.x})!({dims.x - next_offset})&#39;
+                elif a == &#39;RotYcwZ&#39;:
+                    c = f&#39;&gt;({next_offset})&#39;
+                elif a == &#39;RotYccwZ&#39;:
+                    c = f&#34;!({dims.z - next_offset})&lt;({last_dims.z})&#34;
+                new_string += &#39;&#39;.join([c, a])
+
+            # Parent&#39;s stack manipulation
+            if i + 1 &lt; len(atoms_list):
+                if a != &#39;]&#39; and atoms_list[i + 1][&#39;atom&#39;] == &#39;[&#39;:
+                    last_parents.append(a)
+                if a == &#39;]&#39; and atoms_list[i + 1].get(&#39;n&#39;, None) is not None:
+                    last_parents.pop(-1)
+
+        return new_string
+
+    def _add_intersections(self,
+                           string: str) -&gt; str:
+        brackets = []
+        for i, c in enumerate(string):
+            if c == &#39;[&#39;:
+                # find first closing bracket
+                idx_c = string.index(&#39;]&#39;, i)
+                # update closing bracket position in case of nested brackets
+                ni_o = string.find(&#39;[&#39;, i + 1)
+                while ni_o != -1 and string.find(&#39;[&#39;, ni_o) &lt; idx_c:
+                    idx_c = string.index(&#39;]&#39;, idx_c + 1)
+                    ni_o = string.find(&#39;[&#39;, ni_o + 1)
+                # add to list of brackets
+                brackets.append((i, idx_c))
+        to_add = {}
+        # add intersection types
+        for i, b in enumerate(brackets):
+            # get rotation
+            for r in [x.value for x in Rotations]:
+                if string.find(r, b[0], b[1]) != -1:
+                    rot = r
+                    break
+            # check for neighboring rotations
+            has_neighbours = False
+            for t0, t1 in brackets[i:]:
+                if b[1] == t0 - 1:
+                    has_neighbours = True
+                    if b[1] not in to_add.keys():
+                        to_add[t1] = [rot]
+                    else:
+                        to_add[t1] = [*to_add[b[1]], rot]
+                        to_add.pop(b[1])
+                    break
+            if not has_neighbours:
+                if b[1] not in to_add:
+                    to_add[b[1]] = [rot]
+                else:
+                    to_add[b[1]].append(rot)
+        # add to the string
+        offset = 0
+        for i in sorted(list(to_add.keys())):
+            rot = &#39;&#39;.join(sorted(list(set(to_add[i]))))
+            s = f&#39;{rot}intersection!(25)&#39;
+            string = string[:i + 1 + offset] + s + string[i + 1 + offset:]
+            offset += len(s)
+        return string
+
+    def transform(self,
+                  string: str) -&gt; str:
+        atoms_list = self._string_as_list(string)
+        try:
+            new_string = self._to_midlvl(atoms_list)
+            new_string = self._add_intersections(new_string)
+        except Exception as e:
+            print(string)
+            raise e
+        return new_string</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="pcgsepy.lsystem.parser.HLtoMLTranslator.transform"><code class="name flex">
+<span>def <span class="ident">transform</span></span>(<span>self, string: str) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def transform(self,
+              string: str) -&gt; str:
+    atoms_list = self._string_as_list(string)
+    try:
+        new_string = self._to_midlvl(atoms_list)
+        new_string = self._add_intersections(new_string)
+    except Exception as e:
+        print(string)
+        raise e
+    return new_string</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="pcgsepy.lsystem.parser.LLParser"><code class="flex name class">
+<span>class <span class="ident">LLParser</span></span>
+<span>(</span><span>rules: <a title="pcgsepy.lsystem.rules.StochasticRules" href="rules.html#pcgsepy.lsystem.rules.StochasticRules">StochasticRules</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>Create a parser.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>rules</code></strong> :&ensp;<code>StochasticRules</code></dt>
+<dd>The set of expansion rules.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class LLParser(LParser):
+    def expand(self,
+               string: str) -&gt; str:
+        i = 0
+        while i &lt; len(string):
+            for k in reversed(list(self.rules.lhs_alphabet)):
+                if string[i:].startswith(k):
+                    rhs = self.rules.get_rhs(lhs=k)
+                    string = string[:i] + rhs + string[i + len(k):]
+                    i += len(rhs) - 1
+                    break
+            i += 1
+        return string</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.lsystem.parser.LParser" href="#pcgsepy.lsystem.parser.LParser">LParser</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="pcgsepy.lsystem.parser.LParser" href="#pcgsepy.lsystem.parser.LParser">LParser</a></b></code>:
+<ul class="hlist">
+<li><code><a title="pcgsepy.lsystem.parser.LParser.expand" href="#pcgsepy.lsystem.parser.LParser.expand">expand</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="pcgsepy.lsystem.parser.LParser"><code class="flex name class">
+<span>class <span class="ident">LParser</span></span>
+<span>(</span><span>rules: <a title="pcgsepy.lsystem.rules.StochasticRules" href="rules.html#pcgsepy.lsystem.rules.StochasticRules">StochasticRules</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>Create a parser.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>rules</code></strong> :&ensp;<code>StochasticRules</code></dt>
+<dd>The set of expansion rules.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class LParser(ABC):
+    def __init__(self,
+                 rules: StochasticRules):
+        &#34;&#34;&#34;Create a parser.
+
+        Args:
+            rules (StochasticRules): The set of expansion rules.
+        &#34;&#34;&#34;
+        self.rules = rules
+        self.compiled_lhs = [extract_regex(lhs) for lhs in rules.get_lhs()]
+
+    @abstractmethod
+    def expand(self,
+               string: str) -&gt; str:
+        &#34;&#34;&#34;Expand a string using the parser rules.
+
+        Args:
+            string (str): The string to expand.
+
+        Returns:
+            str: The expanded string.
+        &#34;&#34;&#34;
+        pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.lsystem.parser.HLParser" href="#pcgsepy.lsystem.parser.HLParser">HLParser</a></li>
+<li><a title="pcgsepy.lsystem.parser.LLParser" href="#pcgsepy.lsystem.parser.LLParser">LLParser</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="pcgsepy.lsystem.parser.LParser.expand"><code class="name flex">
+<span>def <span class="ident">expand</span></span>(<span>self, string: str) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Expand a string using the parser rules.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>string</code></strong> :&ensp;<code>str</code></dt>
+<dd>The string to expand.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>The expanded string.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def expand(self,
+           string: str) -&gt; str:
+    &#34;&#34;&#34;Expand a string using the parser rules.
+
+    Args:
+        string (str): The string to expand.
+
+    Returns:
+        str: The expanded string.
+    &#34;&#34;&#34;
+    pass</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pcgsepy.lsystem" href="index.html">pcgsepy.lsystem</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pcgsepy.lsystem.parser.HLParser" href="#pcgsepy.lsystem.parser.HLParser">HLParser</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pcgsepy.lsystem.parser.HLtoMLTranslator" href="#pcgsepy.lsystem.parser.HLtoMLTranslator">HLtoMLTranslator</a></code></h4>
+<ul class="">
+<li><code><a title="pcgsepy.lsystem.parser.HLtoMLTranslator.transform" href="#pcgsepy.lsystem.parser.HLtoMLTranslator.transform">transform</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pcgsepy.lsystem.parser.LLParser" href="#pcgsepy.lsystem.parser.LLParser">LLParser</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pcgsepy.lsystem.parser.LParser" href="#pcgsepy.lsystem.parser.LParser">LParser</a></code></h4>
+<ul class="">
+<li><code><a title="pcgsepy.lsystem.parser.LParser.expand" href="#pcgsepy.lsystem.parser.LParser.expand">expand</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

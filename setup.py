@@ -23,6 +23,7 @@ base_dependencies = [
     "scipy >= 1.8.0",
     "simplejson >= 3.17.6",
     "sklearn >= 0.0",
+    "statsmodels >= 0.13.2",
     "steamctl >= 0.9.1",
     "tqdm >= 4.64.0",
     "typing_extensions >= 4.3.0",

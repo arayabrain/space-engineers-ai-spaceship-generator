@@ -1,0 +1,2021 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>pcgsepy.hullbuilder API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pcgsepy.hullbuilder</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import logging
+from scipy.spatial import ConvexHull, Delaunay
+from scipy.ndimage import grey_erosion, binary_erosion, binary_dilation
+import numpy as np
+import numpy.typing as npt
+from pcgsepy.common.vecs import Orientation, Vec, orientation_from_vec
+from pcgsepy.structure import Block, Structure, MountPoint
+from typing import List, Optional, Tuple
+from itertools import product
+from pcgsepy.common.vecs import rotate, get_rotation_matrix
+from scipy.spatial.transform import Rotation
+from enum import IntEnum
+
+
+class BlockValue(IntEnum):
+    AIR_BLOCK = 0
+    BASE_BLOCK = 1
+    SLOPE_BLOCK = 2
+    CORNER_BLOCK = 3
+    CORNERINV_BLOCK = 4
+    CORNERSQUARE_BLOCK = 5
+    CORNERSQUAREINV_BLOCK = 6
+
+
+block_value_types = {
+    BlockValue.BASE_BLOCK: &#39;MyObjectBuilder_CubeBlock_LargeBlockArmorBlock&#39;,
+    BlockValue.SLOPE_BLOCK: &#39;MyObjectBuilder_CubeBlock_LargeBlockArmorSlope&#39;,
+    BlockValue.CORNER_BLOCK: &#39;MyObjectBuilder_CubeBlock_LargeBlockArmorCorner&#39;,
+    BlockValue.CORNERINV_BLOCK: &#39;MyObjectBuilder_CubeBlock_LargeBlockArmorCornerInv&#39;,
+    BlockValue.CORNERSQUARE_BLOCK: &#39;MyObjectBuilder_CubeBlock_LargeBlockArmorCornerSquare&#39;,
+    BlockValue.CORNERSQUAREINV_BLOCK: &#39;MyObjectBuilder_CubeBlock_LargeBlockArmorCornerSquareInverted&#39;,
+}
+
+
+class HullBuilder:
+    def __init__(self,
+                 erosion_type: str,
+                 apply_erosion: bool,
+                 apply_smoothing: bool):
+        self.available_erosion_types = [&#39;grey&#39;, &#39;bin&#39;]
+        self.erosion_type = erosion_type
+        assert self.erosion_type in self.available_erosion_types, f&#39;Unrecognized erosion type {self.erosion_type}; available are {self.available_erosion_types}.&#39;
+        if self.erosion_type == &#39;grey&#39;:
+            self.erosion = grey_erosion
+            self.footprint=[
+                [
+                    [False, False, False],
+                    [False, True, False],
+                    [False, False, False]
+                ],
+                [
+                    [False, True, False],
+                    [True, True, True],
+                    [False, True, False]
+                ],
+                [
+                    [False, False, False],
+                    [False, True, False],
+                    [False, False, False]
+                ]
+            ]
+        elif self.erosion_type == &#39;bin&#39;:
+            self.erosion = binary_erosion
+            self.iterations = 2
+        self.apply_erosion = apply_erosion
+        self.apply_smoothing = apply_smoothing
+        
+        self.base_block = &#39;MyObjectBuilder_CubeBlock_LargeBlockArmorBlock&#39;
+        self.obstruction_targets = [&#39;window&#39;, &#39;thrust&#39;]
+        self._blocks_set = {}
+        
+        self._orientations = [Orientation.FORWARD, Orientation.BACKWARD, Orientation.UP, Orientation.DOWN, Orientation.LEFT, Orientation.RIGHT]
+        self._valid_orientations = [(of, ou) for (of, ou) in list(product(self._orientations, self._orientations)) if of != ou and of != orientation_from_vec(ou.value.opposite())]
+        # self._smoothing_order = {
+        #     BlockValue.BASE_BLOCK: [BlockValue.SLOPE_BLOCK, BlockValue.CORNERSQUARE_BLOCK, BlockValue.CORNER_BLOCK],
+        #     BlockValue.CORNERSQUAREINV_BLOCK: [],
+        #     BlockValue.CORNERINV_BLOCK: [],
+        #     BlockValue.SLOPE_BLOCK: [BlockValue.CORNERSQUARE_BLOCK, BlockValue.CORNER_BLOCK]
+        #     }
+        self._smoothing_order = {
+            BlockValue.BASE_BLOCK: [BlockValue.SLOPE_BLOCK],
+            BlockValue.SLOPE_BLOCK: [BlockValue.CORNER_BLOCK]
+            }
+    
+    def _get_convex_hull(self,
+                         arr: np.ndarray) -&gt; np.ndarray:
+        &#34;&#34;&#34;Compute the convex hull of the given array.
+
+        Args:
+            arr (np.ndarray): The Structure&#39;s array.
+
+        Returns:
+            np.ndarray: The convex hull.
+        &#34;&#34;&#34;
+        points = np.transpose(np.where(arr))
+        hull = ConvexHull(points)
+        deln = Delaunay(points[hull.vertices])
+        idx = np.stack(np.indices(arr.shape), axis=-1)
+        out_idx = np.nonzero(deln.find_simplex(idx) + 1)
+        out_arr = np.zeros(arr.shape)
+        out_arr[out_idx] = BlockValue.BASE_BLOCK
+        return out_arr
+           
+    def _add_block(self,
+                   block_type: str,
+                   idx: Tuple[int, int, int],
+                   pos: Vec,
+                   orientation_forward: Orientation = Orientation.FORWARD,
+                   orientation_up: Orientation = Orientation.UP) -&gt; None:
+        &#34;&#34;&#34;Add the block to the structure.
+
+        Args:
+            block_type (str): The block type.
+            structure (Structure): The structure.
+            pos (Tuple[int, int, int]): The grid coordinates (non-grid-size specific)
+            orientation_forward (Orientation, optional): The forward orientation of the block. Defaults to Orientation.FORWARD.
+            orientation_up (Orientation, optional): The up orientation of the block. Defaults to Orientation.UP.
+        &#34;&#34;&#34;
+        block = Block(block_type=block_type,
+                      orientation_forward=orientation_forward,
+                      orientation_up=orientation_up)
+        block.position = pos
+        self._blocks_set[idx] = block
+        
+    def _exists_block(self,
+                      idx: Tuple[int, int, int],
+                      structure: Structure) -&gt; bool:
+        &#34;&#34;&#34;Check if a block exists within the structure.
+
+        Args:
+            idx (Tuple[int, int, int]): The index to check at.
+            structure (Structure): The structure.
+
+        Returns:
+            bool: Whether the block exists.
+        &#34;&#34;&#34;
+        return structure._blocks.get(idx, None) is not None
+    
+    def _within_hull(self,
+                     loc: Vec,
+                     hull: npt.NDArray[np.float32]) -&gt; bool:
+        &#34;&#34;&#34;Check if a block exists within the hull.
+
+        Args:
+            loc (Vec): The index to check at.
+            hull (npt.NDArray[np.float32]): The hull array.
+
+        Returns:
+            bool: Whether the block is within the hull.
+        &#34;&#34;&#34;
+        i, j, k = loc.as_tuple()
+        return 0 &lt;= i &lt; hull.shape[0] and 0 &lt;= j &lt; hull.shape[1] and 0 &lt;= k &lt; hull.shape[2]
+    
+    def _is_air_block(self,
+                      loc: Vec,
+                      structure: Structure,
+                      hull: np.typing.NDArray[np.float32]) -&gt; bool:
+        &#34;&#34;&#34;Check if the block is an air block.
+
+        Args:
+            loc (Vec): The index to check at.
+            structure (Structure): The structure.
+            hull (np.typing.NDArray[np.float32]): The hull array.
+
+        Returns:
+            bool: Whether the block is an air block.
+        &#34;&#34;&#34;
+        return not self._exists_block(idx=loc.as_tuple(), structure=structure) and\
+            (self._within_hull(loc=loc.scale(1 / structure.grid_size).to_veci(), hull=hull) and hull[loc.scale(1 / structure.grid_size).to_veci().as_tuple()] == BlockValue.AIR_BLOCK)
+    
+    def _next_to_target(self,
+                        loc: Vec,
+                        structure: Structure,
+                        direction: Vec) -&gt; bool:
+        &#34;&#34;&#34;Check if the block is next to a target block along a direction.
+
+        Args:
+            loc (Vec): The index to check at.
+            structure (Structure): The structure.
+            direction (Vec): The direction to check at.
+
+        Returns:
+            bool: Whether the block is next to a target block.
+        &#34;&#34;&#34;
+        dloc = loc.sum(direction)
+        if self._exists_block(idx=dloc.as_tuple(), structure=structure):
+            obs_block = structure._blocks.get(dloc.as_tuple())
+            return any([target.lower() in obs_block.block_type.lower() for target in self.obstruction_targets])
+    
+    def _remove_in_direction(self,
+                             loc: Vec,
+                             hull: npt.NDArray[np.float32],
+                             direction: Vec) -&gt; npt.NDArray[np.float32]:
+        &#34;&#34;&#34;Remove all blocks in the hull along a direction.
+
+        Args:
+            loc (Vec): The starting index.
+            hull (npt.NDArray[np.float32]): The hull array.
+            direction (Vec): The direction to remove along to.
+
+        Returns:
+            npt.NDArray[np.float32]: The modified hull.
+        &#34;&#34;&#34;
+        i, j, k = loc.as_tuple()
+        di, dj, dk = direction.as_tuple()
+        # TODO: improve if needed
+        while 0 &lt; i &lt; hull.shape[0] and 0 &lt; j &lt; hull.shape[1] and 0 &lt; k &lt; hull.shape[2]:
+            hull[i, j, k] = BlockValue.AIR_BLOCK
+            i += di
+            j += dj
+            k += dk
+            if (i, j, k) in self._blocks_set.keys():
+                self._blocks_set.pop((i, j, k))
+        return hull
+    
+    def _remove_obstructing_blocks(self,
+                                   hull: npt.NDArray[np.float32],
+                                   structure: Structure) -&gt; npt.NDArray[np.float32]:
+        &#34;&#34;&#34;Remove the blocks obstructing a target block.
+
+        Args:
+            hull (npt.NDArray[np.float32]): The hull array.
+            structure (Structure): The structure.
+
+        Returns:
+            npt.NDArray[np.float32]: The modified hull array.
+        &#34;&#34;&#34;
+        scale = structure.grid_size
+        for (i, j, k) in list(self._blocks_set.keys()):
+            if hull[i, j, k] != BlockValue.AIR_BLOCK:  # skip removed blocks
+                loc = Vec.from_tuple((scale * i, scale * j, scale * k))
+                for direction in self._orientations:
+                    ntt = self._next_to_target(loc=loc,
+                                               structure=structure,
+                                               direction=direction.value.scale(scale))
+                    if ntt:
+                        hull[i, j, k] = BlockValue.AIR_BLOCK
+                        self._blocks_set.pop((i, j, k))
+                        hull = self._remove_in_direction(loc=loc.scale(v=1 / structure.grid_size).to_veci(),
+                                                            hull=hull,
+                                                            direction=direction.value.opposite())
+                        break
+        return hull
+    
+    def _remove_floating_blocks(self,
+                                hull: npt.NDArray[np.float32],
+                                structure: Structure,
+                                pivot_blocktype: str = &#39;MyObjectBuilder_Cockpit_OpenCockpitLarge&#39;) -&gt; npt.NDArray[np.float32]:
+        &#34;&#34;&#34;Remove floating blocks from the hull. Floating blocks are blocks not connected to the spaceship.
+        These may appear when removing obstructing blocks.
+
+        Args:
+            hull (npt.NDArray[np.float32]): The hull array.
+            structure (Structure): The structure.
+            pivot_blocktype (str): The pivot block type. Defaults to &#39;MyObjectBuilder_Cockpit_OpenCockpitLarge&#39;.
+
+        Returns:
+            npt.NDArray[np.float32]: The modified hull array.
+        &#34;&#34;&#34;
+        structure_arr = structure.as_grid_array
+        structure_shape = Vec.from_tuple(structure_arr.shape)
+        # mask of all blocks
+        mask = np.zeros_like(structure_arr, dtype=np.uint8)
+        mask[np.nonzero(hull)] = BlockValue.BASE_BLOCK
+        mask[np.nonzero(structure_arr)] = BlockValue.BASE_BLOCK
+        # pivot position defines the region to keep
+        pivot_position = [x for x in structure._blocks.values() if x.block_type == pivot_blocktype][0].position
+        pivot_idx = pivot_position.scale(1 / structure.grid_size).to_veci().as_tuple()
+        # get the region to keep defined by blocks connected to pivot position
+        connected_blocks = set()
+        to_check = [pivot_idx]
+        while to_check:
+            to_add = set()
+            for block_position in to_check:
+                if mask[block_position] == BlockValue.BASE_BLOCK:
+                    connected_blocks.add(block_position)
+                    for direction in self._orientations:
+                        dpos = Vec.from_tuple(block_position).sum(direction.value)
+                        if 0 &lt;= dpos.x &lt; structure_shape.x and 0 &lt;= dpos.y &lt; structure_shape.y and 0 &lt;= dpos.z &lt; structure_shape.z:
+                            to_add.add(dpos.as_tuple())
+            to_add = to_add.difference(to_add.intersection(connected_blocks))
+            to_check = list(to_add)
+        # disconnected blocks are the difference between all blocks and blocks connected to pivot block
+        disconnected_blocks = set(self._blocks_set.keys()) - connected_blocks
+        # remove disconnected blocks
+        for block_idx in disconnected_blocks:
+            hull[block_idx] = BlockValue.AIR_BLOCK
+            self._blocks_set.pop(block_idx)
+        return hull
+    
+    def _get_outer_indices(self,
+                           arr: npt.NDArray[np.float32],
+                           edges_only: bool = False,
+                           corners_only: bool = False) -&gt; Tuple[npt.NDArray[np.int64], npt.NDArray[np.int64], npt.NDArray[np.int64]]:
+        &#34;&#34;&#34;Get the indices of blocks lying on the outer corner/edges/faces of the array.
+
+        Args:
+            arr (npt.NDArray[np.float32]): The array.
+            edges_only (bool, optional): Get blocks on the edges only. Defaults to False.
+            corners_only (bool, optional): Get blocks on the corners only. Defaults to False.
+
+        Returns:
+            Tuple[npt.NDArray[np.int64], npt.NDArray[np.int64], npt.NDArray[np.int64]]: The indices of the outer blocks.
+        &#34;&#34;&#34;
+        n_neighbours = np.zeros_like(arr)
+        for idx, _ in np.ndenumerate(arr):
+            if self._blocks_set.get(idx, None):
+                for offset in self._orientations:
+                    pos = Vec.from_tuple(idx).sum(offset.value).as_tuple()
+                    if self._blocks_set.get(pos, None):
+                        n_neighbours[idx] = n_neighbours[idx] + 1
+        if corners_only:
+            return np.nonzero(np.where(n_neighbours &lt; 2, n_neighbours, 0))
+        elif edges_only:
+            ci, cj, ck = np.nonzero(np.where(n_neighbours &lt; 2, n_neighbours, 0))
+            ei, ej, ek = np.nonzero(np.where(n_neighbours &lt;= 3, n_neighbours, 0))
+            return np.append(ci, ei), np.append(cj, ej), np.append(ck, ek)
+        else:
+            return np.nonzero(n_neighbours)
+    
+    def adj_in_hull(self,
+                    idx: Tuple[int, int, int]) -&gt; List[Tuple[int, int, int]]:
+        &#34;&#34;&#34;Get the indices of adjacent blocks in the hull from a given index.
+
+        Args:
+            idx (Tuple[int, int, int]): The index.
+
+        Returns:
+            List[Tuple[int, int, int]]: The list of adjacent indices.
+        &#34;&#34;&#34;
+        adjs = []
+        for direction in self._orientations:
+            new_idx = Vec.from_tuple(idx).sum(direction.value).as_tuple()
+            if new_idx in self._blocks_set.keys():
+                adjs.append(new_idx)
+        return adjs
+    
+    def _get_neighbourhood(self,
+                           idx: Vec,
+                           structure: Structure) -&gt; List[Block]:
+        &#34;&#34;&#34;Get the neighbourhood of a block.
+
+        Args:
+            idx (Vec): The index of the block.
+            structure (Structure): The structure.
+
+        Returns:
+            List[Block]: The neighbourhood of the block.
+        &#34;&#34;&#34;
+        n = []
+        for di, dj, dk in zip([1, 1, 1, 1, 1,  1,  1,   0, 0, 0, 0,  0,  0,  -1, -1, -1, -1, -1, -1, -1],
+                              [0, 1, 0, 1, -1, 0,  -1,  1, 0, 1, -1, 0,  -1, 0,  1,  0,  1,  -1, 0,  -1],
+                              [0, 0, 1, 1, 0,  -1, -1,  0, 1, 1, 0,  -1, -1, 0,  0,  1,  1,  0,  -1, -1]):
+            offset = Vec(di, dj, dk).scale(structure.grid_size)
+            if not offset.is_zero:
+                adj = self.try_and_get_block(idx=idx,
+                                             offset=offset,
+                                             structure=structure)
+                if adj:
+                    n.append(adj)
+        return n
+    
+    def try_and_get_block(self,
+                          idx: Tuple[int, int, int],
+                          offset: Vec,
+                          structure: Structure) -&gt; Optional[Block]:
+        &#34;&#34;&#34;Try and get a block from either the hull or the structure.
+
+        Args:
+            idx (Tuple[int, int, int]): The index of the block (hull-scaled).
+            offset (Vec): The offset vector (structure-scaled).
+            structure (Structure): The structure.
+
+        Returns:
+            Optional[Block]: The block at `idx + offset`, if it exists.
+        &#34;&#34;&#34;
+        dloc = Vec.from_tuple(idx).scale(structure.grid_size).sum(offset)
+        if self._exists_block(idx=dloc.as_tuple(),
+                              structure=structure):
+            return structure._blocks[dloc.as_tuple()]
+        else:
+            return self._blocks_set.get(Vec.from_tuple(idx).sum(offset.scale(1 / structure.grid_size)).to_veci().as_tuple(), None)
+    
+    def _correct_and_centered_rotation(self,
+                                       center: Vec,
+                                       rotation_matrix: np.typing.NDArray,
+                                       vector: Vec) -&gt; Vec:
+        &#34;&#34;&#34;Rotate correctly and center the vector to the center of the block.
+
+        Args:
+            center (Vec): The center of the block.
+            rotation_matrix (np.typing.NDArray): The rotation matrix of the block.
+            vector (Vec): The vector to rotate and center.
+
+        Returns:
+            Vec: The rotated and centered vector.
+        &#34;&#34;&#34;
+        # Rotation with additional checking as in Space Engineers source code.
+        centered_vector = vector.diff(center)
+        centered_vector_i = centered_vector.floor()
+        rotated_vector = rotate(rotation_matrix=rotation_matrix,
+                                vector=centered_vector)
+        rotated_vector_i_correct = rotate(rotation_matrix=rotation_matrix,
+                                          vector=centered_vector_i)
+        rotated_vector_i = rotated_vector.floor()
+        correction = rotated_vector_i_correct.diff(rotated_vector_i)
+        return rotated_vector.sum(correction)
+    
+    def _get_mountpoint_limits(self,
+                               mountpoints: List[MountPoint],
+                               block_center: Vec,
+                               rotation_matrix: npt.NDArray[np.float32]) -&gt; Tuple[List[Vec], List[Vec], List[int]]:
+        &#34;&#34;&#34;Get the start and end vectors of the mountpoint, as well as the face area(s).
+
+        Args:
+            mountpoints (List[MountPoint]): The list of mountpoints.
+            block_center (Vec): The center of the block.
+            rotation_matrix (npt.NDArray[np.float32]): The rotation matrix of the block.
+
+        Returns:
+            Tuple[List[Vec], List[Vec], List[int]]: The start and end vector, and the face area(s).
+        &#34;&#34;&#34;
+        starts, ends = [], []
+        for mp in mountpoints:
+            rotated_start = self._correct_and_centered_rotation(center=block_center,
+                                                                rotation_matrix=rotation_matrix,
+                                                                vector=mp.start)
+            rotated_end = self._correct_and_centered_rotation(center=block_center,
+                                                              rotation_matrix=rotation_matrix,
+                                                              vector=mp.end)
+
+            ordered_start = Vec.min(rotated_start, rotated_end)
+            ordered_end = Vec.max(rotated_start, rotated_end)
+            
+            starts.append(ordered_start)
+            ends.append(ordered_end)
+        
+        planes = [end.diff(start).bbox(ignore_zero=False) for start, end in zip(starts, ends)]
+        
+        return starts, ends, planes
+    
+    def intersect_planes(self,
+                         starts1: List[Vec],
+                         ends1: List[Vec],
+                         starts2: List[Vec],
+                         ends2: List[Vec]) -&gt; float:
+        &#34;&#34;&#34;Compute the intersection surface between mountpoints of different blocks and return the inverse of the intersection as an error to minimize.
+
+        Args:
+            starts1 (List[Vec]): The start vectors of the first block.
+            ends1 (List[Vec]): The end vectors of the first block.
+            starts2 (List[Vec]): The start vectors of the second block.
+            ends2 (List[Vec]): The end vectors of the first block.
+
+        Returns:
+            float: The intersection as an error.
+        &#34;&#34;&#34;
+        intersect_bbox = 0.
+        for start1, end1 in zip(starts1, ends1):
+            for start2, end2 in zip(starts2, ends2):
+                x1 = max(start1.x, start2.x)
+                y1 = max(start1.y, start2.y)
+                z1 = max(start1.z, start2.z)
+                x2 = min(end1.x, end2.x)
+                y2 = min(end1.y, end2.y)
+                z2 = min(end1.z, end2.z)
+                if x2 &gt; x1 and y2 &gt; y1 and z2 &lt; z1:
+                    intersect_bbox += (x2 - x1) * (y2 - y1)
+                elif x2 &gt; x1 and y2 &lt;= y1 and z2 &gt; z1:
+                    intersect_bbox += (x2 - x1) * (z2 - z1)
+                elif x2 &lt;= x1 and y2 &gt; y1 and z2 &gt; z1:
+                    intersect_bbox += (y2 - y1) * (z2 - z1)
+                else:
+                    intersect_bbox += 0
+        return 1 / intersect_bbox
+    
+    def _check_valid_placement(self,
+                               idx: Tuple[int, int, int],
+                               block: Block,
+                               direction: Orientation,
+                               structure: Structure) -&gt; Tuple[bool, int]:
+        &#34;&#34;&#34;Check if the block could be placed with the given orientation when checking in the specified direction.
+
+        Args:
+            idx (Tuple[int, int, int]): The index of the block (hull-scaled).
+            block (Block): The block to be checked.
+            direction (Orientation): The direction to check placement for.
+            structure (Structure): The structure.
+
+        Returns:
+            bool: Whether the block could be placed with the given orientation when checking in the specified direction.
+        &#34;&#34;&#34;
+        rot_mat = get_rotation_matrix(forward=block.orientation_forward,
+                                      up=block.orientation_up)
+        mp1 = [mp for mp in block.mountpoints if rotate(rot_mat, mp.face) == direction.value]
+        starts1, ends1, planes1 = self._get_mountpoint_limits(mountpoints=mp1,
+                                                              block_center=block.center,
+                                                              rotation_matrix=rot_mat)
+        other_block = self.try_and_get_block(idx=idx,
+                                             offset=direction.value.scale(structure.grid_size).to_veci(),
+                                             structure=structure)
+        opposite_direction = orientation_from_vec(direction.value.opposite())
+        if other_block is None:
+            if mp1 == []:
+                mp2 = [mp for mp in block.mountpoints if rotate(rot_mat, mp.face) == opposite_direction.value]
+                _, _, planes2 = self._get_mountpoint_limits(mountpoints=mp2,
+                                                            block_center=block.center,
+                                                            rotation_matrix=rot_mat)
+                val = sum(planes2)  # error as the surface of mountpoints on opposite face
+            else:
+                val = sum(planes1)  # erorr as surface of mountpoints of current face
+            return True, val
+        else:
+            if mp1 == []:
+                return False, 0
+            else:
+                rot_mat_other = get_rotation_matrix(forward=other_block.orientation_forward,
+                                                    up=other_block.orientation_up)
+                mp2 = [mp for mp in other_block.mountpoints if rotate(rot_mat_other, mp.face) == opposite_direction.value]
+                if mp2 == []:
+                    return False, 0
+                starts2, ends2, planes2 = self._get_mountpoint_limits(mountpoints=mp2,
+                                                                      block_center=other_block.center,
+                                                                      rotation_matrix=rot_mat_other)
+                all_valid = []
+                for eo1, so1, p1 in zip(ends1, starts1, planes1):
+                    assert p1 != 0, f&#39;Mountpoint with empty surface: {mp1} has {so1}-{eo1} (from block {block})&#39;
+                    mp_valid = True
+                    for eo2, so2, p2 in zip(ends2, starts2, planes2):
+                        assert p2 != 0, f&#39;Mountpoint with empty surface: {mp2} has {so2}-{eo2} (from block {other_block})&#39;
+                        # NOTE: This check does not take into account exclusions and properties masks (yet)
+                        # Sources\VRage.Math\BoundingBoxI.cs#328
+                        # (double)this.Max.X &gt;= (double)box.Min.X &amp;&amp; (double)this.Min.X &lt;= (double)box.Max.X &amp;&amp; ((double)this.Max.Y &gt;= (double)box.Min.Y &amp;&amp; (double)this.Min.Y &lt;= (double)box.Max.Y) &amp;&amp; ((double)this.Max.Z &gt;= (double)box.Min.Z &amp;&amp; (double)this.Min.Z &lt;= (double)box.Max.Z);
+                        mp_valid |= eo1.x &gt;= so2.x and so1.x &lt;= eo2.x and eo1.y &gt;= so2.y and so1.y &lt;= eo2.y and eo1.z &gt;= so2.z and so1.z &lt;= eo2.z
+                    all_valid.append(mp_valid)
+                return all(all_valid), self.intersect_planes(starts1, ends1, starts2, ends2)
+        
+    def _check_valid_position(self,
+                              idx: Tuple[int, int, int],
+                              block: Block,
+                              hull: np.typing.NDArray,
+                              structure: Structure) -&gt; Tuple[bool, int]:
+        &#34;&#34;&#34;Check if the current position is valid for the given block.
+
+        Args:
+            idx (Tuple[int, int, int]): The index of the block.
+            block (Block): The block to check.
+            hull (npt.NDArray[np.float32]): The hull array.
+            structure (Structure): The structure.
+
+        Returns:
+            Tuple[bool, int]: Whether the position is valid, and the area error.
+        &#34;&#34;&#34;
+        valid = True
+        area_err = 0
+        for direction in self._orientations:
+            res, delta_area = self._check_valid_placement(idx=idx,
+                                                          block=block,
+                                                          direction=direction,
+                                                          structure=structure)
+            valid &amp;= res
+            area_err += delta_area
+            if not valid:
+                break
+        return valid, delta_area
+    
+    def try_smoothing(self,
+                      idx: Tuple[int, int, int],
+                      hull: npt.NDArray[np.float32],
+                      structure: Structure) -&gt; Optional[Block]:
+        &#34;&#34;&#34;Try applying a smoothing pass at the given index.
+
+        Args:
+            idx (Tuple[int, int, int]): The index.
+            hull (npt.NDArray[np.float32]): The hull array.
+            structure (Structure): The structure.
+
+        Returns:
+            Optional[Block]: A possible block to replace the current one.
+        &#34;&#34;&#34;
+        i, j, k = idx
+        block_type = hull[i, j, k]
+        block = self._blocks_set[idx]
+        # removal check
+        valid, curr_err = self._check_valid_position(idx=idx,
+                                                     block=block,
+                                                     hull=hull,
+                                                     structure=structure)
+        if not valid:
+            return None, BlockValue.AIR_BLOCK
+        # replacement check   
+        elif block_type in self._smoothing_order.keys():
+            # give priority to surrounding blocks orientations
+            neighbourhood = self._get_neighbourhood(idx=idx,
+                                                    structure=structure)
+            priority_scores = np.zeros(shape=len(self._valid_orientations), dtype=np.int8).tolist()
+            for other_block in neighbourhood:                
+                oo = (orientation_from_vec(other_block.orientation_forward),
+                        orientation_from_vec(other_block.orientation_up))
+                priority_scores[self._valid_orientations.index(oo)] = priority_scores[self._valid_orientations.index(oo)] + 1
+            idxs = [x for _, x in sorted(zip(priority_scores, np.arange(len(self._valid_orientations)).tolist()))]
+            priority_orientations = [self._valid_orientations[i] for i in idxs]
+            for possible_type in self._smoothing_order[block_type]:
+                orientation_scores, valids = np.zeros(shape=len(self._valid_orientations), dtype=np.float32), np.zeros(shape=len(self._valid_orientations), dtype=np.bool8)
+                # try replacement
+                for i, (of, ou) in enumerate(priority_orientations):
+                    possible_block = Block(block_type=block_value_types[possible_type],
+                                           orientation_forward=of,
+                                           orientation_up=ou)
+                    valid, err = self._check_valid_position(idx=idx,
+                                                            block=possible_block,
+                                                            hull=hull,
+                                                            structure=structure)
+                    orientation_scores[i] = err if valid else 9999  # make sure invalid scores are never picked
+                    valids[i] = valid
+                if any(valids) and min(orientation_scores) &lt; curr_err:
+                    of, ou = priority_orientations[np.argmin(orientation_scores)]
+                    return Block(block_type=block_value_types[possible_type],
+                                orientation_forward=of,
+                                orientation_up=ou), possible_type
+            return None, block_type
+        # skip
+        else:
+            return None, block_type
+        
+    def add_external_hull(self,
+                          structure: Structure) -&gt; None:
+        &#34;&#34;&#34;Add an external hull to the given Structure.
+        This process adds the hull blocks directly into the Structure, so it can be used only once per spaceship.
+
+        Args:
+            structure (Structure): The spaceship.
+        &#34;&#34;&#34;
+        self._blocks_set = {}
+        
+        arr = structure.as_grid_array
+        air = structure.air_blocks_gridmask
+        hull = self._get_convex_hull(arr=arr)
+        hull[np.nonzero(air)] = BlockValue.AIR_BLOCK
+        hull[np.nonzero(arr)] = BlockValue.AIR_BLOCK
+        
+        if self.apply_erosion:
+            if self.erosion_type == &#39;grey&#39;:
+                hull = grey_erosion(input=hull,
+                                    footprint=self.footprint,
+                                    mode=&#39;constant&#39;,
+                                    cval=1)
+                hull = hull.astype(int)
+                hull *= BlockValue.BASE_BLOCK                
+            elif self.erosion_type == &#39;bin&#39;:
+                dilated_arr = binary_dilation(arr)
+                mask = np.ones_like(arr) * BlockValue.BASE_BLOCK
+                mask[np.nonzero(dilated_arr)] = BlockValue.AIR_BLOCK                
+                hull = binary_erosion(input=hull,
+                                      mask=mask,
+                                      iterations=self.iterations)
+                hull = hull.astype(int)
+                hull *= BlockValue.BASE_BLOCK
+                
+        # add blocks to self._blocks_set
+        for i in range(hull.shape[0]):
+                for j in range(hull.shape[1]):
+                    for k in range(hull.shape[2]):
+                        if hull[i, j, k] != BlockValue.AIR_BLOCK:
+                            self._add_block(block_type=self.base_block,
+                                            idx=(i, j, k),
+                                            pos=Vec.v3i(i, j, k).scale(v=structure.grid_size),
+                                            orientation_forward=Orientation.FORWARD,
+                                            orientation_up=Orientation.UP)
+        
+        # remove all blocks that obstruct target block type
+        hull = self._remove_obstructing_blocks(hull=hull,
+                                            structure=structure)
+        
+        # remove &#34;floating&#34; blocks
+        # i.e.: blocks not connected to the spaceship
+        hull = self._remove_floating_blocks(hull=hull,
+                                            structure=structure)
+
+        # apply iterative smoothing algorithm
+        if self.apply_smoothing:
+            my_arr = np.ones_like(hull) * BlockValue.AIR_BLOCK
+            my_arr[np.nonzero(structure.as_grid_array)] = BlockValue.BASE_BLOCK
+            my_arr[np.nonzero(hull)] = BlockValue.BASE_BLOCK
+            within_arr = binary_erosion(my_arr)
+            my_arr[np.where(within_arr == BlockValue.AIR_BLOCK)] = BlockValue.AIR_BLOCK
+            idxs = self._get_outer_indices(arr=my_arr, edges_only=True)
+            ii, jj, kk = idxs
+            curr_checking = [(i, j, k) for (i, j, k) in zip(ii, jj, kk)]
+            while len(curr_checking) != 0:
+                to_rem, to_inspect = [], []
+                for (i, j, k) in curr_checking:
+                    block = self._blocks_set[(i, j, k)]
+                    substitute_block, val = self.try_smoothing(idx=(i, j, k),
+                                                               hull=hull,
+                                                               structure=structure)
+                    if substitute_block is not None and substitute_block.block_type != block.block_type:
+                        substitute_block.position = block.position
+                        self._blocks_set[(i, j, k)] = substitute_block
+                        to_inspect.extend(self.adj_in_hull(idx=(i, j, k)))
+                    elif substitute_block is None and val == BlockValue.AIR_BLOCK:
+                        to_rem.append((i, j, k))
+                        to_inspect.extend(self.adj_in_hull(idx=(i, j, k)))
+                    hull[i, j, k] = val
+                to_inspect = list(set(to_inspect))
+                to_rem = list(set(to_rem))
+                for r in to_rem:
+                    self._blocks_set.pop(r)
+                    if r in to_inspect:
+                        to_inspect.remove(r)
+                curr_checking = to_inspect
+
+        # add blocks to structure
+        for k, block in self._blocks_set.items():
+            structure.add_block(block=block,
+                                grid_position=block.position.as_tuple())
+        
+        structure.sanify()
+
+
+def enforce_symmetry(structure: Structure,
+                     axis: str = &#39;z&#39;,
+                     upper: bool = True,
+                     pivot_blocktype: str = &#39;MyObjectBuilder_Cockpit_OpenCockpitLarge&#39;) -&gt; None:
+    &#34;&#34;&#34;Enforce a symmetry along an axis.
+
+    Args:
+        structure (Structure): The structure.
+        axis (str, optional): The axis to enforce symmetry along to. Defaults to &#39;z&#39;.
+        upper (bool, optional): Whether to keep the upper or the lower half of the structure. Defaults to True.
+        pivot_blocktype (str, optional): Block type used as pivot to determine the middle point. Defaults to &#39;MyObjectBuilder_Cockpit_OpenCockpitLarge&#39;.
+    &#34;&#34;&#34;
+    def to_keep(v1: Vec,
+                v2: Vec,
+                axis: str,
+                upper: bool,
+                keep_equal: bool) -&gt; bool:
+        if axis == &#39;x&#39;:
+            if upper:
+                return (v1.x &gt; v2.x) or (keep_equal and v1.x == v2.x)
+            else:
+                return (v1.x &lt; v2.x) or (keep_equal and v1.x == v2.x)
+        elif axis == &#39;y&#39;:
+            if upper:
+                return (v1.y &gt; v2.y) or (keep_equal and v1.y == v2.y)
+            else:
+                return (v1.y &lt; v2.y) or (keep_equal and v1.y == v2.y)
+        elif axis == &#39;z&#39;:
+            if upper:
+                return (v1.z &gt; v2.z) or (keep_equal and v1.z == v2.z)
+            else:
+                return (v1.z &lt; v2.z) or (keep_equal and v1.z == v2.z)
+    
+    midpoint = [x for x in structure._blocks.values() if x.block_type == pivot_blocktype][0].position
+    structure._blocks = {k:v for k, v in structure._blocks.items() if to_keep(v1=v.position, v2=midpoint, axis=axis, upper=upper, keep_equal=True)}
+    half = [b for b in structure._blocks.values() if to_keep(v1=b.position, v2=midpoint, axis=axis, upper=upper, keep_equal=False)]
+    for b in half:
+        if axis == &#39;x&#39;:
+            b.position.x = midpoint.x - (b.position.x - midpoint.x)
+        elif axis == &#39;y&#39;:
+            b.position.y = midpoint.y - (b.position.y - midpoint.y)
+        elif axis == &#39;z&#39;:
+            b.position.z = midpoint.z - (b.position.z - midpoint.z)
+        structure.add_block(block=b,
+                            grid_position=b.position.as_tuple())
+    structure.sanify()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pcgsepy.hullbuilder.enforce_symmetry"><code class="name flex">
+<span>def <span class="ident">enforce_symmetry</span></span>(<span>structure: <a title="pcgsepy.structure.Structure" href="structure.html#pcgsepy.structure.Structure">Structure</a>, axis: str = 'z', upper: bool = True, pivot_blocktype: str = 'MyObjectBuilder_Cockpit_OpenCockpitLarge') ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Enforce a symmetry along an axis.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>structure</code></strong> :&ensp;<code>Structure</code></dt>
+<dd>The structure.</dd>
+<dt><strong><code>axis</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>The axis to enforce symmetry along to. Defaults to 'z'.</dd>
+<dt><strong><code>upper</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether to keep the upper or the lower half of the structure. Defaults to True.</dd>
+<dt><strong><code>pivot_blocktype</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Block type used as pivot to determine the middle point. Defaults to 'MyObjectBuilder_Cockpit_OpenCockpitLarge'.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def enforce_symmetry(structure: Structure,
+                     axis: str = &#39;z&#39;,
+                     upper: bool = True,
+                     pivot_blocktype: str = &#39;MyObjectBuilder_Cockpit_OpenCockpitLarge&#39;) -&gt; None:
+    &#34;&#34;&#34;Enforce a symmetry along an axis.
+
+    Args:
+        structure (Structure): The structure.
+        axis (str, optional): The axis to enforce symmetry along to. Defaults to &#39;z&#39;.
+        upper (bool, optional): Whether to keep the upper or the lower half of the structure. Defaults to True.
+        pivot_blocktype (str, optional): Block type used as pivot to determine the middle point. Defaults to &#39;MyObjectBuilder_Cockpit_OpenCockpitLarge&#39;.
+    &#34;&#34;&#34;
+    def to_keep(v1: Vec,
+                v2: Vec,
+                axis: str,
+                upper: bool,
+                keep_equal: bool) -&gt; bool:
+        if axis == &#39;x&#39;:
+            if upper:
+                return (v1.x &gt; v2.x) or (keep_equal and v1.x == v2.x)
+            else:
+                return (v1.x &lt; v2.x) or (keep_equal and v1.x == v2.x)
+        elif axis == &#39;y&#39;:
+            if upper:
+                return (v1.y &gt; v2.y) or (keep_equal and v1.y == v2.y)
+            else:
+                return (v1.y &lt; v2.y) or (keep_equal and v1.y == v2.y)
+        elif axis == &#39;z&#39;:
+            if upper:
+                return (v1.z &gt; v2.z) or (keep_equal and v1.z == v2.z)
+            else:
+                return (v1.z &lt; v2.z) or (keep_equal and v1.z == v2.z)
+    
+    midpoint = [x for x in structure._blocks.values() if x.block_type == pivot_blocktype][0].position
+    structure._blocks = {k:v for k, v in structure._blocks.items() if to_keep(v1=v.position, v2=midpoint, axis=axis, upper=upper, keep_equal=True)}
+    half = [b for b in structure._blocks.values() if to_keep(v1=b.position, v2=midpoint, axis=axis, upper=upper, keep_equal=False)]
+    for b in half:
+        if axis == &#39;x&#39;:
+            b.position.x = midpoint.x - (b.position.x - midpoint.x)
+        elif axis == &#39;y&#39;:
+            b.position.y = midpoint.y - (b.position.y - midpoint.y)
+        elif axis == &#39;z&#39;:
+            b.position.z = midpoint.z - (b.position.z - midpoint.z)
+        structure.add_block(block=b,
+                            grid_position=b.position.as_tuple())
+    structure.sanify()</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pcgsepy.hullbuilder.BlockValue"><code class="flex name class">
+<span>class <span class="ident">BlockValue</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An enumeration.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BlockValue(IntEnum):
+    AIR_BLOCK = 0
+    BASE_BLOCK = 1
+    SLOPE_BLOCK = 2
+    CORNER_BLOCK = 3
+    CORNERINV_BLOCK = 4
+    CORNERSQUARE_BLOCK = 5
+    CORNERSQUAREINV_BLOCK = 6</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.IntEnum</li>
+<li>builtins.int</li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="pcgsepy.hullbuilder.BlockValue.AIR_BLOCK"><code class="name">var <span class="ident">AIR_BLOCK</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pcgsepy.hullbuilder.BlockValue.BASE_BLOCK"><code class="name">var <span class="ident">BASE_BLOCK</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pcgsepy.hullbuilder.BlockValue.CORNERINV_BLOCK"><code class="name">var <span class="ident">CORNERINV_BLOCK</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pcgsepy.hullbuilder.BlockValue.CORNERSQUAREINV_BLOCK"><code class="name">var <span class="ident">CORNERSQUAREINV_BLOCK</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pcgsepy.hullbuilder.BlockValue.CORNERSQUARE_BLOCK"><code class="name">var <span class="ident">CORNERSQUARE_BLOCK</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pcgsepy.hullbuilder.BlockValue.CORNER_BLOCK"><code class="name">var <span class="ident">CORNER_BLOCK</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pcgsepy.hullbuilder.BlockValue.SLOPE_BLOCK"><code class="name">var <span class="ident">SLOPE_BLOCK</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="pcgsepy.hullbuilder.HullBuilder"><code class="flex name class">
+<span>class <span class="ident">HullBuilder</span></span>
+<span>(</span><span>erosion_type: str, apply_erosion: bool, apply_smoothing: bool)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class HullBuilder:
+    def __init__(self,
+                 erosion_type: str,
+                 apply_erosion: bool,
+                 apply_smoothing: bool):
+        self.available_erosion_types = [&#39;grey&#39;, &#39;bin&#39;]
+        self.erosion_type = erosion_type
+        assert self.erosion_type in self.available_erosion_types, f&#39;Unrecognized erosion type {self.erosion_type}; available are {self.available_erosion_types}.&#39;
+        if self.erosion_type == &#39;grey&#39;:
+            self.erosion = grey_erosion
+            self.footprint=[
+                [
+                    [False, False, False],
+                    [False, True, False],
+                    [False, False, False]
+                ],
+                [
+                    [False, True, False],
+                    [True, True, True],
+                    [False, True, False]
+                ],
+                [
+                    [False, False, False],
+                    [False, True, False],
+                    [False, False, False]
+                ]
+            ]
+        elif self.erosion_type == &#39;bin&#39;:
+            self.erosion = binary_erosion
+            self.iterations = 2
+        self.apply_erosion = apply_erosion
+        self.apply_smoothing = apply_smoothing
+        
+        self.base_block = &#39;MyObjectBuilder_CubeBlock_LargeBlockArmorBlock&#39;
+        self.obstruction_targets = [&#39;window&#39;, &#39;thrust&#39;]
+        self._blocks_set = {}
+        
+        self._orientations = [Orientation.FORWARD, Orientation.BACKWARD, Orientation.UP, Orientation.DOWN, Orientation.LEFT, Orientation.RIGHT]
+        self._valid_orientations = [(of, ou) for (of, ou) in list(product(self._orientations, self._orientations)) if of != ou and of != orientation_from_vec(ou.value.opposite())]
+        # self._smoothing_order = {
+        #     BlockValue.BASE_BLOCK: [BlockValue.SLOPE_BLOCK, BlockValue.CORNERSQUARE_BLOCK, BlockValue.CORNER_BLOCK],
+        #     BlockValue.CORNERSQUAREINV_BLOCK: [],
+        #     BlockValue.CORNERINV_BLOCK: [],
+        #     BlockValue.SLOPE_BLOCK: [BlockValue.CORNERSQUARE_BLOCK, BlockValue.CORNER_BLOCK]
+        #     }
+        self._smoothing_order = {
+            BlockValue.BASE_BLOCK: [BlockValue.SLOPE_BLOCK],
+            BlockValue.SLOPE_BLOCK: [BlockValue.CORNER_BLOCK]
+            }
+    
+    def _get_convex_hull(self,
+                         arr: np.ndarray) -&gt; np.ndarray:
+        &#34;&#34;&#34;Compute the convex hull of the given array.
+
+        Args:
+            arr (np.ndarray): The Structure&#39;s array.
+
+        Returns:
+            np.ndarray: The convex hull.
+        &#34;&#34;&#34;
+        points = np.transpose(np.where(arr))
+        hull = ConvexHull(points)
+        deln = Delaunay(points[hull.vertices])
+        idx = np.stack(np.indices(arr.shape), axis=-1)
+        out_idx = np.nonzero(deln.find_simplex(idx) + 1)
+        out_arr = np.zeros(arr.shape)
+        out_arr[out_idx] = BlockValue.BASE_BLOCK
+        return out_arr
+           
+    def _add_block(self,
+                   block_type: str,
+                   idx: Tuple[int, int, int],
+                   pos: Vec,
+                   orientation_forward: Orientation = Orientation.FORWARD,
+                   orientation_up: Orientation = Orientation.UP) -&gt; None:
+        &#34;&#34;&#34;Add the block to the structure.
+
+        Args:
+            block_type (str): The block type.
+            structure (Structure): The structure.
+            pos (Tuple[int, int, int]): The grid coordinates (non-grid-size specific)
+            orientation_forward (Orientation, optional): The forward orientation of the block. Defaults to Orientation.FORWARD.
+            orientation_up (Orientation, optional): The up orientation of the block. Defaults to Orientation.UP.
+        &#34;&#34;&#34;
+        block = Block(block_type=block_type,
+                      orientation_forward=orientation_forward,
+                      orientation_up=orientation_up)
+        block.position = pos
+        self._blocks_set[idx] = block
+        
+    def _exists_block(self,
+                      idx: Tuple[int, int, int],
+                      structure: Structure) -&gt; bool:
+        &#34;&#34;&#34;Check if a block exists within the structure.
+
+        Args:
+            idx (Tuple[int, int, int]): The index to check at.
+            structure (Structure): The structure.
+
+        Returns:
+            bool: Whether the block exists.
+        &#34;&#34;&#34;
+        return structure._blocks.get(idx, None) is not None
+    
+    def _within_hull(self,
+                     loc: Vec,
+                     hull: npt.NDArray[np.float32]) -&gt; bool:
+        &#34;&#34;&#34;Check if a block exists within the hull.
+
+        Args:
+            loc (Vec): The index to check at.
+            hull (npt.NDArray[np.float32]): The hull array.
+
+        Returns:
+            bool: Whether the block is within the hull.
+        &#34;&#34;&#34;
+        i, j, k = loc.as_tuple()
+        return 0 &lt;= i &lt; hull.shape[0] and 0 &lt;= j &lt; hull.shape[1] and 0 &lt;= k &lt; hull.shape[2]
+    
+    def _is_air_block(self,
+                      loc: Vec,
+                      structure: Structure,
+                      hull: np.typing.NDArray[np.float32]) -&gt; bool:
+        &#34;&#34;&#34;Check if the block is an air block.
+
+        Args:
+            loc (Vec): The index to check at.
+            structure (Structure): The structure.
+            hull (np.typing.NDArray[np.float32]): The hull array.
+
+        Returns:
+            bool: Whether the block is an air block.
+        &#34;&#34;&#34;
+        return not self._exists_block(idx=loc.as_tuple(), structure=structure) and\
+            (self._within_hull(loc=loc.scale(1 / structure.grid_size).to_veci(), hull=hull) and hull[loc.scale(1 / structure.grid_size).to_veci().as_tuple()] == BlockValue.AIR_BLOCK)
+    
+    def _next_to_target(self,
+                        loc: Vec,
+                        structure: Structure,
+                        direction: Vec) -&gt; bool:
+        &#34;&#34;&#34;Check if the block is next to a target block along a direction.
+
+        Args:
+            loc (Vec): The index to check at.
+            structure (Structure): The structure.
+            direction (Vec): The direction to check at.
+
+        Returns:
+            bool: Whether the block is next to a target block.
+        &#34;&#34;&#34;
+        dloc = loc.sum(direction)
+        if self._exists_block(idx=dloc.as_tuple(), structure=structure):
+            obs_block = structure._blocks.get(dloc.as_tuple())
+            return any([target.lower() in obs_block.block_type.lower() for target in self.obstruction_targets])
+    
+    def _remove_in_direction(self,
+                             loc: Vec,
+                             hull: npt.NDArray[np.float32],
+                             direction: Vec) -&gt; npt.NDArray[np.float32]:
+        &#34;&#34;&#34;Remove all blocks in the hull along a direction.
+
+        Args:
+            loc (Vec): The starting index.
+            hull (npt.NDArray[np.float32]): The hull array.
+            direction (Vec): The direction to remove along to.
+
+        Returns:
+            npt.NDArray[np.float32]: The modified hull.
+        &#34;&#34;&#34;
+        i, j, k = loc.as_tuple()
+        di, dj, dk = direction.as_tuple()
+        # TODO: improve if needed
+        while 0 &lt; i &lt; hull.shape[0] and 0 &lt; j &lt; hull.shape[1] and 0 &lt; k &lt; hull.shape[2]:
+            hull[i, j, k] = BlockValue.AIR_BLOCK
+            i += di
+            j += dj
+            k += dk
+            if (i, j, k) in self._blocks_set.keys():
+                self._blocks_set.pop((i, j, k))
+        return hull
+    
+    def _remove_obstructing_blocks(self,
+                                   hull: npt.NDArray[np.float32],
+                                   structure: Structure) -&gt; npt.NDArray[np.float32]:
+        &#34;&#34;&#34;Remove the blocks obstructing a target block.
+
+        Args:
+            hull (npt.NDArray[np.float32]): The hull array.
+            structure (Structure): The structure.
+
+        Returns:
+            npt.NDArray[np.float32]: The modified hull array.
+        &#34;&#34;&#34;
+        scale = structure.grid_size
+        for (i, j, k) in list(self._blocks_set.keys()):
+            if hull[i, j, k] != BlockValue.AIR_BLOCK:  # skip removed blocks
+                loc = Vec.from_tuple((scale * i, scale * j, scale * k))
+                for direction in self._orientations:
+                    ntt = self._next_to_target(loc=loc,
+                                               structure=structure,
+                                               direction=direction.value.scale(scale))
+                    if ntt:
+                        hull[i, j, k] = BlockValue.AIR_BLOCK
+                        self._blocks_set.pop((i, j, k))
+                        hull = self._remove_in_direction(loc=loc.scale(v=1 / structure.grid_size).to_veci(),
+                                                            hull=hull,
+                                                            direction=direction.value.opposite())
+                        break
+        return hull
+    
+    def _remove_floating_blocks(self,
+                                hull: npt.NDArray[np.float32],
+                                structure: Structure,
+                                pivot_blocktype: str = &#39;MyObjectBuilder_Cockpit_OpenCockpitLarge&#39;) -&gt; npt.NDArray[np.float32]:
+        &#34;&#34;&#34;Remove floating blocks from the hull. Floating blocks are blocks not connected to the spaceship.
+        These may appear when removing obstructing blocks.
+
+        Args:
+            hull (npt.NDArray[np.float32]): The hull array.
+            structure (Structure): The structure.
+            pivot_blocktype (str): The pivot block type. Defaults to &#39;MyObjectBuilder_Cockpit_OpenCockpitLarge&#39;.
+
+        Returns:
+            npt.NDArray[np.float32]: The modified hull array.
+        &#34;&#34;&#34;
+        structure_arr = structure.as_grid_array
+        structure_shape = Vec.from_tuple(structure_arr.shape)
+        # mask of all blocks
+        mask = np.zeros_like(structure_arr, dtype=np.uint8)
+        mask[np.nonzero(hull)] = BlockValue.BASE_BLOCK
+        mask[np.nonzero(structure_arr)] = BlockValue.BASE_BLOCK
+        # pivot position defines the region to keep
+        pivot_position = [x for x in structure._blocks.values() if x.block_type == pivot_blocktype][0].position
+        pivot_idx = pivot_position.scale(1 / structure.grid_size).to_veci().as_tuple()
+        # get the region to keep defined by blocks connected to pivot position
+        connected_blocks = set()
+        to_check = [pivot_idx]
+        while to_check:
+            to_add = set()
+            for block_position in to_check:
+                if mask[block_position] == BlockValue.BASE_BLOCK:
+                    connected_blocks.add(block_position)
+                    for direction in self._orientations:
+                        dpos = Vec.from_tuple(block_position).sum(direction.value)
+                        if 0 &lt;= dpos.x &lt; structure_shape.x and 0 &lt;= dpos.y &lt; structure_shape.y and 0 &lt;= dpos.z &lt; structure_shape.z:
+                            to_add.add(dpos.as_tuple())
+            to_add = to_add.difference(to_add.intersection(connected_blocks))
+            to_check = list(to_add)
+        # disconnected blocks are the difference between all blocks and blocks connected to pivot block
+        disconnected_blocks = set(self._blocks_set.keys()) - connected_blocks
+        # remove disconnected blocks
+        for block_idx in disconnected_blocks:
+            hull[block_idx] = BlockValue.AIR_BLOCK
+            self._blocks_set.pop(block_idx)
+        return hull
+    
+    def _get_outer_indices(self,
+                           arr: npt.NDArray[np.float32],
+                           edges_only: bool = False,
+                           corners_only: bool = False) -&gt; Tuple[npt.NDArray[np.int64], npt.NDArray[np.int64], npt.NDArray[np.int64]]:
+        &#34;&#34;&#34;Get the indices of blocks lying on the outer corner/edges/faces of the array.
+
+        Args:
+            arr (npt.NDArray[np.float32]): The array.
+            edges_only (bool, optional): Get blocks on the edges only. Defaults to False.
+            corners_only (bool, optional): Get blocks on the corners only. Defaults to False.
+
+        Returns:
+            Tuple[npt.NDArray[np.int64], npt.NDArray[np.int64], npt.NDArray[np.int64]]: The indices of the outer blocks.
+        &#34;&#34;&#34;
+        n_neighbours = np.zeros_like(arr)
+        for idx, _ in np.ndenumerate(arr):
+            if self._blocks_set.get(idx, None):
+                for offset in self._orientations:
+                    pos = Vec.from_tuple(idx).sum(offset.value).as_tuple()
+                    if self._blocks_set.get(pos, None):
+                        n_neighbours[idx] = n_neighbours[idx] + 1
+        if corners_only:
+            return np.nonzero(np.where(n_neighbours &lt; 2, n_neighbours, 0))
+        elif edges_only:
+            ci, cj, ck = np.nonzero(np.where(n_neighbours &lt; 2, n_neighbours, 0))
+            ei, ej, ek = np.nonzero(np.where(n_neighbours &lt;= 3, n_neighbours, 0))
+            return np.append(ci, ei), np.append(cj, ej), np.append(ck, ek)
+        else:
+            return np.nonzero(n_neighbours)
+    
+    def adj_in_hull(self,
+                    idx: Tuple[int, int, int]) -&gt; List[Tuple[int, int, int]]:
+        &#34;&#34;&#34;Get the indices of adjacent blocks in the hull from a given index.
+
+        Args:
+            idx (Tuple[int, int, int]): The index.
+
+        Returns:
+            List[Tuple[int, int, int]]: The list of adjacent indices.
+        &#34;&#34;&#34;
+        adjs = []
+        for direction in self._orientations:
+            new_idx = Vec.from_tuple(idx).sum(direction.value).as_tuple()
+            if new_idx in self._blocks_set.keys():
+                adjs.append(new_idx)
+        return adjs
+    
+    def _get_neighbourhood(self,
+                           idx: Vec,
+                           structure: Structure) -&gt; List[Block]:
+        &#34;&#34;&#34;Get the neighbourhood of a block.
+
+        Args:
+            idx (Vec): The index of the block.
+            structure (Structure): The structure.
+
+        Returns:
+            List[Block]: The neighbourhood of the block.
+        &#34;&#34;&#34;
+        n = []
+        for di, dj, dk in zip([1, 1, 1, 1, 1,  1,  1,   0, 0, 0, 0,  0,  0,  -1, -1, -1, -1, -1, -1, -1],
+                              [0, 1, 0, 1, -1, 0,  -1,  1, 0, 1, -1, 0,  -1, 0,  1,  0,  1,  -1, 0,  -1],
+                              [0, 0, 1, 1, 0,  -1, -1,  0, 1, 1, 0,  -1, -1, 0,  0,  1,  1,  0,  -1, -1]):
+            offset = Vec(di, dj, dk).scale(structure.grid_size)
+            if not offset.is_zero:
+                adj = self.try_and_get_block(idx=idx,
+                                             offset=offset,
+                                             structure=structure)
+                if adj:
+                    n.append(adj)
+        return n
+    
+    def try_and_get_block(self,
+                          idx: Tuple[int, int, int],
+                          offset: Vec,
+                          structure: Structure) -&gt; Optional[Block]:
+        &#34;&#34;&#34;Try and get a block from either the hull or the structure.
+
+        Args:
+            idx (Tuple[int, int, int]): The index of the block (hull-scaled).
+            offset (Vec): The offset vector (structure-scaled).
+            structure (Structure): The structure.
+
+        Returns:
+            Optional[Block]: The block at `idx + offset`, if it exists.
+        &#34;&#34;&#34;
+        dloc = Vec.from_tuple(idx).scale(structure.grid_size).sum(offset)
+        if self._exists_block(idx=dloc.as_tuple(),
+                              structure=structure):
+            return structure._blocks[dloc.as_tuple()]
+        else:
+            return self._blocks_set.get(Vec.from_tuple(idx).sum(offset.scale(1 / structure.grid_size)).to_veci().as_tuple(), None)
+    
+    def _correct_and_centered_rotation(self,
+                                       center: Vec,
+                                       rotation_matrix: np.typing.NDArray,
+                                       vector: Vec) -&gt; Vec:
+        &#34;&#34;&#34;Rotate correctly and center the vector to the center of the block.
+
+        Args:
+            center (Vec): The center of the block.
+            rotation_matrix (np.typing.NDArray): The rotation matrix of the block.
+            vector (Vec): The vector to rotate and center.
+
+        Returns:
+            Vec: The rotated and centered vector.
+        &#34;&#34;&#34;
+        # Rotation with additional checking as in Space Engineers source code.
+        centered_vector = vector.diff(center)
+        centered_vector_i = centered_vector.floor()
+        rotated_vector = rotate(rotation_matrix=rotation_matrix,
+                                vector=centered_vector)
+        rotated_vector_i_correct = rotate(rotation_matrix=rotation_matrix,
+                                          vector=centered_vector_i)
+        rotated_vector_i = rotated_vector.floor()
+        correction = rotated_vector_i_correct.diff(rotated_vector_i)
+        return rotated_vector.sum(correction)
+    
+    def _get_mountpoint_limits(self,
+                               mountpoints: List[MountPoint],
+                               block_center: Vec,
+                               rotation_matrix: npt.NDArray[np.float32]) -&gt; Tuple[List[Vec], List[Vec], List[int]]:
+        &#34;&#34;&#34;Get the start and end vectors of the mountpoint, as well as the face area(s).
+
+        Args:
+            mountpoints (List[MountPoint]): The list of mountpoints.
+            block_center (Vec): The center of the block.
+            rotation_matrix (npt.NDArray[np.float32]): The rotation matrix of the block.
+
+        Returns:
+            Tuple[List[Vec], List[Vec], List[int]]: The start and end vector, and the face area(s).
+        &#34;&#34;&#34;
+        starts, ends = [], []
+        for mp in mountpoints:
+            rotated_start = self._correct_and_centered_rotation(center=block_center,
+                                                                rotation_matrix=rotation_matrix,
+                                                                vector=mp.start)
+            rotated_end = self._correct_and_centered_rotation(center=block_center,
+                                                              rotation_matrix=rotation_matrix,
+                                                              vector=mp.end)
+
+            ordered_start = Vec.min(rotated_start, rotated_end)
+            ordered_end = Vec.max(rotated_start, rotated_end)
+            
+            starts.append(ordered_start)
+            ends.append(ordered_end)
+        
+        planes = [end.diff(start).bbox(ignore_zero=False) for start, end in zip(starts, ends)]
+        
+        return starts, ends, planes
+    
+    def intersect_planes(self,
+                         starts1: List[Vec],
+                         ends1: List[Vec],
+                         starts2: List[Vec],
+                         ends2: List[Vec]) -&gt; float:
+        &#34;&#34;&#34;Compute the intersection surface between mountpoints of different blocks and return the inverse of the intersection as an error to minimize.
+
+        Args:
+            starts1 (List[Vec]): The start vectors of the first block.
+            ends1 (List[Vec]): The end vectors of the first block.
+            starts2 (List[Vec]): The start vectors of the second block.
+            ends2 (List[Vec]): The end vectors of the first block.
+
+        Returns:
+            float: The intersection as an error.
+        &#34;&#34;&#34;
+        intersect_bbox = 0.
+        for start1, end1 in zip(starts1, ends1):
+            for start2, end2 in zip(starts2, ends2):
+                x1 = max(start1.x, start2.x)
+                y1 = max(start1.y, start2.y)
+                z1 = max(start1.z, start2.z)
+                x2 = min(end1.x, end2.x)
+                y2 = min(end1.y, end2.y)
+                z2 = min(end1.z, end2.z)
+                if x2 &gt; x1 and y2 &gt; y1 and z2 &lt; z1:
+                    intersect_bbox += (x2 - x1) * (y2 - y1)
+                elif x2 &gt; x1 and y2 &lt;= y1 and z2 &gt; z1:
+                    intersect_bbox += (x2 - x1) * (z2 - z1)
+                elif x2 &lt;= x1 and y2 &gt; y1 and z2 &gt; z1:
+                    intersect_bbox += (y2 - y1) * (z2 - z1)
+                else:
+                    intersect_bbox += 0
+        return 1 / intersect_bbox
+    
+    def _check_valid_placement(self,
+                               idx: Tuple[int, int, int],
+                               block: Block,
+                               direction: Orientation,
+                               structure: Structure) -&gt; Tuple[bool, int]:
+        &#34;&#34;&#34;Check if the block could be placed with the given orientation when checking in the specified direction.
+
+        Args:
+            idx (Tuple[int, int, int]): The index of the block (hull-scaled).
+            block (Block): The block to be checked.
+            direction (Orientation): The direction to check placement for.
+            structure (Structure): The structure.
+
+        Returns:
+            bool: Whether the block could be placed with the given orientation when checking in the specified direction.
+        &#34;&#34;&#34;
+        rot_mat = get_rotation_matrix(forward=block.orientation_forward,
+                                      up=block.orientation_up)
+        mp1 = [mp for mp in block.mountpoints if rotate(rot_mat, mp.face) == direction.value]
+        starts1, ends1, planes1 = self._get_mountpoint_limits(mountpoints=mp1,
+                                                              block_center=block.center,
+                                                              rotation_matrix=rot_mat)
+        other_block = self.try_and_get_block(idx=idx,
+                                             offset=direction.value.scale(structure.grid_size).to_veci(),
+                                             structure=structure)
+        opposite_direction = orientation_from_vec(direction.value.opposite())
+        if other_block is None:
+            if mp1 == []:
+                mp2 = [mp for mp in block.mountpoints if rotate(rot_mat, mp.face) == opposite_direction.value]
+                _, _, planes2 = self._get_mountpoint_limits(mountpoints=mp2,
+                                                            block_center=block.center,
+                                                            rotation_matrix=rot_mat)
+                val = sum(planes2)  # error as the surface of mountpoints on opposite face
+            else:
+                val = sum(planes1)  # erorr as surface of mountpoints of current face
+            return True, val
+        else:
+            if mp1 == []:
+                return False, 0
+            else:
+                rot_mat_other = get_rotation_matrix(forward=other_block.orientation_forward,
+                                                    up=other_block.orientation_up)
+                mp2 = [mp for mp in other_block.mountpoints if rotate(rot_mat_other, mp.face) == opposite_direction.value]
+                if mp2 == []:
+                    return False, 0
+                starts2, ends2, planes2 = self._get_mountpoint_limits(mountpoints=mp2,
+                                                                      block_center=other_block.center,
+                                                                      rotation_matrix=rot_mat_other)
+                all_valid = []
+                for eo1, so1, p1 in zip(ends1, starts1, planes1):
+                    assert p1 != 0, f&#39;Mountpoint with empty surface: {mp1} has {so1}-{eo1} (from block {block})&#39;
+                    mp_valid = True
+                    for eo2, so2, p2 in zip(ends2, starts2, planes2):
+                        assert p2 != 0, f&#39;Mountpoint with empty surface: {mp2} has {so2}-{eo2} (from block {other_block})&#39;
+                        # NOTE: This check does not take into account exclusions and properties masks (yet)
+                        # Sources\VRage.Math\BoundingBoxI.cs#328
+                        # (double)this.Max.X &gt;= (double)box.Min.X &amp;&amp; (double)this.Min.X &lt;= (double)box.Max.X &amp;&amp; ((double)this.Max.Y &gt;= (double)box.Min.Y &amp;&amp; (double)this.Min.Y &lt;= (double)box.Max.Y) &amp;&amp; ((double)this.Max.Z &gt;= (double)box.Min.Z &amp;&amp; (double)this.Min.Z &lt;= (double)box.Max.Z);
+                        mp_valid |= eo1.x &gt;= so2.x and so1.x &lt;= eo2.x and eo1.y &gt;= so2.y and so1.y &lt;= eo2.y and eo1.z &gt;= so2.z and so1.z &lt;= eo2.z
+                    all_valid.append(mp_valid)
+                return all(all_valid), self.intersect_planes(starts1, ends1, starts2, ends2)
+        
+    def _check_valid_position(self,
+                              idx: Tuple[int, int, int],
+                              block: Block,
+                              hull: np.typing.NDArray,
+                              structure: Structure) -&gt; Tuple[bool, int]:
+        &#34;&#34;&#34;Check if the current position is valid for the given block.
+
+        Args:
+            idx (Tuple[int, int, int]): The index of the block.
+            block (Block): The block to check.
+            hull (npt.NDArray[np.float32]): The hull array.
+            structure (Structure): The structure.
+
+        Returns:
+            Tuple[bool, int]: Whether the position is valid, and the area error.
+        &#34;&#34;&#34;
+        valid = True
+        area_err = 0
+        for direction in self._orientations:
+            res, delta_area = self._check_valid_placement(idx=idx,
+                                                          block=block,
+                                                          direction=direction,
+                                                          structure=structure)
+            valid &amp;= res
+            area_err += delta_area
+            if not valid:
+                break
+        return valid, delta_area
+    
+    def try_smoothing(self,
+                      idx: Tuple[int, int, int],
+                      hull: npt.NDArray[np.float32],
+                      structure: Structure) -&gt; Optional[Block]:
+        &#34;&#34;&#34;Try applying a smoothing pass at the given index.
+
+        Args:
+            idx (Tuple[int, int, int]): The index.
+            hull (npt.NDArray[np.float32]): The hull array.
+            structure (Structure): The structure.
+
+        Returns:
+            Optional[Block]: A possible block to replace the current one.
+        &#34;&#34;&#34;
+        i, j, k = idx
+        block_type = hull[i, j, k]
+        block = self._blocks_set[idx]
+        # removal check
+        valid, curr_err = self._check_valid_position(idx=idx,
+                                                     block=block,
+                                                     hull=hull,
+                                                     structure=structure)
+        if not valid:
+            return None, BlockValue.AIR_BLOCK
+        # replacement check   
+        elif block_type in self._smoothing_order.keys():
+            # give priority to surrounding blocks orientations
+            neighbourhood = self._get_neighbourhood(idx=idx,
+                                                    structure=structure)
+            priority_scores = np.zeros(shape=len(self._valid_orientations), dtype=np.int8).tolist()
+            for other_block in neighbourhood:                
+                oo = (orientation_from_vec(other_block.orientation_forward),
+                        orientation_from_vec(other_block.orientation_up))
+                priority_scores[self._valid_orientations.index(oo)] = priority_scores[self._valid_orientations.index(oo)] + 1
+            idxs = [x for _, x in sorted(zip(priority_scores, np.arange(len(self._valid_orientations)).tolist()))]
+            priority_orientations = [self._valid_orientations[i] for i in idxs]
+            for possible_type in self._smoothing_order[block_type]:
+                orientation_scores, valids = np.zeros(shape=len(self._valid_orientations), dtype=np.float32), np.zeros(shape=len(self._valid_orientations), dtype=np.bool8)
+                # try replacement
+                for i, (of, ou) in enumerate(priority_orientations):
+                    possible_block = Block(block_type=block_value_types[possible_type],
+                                           orientation_forward=of,
+                                           orientation_up=ou)
+                    valid, err = self._check_valid_position(idx=idx,
+                                                            block=possible_block,
+                                                            hull=hull,
+                                                            structure=structure)
+                    orientation_scores[i] = err if valid else 9999  # make sure invalid scores are never picked
+                    valids[i] = valid
+                if any(valids) and min(orientation_scores) &lt; curr_err:
+                    of, ou = priority_orientations[np.argmin(orientation_scores)]
+                    return Block(block_type=block_value_types[possible_type],
+                                orientation_forward=of,
+                                orientation_up=ou), possible_type
+            return None, block_type
+        # skip
+        else:
+            return None, block_type
+        
+    def add_external_hull(self,
+                          structure: Structure) -&gt; None:
+        &#34;&#34;&#34;Add an external hull to the given Structure.
+        This process adds the hull blocks directly into the Structure, so it can be used only once per spaceship.
+
+        Args:
+            structure (Structure): The spaceship.
+        &#34;&#34;&#34;
+        self._blocks_set = {}
+        
+        arr = structure.as_grid_array
+        air = structure.air_blocks_gridmask
+        hull = self._get_convex_hull(arr=arr)
+        hull[np.nonzero(air)] = BlockValue.AIR_BLOCK
+        hull[np.nonzero(arr)] = BlockValue.AIR_BLOCK
+        
+        if self.apply_erosion:
+            if self.erosion_type == &#39;grey&#39;:
+                hull = grey_erosion(input=hull,
+                                    footprint=self.footprint,
+                                    mode=&#39;constant&#39;,
+                                    cval=1)
+                hull = hull.astype(int)
+                hull *= BlockValue.BASE_BLOCK                
+            elif self.erosion_type == &#39;bin&#39;:
+                dilated_arr = binary_dilation(arr)
+                mask = np.ones_like(arr) * BlockValue.BASE_BLOCK
+                mask[np.nonzero(dilated_arr)] = BlockValue.AIR_BLOCK                
+                hull = binary_erosion(input=hull,
+                                      mask=mask,
+                                      iterations=self.iterations)
+                hull = hull.astype(int)
+                hull *= BlockValue.BASE_BLOCK
+                
+        # add blocks to self._blocks_set
+        for i in range(hull.shape[0]):
+                for j in range(hull.shape[1]):
+                    for k in range(hull.shape[2]):
+                        if hull[i, j, k] != BlockValue.AIR_BLOCK:
+                            self._add_block(block_type=self.base_block,
+                                            idx=(i, j, k),
+                                            pos=Vec.v3i(i, j, k).scale(v=structure.grid_size),
+                                            orientation_forward=Orientation.FORWARD,
+                                            orientation_up=Orientation.UP)
+        
+        # remove all blocks that obstruct target block type
+        hull = self._remove_obstructing_blocks(hull=hull,
+                                            structure=structure)
+        
+        # remove &#34;floating&#34; blocks
+        # i.e.: blocks not connected to the spaceship
+        hull = self._remove_floating_blocks(hull=hull,
+                                            structure=structure)
+
+        # apply iterative smoothing algorithm
+        if self.apply_smoothing:
+            my_arr = np.ones_like(hull) * BlockValue.AIR_BLOCK
+            my_arr[np.nonzero(structure.as_grid_array)] = BlockValue.BASE_BLOCK
+            my_arr[np.nonzero(hull)] = BlockValue.BASE_BLOCK
+            within_arr = binary_erosion(my_arr)
+            my_arr[np.where(within_arr == BlockValue.AIR_BLOCK)] = BlockValue.AIR_BLOCK
+            idxs = self._get_outer_indices(arr=my_arr, edges_only=True)
+            ii, jj, kk = idxs
+            curr_checking = [(i, j, k) for (i, j, k) in zip(ii, jj, kk)]
+            while len(curr_checking) != 0:
+                to_rem, to_inspect = [], []
+                for (i, j, k) in curr_checking:
+                    block = self._blocks_set[(i, j, k)]
+                    substitute_block, val = self.try_smoothing(idx=(i, j, k),
+                                                               hull=hull,
+                                                               structure=structure)
+                    if substitute_block is not None and substitute_block.block_type != block.block_type:
+                        substitute_block.position = block.position
+                        self._blocks_set[(i, j, k)] = substitute_block
+                        to_inspect.extend(self.adj_in_hull(idx=(i, j, k)))
+                    elif substitute_block is None and val == BlockValue.AIR_BLOCK:
+                        to_rem.append((i, j, k))
+                        to_inspect.extend(self.adj_in_hull(idx=(i, j, k)))
+                    hull[i, j, k] = val
+                to_inspect = list(set(to_inspect))
+                to_rem = list(set(to_rem))
+                for r in to_rem:
+                    self._blocks_set.pop(r)
+                    if r in to_inspect:
+                        to_inspect.remove(r)
+                curr_checking = to_inspect
+
+        # add blocks to structure
+        for k, block in self._blocks_set.items():
+            structure.add_block(block=block,
+                                grid_position=block.position.as_tuple())
+        
+        structure.sanify()</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="pcgsepy.hullbuilder.HullBuilder.add_external_hull"><code class="name flex">
+<span>def <span class="ident">add_external_hull</span></span>(<span>self, structure: <a title="pcgsepy.structure.Structure" href="structure.html#pcgsepy.structure.Structure">Structure</a>) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add an external hull to the given Structure.
+This process adds the hull blocks directly into the Structure, so it can be used only once per spaceship.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>structure</code></strong> :&ensp;<code>Structure</code></dt>
+<dd>The spaceship.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_external_hull(self,
+                      structure: Structure) -&gt; None:
+    &#34;&#34;&#34;Add an external hull to the given Structure.
+    This process adds the hull blocks directly into the Structure, so it can be used only once per spaceship.
+
+    Args:
+        structure (Structure): The spaceship.
+    &#34;&#34;&#34;
+    self._blocks_set = {}
+    
+    arr = structure.as_grid_array
+    air = structure.air_blocks_gridmask
+    hull = self._get_convex_hull(arr=arr)
+    hull[np.nonzero(air)] = BlockValue.AIR_BLOCK
+    hull[np.nonzero(arr)] = BlockValue.AIR_BLOCK
+    
+    if self.apply_erosion:
+        if self.erosion_type == &#39;grey&#39;:
+            hull = grey_erosion(input=hull,
+                                footprint=self.footprint,
+                                mode=&#39;constant&#39;,
+                                cval=1)
+            hull = hull.astype(int)
+            hull *= BlockValue.BASE_BLOCK                
+        elif self.erosion_type == &#39;bin&#39;:
+            dilated_arr = binary_dilation(arr)
+            mask = np.ones_like(arr) * BlockValue.BASE_BLOCK
+            mask[np.nonzero(dilated_arr)] = BlockValue.AIR_BLOCK                
+            hull = binary_erosion(input=hull,
+                                  mask=mask,
+                                  iterations=self.iterations)
+            hull = hull.astype(int)
+            hull *= BlockValue.BASE_BLOCK
+            
+    # add blocks to self._blocks_set
+    for i in range(hull.shape[0]):
+            for j in range(hull.shape[1]):
+                for k in range(hull.shape[2]):
+                    if hull[i, j, k] != BlockValue.AIR_BLOCK:
+                        self._add_block(block_type=self.base_block,
+                                        idx=(i, j, k),
+                                        pos=Vec.v3i(i, j, k).scale(v=structure.grid_size),
+                                        orientation_forward=Orientation.FORWARD,
+                                        orientation_up=Orientation.UP)
+    
+    # remove all blocks that obstruct target block type
+    hull = self._remove_obstructing_blocks(hull=hull,
+                                        structure=structure)
+    
+    # remove &#34;floating&#34; blocks
+    # i.e.: blocks not connected to the spaceship
+    hull = self._remove_floating_blocks(hull=hull,
+                                        structure=structure)
+
+    # apply iterative smoothing algorithm
+    if self.apply_smoothing:
+        my_arr = np.ones_like(hull) * BlockValue.AIR_BLOCK
+        my_arr[np.nonzero(structure.as_grid_array)] = BlockValue.BASE_BLOCK
+        my_arr[np.nonzero(hull)] = BlockValue.BASE_BLOCK
+        within_arr = binary_erosion(my_arr)
+        my_arr[np.where(within_arr == BlockValue.AIR_BLOCK)] = BlockValue.AIR_BLOCK
+        idxs = self._get_outer_indices(arr=my_arr, edges_only=True)
+        ii, jj, kk = idxs
+        curr_checking = [(i, j, k) for (i, j, k) in zip(ii, jj, kk)]
+        while len(curr_checking) != 0:
+            to_rem, to_inspect = [], []
+            for (i, j, k) in curr_checking:
+                block = self._blocks_set[(i, j, k)]
+                substitute_block, val = self.try_smoothing(idx=(i, j, k),
+                                                           hull=hull,
+                                                           structure=structure)
+                if substitute_block is not None and substitute_block.block_type != block.block_type:
+                    substitute_block.position = block.position
+                    self._blocks_set[(i, j, k)] = substitute_block
+                    to_inspect.extend(self.adj_in_hull(idx=(i, j, k)))
+                elif substitute_block is None and val == BlockValue.AIR_BLOCK:
+                    to_rem.append((i, j, k))
+                    to_inspect.extend(self.adj_in_hull(idx=(i, j, k)))
+                hull[i, j, k] = val
+            to_inspect = list(set(to_inspect))
+            to_rem = list(set(to_rem))
+            for r in to_rem:
+                self._blocks_set.pop(r)
+                if r in to_inspect:
+                    to_inspect.remove(r)
+            curr_checking = to_inspect
+
+    # add blocks to structure
+    for k, block in self._blocks_set.items():
+        structure.add_block(block=block,
+                            grid_position=block.position.as_tuple())
+    
+    structure.sanify()</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.hullbuilder.HullBuilder.adj_in_hull"><code class="name flex">
+<span>def <span class="ident">adj_in_hull</span></span>(<span>self, idx: Tuple[int, int, int]) ‑> List[Tuple[int, int, int]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the indices of adjacent blocks in the hull from a given index.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>idx</code></strong> :&ensp;<code>Tuple[int, int, int]</code></dt>
+<dd>The index.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[Tuple[int, int, int]]</code></dt>
+<dd>The list of adjacent indices.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def adj_in_hull(self,
+                idx: Tuple[int, int, int]) -&gt; List[Tuple[int, int, int]]:
+    &#34;&#34;&#34;Get the indices of adjacent blocks in the hull from a given index.
+
+    Args:
+        idx (Tuple[int, int, int]): The index.
+
+    Returns:
+        List[Tuple[int, int, int]]: The list of adjacent indices.
+    &#34;&#34;&#34;
+    adjs = []
+    for direction in self._orientations:
+        new_idx = Vec.from_tuple(idx).sum(direction.value).as_tuple()
+        if new_idx in self._blocks_set.keys():
+            adjs.append(new_idx)
+    return adjs</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.hullbuilder.HullBuilder.intersect_planes"><code class="name flex">
+<span>def <span class="ident">intersect_planes</span></span>(<span>self, starts1: List[<a title="pcgsepy.common.vecs.Vec" href="common/vecs.html#pcgsepy.common.vecs.Vec">Vec</a>], ends1: List[<a title="pcgsepy.common.vecs.Vec" href="common/vecs.html#pcgsepy.common.vecs.Vec">Vec</a>], starts2: List[<a title="pcgsepy.common.vecs.Vec" href="common/vecs.html#pcgsepy.common.vecs.Vec">Vec</a>], ends2: List[<a title="pcgsepy.common.vecs.Vec" href="common/vecs.html#pcgsepy.common.vecs.Vec">Vec</a>]) ‑> float</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute the intersection surface between mountpoints of different blocks and return the inverse of the intersection as an error to minimize.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>starts1</code></strong> :&ensp;<code>List[Vec]</code></dt>
+<dd>The start vectors of the first block.</dd>
+<dt><strong><code>ends1</code></strong> :&ensp;<code>List[Vec]</code></dt>
+<dd>The end vectors of the first block.</dd>
+<dt><strong><code>starts2</code></strong> :&ensp;<code>List[Vec]</code></dt>
+<dd>The start vectors of the second block.</dd>
+<dt><strong><code>ends2</code></strong> :&ensp;<code>List[Vec]</code></dt>
+<dd>The end vectors of the first block.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>The intersection as an error.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def intersect_planes(self,
+                     starts1: List[Vec],
+                     ends1: List[Vec],
+                     starts2: List[Vec],
+                     ends2: List[Vec]) -&gt; float:
+    &#34;&#34;&#34;Compute the intersection surface between mountpoints of different blocks and return the inverse of the intersection as an error to minimize.
+
+    Args:
+        starts1 (List[Vec]): The start vectors of the first block.
+        ends1 (List[Vec]): The end vectors of the first block.
+        starts2 (List[Vec]): The start vectors of the second block.
+        ends2 (List[Vec]): The end vectors of the first block.
+
+    Returns:
+        float: The intersection as an error.
+    &#34;&#34;&#34;
+    intersect_bbox = 0.
+    for start1, end1 in zip(starts1, ends1):
+        for start2, end2 in zip(starts2, ends2):
+            x1 = max(start1.x, start2.x)
+            y1 = max(start1.y, start2.y)
+            z1 = max(start1.z, start2.z)
+            x2 = min(end1.x, end2.x)
+            y2 = min(end1.y, end2.y)
+            z2 = min(end1.z, end2.z)
+            if x2 &gt; x1 and y2 &gt; y1 and z2 &lt; z1:
+                intersect_bbox += (x2 - x1) * (y2 - y1)
+            elif x2 &gt; x1 and y2 &lt;= y1 and z2 &gt; z1:
+                intersect_bbox += (x2 - x1) * (z2 - z1)
+            elif x2 &lt;= x1 and y2 &gt; y1 and z2 &gt; z1:
+                intersect_bbox += (y2 - y1) * (z2 - z1)
+            else:
+                intersect_bbox += 0
+    return 1 / intersect_bbox</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.hullbuilder.HullBuilder.try_and_get_block"><code class="name flex">
+<span>def <span class="ident">try_and_get_block</span></span>(<span>self, idx: Tuple[int, int, int], offset: <a title="pcgsepy.common.vecs.Vec" href="common/vecs.html#pcgsepy.common.vecs.Vec">Vec</a>, structure: <a title="pcgsepy.structure.Structure" href="structure.html#pcgsepy.structure.Structure">Structure</a>) ‑> Optional[<a title="pcgsepy.structure.Block" href="structure.html#pcgsepy.structure.Block">Block</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Try and get a block from either the hull or the structure.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>idx</code></strong> :&ensp;<code>Tuple[int, int, int]</code></dt>
+<dd>The index of the block (hull-scaled).</dd>
+<dt><strong><code>offset</code></strong> :&ensp;<code>Vec</code></dt>
+<dd>The offset vector (structure-scaled).</dd>
+<dt><strong><code>structure</code></strong> :&ensp;<code>Structure</code></dt>
+<dd>The structure.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Optional[Block]</code></dt>
+<dd>The block at <code>idx + offset</code>, if it exists.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def try_and_get_block(self,
+                      idx: Tuple[int, int, int],
+                      offset: Vec,
+                      structure: Structure) -&gt; Optional[Block]:
+    &#34;&#34;&#34;Try and get a block from either the hull or the structure.
+
+    Args:
+        idx (Tuple[int, int, int]): The index of the block (hull-scaled).
+        offset (Vec): The offset vector (structure-scaled).
+        structure (Structure): The structure.
+
+    Returns:
+        Optional[Block]: The block at `idx + offset`, if it exists.
+    &#34;&#34;&#34;
+    dloc = Vec.from_tuple(idx).scale(structure.grid_size).sum(offset)
+    if self._exists_block(idx=dloc.as_tuple(),
+                          structure=structure):
+        return structure._blocks[dloc.as_tuple()]
+    else:
+        return self._blocks_set.get(Vec.from_tuple(idx).sum(offset.scale(1 / structure.grid_size)).to_veci().as_tuple(), None)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.hullbuilder.HullBuilder.try_smoothing"><code class="name flex">
+<span>def <span class="ident">try_smoothing</span></span>(<span>self, idx: Tuple[int, int, int], hull: numpy.ndarray[typing.Any, numpy.dtype[numpy.float32]], structure: <a title="pcgsepy.structure.Structure" href="structure.html#pcgsepy.structure.Structure">Structure</a>) ‑> Optional[<a title="pcgsepy.structure.Block" href="structure.html#pcgsepy.structure.Block">Block</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Try applying a smoothing pass at the given index.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>idx</code></strong> :&ensp;<code>Tuple[int, int, int]</code></dt>
+<dd>The index.</dd>
+<dt><strong><code>hull</code></strong> :&ensp;<code>npt.NDArray[np.float32]</code></dt>
+<dd>The hull array.</dd>
+<dt><strong><code>structure</code></strong> :&ensp;<code>Structure</code></dt>
+<dd>The structure.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Optional[Block]</code></dt>
+<dd>A possible block to replace the current one.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def try_smoothing(self,
+                  idx: Tuple[int, int, int],
+                  hull: npt.NDArray[np.float32],
+                  structure: Structure) -&gt; Optional[Block]:
+    &#34;&#34;&#34;Try applying a smoothing pass at the given index.
+
+    Args:
+        idx (Tuple[int, int, int]): The index.
+        hull (npt.NDArray[np.float32]): The hull array.
+        structure (Structure): The structure.
+
+    Returns:
+        Optional[Block]: A possible block to replace the current one.
+    &#34;&#34;&#34;
+    i, j, k = idx
+    block_type = hull[i, j, k]
+    block = self._blocks_set[idx]
+    # removal check
+    valid, curr_err = self._check_valid_position(idx=idx,
+                                                 block=block,
+                                                 hull=hull,
+                                                 structure=structure)
+    if not valid:
+        return None, BlockValue.AIR_BLOCK
+    # replacement check   
+    elif block_type in self._smoothing_order.keys():
+        # give priority to surrounding blocks orientations
+        neighbourhood = self._get_neighbourhood(idx=idx,
+                                                structure=structure)
+        priority_scores = np.zeros(shape=len(self._valid_orientations), dtype=np.int8).tolist()
+        for other_block in neighbourhood:                
+            oo = (orientation_from_vec(other_block.orientation_forward),
+                    orientation_from_vec(other_block.orientation_up))
+            priority_scores[self._valid_orientations.index(oo)] = priority_scores[self._valid_orientations.index(oo)] + 1
+        idxs = [x for _, x in sorted(zip(priority_scores, np.arange(len(self._valid_orientations)).tolist()))]
+        priority_orientations = [self._valid_orientations[i] for i in idxs]
+        for possible_type in self._smoothing_order[block_type]:
+            orientation_scores, valids = np.zeros(shape=len(self._valid_orientations), dtype=np.float32), np.zeros(shape=len(self._valid_orientations), dtype=np.bool8)
+            # try replacement
+            for i, (of, ou) in enumerate(priority_orientations):
+                possible_block = Block(block_type=block_value_types[possible_type],
+                                       orientation_forward=of,
+                                       orientation_up=ou)
+                valid, err = self._check_valid_position(idx=idx,
+                                                        block=possible_block,
+                                                        hull=hull,
+                                                        structure=structure)
+                orientation_scores[i] = err if valid else 9999  # make sure invalid scores are never picked
+                valids[i] = valid
+            if any(valids) and min(orientation_scores) &lt; curr_err:
+                of, ou = priority_orientations[np.argmin(orientation_scores)]
+                return Block(block_type=block_value_types[possible_type],
+                            orientation_forward=of,
+                            orientation_up=ou), possible_type
+        return None, block_type
+    # skip
+    else:
+        return None, block_type</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pcgsepy" href="index.html">pcgsepy</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pcgsepy.hullbuilder.enforce_symmetry" href="#pcgsepy.hullbuilder.enforce_symmetry">enforce_symmetry</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pcgsepy.hullbuilder.BlockValue" href="#pcgsepy.hullbuilder.BlockValue">BlockValue</a></code></h4>
+<ul class="">
+<li><code><a title="pcgsepy.hullbuilder.BlockValue.AIR_BLOCK" href="#pcgsepy.hullbuilder.BlockValue.AIR_BLOCK">AIR_BLOCK</a></code></li>
+<li><code><a title="pcgsepy.hullbuilder.BlockValue.BASE_BLOCK" href="#pcgsepy.hullbuilder.BlockValue.BASE_BLOCK">BASE_BLOCK</a></code></li>
+<li><code><a title="pcgsepy.hullbuilder.BlockValue.CORNERINV_BLOCK" href="#pcgsepy.hullbuilder.BlockValue.CORNERINV_BLOCK">CORNERINV_BLOCK</a></code></li>
+<li><code><a title="pcgsepy.hullbuilder.BlockValue.CORNERSQUAREINV_BLOCK" href="#pcgsepy.hullbuilder.BlockValue.CORNERSQUAREINV_BLOCK">CORNERSQUAREINV_BLOCK</a></code></li>
+<li><code><a title="pcgsepy.hullbuilder.BlockValue.CORNERSQUARE_BLOCK" href="#pcgsepy.hullbuilder.BlockValue.CORNERSQUARE_BLOCK">CORNERSQUARE_BLOCK</a></code></li>
+<li><code><a title="pcgsepy.hullbuilder.BlockValue.CORNER_BLOCK" href="#pcgsepy.hullbuilder.BlockValue.CORNER_BLOCK">CORNER_BLOCK</a></code></li>
+<li><code><a title="pcgsepy.hullbuilder.BlockValue.SLOPE_BLOCK" href="#pcgsepy.hullbuilder.BlockValue.SLOPE_BLOCK">SLOPE_BLOCK</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pcgsepy.hullbuilder.HullBuilder" href="#pcgsepy.hullbuilder.HullBuilder">HullBuilder</a></code></h4>
+<ul class="">
+<li><code><a title="pcgsepy.hullbuilder.HullBuilder.add_external_hull" href="#pcgsepy.hullbuilder.HullBuilder.add_external_hull">add_external_hull</a></code></li>
+<li><code><a title="pcgsepy.hullbuilder.HullBuilder.adj_in_hull" href="#pcgsepy.hullbuilder.HullBuilder.adj_in_hull">adj_in_hull</a></code></li>
+<li><code><a title="pcgsepy.hullbuilder.HullBuilder.intersect_planes" href="#pcgsepy.hullbuilder.HullBuilder.intersect_planes">intersect_planes</a></code></li>
+<li><code><a title="pcgsepy.hullbuilder.HullBuilder.try_and_get_block" href="#pcgsepy.hullbuilder.HullBuilder.try_and_get_block">try_and_get_block</a></code></li>
+<li><code><a title="pcgsepy.hullbuilder.HullBuilder.try_smoothing" href="#pcgsepy.hullbuilder.HullBuilder.try_smoothing">try_smoothing</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

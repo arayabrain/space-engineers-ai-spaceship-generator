@@ -1,0 +1,3516 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>pcgsepy.common.jsonrpc API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pcgsepy.common.jsonrpc</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from __future__ import unicode_literals
+
+#!/usr/bin/env python
+# -*- coding: ascii -*-
+&#34;&#34;&#34;
+JSON-RPC (remote procedure call).
+
+It consists of 3 (independent) parts:
+    - proxy/dispatcher
+    - data structure / serializer
+    - transport
+
+It&#39;s intended for JSON-RPC, but since the above 3 parts are independent,
+it could be used for other RPCs as well.
+
+Currently, JSON-RPC 2.0(pre) and JSON-RPC 1.0 are implemented
+
+:Version:   2008-08-31-beta
+:Status:    experimental
+
+:Example:
+    simple Client with JsonRPC2.0 and TCP/IP::
+
+        &gt;&gt;&gt; proxy = ServerProxy( JsonRpc20(), TransportTcpIp(addr=(&#34;127.0.0.1&#34;,31415)) )
+        &gt;&gt;&gt; proxy.echo( &#34;hello world&#34; )
+        u&#39;hello world&#39;
+        &gt;&gt;&gt; proxy.echo( &#34;bye.&#34; )
+        u&#39;bye.&#39;
+
+    simple Server with JsonRPC2.0 and TCP/IP with logging to STDOUT::
+
+        &gt;&gt;&gt; server = Server( JsonRpc20(), TransportTcpIp(addr=(&#34;127.0.0.1&#34;,31415), logfunc=log_stdout) )
+        &gt;&gt;&gt; def echo( s ):
+        ...   return s
+        &gt;&gt;&gt; server.register_function( echo )
+        &gt;&gt;&gt; server.serve( 2 )   # serve 2 requests          # doctest: +ELLIPSIS
+        listen (&#39;127.0.0.1&#39;, 31415)
+        (&#39;127.0.0.1&#39;, ...) connected
+        (&#39;127.0.0.1&#39;, ...) &lt;-- {&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: &#34;echo&#34;, &#34;params&#34;: [&#34;hello world&#34;], &#34;id&#34;: 0}
+        (&#39;127.0.0.1&#39;, ...) --&gt; {&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;result&#34;: &#34;hello world&#34;, &#34;id&#34;: 0}
+        (&#39;127.0.0.1&#39;, ...) close
+        (&#39;127.0.0.1&#39;, ...) connected
+        (&#39;127.0.0.1&#39;, ...) &lt;-- {&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: &#34;echo&#34;, &#34;params&#34;: [&#34;bye.&#34;], &#34;id&#34;: 0}
+        (&#39;127.0.0.1&#39;, ...) --&gt; {&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;result&#34;: &#34;bye.&#34;, &#34;id&#34;: 0}
+        (&#39;127.0.0.1&#39;, ...) close
+        close (&#39;127.0.0.1&#39;, 31415)
+
+    Client with JsonRPC2.0 and an abstract Unix Domain Socket::
+    
+        &gt;&gt;&gt; proxy = ServerProxy( JsonRpc20(), TransportUnixSocket(addr=&#34;\\x00.rpcsocket&#34;) )
+        &gt;&gt;&gt; proxy.hi( message=&#34;hello&#34; )         #named parameters
+        u&#39;hi there&#39;
+        &gt;&gt;&gt; proxy.test()                        #fault
+        Traceback (most recent call last):
+          ...
+        jsonrpc.RPCMethodNotFound: &lt;RPCFault -32601: u&#39;Method not found.&#39; (None)&gt;
+        &gt;&gt;&gt; proxy.debug.echo( &#34;hello world&#34; )   #hierarchical procedures
+        u&#39;hello world&#39;
+
+    Server with JsonRPC2.0 and abstract Unix Domain Socket with a logfile::
+        
+        &gt;&gt;&gt; server = Server( JsonRpc20(), TransportUnixSocket(addr=&#34;\\x00.rpcsocket&#34;, logfunc=log_file(&#34;mylog.txt&#34;)) )
+        &gt;&gt;&gt; def echo( s ):
+        ...   return s
+        &gt;&gt;&gt; def hi( message ):
+        ...   return &#34;hi there&#34;
+        &gt;&gt;&gt; server.register_function( hi )
+        &gt;&gt;&gt; server.register_function( echo, name=&#34;debug.echo&#34; )
+        &gt;&gt;&gt; server.serve( 3 )   # serve 3 requests
+
+        &#34;mylog.txt&#34; then contains:
+        listen &#39;\\x00.rpcsocket&#39;
+        &#39;&#39; connected
+        &#39;&#39; --&gt; &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: &#34;hi&#34;, &#34;params&#34;: {&#34;message&#34;: &#34;hello&#34;}, &#34;id&#34;: 0}&#39;
+        &#39;&#39; &lt;-- &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;result&#34;: &#34;hi there&#34;, &#34;id&#34;: 0}&#39;
+        &#39;&#39; close
+        &#39;&#39; connected
+        &#39;&#39; --&gt; &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: &#34;test&#34;, &#34;id&#34;: 0}&#39;
+        &#39;&#39; &lt;-- &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;error&#34;: {&#34;code&#34;:-32601, &#34;message&#34;: &#34;Method not found.&#34;}, &#34;id&#34;: 0}&#39;
+        &#39;&#39; close
+        &#39;&#39; connected
+        &#39;&#39; --&gt; &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: &#34;debug.echo&#34;, &#34;params&#34;: [&#34;hello world&#34;], &#34;id&#34;: 0}&#39;
+        &#39;&#39; &lt;-- &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;result&#34;: &#34;hello world&#34;, &#34;id&#34;: 0}&#39;
+        &#39;&#39; close
+        close &#39;\\x00.rpcsocket&#39;
+
+:Note:      all exceptions derived from RPCFault are propagated to the client.
+            other exceptions are logged and result in a sent-back &#34;empty&#34; INTERNAL_ERROR.
+:Uses:      simplejson, socket, sys,time,codecs
+:SeeAlso:   JSON-RPC 2.0 proposal, 1.0 specification
+:Warning:
+    .. Warning::
+        This is **experimental** code!
+:Bug:
+
+:Author:    Roland Koebler (rk(at)simple-is-better.org)
+:Copyright: 2007-2008 by Roland Koebler (rk(at)simple-is-better.org)
+:License:   see __license__
+:Changelog:
+        - 2008-08-31:     1st release
+
+TODO:
+        - server: multithreading rpc-server
+        - client: multicall (send several requests)
+        - transport: SSL sockets, maybe HTTP, HTTPS
+        - types: support for date/time (ISO 8601)
+        - errors: maybe customizable error-codes/exceptions
+        - mixed 1.0/2.0 server ?
+        - system description etc. ?
+        - maybe test other json-serializers, like cjson?
+&#34;&#34;&#34;
+
+__version__ = &#34;2008-08-31-beta&#34;
+__author__   = &#34;Roland Koebler &lt;rk(at)simple-is-better.org&gt;&#34;
+__license__  = &#34;&#34;&#34;Copyright (c) 2007-2008 by Roland Koebler (rk(at)simple-is-better.org)
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+&#34;Software&#34;), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED &#34;AS IS&#34;, WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.&#34;&#34;&#34;
+
+#=========================================
+#import
+
+import sys
+
+#=========================================
+# errors
+
+#----------------------
+# error-codes + exceptions
+
+#JSON-RPC 2.0 error-codes
+PARSE_ERROR           = -32700
+INVALID_REQUEST       = -32600
+METHOD_NOT_FOUND      = -32601
+INVALID_METHOD_PARAMS = -32602  #invalid number/type of parameters
+INTERNAL_ERROR        = -32603  #&#34;all other errors&#34;
+
+#additional error-codes
+PROCEDURE_EXCEPTION    = -32000
+AUTHENTIFICATION_ERROR = -32001
+PERMISSION_DENIED      = -32002
+INVALID_PARAM_VALUES   = -32003
+
+#human-readable messages
+ERROR_MESSAGE = {
+    PARSE_ERROR           : &#34;Parse error.&#34;,
+    INVALID_REQUEST       : &#34;Invalid Request.&#34;,
+    METHOD_NOT_FOUND      : &#34;Method not found.&#34;,
+    INVALID_METHOD_PARAMS : &#34;Invalid parameters.&#34;,
+    INTERNAL_ERROR        : &#34;Internal error.&#34;,
+
+    PROCEDURE_EXCEPTION   : &#34;Procedure exception.&#34;,
+    AUTHENTIFICATION_ERROR : &#34;Authentification error.&#34;,
+    PERMISSION_DENIED   : &#34;Permission denied.&#34;,
+    INVALID_PARAM_VALUES: &#34;Invalid parameter values.&#34;
+    }
+ 
+#----------------------
+# exceptions
+
+class RPCError(Exception):
+    &#34;&#34;&#34;Base class for rpc-errors.&#34;&#34;&#34;
+
+
+class RPCTransportError(RPCError):
+    &#34;&#34;&#34;Transport error.&#34;&#34;&#34;
+class RPCTimeoutError(RPCTransportError):
+    &#34;&#34;&#34;Transport/reply timeout.&#34;&#34;&#34;
+
+class RPCFault(RPCError):
+    &#34;&#34;&#34;RPC error/fault package received.
+    
+    This exception can also be used as a class, to generate a
+    RPC-error/fault message.
+
+    :Variables:
+        - error_code:   the RPC error-code
+        - error_string: description of the error
+        - error_data:   optional additional information
+                        (must be json-serializable)
+    :TODO: improve __str__
+    &#34;&#34;&#34;
+    def __init__(self, error_code, error_message, error_data=None):
+        RPCError.__init__(self)
+        self.error_code   = error_code
+        self.error_message = error_message
+        self.error_data   = error_data
+    def __str__(self):
+        return repr(self)
+    def __repr__(self):
+        return( &#34;&lt;RPCFault %s: %s (%s)&gt;&#34; % (self.error_code, repr(self.error_message), repr(self.error_data)) )
+
+class RPCParseError(RPCFault):
+    &#34;&#34;&#34;Broken rpc-package. (PARSE_ERROR)&#34;&#34;&#34;
+    def __init__(self, error_data=None):
+        RPCFault.__init__(self, PARSE_ERROR, ERROR_MESSAGE[PARSE_ERROR], error_data)
+
+class RPCInvalidRPC(RPCFault):
+    &#34;&#34;&#34;Invalid rpc-package. (INVALID_REQUEST)&#34;&#34;&#34;
+    def __init__(self, error_data=None):
+        RPCFault.__init__(self, INVALID_REQUEST, ERROR_MESSAGE[INVALID_REQUEST], error_data)
+
+class RPCMethodNotFound(RPCFault):
+    &#34;&#34;&#34;Method not found. (METHOD_NOT_FOUND)&#34;&#34;&#34;
+    def __init__(self, error_data=None):
+        RPCFault.__init__(self, METHOD_NOT_FOUND, ERROR_MESSAGE[METHOD_NOT_FOUND], error_data)
+
+class RPCInvalidMethodParams(RPCFault):
+    &#34;&#34;&#34;Invalid method-parameters. (INVALID_METHOD_PARAMS)&#34;&#34;&#34;
+    def __init__(self, error_data=None):
+        RPCFault.__init__(self, INVALID_METHOD_PARAMS, ERROR_MESSAGE[INVALID_METHOD_PARAMS], error_data)
+
+class RPCInternalError(RPCFault):
+    &#34;&#34;&#34;Internal error. (INTERNAL_ERROR)&#34;&#34;&#34;
+    def __init__(self, error_data=None):
+        RPCFault.__init__(self, INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR], error_data)
+
+
+class RPCProcedureException(RPCFault):
+    &#34;&#34;&#34;Procedure exception. (PROCEDURE_EXCEPTION)&#34;&#34;&#34;
+    def __init__(self, error_data=None):
+        RPCFault.__init__(self, PROCEDURE_EXCEPTION, ERROR_MESSAGE[PROCEDURE_EXCEPTION], error_data)
+class RPCAuthentificationError(RPCFault):
+    &#34;&#34;&#34;AUTHENTIFICATION_ERROR&#34;&#34;&#34;
+    def __init__(self, error_data=None):
+        RPCFault.__init__(self, AUTHENTIFICATION_ERROR, ERROR_MESSAGE[AUTHENTIFICATION_ERROR], error_data)
+class RPCPermissionDenied(RPCFault):
+    &#34;&#34;&#34;PERMISSION_DENIED&#34;&#34;&#34;
+    def __init__(self, error_data=None):
+        RPCFault.__init__(self, PERMISSION_DENIED, ERROR_MESSAGE[PERMISSION_DENIED], error_data)
+class RPCInvalidParamValues(RPCFault):
+    &#34;&#34;&#34;INVALID_PARAM_VALUES&#34;&#34;&#34;
+    def __init__(self, error_data=None):
+        RPCFault.__init__(self, INVALID_PARAM_VALUES, ERROR_MESSAGE[INVALID_PARAM_VALUES], error_data)
+
+
+#=========================================
+# data structure / serializer
+
+try:
+    import simplejson
+except ImportError as err:
+    print(&#34;FATAL: json-module &#39;simplejson&#39; is missing (%s)&#34; % (err))
+    sys.exit(1)
+
+#----------------------
+#
+def dictkeyclean(d):
+    &#34;&#34;&#34;Convert all keys of the dict &#39;d&#39; to (ascii-)strings.
+
+    :Raises: UnicodeEncodeError
+    &#34;&#34;&#34;
+    new_d = {}
+    for (k, v) in d.iteritems():
+        new_d[str(k)] = v
+    return new_d
+
+#----------------------
+# JSON-RPC 1.0
+
+class JsonRpc10:
+    &#34;&#34;&#34;JSON-RPC V1.0 data-structure / serializer
+
+    This implementation is quite liberal in what it accepts: It treats
+    missing &#34;params&#34; and &#34;id&#34; in Requests and missing &#34;result&#34;/&#34;error&#34; in
+    Responses as empty/null.
+
+    :SeeAlso:   JSON-RPC 1.0 specification
+    :TODO:      catch simplejson.dumps not-serializable-exceptions
+    &#34;&#34;&#34;
+    def __init__(self, dumps=simplejson.dumps, loads=simplejson.loads):
+        &#34;&#34;&#34;init: set serializer to use
+
+        :Parameters:
+            - dumps: json-encoder-function
+            - loads: json-decoder-function
+        :Note: The dumps_* functions of this class already directly create
+               the invariant parts of the resulting json-object themselves,
+               without using the given json-encoder-function.
+        &#34;&#34;&#34;
+        self.dumps = dumps
+        self.loads = loads
+
+    def dumps_request( self, method, params=(), id=0 ):
+        &#34;&#34;&#34;serialize JSON-RPC-Request
+
+        :Parameters:
+            - method: the method-name (str/unicode)
+            - params: the parameters (list/tuple)
+            - id:     if id=None, this results in a Notification
+        :Returns:   | {&#34;method&#34;: &#34;...&#34;, &#34;params&#34;: ..., &#34;id&#34;: ...}
+                    | &#34;method&#34;, &#34;params&#34; and &#34;id&#34; are always in this order.
+        :Raises:    TypeError if method/params is of wrong type or 
+                    not JSON-serializable
+        &#34;&#34;&#34;
+        if not isinstance(method, (str, unicode_literals)):
+            raise TypeError(&#39;&#34;method&#34; must be a string (or unicode string).&#39;)
+        if not isinstance(params, (tuple, list)):
+            raise TypeError(&#34;params must be a tuple/list.&#34;)
+
+        return &#39;{&#34;method&#34;: %s, &#34;params&#34;: %s, &#34;id&#34;: %s}&#39; % \
+                (self.dumps(method), self.dumps(params), self.dumps(id))
+
+    def dumps_notification( self, method, params=() ):
+        &#34;&#34;&#34;serialize a JSON-RPC-Notification
+
+        :Parameters: see dumps_request
+        :Returns:   | {&#34;method&#34;: &#34;...&#34;, &#34;params&#34;: ..., &#34;id&#34;: null}
+                    | &#34;method&#34;, &#34;params&#34; and &#34;id&#34; are always in this order.
+        :Raises:    see dumps_request
+        &#34;&#34;&#34;
+        if not isinstance(method, (str, unicode_literals)):
+            raise TypeError(&#39;&#34;method&#34; must be a string (or unicode string).&#39;)
+        if not isinstance(params, (tuple, list)):
+            raise TypeError(&#34;params must be a tuple/list.&#34;)
+
+        return &#39;{&#34;method&#34;: %s, &#34;params&#34;: %s, &#34;id&#34;: null}&#39; % \
+                (self.dumps(method), self.dumps(params))
+
+    def dumps_response( self, result, id=None ):
+        &#34;&#34;&#34;serialize a JSON-RPC-Response (without error)
+
+        :Returns:   | {&#34;result&#34;: ..., &#34;error&#34;: null, &#34;id&#34;: ...}
+                    | &#34;result&#34;, &#34;error&#34; and &#34;id&#34; are always in this order.
+        :Raises:    TypeError if not JSON-serializable
+        &#34;&#34;&#34;
+        return &#39;{&#34;result&#34;: %s, &#34;error&#34;: null, &#34;id&#34;: %s}&#39; % \
+                (self.dumps(result), self.dumps(id))
+
+    def dumps_error( self, error, id=None ):
+        &#34;&#34;&#34;serialize a JSON-RPC-Response-error
+
+        Since JSON-RPC 1.0 does not define an error-object, this uses the
+        JSON-RPC 2.0 error-object.
+      
+        :Parameters:
+            - error: a RPCFault instance
+        :Returns:   | {&#34;result&#34;: null, &#34;error&#34;: {&#34;code&#34;: error_code, &#34;message&#34;: error_message, &#34;data&#34;: error_data}, &#34;id&#34;: ...}
+                    | &#34;result&#34;, &#34;error&#34; and &#34;id&#34; are always in this order, data is omitted if None.
+        :Raises:    ValueError if error is not a RPCFault instance,
+                    TypeError if not JSON-serializable
+        &#34;&#34;&#34;
+        if not isinstance(error, RPCFault):
+            raise ValueError(&#34;&#34;&#34;error must be a RPCFault-instance.&#34;&#34;&#34;)
+        if error.error_data is None:
+            return &#39;{&#34;result&#34;: null, &#34;error&#34;: {&#34;code&#34;:%s, &#34;message&#34;: %s}, &#34;id&#34;: %s}&#39; % \
+                    (self.dumps(error.error_code), self.dumps(error.error_message), self.dumps(id))
+        else:
+            return &#39;{&#34;result&#34;: null, &#34;error&#34;: {&#34;code&#34;:%s, &#34;message&#34;: %s, &#34;data&#34;: %s}, &#34;id&#34;: %s}&#39; % \
+                    (self.dumps(error.error_code), self.dumps(error.error_message), self.dumps(error.error_data), self.dumps(id))
+
+    def loads_request( self, string ):
+        &#34;&#34;&#34;de-serialize a JSON-RPC Request/Notification
+
+        :Returns:   | [method_name, params, id] or [method_name, params]
+                    | params is a tuple/list
+                    | if id is missing, this is a Notification
+        :Raises:    RPCParseError, RPCInvalidRPC, RPCInvalidMethodParams
+        &#34;&#34;&#34;
+        try:
+            data = self.loads(string)
+        except ValueError as err:
+            raise RPCParseError(&#34;No valid JSON. (%s)&#34; % str(err))
+        if not isinstance(data, dict):  raise RPCInvalidRPC(&#34;No valid RPC-package.&#34;)
+        if &#34;method&#34; not in data:        raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, &#34;method&#34; is missing.&#34;&#34;&#34;)
+        if not isinstance(data[&#34;method&#34;], (str, unicode_literals)):
+            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, &#34;method&#34; must be a string.&#34;&#34;&#34;)
+        if &#34;id&#34;     not in data:        data[&#34;id&#34;]     = None   #be liberal
+        if &#34;params&#34; not in data:        data[&#34;params&#34;] = ()     #be liberal
+        if not isinstance(data[&#34;params&#34;], (list, tuple)):
+            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, &#34;params&#34; must be an array.&#34;&#34;&#34;)
+        if len(data) != 3:          raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, additional fields found.&#34;&#34;&#34;)
+
+        # notification / request
+        if data[&#34;id&#34;] is None:
+            return data[&#34;method&#34;], data[&#34;params&#34;]               #notification
+        else:
+            return data[&#34;method&#34;], data[&#34;params&#34;], data[&#34;id&#34;]   #request
+
+    def loads_response( self, string ):
+        &#34;&#34;&#34;de-serialize a JSON-RPC Response/error
+
+        :Returns: | [result, id] for Responses
+        :Raises:  | RPCFault+derivates for error-packages/faults, RPCParseError, RPCInvalidRPC
+                  | Note that for error-packages which do not match the
+                    V2.0-definition, RPCFault(-1, &#34;Error&#34;, RECEIVED_ERROR_OBJ)
+                    is raised.
+        &#34;&#34;&#34;
+        try:
+            data = self.loads(string)
+        except ValueError as err:
+            raise RPCParseError(&#34;No valid JSON. (%s)&#34; % str(err))
+        if not isinstance(data, dict):  raise RPCInvalidRPC(&#34;No valid RPC-package.&#34;)
+        if &#34;id&#34; not in data:            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, &#34;id&#34; missing.&#34;&#34;&#34;)
+        if &#34;result&#34; not in data:        data[&#34;result&#34;] = None    #be liberal
+        if &#34;error&#34;  not in data:        data[&#34;error&#34;]  = None    #be liberal
+        if len(data) != 3:              raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, additional or missing fields.&#34;&#34;&#34;)
+
+        #error
+        if data[&#34;error&#34;] is not None:
+            if data[&#34;result&#34;] is not None:
+                raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, one of &#34;result&#34; or &#34;error&#34; must be null.&#34;&#34;&#34;)
+            #v2.0 error-format
+            if( isinstance(data[&#34;error&#34;], dict)  and  &#34;code&#34; in data[&#34;error&#34;]  and  &#34;message&#34; in data[&#34;error&#34;]  and
+                (len(data[&#34;error&#34;])==2 or (&#34;data&#34; in data[&#34;error&#34;] and len(data[&#34;error&#34;])==3)) ):
+                if &#34;data&#34; not in data[&#34;error&#34;]:
+                    error_data = None
+                else:
+                    error_data = data[&#34;error&#34;][&#34;data&#34;]
+
+                if   data[&#34;error&#34;][&#34;code&#34;] == PARSE_ERROR:
+                    raise RPCParseError(error_data)
+                elif data[&#34;error&#34;][&#34;code&#34;] == INVALID_REQUEST:
+                    raise RPCInvalidRPC(error_data)
+                elif data[&#34;error&#34;][&#34;code&#34;] == METHOD_NOT_FOUND:
+                    raise RPCMethodNotFound(error_data)
+                elif data[&#34;error&#34;][&#34;code&#34;] == INVALID_METHOD_PARAMS:
+                    raise RPCInvalidMethodParams(error_data)
+                elif data[&#34;error&#34;][&#34;code&#34;] == INTERNAL_ERROR:
+                    raise RPCInternalError(error_data)
+                elif data[&#34;error&#34;][&#34;code&#34;] == PROCEDURE_EXCEPTION:
+                    raise RPCProcedureException(error_data)
+                elif data[&#34;error&#34;][&#34;code&#34;] == AUTHENTIFICATION_ERROR:
+                    raise RPCAuthentificationError(error_data)
+                elif data[&#34;error&#34;][&#34;code&#34;] == PERMISSION_DENIED:
+                    raise RPCPermissionDenied(error_data)
+                elif data[&#34;error&#34;][&#34;code&#34;] == INVALID_PARAM_VALUES:
+                    raise RPCInvalidParamValues(error_data)
+                else:
+                    raise RPCFault(data[&#34;error&#34;][&#34;code&#34;], data[&#34;error&#34;][&#34;message&#34;], error_data)
+            #other error-format
+            else:
+                raise RPCFault(-1, &#34;Error&#34;, data[&#34;error&#34;])
+        #result
+        else:
+            return data[&#34;result&#34;], data[&#34;id&#34;]
+
+#----------------------
+# JSON-RPC 2.0
+
+class JsonRpc20:
+    &#34;&#34;&#34;JSON-RPC V2.0 data-structure / serializer
+
+    :SeeAlso:   JSON-RPC 2.0 specification
+    :TODO:      catch simplejson.dumps not-serializable-exceptions
+    &#34;&#34;&#34;
+    def __init__(self, dumps=simplejson.dumps, loads=simplejson.loads):
+        &#34;&#34;&#34;init: set serializer to use
+
+        :Parameters:
+            - dumps: json-encoder-function
+            - loads: json-decoder-function
+        :Note: The dumps_* functions of this class already directly create
+               the invariant parts of the resulting json-object themselves,
+               without using the given json-encoder-function.
+        &#34;&#34;&#34;
+        self.dumps = dumps
+        self.loads = loads
+
+    def dumps_request( self, method, params=(), id=0 ):
+        &#34;&#34;&#34;serialize JSON-RPC-Request
+
+        :Parameters:
+            - method: the method-name (str/unicode)
+            - params: the parameters (list/tuple/dict)
+            - id:     the id (should not be None)
+        :Returns:   | {&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: &#34;...&#34;, &#34;params&#34;: ..., &#34;id&#34;: ...}
+                    | &#34;jsonrpc&#34;, &#34;method&#34;, &#34;params&#34; and &#34;id&#34; are always in this order.
+                    | &#34;params&#34; is omitted if empty
+        :Raises:    TypeError if method/params is of wrong type or 
+                    not JSON-serializable
+        &#34;&#34;&#34;
+        if not isinstance(method, (str, unicode_literals)):
+            raise TypeError(&#39;&#34;method&#34; must be a string (or unicode string).&#39;)
+        if not isinstance(params, (tuple, list, dict)):
+            raise TypeError(&#34;params must be a tuple/list/dict or None.&#34;)
+
+        if params:
+            return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: %s, &#34;params&#34;: %s, &#34;id&#34;: %s}&#39; % \
+                    (self.dumps(method), self.dumps(params), self.dumps(id))
+        else:
+            return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: %s, &#34;id&#34;: %s}&#39; % \
+                    (self.dumps(method), self.dumps(id))
+
+    def dumps_notification( self, method, params=() ):
+        &#34;&#34;&#34;serialize a JSON-RPC-Notification
+
+        :Parameters: see dumps_request
+        :Returns:   | {&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: &#34;...&#34;, &#34;params&#34;: ...}
+                    | &#34;jsonrpc&#34;, &#34;method&#34; and &#34;params&#34; are always in this order.
+        :Raises:    see dumps_request
+        &#34;&#34;&#34;
+        if not isinstance(method, (str, unicode_literals)):
+            raise TypeError(&#39;&#34;method&#34; must be a string (or unicode string).&#39;)
+        if not isinstance(params, (tuple, list, dict)):
+            raise TypeError(&#34;params must be a tuple/list/dict or None.&#34;)
+
+        if params:
+            return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: %s, &#34;params&#34;: %s}&#39; % \
+                    (self.dumps(method), self.dumps(params))
+        else:
+            return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: %s}&#39; % \
+                    (self.dumps(method))
+
+    def dumps_response( self, result, id=None ):
+        &#34;&#34;&#34;serialize a JSON-RPC-Response (without error)
+
+        :Returns:   | {&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;result&#34;: ..., &#34;id&#34;: ...}
+                    | &#34;jsonrpc&#34;, &#34;result&#34;, and &#34;id&#34; are always in this order.
+        :Raises:    TypeError if not JSON-serializable
+        &#34;&#34;&#34;
+        return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;result&#34;: %s, &#34;id&#34;: %s}&#39; % \
+                (self.dumps(result), self.dumps(id))
+
+    def dumps_error( self, error, id=None ):
+        &#34;&#34;&#34;serialize a JSON-RPC-Response-error
+      
+        :Parameters:
+            - error: a RPCFault instance
+        :Returns:   | {&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;error&#34;: {&#34;code&#34;: error_code, &#34;message&#34;: error_message, &#34;data&#34;: error_data}, &#34;id&#34;: ...}
+                    | &#34;jsonrpc&#34;, &#34;result&#34;, &#34;error&#34; and &#34;id&#34; are always in this order, data is omitted if None.
+        :Raises:    ValueError if error is not a RPCFault instance,
+                    TypeError if not JSON-serializable
+        &#34;&#34;&#34;
+        if not isinstance(error, RPCFault):
+            raise ValueError(&#34;&#34;&#34;error must be a RPCFault-instance.&#34;&#34;&#34;)
+        if error.error_data is None:
+            return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;error&#34;: {&#34;code&#34;:%s, &#34;message&#34;: %s}, &#34;id&#34;: %s}&#39; % \
+                    (self.dumps(error.error_code), self.dumps(error.error_message), self.dumps(id))
+        else:
+            return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;error&#34;: {&#34;code&#34;:%s, &#34;message&#34;: %s, &#34;data&#34;: %s}, &#34;id&#34;: %s}&#39; % \
+                    (self.dumps(error.error_code), self.dumps(error.error_message), self.dumps(error.error_data), self.dumps(id))
+
+    def loads_request( self, string ):
+        &#34;&#34;&#34;de-serialize a JSON-RPC Request/Notification
+
+        :Returns:   | [method_name, params, id] or [method_name, params]
+                    | params is a tuple/list or dict (with only str-keys)
+                    | if id is missing, this is a Notification
+        :Raises:    RPCParseError, RPCInvalidRPC, RPCInvalidMethodParams
+        &#34;&#34;&#34;
+        try:
+            data = self.loads(string)
+        except ValueError as err:
+            raise RPCParseError(&#34;No valid JSON. (%s)&#34; % str(err))
+        if not isinstance(data, dict):  raise RPCInvalidRPC(&#34;No valid RPC-package.&#34;)
+        if &#34;jsonrpc&#34; not in data:       raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, &#34;jsonrpc&#34; missing.&#34;&#34;&#34;)
+        if not isinstance(data[&#34;jsonrpc&#34;], (str, unicode_literals)):
+            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, &#34;jsonrpc&#34; must be a string.&#34;&#34;&#34;)
+        if data[&#34;jsonrpc&#34;] != &#34;2.0&#34;:    raise RPCInvalidRPC(&#34;&#34;&#34;Invalid jsonrpc version.&#34;&#34;&#34;)
+        if &#34;method&#34; not in data:        raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, &#34;method&#34; is missing.&#34;&#34;&#34;)
+        if not isinstance(data[&#34;method&#34;], (str, unicode_literals)):
+            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, &#34;method&#34; must be a string.&#34;&#34;&#34;)
+        if &#34;params&#34; not in data:        data[&#34;params&#34;] = ()
+        #convert params-keys from unicode to str
+        elif isinstance(data[&#34;params&#34;], dict):
+            try:
+                data[&#34;params&#34;] = dictkeyclean(data[&#34;params&#34;])
+            except UnicodeEncodeError:
+                raise RPCInvalidMethodParams(&#34;Parameter-names must be in ascii.&#34;)
+        elif not isinstance(data[&#34;params&#34;], (list, tuple)):
+            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, &#34;params&#34; must be an array or object.&#34;&#34;&#34;)
+        if not( len(data)==3 or (&#34;id&#34; in data and len(data)==4) ):
+            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, additional fields found.&#34;&#34;&#34;)
+
+        # notification / request
+        if &#34;id&#34; not in data:
+            return data[&#34;method&#34;], data[&#34;params&#34;]               #notification
+        else:
+            return data[&#34;method&#34;], data[&#34;params&#34;], data[&#34;id&#34;]   #request
+
+    def loads_response( self, string ):
+        &#34;&#34;&#34;de-serialize a JSON-RPC Response/error
+
+        :Returns: | [result, id] for Responses
+        :Raises:  | RPCFault+derivates for error-packages/faults, RPCParseError, RPCInvalidRPC
+        &#34;&#34;&#34;
+        try:
+            data = self.loads(string)
+        except ValueError as err:
+            raise RPCParseError(&#34;No valid JSON. (%s)&#34; % str(err))
+        if not isinstance(data, dict):  raise RPCInvalidRPC(&#34;No valid RPC-package.&#34;)
+        if &#34;jsonrpc&#34; not in data:       raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, &#34;jsonrpc&#34; missing.&#34;&#34;&#34;)
+        if not isinstance(data[&#34;jsonrpc&#34;], (str, unicode_literals)):
+            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, &#34;jsonrpc&#34; must be a string.&#34;&#34;&#34;)
+        if data[&#34;jsonrpc&#34;] != &#34;2.0&#34;:    raise RPCInvalidRPC(&#34;&#34;&#34;Invalid jsonrpc version.&#34;&#34;&#34;)
+        if &#34;id&#34; not in data:            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, &#34;id&#34; missing.&#34;&#34;&#34;)
+        if &#34;result&#34; not in data:        data[&#34;result&#34;] = None
+        if &#34;error&#34;  not in data:        data[&#34;error&#34;]  = None
+        if len(data) != 4:              raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, additional or missing fields.&#34;&#34;&#34;)
+
+        #error
+        if data[&#34;error&#34;] is not None:
+            if data[&#34;result&#34;] is not None:
+                raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, only &#34;result&#34; OR &#34;error&#34; allowed.&#34;&#34;&#34;)
+            if not isinstance(data[&#34;error&#34;], dict): raise RPCInvalidRPC(&#34;Invalid Response, invalid error-object.&#34;)
+            if &#34;code&#34; not in data[&#34;error&#34;]  or  &#34;message&#34; not in data[&#34;error&#34;]:
+                raise RPCInvalidRPC(&#34;Invalid Response, invalid error-object.&#34;)
+            if &#34;data&#34; not in data[&#34;error&#34;]:  data[&#34;error&#34;][&#34;data&#34;] = None
+            if len(data[&#34;error&#34;]) != 3:
+                raise RPCInvalidRPC(&#34;Invalid Response, invalid error-object.&#34;)
+
+            error_data = data[&#34;error&#34;][&#34;data&#34;]
+            if   data[&#34;error&#34;][&#34;code&#34;] == PARSE_ERROR:
+                raise RPCParseError(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == INVALID_REQUEST:
+                raise RPCInvalidRPC(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == METHOD_NOT_FOUND:
+                raise RPCMethodNotFound(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == INVALID_METHOD_PARAMS:
+                raise RPCInvalidMethodParams(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == INTERNAL_ERROR:
+                raise RPCInternalError(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == PROCEDURE_EXCEPTION:
+                raise RPCProcedureException(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == AUTHENTIFICATION_ERROR:
+                raise RPCAuthentificationError(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == PERMISSION_DENIED:
+                raise RPCPermissionDenied(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == INVALID_PARAM_VALUES:
+                raise RPCInvalidParamValues(error_data)
+            else:
+                raise RPCFault(data[&#34;error&#34;][&#34;code&#34;], data[&#34;error&#34;][&#34;message&#34;], error_data)
+        #result
+        else:
+            return data[&#34;result&#34;], data[&#34;id&#34;]
+
+
+#=========================================
+# transports
+
+#----------------------
+# transport-logging
+
+import codecs
+import time
+
+def log_dummy( message ):
+    &#34;&#34;&#34;dummy-logger: do nothing&#34;&#34;&#34;
+    pass
+def log_stdout( message ):
+    &#34;&#34;&#34;print message to STDOUT&#34;&#34;&#34;
+    print(message)
+
+def log_file( filename ):
+    &#34;&#34;&#34;return a logfunc which logs to a file (in utf-8)&#34;&#34;&#34;
+    def logfile( message ):
+        f = codecs.open( filename, &#39;a&#39;, encoding=&#39;utf-8&#39; )
+        f.write( message+&#34;\n&#34; )
+        f.close()
+    return logfile
+
+def log_filedate( filename ):
+    &#34;&#34;&#34;return a logfunc which logs date+message to a file (in utf-8)&#34;&#34;&#34;
+    def logfile( message ):
+        f = codecs.open( filename, &#39;a&#39;, encoding=&#39;utf-8&#39; )
+        f.write( time.strftime(&#34;%Y-%m-%d %H:%M:%S &#34;)+message+&#34;\n&#34; )
+        f.close()
+    return logfile
+
+#----------------------
+
+class Transport:
+    &#34;&#34;&#34;generic Transport-interface.
+    
+    This class, and especially its methods and docstrings,
+    define the Transport-Interface.
+    &#34;&#34;&#34;
+    def __init__(self):
+        pass
+
+    def send( self, data ):
+        &#34;&#34;&#34;send all data. must be implemented by derived classes.&#34;&#34;&#34;
+        raise NotImplementedError
+    def recv( self ):
+        &#34;&#34;&#34;receive data. must be implemented by derived classes.&#34;&#34;&#34;
+        raise NotImplementedError
+
+    def sendrecv( self, string ):
+        &#34;&#34;&#34;send + receive data&#34;&#34;&#34;
+        self.send( string )
+        return self.recv()
+    def serve( self, handler, n=None ):
+        &#34;&#34;&#34;serve (forever or for n communicaions).
+        
+        - receive data
+        - call result = handler(data)
+        - send back result if not None
+
+        The serving can be stopped by SIGINT.
+
+        :TODO:
+            - how to stop?
+              maybe use a .run-file, and stop server if file removed?
+            - maybe make n_current accessible? (e.g. for logging)
+        &#34;&#34;&#34;
+        n_current = 0
+        while 1:
+            if n is not None  and  n_current &gt;= n:
+                break
+            data = self.recv()
+            result = handler(data)
+            if result is not None:
+                self.send( result )
+            n_current += 1
+
+
+class TransportSTDINOUT(Transport):
+    &#34;&#34;&#34;receive from STDIN, send to STDOUT.
+
+    Useful e.g. for debugging.
+    &#34;&#34;&#34;
+    def send(self, string):
+        &#34;&#34;&#34;write data to STDOUT with &#39;***SEND:&#39; prefix &#34;&#34;&#34;
+        print(&#34;***SEND:&#34;)
+        print(string)
+    def recv(self):
+        &#34;&#34;&#34;read data from STDIN&#34;&#34;&#34;
+        print(&#34;***RECV (please enter, ^D ends.):&#34;)
+        return sys.stdin.read()
+
+
+import socket, select
+class TransportSocket(Transport):
+    &#34;&#34;&#34;Transport via socket.
+   
+    :SeeAlso:   python-module socket
+    :TODO:
+        - documentation
+        - improve this (e.g. make sure that connections are closed, socket-files are deleted etc.)
+        - exception-handling? (socket.error)
+    &#34;&#34;&#34;
+    def __init__( self, addr, limit=4096, sock_type=socket.AF_INET, sock_prot=socket.SOCK_STREAM, timeout=1.0, logfunc=log_dummy ):
+        &#34;&#34;&#34;
+        :Parameters:
+            - addr: socket-address
+            - timeout: timeout in seconds
+            - logfunc: function for logging, logfunc(message)
+        :Raises: socket.timeout after timeout
+        &#34;&#34;&#34;
+        self.limit  = limit
+        self.addr   = addr
+        self.s_type = sock_type
+        self.s_prot = sock_prot
+        self.s      = None
+        self.timeout = timeout
+        self.log    = logfunc
+    def connect( self ):
+        self.close()
+        self.log( &#34;connect to %s&#34; % repr(self.addr) )
+        self.s = socket.socket( self.s_type, self.s_prot )
+        self.s.settimeout( self.timeout )
+        self.s.connect( self.addr )
+    def close( self ):
+        if self.s is not None:
+            self.log( &#34;close %s&#34; % repr(self.addr) )
+            self.s.close()
+            self.s = None
+    def __repr__(self):
+        return &#34;&lt;TransportSocket, %s&gt;&#34; % repr(self.addr)
+    
+    def send( self, string ):
+        if self.s is None:
+            self.connect()
+        self.log( &#34;--&gt; &#34;+repr(string) )
+        self.s.sendall( string )
+    def recv( self ):
+        if self.s is None:
+            self.connect()
+        data = self.s.recv( self.limit )
+        while( select.select((self.s,), (), (), 0.1)[0] ):  #TODO: this select is probably not necessary, because server closes this socket
+            d = self.s.recv( self.limit )
+            if len(d) == 0:
+                break
+            data += d
+        self.log( &#34;&lt;-- &#34;+repr(data) )
+        return data
+
+    def sendrecv( self, string ):
+        &#34;&#34;&#34;send data + receive data + close&#34;&#34;&#34;
+        try:
+            self.send( string )
+            return self.recv()
+        finally:
+            self.close()
+    def serve(self, handler, n=None):
+        &#34;&#34;&#34;open socket, wait for incoming connections and handle them.
+        
+        :Parameters:
+            - n: serve n requests, None=forever
+        &#34;&#34;&#34;
+        self.close()
+        self.s = socket.socket( self.s_type, self.s_prot )
+        try:
+            self.log( &#34;listen %s&#34; % repr(self.addr) )
+            self.s.bind( self.addr )
+            self.s.listen(1)
+            n_current = 0
+            while 1:
+                if n is not None  and  n_current &gt;= n:
+                    break
+                conn, addr = self.s.accept()
+                self.log( &#34;%s connected&#34; % repr(addr) )
+                data = conn.recv(self.limit)
+                self.log( &#34;%s --&gt; %s&#34; % (repr(addr), repr(data)) )
+                result = handler(data)
+                if data is not None:
+                    self.log( &#34;%s &lt;-- %s&#34; % (repr(addr), repr(result)) )
+                    conn.send( result )
+                self.log( &#34;%s close&#34; % repr(addr) )
+                conn.close()
+                n_current += 1
+        finally:
+            self.close()
+
+
+if hasattr(socket, &#39;AF_UNIX&#39;):
+    
+    class TransportUnixSocket(TransportSocket):
+        &#34;&#34;&#34;Transport via Unix Domain Socket.
+        &#34;&#34;&#34;
+        def __init__(self, addr=None, limit=4096, timeout=1.0, logfunc=log_dummy):
+            &#34;&#34;&#34;
+            :Parameters:
+                - addr: &#34;socket_file&#34;
+            :Note: | The socket-file is not deleted.
+                   | If the socket-file begins with \x00, abstract sockets are used,
+                     and no socket-file is created.
+            :SeeAlso:   TransportSocket
+            &#34;&#34;&#34;
+            TransportSocket.__init__( self, addr, limit, socket.AF_UNIX, socket.SOCK_STREAM, timeout, logfunc )
+
+class TransportTcpIp(TransportSocket):
+    &#34;&#34;&#34;Transport via TCP/IP.
+    &#34;&#34;&#34;
+    def __init__(self, addr=None, limit=4096, timeout=1.0, logfunc=log_dummy):
+        &#34;&#34;&#34;
+        :Parameters:
+            - addr: (&#34;host&#34;,port)
+        :SeeAlso:   TransportSocket
+        &#34;&#34;&#34;
+        TransportSocket.__init__( self, addr, limit, socket.AF_INET, socket.SOCK_STREAM, timeout, logfunc )
+
+
+#=========================================
+# client side: server proxy
+
+class ServerProxy:
+    &#34;&#34;&#34;RPC-client: server proxy
+
+    A logical connection to a RPC server.
+
+    It works with different data/serializers and different transports.
+
+    Notifications and id-handling/multicall are not yet implemented.
+
+    :Example:
+        see module-docstring
+
+    :TODO: verbose/logging?
+    &#34;&#34;&#34;
+    def __init__( self, data_serializer, transport ):
+        &#34;&#34;&#34;
+        :Parameters:
+            - data_serializer: a data_structure+serializer-instance
+            - transport: a Transport instance
+        &#34;&#34;&#34;
+        #TODO: check parameters
+        self.__data_serializer = data_serializer
+        if not isinstance(transport, Transport):
+            raise ValueError(&#39;invalid &#34;transport&#34; (must be a Transport-instance)&#34;&#39;)
+        self.__transport = transport
+
+    def __str__(self):
+        return repr(self)
+    def __repr__(self):
+        return &#34;&lt;ServerProxy for %s, with serializer %s&gt;&#34; % (self.__transport, self.__data_serializer)
+
+    def __req( self, methodname, args=None, kwargs=None, id=0 ):
+        # JSON-RPC 1.0: only positional parameters
+        if len(kwargs) &gt; 0 and isinstance(self.data_serializer, JsonRpc10):
+            raise ValueError(&#34;Only positional parameters allowed in JSON-RPC 1.0&#34;)
+        # JSON-RPC 2.0: only args OR kwargs allowed!
+        if len(args) &gt; 0 and len(kwargs) &gt; 0:
+            raise ValueError(&#34;Only positional or named parameters are allowed!&#34;)
+        if len(kwargs) == 0:
+            req_str  = self.__data_serializer.dumps_request( methodname, args, id )
+        else:
+            req_str  = self.__data_serializer.dumps_request( methodname, kwargs, id )
+
+        try:
+            resp_str = self.__transport.sendrecv( req_str )
+        except Exception as err:
+            raise RPCTransportError(err)
+        resp = self.__data_serializer.loads_response( resp_str )
+        return resp[0]
+
+    def __getattr__(self, name):
+        # magic method dispatcher
+        #  note: to call a remote object with an non-standard name, use
+        #  result getattr(my_server_proxy, &#34;strange-python-name&#34;)(args)
+        return _method(self.__req, name)
+
+# request dispatcher
+class _method:
+    &#34;&#34;&#34;some &#34;magic&#34; to bind an RPC method to an RPC server.
+
+    Supports &#34;nested&#34; methods (e.g. examples.getStateName).
+
+    :Raises: AttributeError for method-names/attributes beginning with &#39;_&#39;.
+    &#34;&#34;&#34;
+    def __init__(self, req, name):
+        if name[0] == &#34;_&#34;:  #prevent rpc-calls for proxy._*-functions
+            raise AttributeError(&#34;invalid attribute &#39;%s&#39;&#34; % name)
+        self.__req  = req
+        self.__name = name
+    def __getattr__(self, name):
+        if name[0] == &#34;_&#34;:  #prevent rpc-calls for proxy._*-functions
+            raise AttributeError(&#34;invalid attribute &#39;%s&#39;&#34; % name)
+        return _method(self.__req, &#34;%s.%s&#34; % (self.__name, name))
+    def __call__(self, *args, **kwargs):
+        return self.__req(self.__name, args, kwargs)
+
+#=========================================
+# server side: Server
+
+class Server:
+    &#34;&#34;&#34;RPC-server.
+
+    It works with different data/serializers and 
+    with different transports.
+
+    :Example:
+        see module-docstring
+
+    :TODO:
+        - mixed JSON-RPC 1.0/2.0 server?
+        - logging/loglevels?
+    &#34;&#34;&#34;
+    def __init__( self, data_serializer, transport, logfile=None ):
+        &#34;&#34;&#34;
+        :Parameters:
+            - data_serializer: a data_structure+serializer-instance
+            - transport: a Transport instance
+            - logfile: file to log (&#34;unexpected&#34;) errors to
+        &#34;&#34;&#34;
+        #TODO: check parameters
+        self.__data_serializer = data_serializer
+        if not isinstance(transport, Transport):
+            raise ValueError(&#39;invalid &#34;transport&#34; (must be a Transport-instance)&#34;&#39;)
+        self.__transport = transport
+        self.logfile = logfile
+        if self.logfile is not None:    #create logfile (or raise exception)
+            f = codecs.open( self.logfile, &#39;a&#39;, encoding=&#39;utf-8&#39; )
+            f.close()
+
+        self.funcs = {}
+
+    def __repr__(self):
+        return &#34;&lt;Server for %s, with serializer %s&gt;&#34; % (self.__transport, self.__data_serializer)
+
+    def log(self, message):
+        &#34;&#34;&#34;write a message to the logfile (in utf-8)&#34;&#34;&#34;
+        if self.logfile is not None:
+            f = codecs.open( self.logfile, &#39;a&#39;, encoding=&#39;utf-8&#39; )
+            f.write( time.strftime(&#34;%Y-%m-%d %H:%M:%S &#34;)+message+&#34;\n&#34; )
+            f.close()
+
+    def register_instance(self, myinst, name=None):
+        &#34;&#34;&#34;Add all functions of a class-instance to the RPC-services.
+        
+        All entries of the instance which do not begin with &#39;_&#39; are added.
+
+        :Parameters:
+            - myinst: class-instance containing the functions
+            - name:   | hierarchical prefix.
+                      | If omitted, the functions are added directly.
+                      | If given, the functions are added as &#34;name.function&#34;.
+        :TODO:
+            - only add functions and omit attributes?
+            - improve hierarchy?
+        &#34;&#34;&#34;
+        for e in dir(myinst):
+            if e[0][0] != &#34;_&#34;:
+                if name is None:
+                    self.register_function( getattr(myinst, e) )
+                else:
+                    self.register_function( getattr(myinst, e), name=&#34;%s.%s&#34; % (name, e) )
+    def register_function(self, function, name=None):
+        &#34;&#34;&#34;Add a function to the RPC-services.
+        
+        :Parameters:
+            - function: function to add
+            - name:     RPC-name for the function. If omitted/None, the original
+                        name of the function is used.
+        &#34;&#34;&#34;
+        if name is None:
+            self.funcs[function.__name__] = function
+        else:
+            self.funcs[name] = function
+    
+    def handle(self, rpcstr):
+        &#34;&#34;&#34;Handle a RPC-Request.
+
+        :Parameters:
+            - rpcstr: the received rpc-string
+        :Returns: the data to send back or None if nothing should be sent back
+        :Raises:  RPCFault (and maybe others)
+        &#34;&#34;&#34;
+        #TODO: id
+        notification = False
+        try:
+            req = self.__data_serializer.loads_request( rpcstr )
+            if len(req) == 2:       #notification
+                method, params = req
+                notification = True
+            else:                   #request
+                method, params, id = req
+        except RPCFault as err:
+            return self.__data_serializer.dumps_error( err, id=None )
+        except Exception as err:
+            self.log( &#34;%d (%s): %s&#34; % (INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR], str(err)) )
+            return self.__data_serializer.dumps_error( RPCFault(INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR]), id=None )
+
+        if method not in self.funcs:
+            if notification:
+                return None
+            return self.__data_serializer.dumps_error( RPCFault(METHOD_NOT_FOUND, ERROR_MESSAGE[METHOD_NOT_FOUND]), id )
+
+        try:
+            if isinstance(params, dict):
+                result = self.funcs[method]( **params )
+            else:
+                result = self.funcs[method]( *params )
+        except RPCFault as err:
+            if notification:
+                return None
+            return self.__data_serializer.dumps_error( err, id=None )
+        except Exception as err:
+            if notification:
+                return None
+            self.log( &#34;%d (%s): %s&#34; % (INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR], str(err)) )
+            return self.__data_serializer.dumps_error( RPCFault(INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR]), id )
+
+        if notification:
+            return None
+        try:
+            return self.__data_serializer.dumps_response( result, id )
+        except Exception as err:
+            self.log( &#34;%d (%s): %s&#34; % (INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR], str(err)) )
+            return self.__data_serializer.dumps_error( RPCFault(INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR]), id )
+
+    def serve(self, n=None):
+        &#34;&#34;&#34;serve (forever or for n communicaions).
+        
+        :See: Transport
+        &#34;&#34;&#34;
+        self.__transport.serve( self.handle, n )
+
+#=========================================</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pcgsepy.common.jsonrpc.dictkeyclean"><code class="name flex">
+<span>def <span class="ident">dictkeyclean</span></span>(<span>d)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert all keys of the dict 'd' to (ascii-)strings.</p>
+<p>:Raises: UnicodeEncodeError</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dictkeyclean(d):
+    &#34;&#34;&#34;Convert all keys of the dict &#39;d&#39; to (ascii-)strings.
+
+    :Raises: UnicodeEncodeError
+    &#34;&#34;&#34;
+    new_d = {}
+    for (k, v) in d.iteritems():
+        new_d[str(k)] = v
+    return new_d</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.log_dummy"><code class="name flex">
+<span>def <span class="ident">log_dummy</span></span>(<span>message)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>dummy-logger: do nothing</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def log_dummy( message ):
+    &#34;&#34;&#34;dummy-logger: do nothing&#34;&#34;&#34;
+    pass</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.log_file"><code class="name flex">
+<span>def <span class="ident">log_file</span></span>(<span>filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>return a logfunc which logs to a file (in utf-8)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def log_file( filename ):
+    &#34;&#34;&#34;return a logfunc which logs to a file (in utf-8)&#34;&#34;&#34;
+    def logfile( message ):
+        f = codecs.open( filename, &#39;a&#39;, encoding=&#39;utf-8&#39; )
+        f.write( message+&#34;\n&#34; )
+        f.close()
+    return logfile</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.log_filedate"><code class="name flex">
+<span>def <span class="ident">log_filedate</span></span>(<span>filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>return a logfunc which logs date+message to a file (in utf-8)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def log_filedate( filename ):
+    &#34;&#34;&#34;return a logfunc which logs date+message to a file (in utf-8)&#34;&#34;&#34;
+    def logfile( message ):
+        f = codecs.open( filename, &#39;a&#39;, encoding=&#39;utf-8&#39; )
+        f.write( time.strftime(&#34;%Y-%m-%d %H:%M:%S &#34;)+message+&#34;\n&#34; )
+        f.close()
+    return logfile</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.log_stdout"><code class="name flex">
+<span>def <span class="ident">log_stdout</span></span>(<span>message)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>print message to STDOUT</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def log_stdout( message ):
+    &#34;&#34;&#34;print message to STDOUT&#34;&#34;&#34;
+    print(message)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pcgsepy.common.jsonrpc.JsonRpc10"><code class="flex name class">
+<span>class <span class="ident">JsonRpc10</span></span>
+<span>(</span><span>dumps=&lt;function dumps&gt;, loads=&lt;function loads&gt;)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>JSON-RPC V1.0 data-structure / serializer</p>
+<p>This implementation is quite liberal in what it accepts: It treats
+missing "params" and "id" in Requests and missing "result"/"error" in
+Responses as empty/null.</p>
+<p>:SeeAlso:
+JSON-RPC 1.0 specification
+:TODO:
+catch simplejson.dumps not-serializable-exceptions</p>
+<p>init: set serializer to use</p>
+<p>:Parameters:
+- dumps: json-encoder-function
+- loads: json-decoder-function
+:Note: The dumps_* functions of this class already directly create
+the invariant parts of the resulting json-object themselves,
+without using the given json-encoder-function.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class JsonRpc10:
+    &#34;&#34;&#34;JSON-RPC V1.0 data-structure / serializer
+
+    This implementation is quite liberal in what it accepts: It treats
+    missing &#34;params&#34; and &#34;id&#34; in Requests and missing &#34;result&#34;/&#34;error&#34; in
+    Responses as empty/null.
+
+    :SeeAlso:   JSON-RPC 1.0 specification
+    :TODO:      catch simplejson.dumps not-serializable-exceptions
+    &#34;&#34;&#34;
+    def __init__(self, dumps=simplejson.dumps, loads=simplejson.loads):
+        &#34;&#34;&#34;init: set serializer to use
+
+        :Parameters:
+            - dumps: json-encoder-function
+            - loads: json-decoder-function
+        :Note: The dumps_* functions of this class already directly create
+               the invariant parts of the resulting json-object themselves,
+               without using the given json-encoder-function.
+        &#34;&#34;&#34;
+        self.dumps = dumps
+        self.loads = loads
+
+    def dumps_request( self, method, params=(), id=0 ):
+        &#34;&#34;&#34;serialize JSON-RPC-Request
+
+        :Parameters:
+            - method: the method-name (str/unicode)
+            - params: the parameters (list/tuple)
+            - id:     if id=None, this results in a Notification
+        :Returns:   | {&#34;method&#34;: &#34;...&#34;, &#34;params&#34;: ..., &#34;id&#34;: ...}
+                    | &#34;method&#34;, &#34;params&#34; and &#34;id&#34; are always in this order.
+        :Raises:    TypeError if method/params is of wrong type or 
+                    not JSON-serializable
+        &#34;&#34;&#34;
+        if not isinstance(method, (str, unicode_literals)):
+            raise TypeError(&#39;&#34;method&#34; must be a string (or unicode string).&#39;)
+        if not isinstance(params, (tuple, list)):
+            raise TypeError(&#34;params must be a tuple/list.&#34;)
+
+        return &#39;{&#34;method&#34;: %s, &#34;params&#34;: %s, &#34;id&#34;: %s}&#39; % \
+                (self.dumps(method), self.dumps(params), self.dumps(id))
+
+    def dumps_notification( self, method, params=() ):
+        &#34;&#34;&#34;serialize a JSON-RPC-Notification
+
+        :Parameters: see dumps_request
+        :Returns:   | {&#34;method&#34;: &#34;...&#34;, &#34;params&#34;: ..., &#34;id&#34;: null}
+                    | &#34;method&#34;, &#34;params&#34; and &#34;id&#34; are always in this order.
+        :Raises:    see dumps_request
+        &#34;&#34;&#34;
+        if not isinstance(method, (str, unicode_literals)):
+            raise TypeError(&#39;&#34;method&#34; must be a string (or unicode string).&#39;)
+        if not isinstance(params, (tuple, list)):
+            raise TypeError(&#34;params must be a tuple/list.&#34;)
+
+        return &#39;{&#34;method&#34;: %s, &#34;params&#34;: %s, &#34;id&#34;: null}&#39; % \
+                (self.dumps(method), self.dumps(params))
+
+    def dumps_response( self, result, id=None ):
+        &#34;&#34;&#34;serialize a JSON-RPC-Response (without error)
+
+        :Returns:   | {&#34;result&#34;: ..., &#34;error&#34;: null, &#34;id&#34;: ...}
+                    | &#34;result&#34;, &#34;error&#34; and &#34;id&#34; are always in this order.
+        :Raises:    TypeError if not JSON-serializable
+        &#34;&#34;&#34;
+        return &#39;{&#34;result&#34;: %s, &#34;error&#34;: null, &#34;id&#34;: %s}&#39; % \
+                (self.dumps(result), self.dumps(id))
+
+    def dumps_error( self, error, id=None ):
+        &#34;&#34;&#34;serialize a JSON-RPC-Response-error
+
+        Since JSON-RPC 1.0 does not define an error-object, this uses the
+        JSON-RPC 2.0 error-object.
+      
+        :Parameters:
+            - error: a RPCFault instance
+        :Returns:   | {&#34;result&#34;: null, &#34;error&#34;: {&#34;code&#34;: error_code, &#34;message&#34;: error_message, &#34;data&#34;: error_data}, &#34;id&#34;: ...}
+                    | &#34;result&#34;, &#34;error&#34; and &#34;id&#34; are always in this order, data is omitted if None.
+        :Raises:    ValueError if error is not a RPCFault instance,
+                    TypeError if not JSON-serializable
+        &#34;&#34;&#34;
+        if not isinstance(error, RPCFault):
+            raise ValueError(&#34;&#34;&#34;error must be a RPCFault-instance.&#34;&#34;&#34;)
+        if error.error_data is None:
+            return &#39;{&#34;result&#34;: null, &#34;error&#34;: {&#34;code&#34;:%s, &#34;message&#34;: %s}, &#34;id&#34;: %s}&#39; % \
+                    (self.dumps(error.error_code), self.dumps(error.error_message), self.dumps(id))
+        else:
+            return &#39;{&#34;result&#34;: null, &#34;error&#34;: {&#34;code&#34;:%s, &#34;message&#34;: %s, &#34;data&#34;: %s}, &#34;id&#34;: %s}&#39; % \
+                    (self.dumps(error.error_code), self.dumps(error.error_message), self.dumps(error.error_data), self.dumps(id))
+
+    def loads_request( self, string ):
+        &#34;&#34;&#34;de-serialize a JSON-RPC Request/Notification
+
+        :Returns:   | [method_name, params, id] or [method_name, params]
+                    | params is a tuple/list
+                    | if id is missing, this is a Notification
+        :Raises:    RPCParseError, RPCInvalidRPC, RPCInvalidMethodParams
+        &#34;&#34;&#34;
+        try:
+            data = self.loads(string)
+        except ValueError as err:
+            raise RPCParseError(&#34;No valid JSON. (%s)&#34; % str(err))
+        if not isinstance(data, dict):  raise RPCInvalidRPC(&#34;No valid RPC-package.&#34;)
+        if &#34;method&#34; not in data:        raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, &#34;method&#34; is missing.&#34;&#34;&#34;)
+        if not isinstance(data[&#34;method&#34;], (str, unicode_literals)):
+            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, &#34;method&#34; must be a string.&#34;&#34;&#34;)
+        if &#34;id&#34;     not in data:        data[&#34;id&#34;]     = None   #be liberal
+        if &#34;params&#34; not in data:        data[&#34;params&#34;] = ()     #be liberal
+        if not isinstance(data[&#34;params&#34;], (list, tuple)):
+            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, &#34;params&#34; must be an array.&#34;&#34;&#34;)
+        if len(data) != 3:          raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, additional fields found.&#34;&#34;&#34;)
+
+        # notification / request
+        if data[&#34;id&#34;] is None:
+            return data[&#34;method&#34;], data[&#34;params&#34;]               #notification
+        else:
+            return data[&#34;method&#34;], data[&#34;params&#34;], data[&#34;id&#34;]   #request
+
+    def loads_response( self, string ):
+        &#34;&#34;&#34;de-serialize a JSON-RPC Response/error
+
+        :Returns: | [result, id] for Responses
+        :Raises:  | RPCFault+derivates for error-packages/faults, RPCParseError, RPCInvalidRPC
+                  | Note that for error-packages which do not match the
+                    V2.0-definition, RPCFault(-1, &#34;Error&#34;, RECEIVED_ERROR_OBJ)
+                    is raised.
+        &#34;&#34;&#34;
+        try:
+            data = self.loads(string)
+        except ValueError as err:
+            raise RPCParseError(&#34;No valid JSON. (%s)&#34; % str(err))
+        if not isinstance(data, dict):  raise RPCInvalidRPC(&#34;No valid RPC-package.&#34;)
+        if &#34;id&#34; not in data:            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, &#34;id&#34; missing.&#34;&#34;&#34;)
+        if &#34;result&#34; not in data:        data[&#34;result&#34;] = None    #be liberal
+        if &#34;error&#34;  not in data:        data[&#34;error&#34;]  = None    #be liberal
+        if len(data) != 3:              raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, additional or missing fields.&#34;&#34;&#34;)
+
+        #error
+        if data[&#34;error&#34;] is not None:
+            if data[&#34;result&#34;] is not None:
+                raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, one of &#34;result&#34; or &#34;error&#34; must be null.&#34;&#34;&#34;)
+            #v2.0 error-format
+            if( isinstance(data[&#34;error&#34;], dict)  and  &#34;code&#34; in data[&#34;error&#34;]  and  &#34;message&#34; in data[&#34;error&#34;]  and
+                (len(data[&#34;error&#34;])==2 or (&#34;data&#34; in data[&#34;error&#34;] and len(data[&#34;error&#34;])==3)) ):
+                if &#34;data&#34; not in data[&#34;error&#34;]:
+                    error_data = None
+                else:
+                    error_data = data[&#34;error&#34;][&#34;data&#34;]
+
+                if   data[&#34;error&#34;][&#34;code&#34;] == PARSE_ERROR:
+                    raise RPCParseError(error_data)
+                elif data[&#34;error&#34;][&#34;code&#34;] == INVALID_REQUEST:
+                    raise RPCInvalidRPC(error_data)
+                elif data[&#34;error&#34;][&#34;code&#34;] == METHOD_NOT_FOUND:
+                    raise RPCMethodNotFound(error_data)
+                elif data[&#34;error&#34;][&#34;code&#34;] == INVALID_METHOD_PARAMS:
+                    raise RPCInvalidMethodParams(error_data)
+                elif data[&#34;error&#34;][&#34;code&#34;] == INTERNAL_ERROR:
+                    raise RPCInternalError(error_data)
+                elif data[&#34;error&#34;][&#34;code&#34;] == PROCEDURE_EXCEPTION:
+                    raise RPCProcedureException(error_data)
+                elif data[&#34;error&#34;][&#34;code&#34;] == AUTHENTIFICATION_ERROR:
+                    raise RPCAuthentificationError(error_data)
+                elif data[&#34;error&#34;][&#34;code&#34;] == PERMISSION_DENIED:
+                    raise RPCPermissionDenied(error_data)
+                elif data[&#34;error&#34;][&#34;code&#34;] == INVALID_PARAM_VALUES:
+                    raise RPCInvalidParamValues(error_data)
+                else:
+                    raise RPCFault(data[&#34;error&#34;][&#34;code&#34;], data[&#34;error&#34;][&#34;message&#34;], error_data)
+            #other error-format
+            else:
+                raise RPCFault(-1, &#34;Error&#34;, data[&#34;error&#34;])
+        #result
+        else:
+            return data[&#34;result&#34;], data[&#34;id&#34;]</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="pcgsepy.common.jsonrpc.JsonRpc10.dumps_error"><code class="name flex">
+<span>def <span class="ident">dumps_error</span></span>(<span>self, error, id=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>serialize a JSON-RPC-Response-error</p>
+<p>Since JSON-RPC 1.0 does not define an error-object, this uses the
+JSON-RPC 2.0 error-object.</p>
+<p>:Parameters:
+- error: a RPCFault instance
+:Returns:
+| {"result": null, "error": {"code": error_code, "message": error_message, "data": error_data}, "id": &hellip;}
+| "result", "error" and "id" are always in this order, data is omitted if None.
+:Raises:
+ValueError if error is not a RPCFault instance,
+TypeError if not JSON-serializable</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dumps_error( self, error, id=None ):
+    &#34;&#34;&#34;serialize a JSON-RPC-Response-error
+
+    Since JSON-RPC 1.0 does not define an error-object, this uses the
+    JSON-RPC 2.0 error-object.
+  
+    :Parameters:
+        - error: a RPCFault instance
+    :Returns:   | {&#34;result&#34;: null, &#34;error&#34;: {&#34;code&#34;: error_code, &#34;message&#34;: error_message, &#34;data&#34;: error_data}, &#34;id&#34;: ...}
+                | &#34;result&#34;, &#34;error&#34; and &#34;id&#34; are always in this order, data is omitted if None.
+    :Raises:    ValueError if error is not a RPCFault instance,
+                TypeError if not JSON-serializable
+    &#34;&#34;&#34;
+    if not isinstance(error, RPCFault):
+        raise ValueError(&#34;&#34;&#34;error must be a RPCFault-instance.&#34;&#34;&#34;)
+    if error.error_data is None:
+        return &#39;{&#34;result&#34;: null, &#34;error&#34;: {&#34;code&#34;:%s, &#34;message&#34;: %s}, &#34;id&#34;: %s}&#39; % \
+                (self.dumps(error.error_code), self.dumps(error.error_message), self.dumps(id))
+    else:
+        return &#39;{&#34;result&#34;: null, &#34;error&#34;: {&#34;code&#34;:%s, &#34;message&#34;: %s, &#34;data&#34;: %s}, &#34;id&#34;: %s}&#39; % \
+                (self.dumps(error.error_code), self.dumps(error.error_message), self.dumps(error.error_data), self.dumps(id))</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.JsonRpc10.dumps_notification"><code class="name flex">
+<span>def <span class="ident">dumps_notification</span></span>(<span>self, method, params=())</span>
+</code></dt>
+<dd>
+<div class="desc"><p>serialize a JSON-RPC-Notification</p>
+<p>:Parameters: see dumps_request
+:Returns:
+| {"method": "&hellip;", "params": &hellip;, "id": null}
+| "method", "params" and "id" are always in this order.
+:Raises:
+see dumps_request</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dumps_notification( self, method, params=() ):
+    &#34;&#34;&#34;serialize a JSON-RPC-Notification
+
+    :Parameters: see dumps_request
+    :Returns:   | {&#34;method&#34;: &#34;...&#34;, &#34;params&#34;: ..., &#34;id&#34;: null}
+                | &#34;method&#34;, &#34;params&#34; and &#34;id&#34; are always in this order.
+    :Raises:    see dumps_request
+    &#34;&#34;&#34;
+    if not isinstance(method, (str, unicode_literals)):
+        raise TypeError(&#39;&#34;method&#34; must be a string (or unicode string).&#39;)
+    if not isinstance(params, (tuple, list)):
+        raise TypeError(&#34;params must be a tuple/list.&#34;)
+
+    return &#39;{&#34;method&#34;: %s, &#34;params&#34;: %s, &#34;id&#34;: null}&#39; % \
+            (self.dumps(method), self.dumps(params))</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.JsonRpc10.dumps_request"><code class="name flex">
+<span>def <span class="ident">dumps_request</span></span>(<span>self, method, params=(), id=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>serialize JSON-RPC-Request</p>
+<p>:Parameters:
+- method: the method-name (str/unicode)
+- params: the parameters (list/tuple)
+- id:
+if id=None, this results in a Notification
+:Returns:
+| {"method": "&hellip;", "params": &hellip;, "id": &hellip;}
+| "method", "params" and "id" are always in this order.
+:Raises:
+TypeError if method/params is of wrong type or
+not JSON-serializable</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dumps_request( self, method, params=(), id=0 ):
+    &#34;&#34;&#34;serialize JSON-RPC-Request
+
+    :Parameters:
+        - method: the method-name (str/unicode)
+        - params: the parameters (list/tuple)
+        - id:     if id=None, this results in a Notification
+    :Returns:   | {&#34;method&#34;: &#34;...&#34;, &#34;params&#34;: ..., &#34;id&#34;: ...}
+                | &#34;method&#34;, &#34;params&#34; and &#34;id&#34; are always in this order.
+    :Raises:    TypeError if method/params is of wrong type or 
+                not JSON-serializable
+    &#34;&#34;&#34;
+    if not isinstance(method, (str, unicode_literals)):
+        raise TypeError(&#39;&#34;method&#34; must be a string (or unicode string).&#39;)
+    if not isinstance(params, (tuple, list)):
+        raise TypeError(&#34;params must be a tuple/list.&#34;)
+
+    return &#39;{&#34;method&#34;: %s, &#34;params&#34;: %s, &#34;id&#34;: %s}&#39; % \
+            (self.dumps(method), self.dumps(params), self.dumps(id))</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.JsonRpc10.dumps_response"><code class="name flex">
+<span>def <span class="ident">dumps_response</span></span>(<span>self, result, id=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>serialize a JSON-RPC-Response (without error)</p>
+<p>:Returns:
+| {"result": &hellip;, "error": null, "id": &hellip;}
+| "result", "error" and "id" are always in this order.
+:Raises:
+TypeError if not JSON-serializable</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dumps_response( self, result, id=None ):
+    &#34;&#34;&#34;serialize a JSON-RPC-Response (without error)
+
+    :Returns:   | {&#34;result&#34;: ..., &#34;error&#34;: null, &#34;id&#34;: ...}
+                | &#34;result&#34;, &#34;error&#34; and &#34;id&#34; are always in this order.
+    :Raises:    TypeError if not JSON-serializable
+    &#34;&#34;&#34;
+    return &#39;{&#34;result&#34;: %s, &#34;error&#34;: null, &#34;id&#34;: %s}&#39; % \
+            (self.dumps(result), self.dumps(id))</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.JsonRpc10.loads_request"><code class="name flex">
+<span>def <span class="ident">loads_request</span></span>(<span>self, string)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>de-serialize a JSON-RPC Request/Notification</p>
+<p>:Returns:
+| [method_name, params, id] or [method_name, params]
+| params is a tuple/list
+| if id is missing, this is a Notification
+:Raises:
+RPCParseError, RPCInvalidRPC, RPCInvalidMethodParams</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def loads_request( self, string ):
+    &#34;&#34;&#34;de-serialize a JSON-RPC Request/Notification
+
+    :Returns:   | [method_name, params, id] or [method_name, params]
+                | params is a tuple/list
+                | if id is missing, this is a Notification
+    :Raises:    RPCParseError, RPCInvalidRPC, RPCInvalidMethodParams
+    &#34;&#34;&#34;
+    try:
+        data = self.loads(string)
+    except ValueError as err:
+        raise RPCParseError(&#34;No valid JSON. (%s)&#34; % str(err))
+    if not isinstance(data, dict):  raise RPCInvalidRPC(&#34;No valid RPC-package.&#34;)
+    if &#34;method&#34; not in data:        raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, &#34;method&#34; is missing.&#34;&#34;&#34;)
+    if not isinstance(data[&#34;method&#34;], (str, unicode_literals)):
+        raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, &#34;method&#34; must be a string.&#34;&#34;&#34;)
+    if &#34;id&#34;     not in data:        data[&#34;id&#34;]     = None   #be liberal
+    if &#34;params&#34; not in data:        data[&#34;params&#34;] = ()     #be liberal
+    if not isinstance(data[&#34;params&#34;], (list, tuple)):
+        raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, &#34;params&#34; must be an array.&#34;&#34;&#34;)
+    if len(data) != 3:          raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, additional fields found.&#34;&#34;&#34;)
+
+    # notification / request
+    if data[&#34;id&#34;] is None:
+        return data[&#34;method&#34;], data[&#34;params&#34;]               #notification
+    else:
+        return data[&#34;method&#34;], data[&#34;params&#34;], data[&#34;id&#34;]   #request</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.JsonRpc10.loads_response"><code class="name flex">
+<span>def <span class="ident">loads_response</span></span>(<span>self, string)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>de-serialize a JSON-RPC Response/error</p>
+<p>:Returns: | [result, id] for Responses
+:Raises:
+| RPCFault+derivates for error-packages/faults, RPCParseError, RPCInvalidRPC
+| Note that for error-packages which do not match the
+V2.0-definition, RPCFault(-1, "Error", RECEIVED_ERROR_OBJ)
+is raised.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def loads_response( self, string ):
+    &#34;&#34;&#34;de-serialize a JSON-RPC Response/error
+
+    :Returns: | [result, id] for Responses
+    :Raises:  | RPCFault+derivates for error-packages/faults, RPCParseError, RPCInvalidRPC
+              | Note that for error-packages which do not match the
+                V2.0-definition, RPCFault(-1, &#34;Error&#34;, RECEIVED_ERROR_OBJ)
+                is raised.
+    &#34;&#34;&#34;
+    try:
+        data = self.loads(string)
+    except ValueError as err:
+        raise RPCParseError(&#34;No valid JSON. (%s)&#34; % str(err))
+    if not isinstance(data, dict):  raise RPCInvalidRPC(&#34;No valid RPC-package.&#34;)
+    if &#34;id&#34; not in data:            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, &#34;id&#34; missing.&#34;&#34;&#34;)
+    if &#34;result&#34; not in data:        data[&#34;result&#34;] = None    #be liberal
+    if &#34;error&#34;  not in data:        data[&#34;error&#34;]  = None    #be liberal
+    if len(data) != 3:              raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, additional or missing fields.&#34;&#34;&#34;)
+
+    #error
+    if data[&#34;error&#34;] is not None:
+        if data[&#34;result&#34;] is not None:
+            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, one of &#34;result&#34; or &#34;error&#34; must be null.&#34;&#34;&#34;)
+        #v2.0 error-format
+        if( isinstance(data[&#34;error&#34;], dict)  and  &#34;code&#34; in data[&#34;error&#34;]  and  &#34;message&#34; in data[&#34;error&#34;]  and
+            (len(data[&#34;error&#34;])==2 or (&#34;data&#34; in data[&#34;error&#34;] and len(data[&#34;error&#34;])==3)) ):
+            if &#34;data&#34; not in data[&#34;error&#34;]:
+                error_data = None
+            else:
+                error_data = data[&#34;error&#34;][&#34;data&#34;]
+
+            if   data[&#34;error&#34;][&#34;code&#34;] == PARSE_ERROR:
+                raise RPCParseError(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == INVALID_REQUEST:
+                raise RPCInvalidRPC(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == METHOD_NOT_FOUND:
+                raise RPCMethodNotFound(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == INVALID_METHOD_PARAMS:
+                raise RPCInvalidMethodParams(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == INTERNAL_ERROR:
+                raise RPCInternalError(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == PROCEDURE_EXCEPTION:
+                raise RPCProcedureException(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == AUTHENTIFICATION_ERROR:
+                raise RPCAuthentificationError(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == PERMISSION_DENIED:
+                raise RPCPermissionDenied(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == INVALID_PARAM_VALUES:
+                raise RPCInvalidParamValues(error_data)
+            else:
+                raise RPCFault(data[&#34;error&#34;][&#34;code&#34;], data[&#34;error&#34;][&#34;message&#34;], error_data)
+        #other error-format
+        else:
+            raise RPCFault(-1, &#34;Error&#34;, data[&#34;error&#34;])
+    #result
+    else:
+        return data[&#34;result&#34;], data[&#34;id&#34;]</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.JsonRpc20"><code class="flex name class">
+<span>class <span class="ident">JsonRpc20</span></span>
+<span>(</span><span>dumps=&lt;function dumps&gt;, loads=&lt;function loads&gt;)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>JSON-RPC V2.0 data-structure / serializer</p>
+<p>:SeeAlso:
+JSON-RPC 2.0 specification
+:TODO:
+catch simplejson.dumps not-serializable-exceptions</p>
+<p>init: set serializer to use</p>
+<p>:Parameters:
+- dumps: json-encoder-function
+- loads: json-decoder-function
+:Note: The dumps_* functions of this class already directly create
+the invariant parts of the resulting json-object themselves,
+without using the given json-encoder-function.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class JsonRpc20:
+    &#34;&#34;&#34;JSON-RPC V2.0 data-structure / serializer
+
+    :SeeAlso:   JSON-RPC 2.0 specification
+    :TODO:      catch simplejson.dumps not-serializable-exceptions
+    &#34;&#34;&#34;
+    def __init__(self, dumps=simplejson.dumps, loads=simplejson.loads):
+        &#34;&#34;&#34;init: set serializer to use
+
+        :Parameters:
+            - dumps: json-encoder-function
+            - loads: json-decoder-function
+        :Note: The dumps_* functions of this class already directly create
+               the invariant parts of the resulting json-object themselves,
+               without using the given json-encoder-function.
+        &#34;&#34;&#34;
+        self.dumps = dumps
+        self.loads = loads
+
+    def dumps_request( self, method, params=(), id=0 ):
+        &#34;&#34;&#34;serialize JSON-RPC-Request
+
+        :Parameters:
+            - method: the method-name (str/unicode)
+            - params: the parameters (list/tuple/dict)
+            - id:     the id (should not be None)
+        :Returns:   | {&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: &#34;...&#34;, &#34;params&#34;: ..., &#34;id&#34;: ...}
+                    | &#34;jsonrpc&#34;, &#34;method&#34;, &#34;params&#34; and &#34;id&#34; are always in this order.
+                    | &#34;params&#34; is omitted if empty
+        :Raises:    TypeError if method/params is of wrong type or 
+                    not JSON-serializable
+        &#34;&#34;&#34;
+        if not isinstance(method, (str, unicode_literals)):
+            raise TypeError(&#39;&#34;method&#34; must be a string (or unicode string).&#39;)
+        if not isinstance(params, (tuple, list, dict)):
+            raise TypeError(&#34;params must be a tuple/list/dict or None.&#34;)
+
+        if params:
+            return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: %s, &#34;params&#34;: %s, &#34;id&#34;: %s}&#39; % \
+                    (self.dumps(method), self.dumps(params), self.dumps(id))
+        else:
+            return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: %s, &#34;id&#34;: %s}&#39; % \
+                    (self.dumps(method), self.dumps(id))
+
+    def dumps_notification( self, method, params=() ):
+        &#34;&#34;&#34;serialize a JSON-RPC-Notification
+
+        :Parameters: see dumps_request
+        :Returns:   | {&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: &#34;...&#34;, &#34;params&#34;: ...}
+                    | &#34;jsonrpc&#34;, &#34;method&#34; and &#34;params&#34; are always in this order.
+        :Raises:    see dumps_request
+        &#34;&#34;&#34;
+        if not isinstance(method, (str, unicode_literals)):
+            raise TypeError(&#39;&#34;method&#34; must be a string (or unicode string).&#39;)
+        if not isinstance(params, (tuple, list, dict)):
+            raise TypeError(&#34;params must be a tuple/list/dict or None.&#34;)
+
+        if params:
+            return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: %s, &#34;params&#34;: %s}&#39; % \
+                    (self.dumps(method), self.dumps(params))
+        else:
+            return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: %s}&#39; % \
+                    (self.dumps(method))
+
+    def dumps_response( self, result, id=None ):
+        &#34;&#34;&#34;serialize a JSON-RPC-Response (without error)
+
+        :Returns:   | {&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;result&#34;: ..., &#34;id&#34;: ...}
+                    | &#34;jsonrpc&#34;, &#34;result&#34;, and &#34;id&#34; are always in this order.
+        :Raises:    TypeError if not JSON-serializable
+        &#34;&#34;&#34;
+        return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;result&#34;: %s, &#34;id&#34;: %s}&#39; % \
+                (self.dumps(result), self.dumps(id))
+
+    def dumps_error( self, error, id=None ):
+        &#34;&#34;&#34;serialize a JSON-RPC-Response-error
+      
+        :Parameters:
+            - error: a RPCFault instance
+        :Returns:   | {&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;error&#34;: {&#34;code&#34;: error_code, &#34;message&#34;: error_message, &#34;data&#34;: error_data}, &#34;id&#34;: ...}
+                    | &#34;jsonrpc&#34;, &#34;result&#34;, &#34;error&#34; and &#34;id&#34; are always in this order, data is omitted if None.
+        :Raises:    ValueError if error is not a RPCFault instance,
+                    TypeError if not JSON-serializable
+        &#34;&#34;&#34;
+        if not isinstance(error, RPCFault):
+            raise ValueError(&#34;&#34;&#34;error must be a RPCFault-instance.&#34;&#34;&#34;)
+        if error.error_data is None:
+            return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;error&#34;: {&#34;code&#34;:%s, &#34;message&#34;: %s}, &#34;id&#34;: %s}&#39; % \
+                    (self.dumps(error.error_code), self.dumps(error.error_message), self.dumps(id))
+        else:
+            return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;error&#34;: {&#34;code&#34;:%s, &#34;message&#34;: %s, &#34;data&#34;: %s}, &#34;id&#34;: %s}&#39; % \
+                    (self.dumps(error.error_code), self.dumps(error.error_message), self.dumps(error.error_data), self.dumps(id))
+
+    def loads_request( self, string ):
+        &#34;&#34;&#34;de-serialize a JSON-RPC Request/Notification
+
+        :Returns:   | [method_name, params, id] or [method_name, params]
+                    | params is a tuple/list or dict (with only str-keys)
+                    | if id is missing, this is a Notification
+        :Raises:    RPCParseError, RPCInvalidRPC, RPCInvalidMethodParams
+        &#34;&#34;&#34;
+        try:
+            data = self.loads(string)
+        except ValueError as err:
+            raise RPCParseError(&#34;No valid JSON. (%s)&#34; % str(err))
+        if not isinstance(data, dict):  raise RPCInvalidRPC(&#34;No valid RPC-package.&#34;)
+        if &#34;jsonrpc&#34; not in data:       raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, &#34;jsonrpc&#34; missing.&#34;&#34;&#34;)
+        if not isinstance(data[&#34;jsonrpc&#34;], (str, unicode_literals)):
+            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, &#34;jsonrpc&#34; must be a string.&#34;&#34;&#34;)
+        if data[&#34;jsonrpc&#34;] != &#34;2.0&#34;:    raise RPCInvalidRPC(&#34;&#34;&#34;Invalid jsonrpc version.&#34;&#34;&#34;)
+        if &#34;method&#34; not in data:        raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, &#34;method&#34; is missing.&#34;&#34;&#34;)
+        if not isinstance(data[&#34;method&#34;], (str, unicode_literals)):
+            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, &#34;method&#34; must be a string.&#34;&#34;&#34;)
+        if &#34;params&#34; not in data:        data[&#34;params&#34;] = ()
+        #convert params-keys from unicode to str
+        elif isinstance(data[&#34;params&#34;], dict):
+            try:
+                data[&#34;params&#34;] = dictkeyclean(data[&#34;params&#34;])
+            except UnicodeEncodeError:
+                raise RPCInvalidMethodParams(&#34;Parameter-names must be in ascii.&#34;)
+        elif not isinstance(data[&#34;params&#34;], (list, tuple)):
+            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, &#34;params&#34; must be an array or object.&#34;&#34;&#34;)
+        if not( len(data)==3 or (&#34;id&#34; in data and len(data)==4) ):
+            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, additional fields found.&#34;&#34;&#34;)
+
+        # notification / request
+        if &#34;id&#34; not in data:
+            return data[&#34;method&#34;], data[&#34;params&#34;]               #notification
+        else:
+            return data[&#34;method&#34;], data[&#34;params&#34;], data[&#34;id&#34;]   #request
+
+    def loads_response( self, string ):
+        &#34;&#34;&#34;de-serialize a JSON-RPC Response/error
+
+        :Returns: | [result, id] for Responses
+        :Raises:  | RPCFault+derivates for error-packages/faults, RPCParseError, RPCInvalidRPC
+        &#34;&#34;&#34;
+        try:
+            data = self.loads(string)
+        except ValueError as err:
+            raise RPCParseError(&#34;No valid JSON. (%s)&#34; % str(err))
+        if not isinstance(data, dict):  raise RPCInvalidRPC(&#34;No valid RPC-package.&#34;)
+        if &#34;jsonrpc&#34; not in data:       raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, &#34;jsonrpc&#34; missing.&#34;&#34;&#34;)
+        if not isinstance(data[&#34;jsonrpc&#34;], (str, unicode_literals)):
+            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, &#34;jsonrpc&#34; must be a string.&#34;&#34;&#34;)
+        if data[&#34;jsonrpc&#34;] != &#34;2.0&#34;:    raise RPCInvalidRPC(&#34;&#34;&#34;Invalid jsonrpc version.&#34;&#34;&#34;)
+        if &#34;id&#34; not in data:            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, &#34;id&#34; missing.&#34;&#34;&#34;)
+        if &#34;result&#34; not in data:        data[&#34;result&#34;] = None
+        if &#34;error&#34;  not in data:        data[&#34;error&#34;]  = None
+        if len(data) != 4:              raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, additional or missing fields.&#34;&#34;&#34;)
+
+        #error
+        if data[&#34;error&#34;] is not None:
+            if data[&#34;result&#34;] is not None:
+                raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, only &#34;result&#34; OR &#34;error&#34; allowed.&#34;&#34;&#34;)
+            if not isinstance(data[&#34;error&#34;], dict): raise RPCInvalidRPC(&#34;Invalid Response, invalid error-object.&#34;)
+            if &#34;code&#34; not in data[&#34;error&#34;]  or  &#34;message&#34; not in data[&#34;error&#34;]:
+                raise RPCInvalidRPC(&#34;Invalid Response, invalid error-object.&#34;)
+            if &#34;data&#34; not in data[&#34;error&#34;]:  data[&#34;error&#34;][&#34;data&#34;] = None
+            if len(data[&#34;error&#34;]) != 3:
+                raise RPCInvalidRPC(&#34;Invalid Response, invalid error-object.&#34;)
+
+            error_data = data[&#34;error&#34;][&#34;data&#34;]
+            if   data[&#34;error&#34;][&#34;code&#34;] == PARSE_ERROR:
+                raise RPCParseError(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == INVALID_REQUEST:
+                raise RPCInvalidRPC(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == METHOD_NOT_FOUND:
+                raise RPCMethodNotFound(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == INVALID_METHOD_PARAMS:
+                raise RPCInvalidMethodParams(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == INTERNAL_ERROR:
+                raise RPCInternalError(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == PROCEDURE_EXCEPTION:
+                raise RPCProcedureException(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == AUTHENTIFICATION_ERROR:
+                raise RPCAuthentificationError(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == PERMISSION_DENIED:
+                raise RPCPermissionDenied(error_data)
+            elif data[&#34;error&#34;][&#34;code&#34;] == INVALID_PARAM_VALUES:
+                raise RPCInvalidParamValues(error_data)
+            else:
+                raise RPCFault(data[&#34;error&#34;][&#34;code&#34;], data[&#34;error&#34;][&#34;message&#34;], error_data)
+        #result
+        else:
+            return data[&#34;result&#34;], data[&#34;id&#34;]</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="pcgsepy.common.jsonrpc.JsonRpc20.dumps_error"><code class="name flex">
+<span>def <span class="ident">dumps_error</span></span>(<span>self, error, id=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>serialize a JSON-RPC-Response-error</p>
+<p>:Parameters:
+- error: a RPCFault instance
+:Returns:
+| {"jsonrpc": "2.0", "error": {"code": error_code, "message": error_message, "data": error_data}, "id": &hellip;}
+| "jsonrpc", "result", "error" and "id" are always in this order, data is omitted if None.
+:Raises:
+ValueError if error is not a RPCFault instance,
+TypeError if not JSON-serializable</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dumps_error( self, error, id=None ):
+    &#34;&#34;&#34;serialize a JSON-RPC-Response-error
+  
+    :Parameters:
+        - error: a RPCFault instance
+    :Returns:   | {&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;error&#34;: {&#34;code&#34;: error_code, &#34;message&#34;: error_message, &#34;data&#34;: error_data}, &#34;id&#34;: ...}
+                | &#34;jsonrpc&#34;, &#34;result&#34;, &#34;error&#34; and &#34;id&#34; are always in this order, data is omitted if None.
+    :Raises:    ValueError if error is not a RPCFault instance,
+                TypeError if not JSON-serializable
+    &#34;&#34;&#34;
+    if not isinstance(error, RPCFault):
+        raise ValueError(&#34;&#34;&#34;error must be a RPCFault-instance.&#34;&#34;&#34;)
+    if error.error_data is None:
+        return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;error&#34;: {&#34;code&#34;:%s, &#34;message&#34;: %s}, &#34;id&#34;: %s}&#39; % \
+                (self.dumps(error.error_code), self.dumps(error.error_message), self.dumps(id))
+    else:
+        return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;error&#34;: {&#34;code&#34;:%s, &#34;message&#34;: %s, &#34;data&#34;: %s}, &#34;id&#34;: %s}&#39; % \
+                (self.dumps(error.error_code), self.dumps(error.error_message), self.dumps(error.error_data), self.dumps(id))</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.JsonRpc20.dumps_notification"><code class="name flex">
+<span>def <span class="ident">dumps_notification</span></span>(<span>self, method, params=())</span>
+</code></dt>
+<dd>
+<div class="desc"><p>serialize a JSON-RPC-Notification</p>
+<p>:Parameters: see dumps_request
+:Returns:
+| {"jsonrpc": "2.0", "method": "&hellip;", "params": &hellip;}
+| "jsonrpc", "method" and "params" are always in this order.
+:Raises:
+see dumps_request</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dumps_notification( self, method, params=() ):
+    &#34;&#34;&#34;serialize a JSON-RPC-Notification
+
+    :Parameters: see dumps_request
+    :Returns:   | {&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: &#34;...&#34;, &#34;params&#34;: ...}
+                | &#34;jsonrpc&#34;, &#34;method&#34; and &#34;params&#34; are always in this order.
+    :Raises:    see dumps_request
+    &#34;&#34;&#34;
+    if not isinstance(method, (str, unicode_literals)):
+        raise TypeError(&#39;&#34;method&#34; must be a string (or unicode string).&#39;)
+    if not isinstance(params, (tuple, list, dict)):
+        raise TypeError(&#34;params must be a tuple/list/dict or None.&#34;)
+
+    if params:
+        return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: %s, &#34;params&#34;: %s}&#39; % \
+                (self.dumps(method), self.dumps(params))
+    else:
+        return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: %s}&#39; % \
+                (self.dumps(method))</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.JsonRpc20.dumps_request"><code class="name flex">
+<span>def <span class="ident">dumps_request</span></span>(<span>self, method, params=(), id=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>serialize JSON-RPC-Request</p>
+<p>:Parameters:
+- method: the method-name (str/unicode)
+- params: the parameters (list/tuple/dict)
+- id:
+the id (should not be None)
+:Returns:
+| {"jsonrpc": "2.0", "method": "&hellip;", "params": &hellip;, "id": &hellip;}
+| "jsonrpc", "method", "params" and "id" are always in this order.
+| "params" is omitted if empty
+:Raises:
+TypeError if method/params is of wrong type or
+not JSON-serializable</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dumps_request( self, method, params=(), id=0 ):
+    &#34;&#34;&#34;serialize JSON-RPC-Request
+
+    :Parameters:
+        - method: the method-name (str/unicode)
+        - params: the parameters (list/tuple/dict)
+        - id:     the id (should not be None)
+    :Returns:   | {&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: &#34;...&#34;, &#34;params&#34;: ..., &#34;id&#34;: ...}
+                | &#34;jsonrpc&#34;, &#34;method&#34;, &#34;params&#34; and &#34;id&#34; are always in this order.
+                | &#34;params&#34; is omitted if empty
+    :Raises:    TypeError if method/params is of wrong type or 
+                not JSON-serializable
+    &#34;&#34;&#34;
+    if not isinstance(method, (str, unicode_literals)):
+        raise TypeError(&#39;&#34;method&#34; must be a string (or unicode string).&#39;)
+    if not isinstance(params, (tuple, list, dict)):
+        raise TypeError(&#34;params must be a tuple/list/dict or None.&#34;)
+
+    if params:
+        return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: %s, &#34;params&#34;: %s, &#34;id&#34;: %s}&#39; % \
+                (self.dumps(method), self.dumps(params), self.dumps(id))
+    else:
+        return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;method&#34;: %s, &#34;id&#34;: %s}&#39; % \
+                (self.dumps(method), self.dumps(id))</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.JsonRpc20.dumps_response"><code class="name flex">
+<span>def <span class="ident">dumps_response</span></span>(<span>self, result, id=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>serialize a JSON-RPC-Response (without error)</p>
+<p>:Returns:
+| {"jsonrpc": "2.0", "result": &hellip;, "id": &hellip;}
+| "jsonrpc", "result", and "id" are always in this order.
+:Raises:
+TypeError if not JSON-serializable</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dumps_response( self, result, id=None ):
+    &#34;&#34;&#34;serialize a JSON-RPC-Response (without error)
+
+    :Returns:   | {&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;result&#34;: ..., &#34;id&#34;: ...}
+                | &#34;jsonrpc&#34;, &#34;result&#34;, and &#34;id&#34; are always in this order.
+    :Raises:    TypeError if not JSON-serializable
+    &#34;&#34;&#34;
+    return &#39;{&#34;jsonrpc&#34;: &#34;2.0&#34;, &#34;result&#34;: %s, &#34;id&#34;: %s}&#39; % \
+            (self.dumps(result), self.dumps(id))</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.JsonRpc20.loads_request"><code class="name flex">
+<span>def <span class="ident">loads_request</span></span>(<span>self, string)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>de-serialize a JSON-RPC Request/Notification</p>
+<p>:Returns:
+| [method_name, params, id] or [method_name, params]
+| params is a tuple/list or dict (with only str-keys)
+| if id is missing, this is a Notification
+:Raises:
+RPCParseError, RPCInvalidRPC, RPCInvalidMethodParams</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def loads_request( self, string ):
+    &#34;&#34;&#34;de-serialize a JSON-RPC Request/Notification
+
+    :Returns:   | [method_name, params, id] or [method_name, params]
+                | params is a tuple/list or dict (with only str-keys)
+                | if id is missing, this is a Notification
+    :Raises:    RPCParseError, RPCInvalidRPC, RPCInvalidMethodParams
+    &#34;&#34;&#34;
+    try:
+        data = self.loads(string)
+    except ValueError as err:
+        raise RPCParseError(&#34;No valid JSON. (%s)&#34; % str(err))
+    if not isinstance(data, dict):  raise RPCInvalidRPC(&#34;No valid RPC-package.&#34;)
+    if &#34;jsonrpc&#34; not in data:       raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, &#34;jsonrpc&#34; missing.&#34;&#34;&#34;)
+    if not isinstance(data[&#34;jsonrpc&#34;], (str, unicode_literals)):
+        raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, &#34;jsonrpc&#34; must be a string.&#34;&#34;&#34;)
+    if data[&#34;jsonrpc&#34;] != &#34;2.0&#34;:    raise RPCInvalidRPC(&#34;&#34;&#34;Invalid jsonrpc version.&#34;&#34;&#34;)
+    if &#34;method&#34; not in data:        raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, &#34;method&#34; is missing.&#34;&#34;&#34;)
+    if not isinstance(data[&#34;method&#34;], (str, unicode_literals)):
+        raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, &#34;method&#34; must be a string.&#34;&#34;&#34;)
+    if &#34;params&#34; not in data:        data[&#34;params&#34;] = ()
+    #convert params-keys from unicode to str
+    elif isinstance(data[&#34;params&#34;], dict):
+        try:
+            data[&#34;params&#34;] = dictkeyclean(data[&#34;params&#34;])
+        except UnicodeEncodeError:
+            raise RPCInvalidMethodParams(&#34;Parameter-names must be in ascii.&#34;)
+    elif not isinstance(data[&#34;params&#34;], (list, tuple)):
+        raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, &#34;params&#34; must be an array or object.&#34;&#34;&#34;)
+    if not( len(data)==3 or (&#34;id&#34; in data and len(data)==4) ):
+        raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Request, additional fields found.&#34;&#34;&#34;)
+
+    # notification / request
+    if &#34;id&#34; not in data:
+        return data[&#34;method&#34;], data[&#34;params&#34;]               #notification
+    else:
+        return data[&#34;method&#34;], data[&#34;params&#34;], data[&#34;id&#34;]   #request</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.JsonRpc20.loads_response"><code class="name flex">
+<span>def <span class="ident">loads_response</span></span>(<span>self, string)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>de-serialize a JSON-RPC Response/error</p>
+<p>:Returns: | [result, id] for Responses
+:Raises:
+| RPCFault+derivates for error-packages/faults, RPCParseError, RPCInvalidRPC</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def loads_response( self, string ):
+    &#34;&#34;&#34;de-serialize a JSON-RPC Response/error
+
+    :Returns: | [result, id] for Responses
+    :Raises:  | RPCFault+derivates for error-packages/faults, RPCParseError, RPCInvalidRPC
+    &#34;&#34;&#34;
+    try:
+        data = self.loads(string)
+    except ValueError as err:
+        raise RPCParseError(&#34;No valid JSON. (%s)&#34; % str(err))
+    if not isinstance(data, dict):  raise RPCInvalidRPC(&#34;No valid RPC-package.&#34;)
+    if &#34;jsonrpc&#34; not in data:       raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, &#34;jsonrpc&#34; missing.&#34;&#34;&#34;)
+    if not isinstance(data[&#34;jsonrpc&#34;], (str, unicode_literals)):
+        raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, &#34;jsonrpc&#34; must be a string.&#34;&#34;&#34;)
+    if data[&#34;jsonrpc&#34;] != &#34;2.0&#34;:    raise RPCInvalidRPC(&#34;&#34;&#34;Invalid jsonrpc version.&#34;&#34;&#34;)
+    if &#34;id&#34; not in data:            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, &#34;id&#34; missing.&#34;&#34;&#34;)
+    if &#34;result&#34; not in data:        data[&#34;result&#34;] = None
+    if &#34;error&#34;  not in data:        data[&#34;error&#34;]  = None
+    if len(data) != 4:              raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, additional or missing fields.&#34;&#34;&#34;)
+
+    #error
+    if data[&#34;error&#34;] is not None:
+        if data[&#34;result&#34;] is not None:
+            raise RPCInvalidRPC(&#34;&#34;&#34;Invalid Response, only &#34;result&#34; OR &#34;error&#34; allowed.&#34;&#34;&#34;)
+        if not isinstance(data[&#34;error&#34;], dict): raise RPCInvalidRPC(&#34;Invalid Response, invalid error-object.&#34;)
+        if &#34;code&#34; not in data[&#34;error&#34;]  or  &#34;message&#34; not in data[&#34;error&#34;]:
+            raise RPCInvalidRPC(&#34;Invalid Response, invalid error-object.&#34;)
+        if &#34;data&#34; not in data[&#34;error&#34;]:  data[&#34;error&#34;][&#34;data&#34;] = None
+        if len(data[&#34;error&#34;]) != 3:
+            raise RPCInvalidRPC(&#34;Invalid Response, invalid error-object.&#34;)
+
+        error_data = data[&#34;error&#34;][&#34;data&#34;]
+        if   data[&#34;error&#34;][&#34;code&#34;] == PARSE_ERROR:
+            raise RPCParseError(error_data)
+        elif data[&#34;error&#34;][&#34;code&#34;] == INVALID_REQUEST:
+            raise RPCInvalidRPC(error_data)
+        elif data[&#34;error&#34;][&#34;code&#34;] == METHOD_NOT_FOUND:
+            raise RPCMethodNotFound(error_data)
+        elif data[&#34;error&#34;][&#34;code&#34;] == INVALID_METHOD_PARAMS:
+            raise RPCInvalidMethodParams(error_data)
+        elif data[&#34;error&#34;][&#34;code&#34;] == INTERNAL_ERROR:
+            raise RPCInternalError(error_data)
+        elif data[&#34;error&#34;][&#34;code&#34;] == PROCEDURE_EXCEPTION:
+            raise RPCProcedureException(error_data)
+        elif data[&#34;error&#34;][&#34;code&#34;] == AUTHENTIFICATION_ERROR:
+            raise RPCAuthentificationError(error_data)
+        elif data[&#34;error&#34;][&#34;code&#34;] == PERMISSION_DENIED:
+            raise RPCPermissionDenied(error_data)
+        elif data[&#34;error&#34;][&#34;code&#34;] == INVALID_PARAM_VALUES:
+            raise RPCInvalidParamValues(error_data)
+        else:
+            raise RPCFault(data[&#34;error&#34;][&#34;code&#34;], data[&#34;error&#34;][&#34;message&#34;], error_data)
+    #result
+    else:
+        return data[&#34;result&#34;], data[&#34;id&#34;]</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.RPCAuthentificationError"><code class="flex name class">
+<span>class <span class="ident">RPCAuthentificationError</span></span>
+<span>(</span><span>error_data=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>AUTHENTIFICATION_ERROR</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RPCAuthentificationError(RPCFault):
+    &#34;&#34;&#34;AUTHENTIFICATION_ERROR&#34;&#34;&#34;
+    def __init__(self, error_data=None):
+        RPCFault.__init__(self, AUTHENTIFICATION_ERROR, ERROR_MESSAGE[AUTHENTIFICATION_ERROR], error_data)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.RPCFault" href="#pcgsepy.common.jsonrpc.RPCFault">RPCFault</a></li>
+<li><a title="pcgsepy.common.jsonrpc.RPCError" href="#pcgsepy.common.jsonrpc.RPCError">RPCError</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.RPCError"><code class="flex name class">
+<span>class <span class="ident">RPCError</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class for rpc-errors.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RPCError(Exception):
+    &#34;&#34;&#34;Base class for rpc-errors.&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.RPCFault" href="#pcgsepy.common.jsonrpc.RPCFault">RPCFault</a></li>
+<li><a title="pcgsepy.common.jsonrpc.RPCTransportError" href="#pcgsepy.common.jsonrpc.RPCTransportError">RPCTransportError</a></li>
+</ul>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.RPCFault"><code class="flex name class">
+<span>class <span class="ident">RPCFault</span></span>
+<span>(</span><span>error_code, error_message, error_data=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>RPC error/fault package received.</p>
+<p>This exception can also be used as a class, to generate a
+RPC-error/fault message.</p>
+<p>:Variables:
+- error_code:
+the RPC error-code
+- error_string: description of the error
+- error_data:
+optional additional information
+(must be json-serializable)
+:TODO: improve <strong>str</strong></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RPCFault(RPCError):
+    &#34;&#34;&#34;RPC error/fault package received.
+    
+    This exception can also be used as a class, to generate a
+    RPC-error/fault message.
+
+    :Variables:
+        - error_code:   the RPC error-code
+        - error_string: description of the error
+        - error_data:   optional additional information
+                        (must be json-serializable)
+    :TODO: improve __str__
+    &#34;&#34;&#34;
+    def __init__(self, error_code, error_message, error_data=None):
+        RPCError.__init__(self)
+        self.error_code   = error_code
+        self.error_message = error_message
+        self.error_data   = error_data
+    def __str__(self):
+        return repr(self)
+    def __repr__(self):
+        return( &#34;&lt;RPCFault %s: %s (%s)&gt;&#34; % (self.error_code, repr(self.error_message), repr(self.error_data)) )</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.RPCError" href="#pcgsepy.common.jsonrpc.RPCError">RPCError</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.RPCAuthentificationError" href="#pcgsepy.common.jsonrpc.RPCAuthentificationError">RPCAuthentificationError</a></li>
+<li><a title="pcgsepy.common.jsonrpc.RPCInternalError" href="#pcgsepy.common.jsonrpc.RPCInternalError">RPCInternalError</a></li>
+<li><a title="pcgsepy.common.jsonrpc.RPCInvalidMethodParams" href="#pcgsepy.common.jsonrpc.RPCInvalidMethodParams">RPCInvalidMethodParams</a></li>
+<li><a title="pcgsepy.common.jsonrpc.RPCInvalidParamValues" href="#pcgsepy.common.jsonrpc.RPCInvalidParamValues">RPCInvalidParamValues</a></li>
+<li><a title="pcgsepy.common.jsonrpc.RPCInvalidRPC" href="#pcgsepy.common.jsonrpc.RPCInvalidRPC">RPCInvalidRPC</a></li>
+<li><a title="pcgsepy.common.jsonrpc.RPCMethodNotFound" href="#pcgsepy.common.jsonrpc.RPCMethodNotFound">RPCMethodNotFound</a></li>
+<li><a title="pcgsepy.common.jsonrpc.RPCParseError" href="#pcgsepy.common.jsonrpc.RPCParseError">RPCParseError</a></li>
+<li><a title="pcgsepy.common.jsonrpc.RPCPermissionDenied" href="#pcgsepy.common.jsonrpc.RPCPermissionDenied">RPCPermissionDenied</a></li>
+<li><a title="pcgsepy.common.jsonrpc.RPCProcedureException" href="#pcgsepy.common.jsonrpc.RPCProcedureException">RPCProcedureException</a></li>
+</ul>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.RPCInternalError"><code class="flex name class">
+<span>class <span class="ident">RPCInternalError</span></span>
+<span>(</span><span>error_data=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Internal error. (INTERNAL_ERROR)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RPCInternalError(RPCFault):
+    &#34;&#34;&#34;Internal error. (INTERNAL_ERROR)&#34;&#34;&#34;
+    def __init__(self, error_data=None):
+        RPCFault.__init__(self, INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR], error_data)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.RPCFault" href="#pcgsepy.common.jsonrpc.RPCFault">RPCFault</a></li>
+<li><a title="pcgsepy.common.jsonrpc.RPCError" href="#pcgsepy.common.jsonrpc.RPCError">RPCError</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.RPCInvalidMethodParams"><code class="flex name class">
+<span>class <span class="ident">RPCInvalidMethodParams</span></span>
+<span>(</span><span>error_data=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Invalid method-parameters. (INVALID_METHOD_PARAMS)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RPCInvalidMethodParams(RPCFault):
+    &#34;&#34;&#34;Invalid method-parameters. (INVALID_METHOD_PARAMS)&#34;&#34;&#34;
+    def __init__(self, error_data=None):
+        RPCFault.__init__(self, INVALID_METHOD_PARAMS, ERROR_MESSAGE[INVALID_METHOD_PARAMS], error_data)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.RPCFault" href="#pcgsepy.common.jsonrpc.RPCFault">RPCFault</a></li>
+<li><a title="pcgsepy.common.jsonrpc.RPCError" href="#pcgsepy.common.jsonrpc.RPCError">RPCError</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.RPCInvalidParamValues"><code class="flex name class">
+<span>class <span class="ident">RPCInvalidParamValues</span></span>
+<span>(</span><span>error_data=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>INVALID_PARAM_VALUES</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RPCInvalidParamValues(RPCFault):
+    &#34;&#34;&#34;INVALID_PARAM_VALUES&#34;&#34;&#34;
+    def __init__(self, error_data=None):
+        RPCFault.__init__(self, INVALID_PARAM_VALUES, ERROR_MESSAGE[INVALID_PARAM_VALUES], error_data)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.RPCFault" href="#pcgsepy.common.jsonrpc.RPCFault">RPCFault</a></li>
+<li><a title="pcgsepy.common.jsonrpc.RPCError" href="#pcgsepy.common.jsonrpc.RPCError">RPCError</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.RPCInvalidRPC"><code class="flex name class">
+<span>class <span class="ident">RPCInvalidRPC</span></span>
+<span>(</span><span>error_data=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Invalid rpc-package. (INVALID_REQUEST)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RPCInvalidRPC(RPCFault):
+    &#34;&#34;&#34;Invalid rpc-package. (INVALID_REQUEST)&#34;&#34;&#34;
+    def __init__(self, error_data=None):
+        RPCFault.__init__(self, INVALID_REQUEST, ERROR_MESSAGE[INVALID_REQUEST], error_data)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.RPCFault" href="#pcgsepy.common.jsonrpc.RPCFault">RPCFault</a></li>
+<li><a title="pcgsepy.common.jsonrpc.RPCError" href="#pcgsepy.common.jsonrpc.RPCError">RPCError</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.RPCMethodNotFound"><code class="flex name class">
+<span>class <span class="ident">RPCMethodNotFound</span></span>
+<span>(</span><span>error_data=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Method not found. (METHOD_NOT_FOUND)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RPCMethodNotFound(RPCFault):
+    &#34;&#34;&#34;Method not found. (METHOD_NOT_FOUND)&#34;&#34;&#34;
+    def __init__(self, error_data=None):
+        RPCFault.__init__(self, METHOD_NOT_FOUND, ERROR_MESSAGE[METHOD_NOT_FOUND], error_data)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.RPCFault" href="#pcgsepy.common.jsonrpc.RPCFault">RPCFault</a></li>
+<li><a title="pcgsepy.common.jsonrpc.RPCError" href="#pcgsepy.common.jsonrpc.RPCError">RPCError</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.RPCParseError"><code class="flex name class">
+<span>class <span class="ident">RPCParseError</span></span>
+<span>(</span><span>error_data=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Broken rpc-package. (PARSE_ERROR)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RPCParseError(RPCFault):
+    &#34;&#34;&#34;Broken rpc-package. (PARSE_ERROR)&#34;&#34;&#34;
+    def __init__(self, error_data=None):
+        RPCFault.__init__(self, PARSE_ERROR, ERROR_MESSAGE[PARSE_ERROR], error_data)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.RPCFault" href="#pcgsepy.common.jsonrpc.RPCFault">RPCFault</a></li>
+<li><a title="pcgsepy.common.jsonrpc.RPCError" href="#pcgsepy.common.jsonrpc.RPCError">RPCError</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.RPCPermissionDenied"><code class="flex name class">
+<span>class <span class="ident">RPCPermissionDenied</span></span>
+<span>(</span><span>error_data=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>PERMISSION_DENIED</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RPCPermissionDenied(RPCFault):
+    &#34;&#34;&#34;PERMISSION_DENIED&#34;&#34;&#34;
+    def __init__(self, error_data=None):
+        RPCFault.__init__(self, PERMISSION_DENIED, ERROR_MESSAGE[PERMISSION_DENIED], error_data)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.RPCFault" href="#pcgsepy.common.jsonrpc.RPCFault">RPCFault</a></li>
+<li><a title="pcgsepy.common.jsonrpc.RPCError" href="#pcgsepy.common.jsonrpc.RPCError">RPCError</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.RPCProcedureException"><code class="flex name class">
+<span>class <span class="ident">RPCProcedureException</span></span>
+<span>(</span><span>error_data=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Procedure exception. (PROCEDURE_EXCEPTION)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RPCProcedureException(RPCFault):
+    &#34;&#34;&#34;Procedure exception. (PROCEDURE_EXCEPTION)&#34;&#34;&#34;
+    def __init__(self, error_data=None):
+        RPCFault.__init__(self, PROCEDURE_EXCEPTION, ERROR_MESSAGE[PROCEDURE_EXCEPTION], error_data)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.RPCFault" href="#pcgsepy.common.jsonrpc.RPCFault">RPCFault</a></li>
+<li><a title="pcgsepy.common.jsonrpc.RPCError" href="#pcgsepy.common.jsonrpc.RPCError">RPCError</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.RPCTimeoutError"><code class="flex name class">
+<span>class <span class="ident">RPCTimeoutError</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Transport/reply timeout.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RPCTimeoutError(RPCTransportError):
+    &#34;&#34;&#34;Transport/reply timeout.&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.RPCTransportError" href="#pcgsepy.common.jsonrpc.RPCTransportError">RPCTransportError</a></li>
+<li><a title="pcgsepy.common.jsonrpc.RPCError" href="#pcgsepy.common.jsonrpc.RPCError">RPCError</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.RPCTransportError"><code class="flex name class">
+<span>class <span class="ident">RPCTransportError</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Transport error.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RPCTransportError(RPCError):
+    &#34;&#34;&#34;Transport error.&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.RPCError" href="#pcgsepy.common.jsonrpc.RPCError">RPCError</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.RPCTimeoutError" href="#pcgsepy.common.jsonrpc.RPCTimeoutError">RPCTimeoutError</a></li>
+</ul>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.Server"><code class="flex name class">
+<span>class <span class="ident">Server</span></span>
+<span>(</span><span>data_serializer, transport, logfile=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>RPC-server.</p>
+<p>It works with different data/serializers and
+with different transports.</p>
+<p>:Example:
+see module-docstring</p>
+<p>:TODO:
+- mixed JSON-RPC 1.0/2.0 server?
+- logging/loglevels?</p>
+<p>:Parameters:
+- data_serializer: a data_structure+serializer-instance
+- transport: a Transport instance
+- logfile: file to log ("unexpected") errors to</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Server:
+    &#34;&#34;&#34;RPC-server.
+
+    It works with different data/serializers and 
+    with different transports.
+
+    :Example:
+        see module-docstring
+
+    :TODO:
+        - mixed JSON-RPC 1.0/2.0 server?
+        - logging/loglevels?
+    &#34;&#34;&#34;
+    def __init__( self, data_serializer, transport, logfile=None ):
+        &#34;&#34;&#34;
+        :Parameters:
+            - data_serializer: a data_structure+serializer-instance
+            - transport: a Transport instance
+            - logfile: file to log (&#34;unexpected&#34;) errors to
+        &#34;&#34;&#34;
+        #TODO: check parameters
+        self.__data_serializer = data_serializer
+        if not isinstance(transport, Transport):
+            raise ValueError(&#39;invalid &#34;transport&#34; (must be a Transport-instance)&#34;&#39;)
+        self.__transport = transport
+        self.logfile = logfile
+        if self.logfile is not None:    #create logfile (or raise exception)
+            f = codecs.open( self.logfile, &#39;a&#39;, encoding=&#39;utf-8&#39; )
+            f.close()
+
+        self.funcs = {}
+
+    def __repr__(self):
+        return &#34;&lt;Server for %s, with serializer %s&gt;&#34; % (self.__transport, self.__data_serializer)
+
+    def log(self, message):
+        &#34;&#34;&#34;write a message to the logfile (in utf-8)&#34;&#34;&#34;
+        if self.logfile is not None:
+            f = codecs.open( self.logfile, &#39;a&#39;, encoding=&#39;utf-8&#39; )
+            f.write( time.strftime(&#34;%Y-%m-%d %H:%M:%S &#34;)+message+&#34;\n&#34; )
+            f.close()
+
+    def register_instance(self, myinst, name=None):
+        &#34;&#34;&#34;Add all functions of a class-instance to the RPC-services.
+        
+        All entries of the instance which do not begin with &#39;_&#39; are added.
+
+        :Parameters:
+            - myinst: class-instance containing the functions
+            - name:   | hierarchical prefix.
+                      | If omitted, the functions are added directly.
+                      | If given, the functions are added as &#34;name.function&#34;.
+        :TODO:
+            - only add functions and omit attributes?
+            - improve hierarchy?
+        &#34;&#34;&#34;
+        for e in dir(myinst):
+            if e[0][0] != &#34;_&#34;:
+                if name is None:
+                    self.register_function( getattr(myinst, e) )
+                else:
+                    self.register_function( getattr(myinst, e), name=&#34;%s.%s&#34; % (name, e) )
+    def register_function(self, function, name=None):
+        &#34;&#34;&#34;Add a function to the RPC-services.
+        
+        :Parameters:
+            - function: function to add
+            - name:     RPC-name for the function. If omitted/None, the original
+                        name of the function is used.
+        &#34;&#34;&#34;
+        if name is None:
+            self.funcs[function.__name__] = function
+        else:
+            self.funcs[name] = function
+    
+    def handle(self, rpcstr):
+        &#34;&#34;&#34;Handle a RPC-Request.
+
+        :Parameters:
+            - rpcstr: the received rpc-string
+        :Returns: the data to send back or None if nothing should be sent back
+        :Raises:  RPCFault (and maybe others)
+        &#34;&#34;&#34;
+        #TODO: id
+        notification = False
+        try:
+            req = self.__data_serializer.loads_request( rpcstr )
+            if len(req) == 2:       #notification
+                method, params = req
+                notification = True
+            else:                   #request
+                method, params, id = req
+        except RPCFault as err:
+            return self.__data_serializer.dumps_error( err, id=None )
+        except Exception as err:
+            self.log( &#34;%d (%s): %s&#34; % (INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR], str(err)) )
+            return self.__data_serializer.dumps_error( RPCFault(INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR]), id=None )
+
+        if method not in self.funcs:
+            if notification:
+                return None
+            return self.__data_serializer.dumps_error( RPCFault(METHOD_NOT_FOUND, ERROR_MESSAGE[METHOD_NOT_FOUND]), id )
+
+        try:
+            if isinstance(params, dict):
+                result = self.funcs[method]( **params )
+            else:
+                result = self.funcs[method]( *params )
+        except RPCFault as err:
+            if notification:
+                return None
+            return self.__data_serializer.dumps_error( err, id=None )
+        except Exception as err:
+            if notification:
+                return None
+            self.log( &#34;%d (%s): %s&#34; % (INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR], str(err)) )
+            return self.__data_serializer.dumps_error( RPCFault(INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR]), id )
+
+        if notification:
+            return None
+        try:
+            return self.__data_serializer.dumps_response( result, id )
+        except Exception as err:
+            self.log( &#34;%d (%s): %s&#34; % (INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR], str(err)) )
+            return self.__data_serializer.dumps_error( RPCFault(INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR]), id )
+
+    def serve(self, n=None):
+        &#34;&#34;&#34;serve (forever or for n communicaions).
+        
+        :See: Transport
+        &#34;&#34;&#34;
+        self.__transport.serve( self.handle, n )</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="pcgsepy.common.jsonrpc.Server.handle"><code class="name flex">
+<span>def <span class="ident">handle</span></span>(<span>self, rpcstr)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Handle a RPC-Request.</p>
+<p>:Parameters:
+- rpcstr: the received rpc-string
+:Returns: the data to send back or None if nothing should be sent back
+:Raises:
+RPCFault (and maybe others)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle(self, rpcstr):
+    &#34;&#34;&#34;Handle a RPC-Request.
+
+    :Parameters:
+        - rpcstr: the received rpc-string
+    :Returns: the data to send back or None if nothing should be sent back
+    :Raises:  RPCFault (and maybe others)
+    &#34;&#34;&#34;
+    #TODO: id
+    notification = False
+    try:
+        req = self.__data_serializer.loads_request( rpcstr )
+        if len(req) == 2:       #notification
+            method, params = req
+            notification = True
+        else:                   #request
+            method, params, id = req
+    except RPCFault as err:
+        return self.__data_serializer.dumps_error( err, id=None )
+    except Exception as err:
+        self.log( &#34;%d (%s): %s&#34; % (INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR], str(err)) )
+        return self.__data_serializer.dumps_error( RPCFault(INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR]), id=None )
+
+    if method not in self.funcs:
+        if notification:
+            return None
+        return self.__data_serializer.dumps_error( RPCFault(METHOD_NOT_FOUND, ERROR_MESSAGE[METHOD_NOT_FOUND]), id )
+
+    try:
+        if isinstance(params, dict):
+            result = self.funcs[method]( **params )
+        else:
+            result = self.funcs[method]( *params )
+    except RPCFault as err:
+        if notification:
+            return None
+        return self.__data_serializer.dumps_error( err, id=None )
+    except Exception as err:
+        if notification:
+            return None
+        self.log( &#34;%d (%s): %s&#34; % (INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR], str(err)) )
+        return self.__data_serializer.dumps_error( RPCFault(INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR]), id )
+
+    if notification:
+        return None
+    try:
+        return self.__data_serializer.dumps_response( result, id )
+    except Exception as err:
+        self.log( &#34;%d (%s): %s&#34; % (INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR], str(err)) )
+        return self.__data_serializer.dumps_error( RPCFault(INTERNAL_ERROR, ERROR_MESSAGE[INTERNAL_ERROR]), id )</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.Server.log"><code class="name flex">
+<span>def <span class="ident">log</span></span>(<span>self, message)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>write a message to the logfile (in utf-8)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def log(self, message):
+    &#34;&#34;&#34;write a message to the logfile (in utf-8)&#34;&#34;&#34;
+    if self.logfile is not None:
+        f = codecs.open( self.logfile, &#39;a&#39;, encoding=&#39;utf-8&#39; )
+        f.write( time.strftime(&#34;%Y-%m-%d %H:%M:%S &#34;)+message+&#34;\n&#34; )
+        f.close()</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.Server.register_function"><code class="name flex">
+<span>def <span class="ident">register_function</span></span>(<span>self, function, name=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add a function to the RPC-services.</p>
+<p>:Parameters:
+- function: function to add
+- name:
+RPC-name for the function. If omitted/None, the original
+name of the function is used.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def register_function(self, function, name=None):
+    &#34;&#34;&#34;Add a function to the RPC-services.
+    
+    :Parameters:
+        - function: function to add
+        - name:     RPC-name for the function. If omitted/None, the original
+                    name of the function is used.
+    &#34;&#34;&#34;
+    if name is None:
+        self.funcs[function.__name__] = function
+    else:
+        self.funcs[name] = function</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.Server.register_instance"><code class="name flex">
+<span>def <span class="ident">register_instance</span></span>(<span>self, myinst, name=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add all functions of a class-instance to the RPC-services.</p>
+<p>All entries of the instance which do not begin with '_' are added.</p>
+<p>:Parameters:
+- myinst: class-instance containing the functions
+- name:
+| hierarchical prefix.
+| If omitted, the functions are added directly.
+| If given, the functions are added as "name.function".
+:TODO:
+- only add functions and omit attributes?
+- improve hierarchy?</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def register_instance(self, myinst, name=None):
+    &#34;&#34;&#34;Add all functions of a class-instance to the RPC-services.
+    
+    All entries of the instance which do not begin with &#39;_&#39; are added.
+
+    :Parameters:
+        - myinst: class-instance containing the functions
+        - name:   | hierarchical prefix.
+                  | If omitted, the functions are added directly.
+                  | If given, the functions are added as &#34;name.function&#34;.
+    :TODO:
+        - only add functions and omit attributes?
+        - improve hierarchy?
+    &#34;&#34;&#34;
+    for e in dir(myinst):
+        if e[0][0] != &#34;_&#34;:
+            if name is None:
+                self.register_function( getattr(myinst, e) )
+            else:
+                self.register_function( getattr(myinst, e), name=&#34;%s.%s&#34; % (name, e) )</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.Server.serve"><code class="name flex">
+<span>def <span class="ident">serve</span></span>(<span>self, n=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>serve (forever or for n communicaions).</p>
+<p>:See: Transport</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def serve(self, n=None):
+    &#34;&#34;&#34;serve (forever or for n communicaions).
+    
+    :See: Transport
+    &#34;&#34;&#34;
+    self.__transport.serve( self.handle, n )</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.ServerProxy"><code class="flex name class">
+<span>class <span class="ident">ServerProxy</span></span>
+<span>(</span><span>data_serializer, transport)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>RPC-client: server proxy</p>
+<p>A logical connection to a RPC server.</p>
+<p>It works with different data/serializers and different transports.</p>
+<p>Notifications and id-handling/multicall are not yet implemented.</p>
+<p>:Example:
+see module-docstring</p>
+<p>:TODO: verbose/logging?</p>
+<p>:Parameters:
+- data_serializer: a data_structure+serializer-instance
+- transport: a Transport instance</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ServerProxy:
+    &#34;&#34;&#34;RPC-client: server proxy
+
+    A logical connection to a RPC server.
+
+    It works with different data/serializers and different transports.
+
+    Notifications and id-handling/multicall are not yet implemented.
+
+    :Example:
+        see module-docstring
+
+    :TODO: verbose/logging?
+    &#34;&#34;&#34;
+    def __init__( self, data_serializer, transport ):
+        &#34;&#34;&#34;
+        :Parameters:
+            - data_serializer: a data_structure+serializer-instance
+            - transport: a Transport instance
+        &#34;&#34;&#34;
+        #TODO: check parameters
+        self.__data_serializer = data_serializer
+        if not isinstance(transport, Transport):
+            raise ValueError(&#39;invalid &#34;transport&#34; (must be a Transport-instance)&#34;&#39;)
+        self.__transport = transport
+
+    def __str__(self):
+        return repr(self)
+    def __repr__(self):
+        return &#34;&lt;ServerProxy for %s, with serializer %s&gt;&#34; % (self.__transport, self.__data_serializer)
+
+    def __req( self, methodname, args=None, kwargs=None, id=0 ):
+        # JSON-RPC 1.0: only positional parameters
+        if len(kwargs) &gt; 0 and isinstance(self.data_serializer, JsonRpc10):
+            raise ValueError(&#34;Only positional parameters allowed in JSON-RPC 1.0&#34;)
+        # JSON-RPC 2.0: only args OR kwargs allowed!
+        if len(args) &gt; 0 and len(kwargs) &gt; 0:
+            raise ValueError(&#34;Only positional or named parameters are allowed!&#34;)
+        if len(kwargs) == 0:
+            req_str  = self.__data_serializer.dumps_request( methodname, args, id )
+        else:
+            req_str  = self.__data_serializer.dumps_request( methodname, kwargs, id )
+
+        try:
+            resp_str = self.__transport.sendrecv( req_str )
+        except Exception as err:
+            raise RPCTransportError(err)
+        resp = self.__data_serializer.loads_response( resp_str )
+        return resp[0]
+
+    def __getattr__(self, name):
+        # magic method dispatcher
+        #  note: to call a remote object with an non-standard name, use
+        #  result getattr(my_server_proxy, &#34;strange-python-name&#34;)(args)
+        return _method(self.__req, name)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.Transport"><code class="flex name class">
+<span>class <span class="ident">Transport</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>generic Transport-interface.</p>
+<p>This class, and especially its methods and docstrings,
+define the Transport-Interface.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Transport:
+    &#34;&#34;&#34;generic Transport-interface.
+    
+    This class, and especially its methods and docstrings,
+    define the Transport-Interface.
+    &#34;&#34;&#34;
+    def __init__(self):
+        pass
+
+    def send( self, data ):
+        &#34;&#34;&#34;send all data. must be implemented by derived classes.&#34;&#34;&#34;
+        raise NotImplementedError
+    def recv( self ):
+        &#34;&#34;&#34;receive data. must be implemented by derived classes.&#34;&#34;&#34;
+        raise NotImplementedError
+
+    def sendrecv( self, string ):
+        &#34;&#34;&#34;send + receive data&#34;&#34;&#34;
+        self.send( string )
+        return self.recv()
+    def serve( self, handler, n=None ):
+        &#34;&#34;&#34;serve (forever or for n communicaions).
+        
+        - receive data
+        - call result = handler(data)
+        - send back result if not None
+
+        The serving can be stopped by SIGINT.
+
+        :TODO:
+            - how to stop?
+              maybe use a .run-file, and stop server if file removed?
+            - maybe make n_current accessible? (e.g. for logging)
+        &#34;&#34;&#34;
+        n_current = 0
+        while 1:
+            if n is not None  and  n_current &gt;= n:
+                break
+            data = self.recv()
+            result = handler(data)
+            if result is not None:
+                self.send( result )
+            n_current += 1</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.TransportSTDINOUT" href="#pcgsepy.common.jsonrpc.TransportSTDINOUT">TransportSTDINOUT</a></li>
+<li><a title="pcgsepy.common.jsonrpc.TransportSocket" href="#pcgsepy.common.jsonrpc.TransportSocket">TransportSocket</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="pcgsepy.common.jsonrpc.Transport.recv"><code class="name flex">
+<span>def <span class="ident">recv</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>receive data. must be implemented by derived classes.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def recv( self ):
+    &#34;&#34;&#34;receive data. must be implemented by derived classes.&#34;&#34;&#34;
+    raise NotImplementedError</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.Transport.send"><code class="name flex">
+<span>def <span class="ident">send</span></span>(<span>self, data)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>send all data. must be implemented by derived classes.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send( self, data ):
+    &#34;&#34;&#34;send all data. must be implemented by derived classes.&#34;&#34;&#34;
+    raise NotImplementedError</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.Transport.sendrecv"><code class="name flex">
+<span>def <span class="ident">sendrecv</span></span>(<span>self, string)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>send + receive data</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sendrecv( self, string ):
+    &#34;&#34;&#34;send + receive data&#34;&#34;&#34;
+    self.send( string )
+    return self.recv()</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.Transport.serve"><code class="name flex">
+<span>def <span class="ident">serve</span></span>(<span>self, handler, n=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>serve (forever or for n communicaions).</p>
+<ul>
+<li>receive data</li>
+<li>call result = handler(data)</li>
+<li>send back result if not None</li>
+</ul>
+<p>The serving can be stopped by SIGINT.</p>
+<p>:TODO:
+- how to stop?
+maybe use a .run-file, and stop server if file removed?
+- maybe make n_current accessible? (e.g. for logging)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def serve( self, handler, n=None ):
+    &#34;&#34;&#34;serve (forever or for n communicaions).
+    
+    - receive data
+    - call result = handler(data)
+    - send back result if not None
+
+    The serving can be stopped by SIGINT.
+
+    :TODO:
+        - how to stop?
+          maybe use a .run-file, and stop server if file removed?
+        - maybe make n_current accessible? (e.g. for logging)
+    &#34;&#34;&#34;
+    n_current = 0
+    while 1:
+        if n is not None  and  n_current &gt;= n:
+            break
+        data = self.recv()
+        result = handler(data)
+        if result is not None:
+            self.send( result )
+        n_current += 1</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.TransportSTDINOUT"><code class="flex name class">
+<span>class <span class="ident">TransportSTDINOUT</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>receive from STDIN, send to STDOUT.</p>
+<p>Useful e.g. for debugging.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TransportSTDINOUT(Transport):
+    &#34;&#34;&#34;receive from STDIN, send to STDOUT.
+
+    Useful e.g. for debugging.
+    &#34;&#34;&#34;
+    def send(self, string):
+        &#34;&#34;&#34;write data to STDOUT with &#39;***SEND:&#39; prefix &#34;&#34;&#34;
+        print(&#34;***SEND:&#34;)
+        print(string)
+    def recv(self):
+        &#34;&#34;&#34;read data from STDIN&#34;&#34;&#34;
+        print(&#34;***RECV (please enter, ^D ends.):&#34;)
+        return sys.stdin.read()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.Transport" href="#pcgsepy.common.jsonrpc.Transport">Transport</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="pcgsepy.common.jsonrpc.TransportSTDINOUT.recv"><code class="name flex">
+<span>def <span class="ident">recv</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>read data from STDIN</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def recv(self):
+    &#34;&#34;&#34;read data from STDIN&#34;&#34;&#34;
+    print(&#34;***RECV (please enter, ^D ends.):&#34;)
+    return sys.stdin.read()</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.TransportSTDINOUT.send"><code class="name flex">
+<span>def <span class="ident">send</span></span>(<span>self, string)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>write data to STDOUT with '***SEND:' prefix</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send(self, string):
+    &#34;&#34;&#34;write data to STDOUT with &#39;***SEND:&#39; prefix &#34;&#34;&#34;
+    print(&#34;***SEND:&#34;)
+    print(string)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="pcgsepy.common.jsonrpc.Transport" href="#pcgsepy.common.jsonrpc.Transport">Transport</a></b></code>:
+<ul class="hlist">
+<li><code><a title="pcgsepy.common.jsonrpc.Transport.sendrecv" href="#pcgsepy.common.jsonrpc.Transport.sendrecv">sendrecv</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.Transport.serve" href="#pcgsepy.common.jsonrpc.Transport.serve">serve</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.TransportSocket"><code class="flex name class">
+<span>class <span class="ident">TransportSocket</span></span>
+<span>(</span><span>addr, limit=4096, sock_type=AddressFamily.AF_INET, sock_prot=SocketKind.SOCK_STREAM, timeout=1.0, logfunc=&lt;function log_dummy&gt;)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Transport via socket.</p>
+<p>:SeeAlso:
+python-module socket
+:TODO:
+- documentation
+- improve this (e.g. make sure that connections are closed, socket-files are deleted etc.)
+- exception-handling? (socket.error)</p>
+<p>:Parameters:
+- addr: socket-address
+- timeout: timeout in seconds
+- logfunc: function for logging, logfunc(message)
+:Raises: socket.timeout after timeout</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TransportSocket(Transport):
+    &#34;&#34;&#34;Transport via socket.
+   
+    :SeeAlso:   python-module socket
+    :TODO:
+        - documentation
+        - improve this (e.g. make sure that connections are closed, socket-files are deleted etc.)
+        - exception-handling? (socket.error)
+    &#34;&#34;&#34;
+    def __init__( self, addr, limit=4096, sock_type=socket.AF_INET, sock_prot=socket.SOCK_STREAM, timeout=1.0, logfunc=log_dummy ):
+        &#34;&#34;&#34;
+        :Parameters:
+            - addr: socket-address
+            - timeout: timeout in seconds
+            - logfunc: function for logging, logfunc(message)
+        :Raises: socket.timeout after timeout
+        &#34;&#34;&#34;
+        self.limit  = limit
+        self.addr   = addr
+        self.s_type = sock_type
+        self.s_prot = sock_prot
+        self.s      = None
+        self.timeout = timeout
+        self.log    = logfunc
+    def connect( self ):
+        self.close()
+        self.log( &#34;connect to %s&#34; % repr(self.addr) )
+        self.s = socket.socket( self.s_type, self.s_prot )
+        self.s.settimeout( self.timeout )
+        self.s.connect( self.addr )
+    def close( self ):
+        if self.s is not None:
+            self.log( &#34;close %s&#34; % repr(self.addr) )
+            self.s.close()
+            self.s = None
+    def __repr__(self):
+        return &#34;&lt;TransportSocket, %s&gt;&#34; % repr(self.addr)
+    
+    def send( self, string ):
+        if self.s is None:
+            self.connect()
+        self.log( &#34;--&gt; &#34;+repr(string) )
+        self.s.sendall( string )
+    def recv( self ):
+        if self.s is None:
+            self.connect()
+        data = self.s.recv( self.limit )
+        while( select.select((self.s,), (), (), 0.1)[0] ):  #TODO: this select is probably not necessary, because server closes this socket
+            d = self.s.recv( self.limit )
+            if len(d) == 0:
+                break
+            data += d
+        self.log( &#34;&lt;-- &#34;+repr(data) )
+        return data
+
+    def sendrecv( self, string ):
+        &#34;&#34;&#34;send data + receive data + close&#34;&#34;&#34;
+        try:
+            self.send( string )
+            return self.recv()
+        finally:
+            self.close()
+    def serve(self, handler, n=None):
+        &#34;&#34;&#34;open socket, wait for incoming connections and handle them.
+        
+        :Parameters:
+            - n: serve n requests, None=forever
+        &#34;&#34;&#34;
+        self.close()
+        self.s = socket.socket( self.s_type, self.s_prot )
+        try:
+            self.log( &#34;listen %s&#34; % repr(self.addr) )
+            self.s.bind( self.addr )
+            self.s.listen(1)
+            n_current = 0
+            while 1:
+                if n is not None  and  n_current &gt;= n:
+                    break
+                conn, addr = self.s.accept()
+                self.log( &#34;%s connected&#34; % repr(addr) )
+                data = conn.recv(self.limit)
+                self.log( &#34;%s --&gt; %s&#34; % (repr(addr), repr(data)) )
+                result = handler(data)
+                if data is not None:
+                    self.log( &#34;%s &lt;-- %s&#34; % (repr(addr), repr(result)) )
+                    conn.send( result )
+                self.log( &#34;%s close&#34; % repr(addr) )
+                conn.close()
+                n_current += 1
+        finally:
+            self.close()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.Transport" href="#pcgsepy.common.jsonrpc.Transport">Transport</a></li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.TransportTcpIp" href="#pcgsepy.common.jsonrpc.TransportTcpIp">TransportTcpIp</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="pcgsepy.common.jsonrpc.TransportSocket.close"><code class="name flex">
+<span>def <span class="ident">close</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def close( self ):
+    if self.s is not None:
+        self.log( &#34;close %s&#34; % repr(self.addr) )
+        self.s.close()
+        self.s = None</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.TransportSocket.connect"><code class="name flex">
+<span>def <span class="ident">connect</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def connect( self ):
+    self.close()
+    self.log( &#34;connect to %s&#34; % repr(self.addr) )
+    self.s = socket.socket( self.s_type, self.s_prot )
+    self.s.settimeout( self.timeout )
+    self.s.connect( self.addr )</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.TransportSocket.sendrecv"><code class="name flex">
+<span>def <span class="ident">sendrecv</span></span>(<span>self, string)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>send data + receive data + close</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sendrecv( self, string ):
+    &#34;&#34;&#34;send data + receive data + close&#34;&#34;&#34;
+    try:
+        self.send( string )
+        return self.recv()
+    finally:
+        self.close()</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.TransportSocket.serve"><code class="name flex">
+<span>def <span class="ident">serve</span></span>(<span>self, handler, n=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>open socket, wait for incoming connections and handle them.</p>
+<p>:Parameters:
+- n: serve n requests, None=forever</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def serve(self, handler, n=None):
+    &#34;&#34;&#34;open socket, wait for incoming connections and handle them.
+    
+    :Parameters:
+        - n: serve n requests, None=forever
+    &#34;&#34;&#34;
+    self.close()
+    self.s = socket.socket( self.s_type, self.s_prot )
+    try:
+        self.log( &#34;listen %s&#34; % repr(self.addr) )
+        self.s.bind( self.addr )
+        self.s.listen(1)
+        n_current = 0
+        while 1:
+            if n is not None  and  n_current &gt;= n:
+                break
+            conn, addr = self.s.accept()
+            self.log( &#34;%s connected&#34; % repr(addr) )
+            data = conn.recv(self.limit)
+            self.log( &#34;%s --&gt; %s&#34; % (repr(addr), repr(data)) )
+            result = handler(data)
+            if data is not None:
+                self.log( &#34;%s &lt;-- %s&#34; % (repr(addr), repr(result)) )
+                conn.send( result )
+            self.log( &#34;%s close&#34; % repr(addr) )
+            conn.close()
+            n_current += 1
+    finally:
+        self.close()</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="pcgsepy.common.jsonrpc.Transport" href="#pcgsepy.common.jsonrpc.Transport">Transport</a></b></code>:
+<ul class="hlist">
+<li><code><a title="pcgsepy.common.jsonrpc.Transport.recv" href="#pcgsepy.common.jsonrpc.Transport.recv">recv</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.Transport.send" href="#pcgsepy.common.jsonrpc.Transport.send">send</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="pcgsepy.common.jsonrpc.TransportTcpIp"><code class="flex name class">
+<span>class <span class="ident">TransportTcpIp</span></span>
+<span>(</span><span>addr=None, limit=4096, timeout=1.0, logfunc=&lt;function log_dummy&gt;)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Transport via TCP/IP.</p>
+<p>:Parameters:
+- addr: ("host",port)
+:SeeAlso:
+TransportSocket</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TransportTcpIp(TransportSocket):
+    &#34;&#34;&#34;Transport via TCP/IP.
+    &#34;&#34;&#34;
+    def __init__(self, addr=None, limit=4096, timeout=1.0, logfunc=log_dummy):
+        &#34;&#34;&#34;
+        :Parameters:
+            - addr: (&#34;host&#34;,port)
+        :SeeAlso:   TransportSocket
+        &#34;&#34;&#34;
+        TransportSocket.__init__( self, addr, limit, socket.AF_INET, socket.SOCK_STREAM, timeout, logfunc )</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pcgsepy.common.jsonrpc.TransportSocket" href="#pcgsepy.common.jsonrpc.TransportSocket">TransportSocket</a></li>
+<li><a title="pcgsepy.common.jsonrpc.Transport" href="#pcgsepy.common.jsonrpc.Transport">Transport</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="pcgsepy.common.jsonrpc.TransportSocket" href="#pcgsepy.common.jsonrpc.TransportSocket">TransportSocket</a></b></code>:
+<ul class="hlist">
+<li><code><a title="pcgsepy.common.jsonrpc.TransportSocket.recv" href="#pcgsepy.common.jsonrpc.Transport.recv">recv</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.TransportSocket.send" href="#pcgsepy.common.jsonrpc.Transport.send">send</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.TransportSocket.sendrecv" href="#pcgsepy.common.jsonrpc.TransportSocket.sendrecv">sendrecv</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.TransportSocket.serve" href="#pcgsepy.common.jsonrpc.TransportSocket.serve">serve</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pcgsepy.common" href="index.html">pcgsepy.common</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pcgsepy.common.jsonrpc.dictkeyclean" href="#pcgsepy.common.jsonrpc.dictkeyclean">dictkeyclean</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.log_dummy" href="#pcgsepy.common.jsonrpc.log_dummy">log_dummy</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.log_file" href="#pcgsepy.common.jsonrpc.log_file">log_file</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.log_filedate" href="#pcgsepy.common.jsonrpc.log_filedate">log_filedate</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.log_stdout" href="#pcgsepy.common.jsonrpc.log_stdout">log_stdout</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.JsonRpc10" href="#pcgsepy.common.jsonrpc.JsonRpc10">JsonRpc10</a></code></h4>
+<ul class="two-column">
+<li><code><a title="pcgsepy.common.jsonrpc.JsonRpc10.dumps_error" href="#pcgsepy.common.jsonrpc.JsonRpc10.dumps_error">dumps_error</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.JsonRpc10.dumps_notification" href="#pcgsepy.common.jsonrpc.JsonRpc10.dumps_notification">dumps_notification</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.JsonRpc10.dumps_request" href="#pcgsepy.common.jsonrpc.JsonRpc10.dumps_request">dumps_request</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.JsonRpc10.dumps_response" href="#pcgsepy.common.jsonrpc.JsonRpc10.dumps_response">dumps_response</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.JsonRpc10.loads_request" href="#pcgsepy.common.jsonrpc.JsonRpc10.loads_request">loads_request</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.JsonRpc10.loads_response" href="#pcgsepy.common.jsonrpc.JsonRpc10.loads_response">loads_response</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.JsonRpc20" href="#pcgsepy.common.jsonrpc.JsonRpc20">JsonRpc20</a></code></h4>
+<ul class="two-column">
+<li><code><a title="pcgsepy.common.jsonrpc.JsonRpc20.dumps_error" href="#pcgsepy.common.jsonrpc.JsonRpc20.dumps_error">dumps_error</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.JsonRpc20.dumps_notification" href="#pcgsepy.common.jsonrpc.JsonRpc20.dumps_notification">dumps_notification</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.JsonRpc20.dumps_request" href="#pcgsepy.common.jsonrpc.JsonRpc20.dumps_request">dumps_request</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.JsonRpc20.dumps_response" href="#pcgsepy.common.jsonrpc.JsonRpc20.dumps_response">dumps_response</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.JsonRpc20.loads_request" href="#pcgsepy.common.jsonrpc.JsonRpc20.loads_request">loads_request</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.JsonRpc20.loads_response" href="#pcgsepy.common.jsonrpc.JsonRpc20.loads_response">loads_response</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.RPCAuthentificationError" href="#pcgsepy.common.jsonrpc.RPCAuthentificationError">RPCAuthentificationError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.RPCError" href="#pcgsepy.common.jsonrpc.RPCError">RPCError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.RPCFault" href="#pcgsepy.common.jsonrpc.RPCFault">RPCFault</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.RPCInternalError" href="#pcgsepy.common.jsonrpc.RPCInternalError">RPCInternalError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.RPCInvalidMethodParams" href="#pcgsepy.common.jsonrpc.RPCInvalidMethodParams">RPCInvalidMethodParams</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.RPCInvalidParamValues" href="#pcgsepy.common.jsonrpc.RPCInvalidParamValues">RPCInvalidParamValues</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.RPCInvalidRPC" href="#pcgsepy.common.jsonrpc.RPCInvalidRPC">RPCInvalidRPC</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.RPCMethodNotFound" href="#pcgsepy.common.jsonrpc.RPCMethodNotFound">RPCMethodNotFound</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.RPCParseError" href="#pcgsepy.common.jsonrpc.RPCParseError">RPCParseError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.RPCPermissionDenied" href="#pcgsepy.common.jsonrpc.RPCPermissionDenied">RPCPermissionDenied</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.RPCProcedureException" href="#pcgsepy.common.jsonrpc.RPCProcedureException">RPCProcedureException</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.RPCTimeoutError" href="#pcgsepy.common.jsonrpc.RPCTimeoutError">RPCTimeoutError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.RPCTransportError" href="#pcgsepy.common.jsonrpc.RPCTransportError">RPCTransportError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.Server" href="#pcgsepy.common.jsonrpc.Server">Server</a></code></h4>
+<ul class="">
+<li><code><a title="pcgsepy.common.jsonrpc.Server.handle" href="#pcgsepy.common.jsonrpc.Server.handle">handle</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.Server.log" href="#pcgsepy.common.jsonrpc.Server.log">log</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.Server.register_function" href="#pcgsepy.common.jsonrpc.Server.register_function">register_function</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.Server.register_instance" href="#pcgsepy.common.jsonrpc.Server.register_instance">register_instance</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.Server.serve" href="#pcgsepy.common.jsonrpc.Server.serve">serve</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.ServerProxy" href="#pcgsepy.common.jsonrpc.ServerProxy">ServerProxy</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.Transport" href="#pcgsepy.common.jsonrpc.Transport">Transport</a></code></h4>
+<ul class="">
+<li><code><a title="pcgsepy.common.jsonrpc.Transport.recv" href="#pcgsepy.common.jsonrpc.Transport.recv">recv</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.Transport.send" href="#pcgsepy.common.jsonrpc.Transport.send">send</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.Transport.sendrecv" href="#pcgsepy.common.jsonrpc.Transport.sendrecv">sendrecv</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.Transport.serve" href="#pcgsepy.common.jsonrpc.Transport.serve">serve</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.TransportSTDINOUT" href="#pcgsepy.common.jsonrpc.TransportSTDINOUT">TransportSTDINOUT</a></code></h4>
+<ul class="">
+<li><code><a title="pcgsepy.common.jsonrpc.TransportSTDINOUT.recv" href="#pcgsepy.common.jsonrpc.TransportSTDINOUT.recv">recv</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.TransportSTDINOUT.send" href="#pcgsepy.common.jsonrpc.TransportSTDINOUT.send">send</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.TransportSocket" href="#pcgsepy.common.jsonrpc.TransportSocket">TransportSocket</a></code></h4>
+<ul class="">
+<li><code><a title="pcgsepy.common.jsonrpc.TransportSocket.close" href="#pcgsepy.common.jsonrpc.TransportSocket.close">close</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.TransportSocket.connect" href="#pcgsepy.common.jsonrpc.TransportSocket.connect">connect</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.TransportSocket.sendrecv" href="#pcgsepy.common.jsonrpc.TransportSocket.sendrecv">sendrecv</a></code></li>
+<li><code><a title="pcgsepy.common.jsonrpc.TransportSocket.serve" href="#pcgsepy.common.jsonrpc.TransportSocket.serve">serve</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pcgsepy.common.jsonrpc.TransportTcpIp" href="#pcgsepy.common.jsonrpc.TransportTcpIp">TransportTcpIp</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

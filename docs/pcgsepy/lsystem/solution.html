@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>pcgsepy.lsystem.solution API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pcgsepy.lsystem.solution</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from functools import cached_property
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
+
+from pcgsepy.common.vecs import Vec
+
+from ..structure import Structure
+
+
+class CandidateSolution:
+    __slots__ = [&#39;string&#39;, &#39;_content&#39;, &#39;age&#39;, &#39;b_descs&#39;, &#39;c_fitness&#39;, &#39;fitness&#39;, &#39;hls_mod&#39;,
+                 &#39;is_feasible&#39;, &#39;ll_string&#39;, &#39;n_feas_offspring&#39;, &#39;n_offspring&#39;, &#39;ncv&#39;,
+                 &#39;parents&#39;, &#39;representation&#39;, &#39;base_color&#39;]
+    
+    def __init__(self,
+                 string: str,
+                 content: Optional[Structure] = None):
+        self.string: str = string
+        self._content: Structure = content
+        
+        self.age: int = 0
+        self.b_descs: Tuple[float, float] = (0., 0.)
+        self.c_fitness: float = 0.
+        self.fitness: List[float] = []
+        self.hls_mod: Dict[str, Any] = {}  # keys: &#39;string&#39;, &#39;mutable&#39;
+        self.is_feasible: bool = True
+        self.ll_string: str = &#39;&#39;
+        self.n_feas_offspring: int = 0
+        self.n_offspring: int = 0
+        self.ncv: int = 0  # number of constraints violated
+        self.parents: List[CandidateSolution] = []
+        self.representation: List[float] = []
+        self.base_color = Vec.v3f(x=0.45, y=0.45, z=0.45)  # default block color is #737373
+
+    def __str__(self) -&gt; str:
+        return f&#39;{self.string}; fitness: {self.c_fitness}; is_feasible: {self.is_feasible}&#39;
+
+    def __repr__(self) -&gt; str:
+        return str(self)
+
+    def __eq__(self,
+               other: &#39;CandidateSolution&#39;) -&gt; bool:
+        if isinstance(other, CandidateSolution):
+            return self.string == other.string
+        return False
+
+    def __hash__(self):
+        return hash(self.string)
+
+    def set_content(self,
+                    content: Structure):
+        &#34;&#34;&#34;Set the content of the solution.
+
+        Args:
+            content (Structure): The content.
+
+        Raises:
+            Exception: Raised if the solution already has a content set.
+        &#34;&#34;&#34;
+        if self._content:
+            raise Exception(&#39;Structure already exists for this CandidateSolution.&#39;)
+        else:
+            self._content = content
+
+    @property
+    def content(self) -&gt; Structure:
+        if self._content:
+            return self._content
+        else:
+            raise NotImplementedError(&#39;Structure has not been set yet.&#39;)
+    
+    @property
+    def n_blocks(self) -&gt; int:
+        return len(self.content._blocks)
+    
+    @property
+    def size(self) -&gt; Tuple[int, int, int]:
+        return self._content._max_dims
+    
+    @property
+    def unique_blocks(self) -&gt; Dict[str, int]:
+        unique_blocks_dict = {
+            &#39;Gyroscopes&#39;: [&#39;MyObjectBuilder_Gyro_LargeBlockGyro&#39;],
+            &#39;Reactors&#39;: [&#39;MyObjectBuilder_Reactor_LargeBlockSmallGenerator&#39;],
+            &#39;Containers&#39;: [&#39;MyObjectBuilder_CargoContainer_LargeBlockSmallContainer&#39;],
+            &#39;Cockpits&#39;: [&#39;MyObjectBuilder_Cockpit_OpenCockpitLarge&#39;],
+            &#39;Thrusters&#39;: [&#39;MyObjectBuilder_Thrust_LargeBlockSmallThrust&#39;],
+            &#39;Lights&#39;: [&#39;MyObjectBuilder_InteriorLight_SmallLight&#39;, &#39;MyObjectBuilder_InteriorLight_LargeBlockLight_1corner&#39;]
+        }
+        counts = {}
+        for k, vs in unique_blocks_dict.items():
+            counts[k] = 0
+            for v in vs:
+                counts[k] = counts[k] + self._content.unique_blocks_count(block_type=v)
+        return counts
+    
+    def to_json(self) -&gt; Dict[str, Any]:
+        return {
+            &#39;string&#39;: self.string,
+            &#39;age&#39;: self.age,
+            &#39;b_descs&#39;: self.b_descs,
+            &#39;c_fitness&#39;: self.c_fitness,
+            &#39;fitness&#39;: self.fitness,
+            &#39;hls_mod&#39;: self.hls_mod,
+            &#39;is_feasible&#39;: self.is_feasible,
+            &#39;ll_string&#39;: self.ll_string,
+            &#39;n_feas_offspring&#39;: self.n_feas_offspring,
+            &#39;n_offspring&#39;: self.n_offspring,
+            &#39;ncv&#39;: self.ncv,
+            &#39;parents&#39;: [p.to_json() for p in self.parents],
+            &#39;representation&#39;: self.representation
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -&gt; &#39;CandidateSolution&#39;:
+        cs = CandidateSolution(string=my_args[&#39;string&#39;],
+                               content=None)
+        cs.age = my_args[&#39;age&#39;]
+        cs.b_descs = my_args[&#39;b_descs&#39;]
+        cs.c_fitness = my_args[&#39;c_fitness&#39;]
+        cs.fitness = my_args[&#39;fitness&#39;]
+        cs.hls_mod = my_args[&#39;hls_mod&#39;]
+        cs.is_feasible = my_args[&#39;is_feasible&#39;]
+        cs.ll_string = my_args[&#39;ll_string&#39;]
+        cs.n_feas_offspring = my_args[&#39;n_feas_offspring&#39;]
+        cs.n_offspring = my_args[&#39;n_offspring&#39;]
+        cs.ncv = my_args[&#39;ncv&#39;]
+        cs.parents = [CandidateSolution.from_json(args=p) for p in my_args[&#39;parents&#39;]]
+        cs.representation = my_args[&#39;representation&#39;]
+        return cs
+
+
+def string_merging(ls: List[str]) -&gt; str:
+    &#34;&#34;&#34;Merge a list of strings.
+
+    Args:
+        ls (List[str]): The list of strings.
+
+    Returns:
+        str: The merged string.
+    &#34;&#34;&#34;
+    # any additional control on alignment etc. should be done here.
+    return &#39;&#39;.join(s for s in ls)
+
+
+def merge_solutions(lcs: List[CandidateSolution],
+                    modules_names: List[str],
+                    modules_active: List[bool]) -&gt; CandidateSolution:
+        &#34;&#34;&#34;
+        Merge solutions in a single solution, keeping track of modules&#39; solutions.
+
+        Args:
+            lcs (List[CandidateSolution]): The list of solutions to merge, ordered.
+            modules_names (List[str]): The name of the L-system modules.
+            modules_active: (List[bool]): The default mutability of the L-system modules.
+
+        Returns:
+            CandidateSolution: The merged solution
+        &#34;&#34;&#34;
+        assert len(lcs) == len(modules_names), f&#39;Each solution should be produced by a module! Passed {len(lcs)} solutions and {len(modules_names)} modules.&#39;
+        m_cs = CandidateSolution(string=string_merging(ls=[cs.string for cs in lcs]))
+        for i, (cs, default_m) in enumerate(zip(lcs, modules_active)):
+            m_cs.hls_mod[modules_names[i]] = {&#39;string&#39;: cs.string,
+                                              &#39;mutable&#39;: default_m}
+        return m_cs</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pcgsepy.lsystem.solution.merge_solutions"><code class="name flex">
+<span>def <span class="ident">merge_solutions</span></span>(<span>lcs: List[<a title="pcgsepy.lsystem.solution.CandidateSolution" href="#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a>], modules_names: List[str], modules_active: List[bool]) ‑> <a title="pcgsepy.lsystem.solution.CandidateSolution" href="#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Merge solutions in a single solution, keeping track of modules' solutions.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>lcs</code></strong> :&ensp;<code>List[<a title="pcgsepy.lsystem.solution.CandidateSolution" href="#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a>]</code></dt>
+<dd>The list of solutions to merge, ordered.</dd>
+<dt><strong><code>modules_names</code></strong> :&ensp;<code>List[str]</code></dt>
+<dd>The name of the L-system modules.</dd>
+<dt><strong><code>modules_active</code></strong></dt>
+<dd>(List[bool]): The default mutability of the L-system modules.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="pcgsepy.lsystem.solution.CandidateSolution" href="#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a></code></dt>
+<dd>The merged solution</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def merge_solutions(lcs: List[CandidateSolution],
+                    modules_names: List[str],
+                    modules_active: List[bool]) -&gt; CandidateSolution:
+        &#34;&#34;&#34;
+        Merge solutions in a single solution, keeping track of modules&#39; solutions.
+
+        Args:
+            lcs (List[CandidateSolution]): The list of solutions to merge, ordered.
+            modules_names (List[str]): The name of the L-system modules.
+            modules_active: (List[bool]): The default mutability of the L-system modules.
+
+        Returns:
+            CandidateSolution: The merged solution
+        &#34;&#34;&#34;
+        assert len(lcs) == len(modules_names), f&#39;Each solution should be produced by a module! Passed {len(lcs)} solutions and {len(modules_names)} modules.&#39;
+        m_cs = CandidateSolution(string=string_merging(ls=[cs.string for cs in lcs]))
+        for i, (cs, default_m) in enumerate(zip(lcs, modules_active)):
+            m_cs.hls_mod[modules_names[i]] = {&#39;string&#39;: cs.string,
+                                              &#39;mutable&#39;: default_m}
+        return m_cs</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.lsystem.solution.string_merging"><code class="name flex">
+<span>def <span class="ident">string_merging</span></span>(<span>ls: List[str]) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Merge a list of strings.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ls</code></strong> :&ensp;<code>List[str]</code></dt>
+<dd>The list of strings.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>The merged string.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def string_merging(ls: List[str]) -&gt; str:
+    &#34;&#34;&#34;Merge a list of strings.
+
+    Args:
+        ls (List[str]): The list of strings.
+
+    Returns:
+        str: The merged string.
+    &#34;&#34;&#34;
+    # any additional control on alignment etc. should be done here.
+    return &#39;&#39;.join(s for s in ls)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution"><code class="flex name class">
+<span>class <span class="ident">CandidateSolution</span></span>
+<span>(</span><span>string: str, content: Optional[<a title="pcgsepy.structure.Structure" href="../structure.html#pcgsepy.structure.Structure">Structure</a>] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CandidateSolution:
+    __slots__ = [&#39;string&#39;, &#39;_content&#39;, &#39;age&#39;, &#39;b_descs&#39;, &#39;c_fitness&#39;, &#39;fitness&#39;, &#39;hls_mod&#39;,
+                 &#39;is_feasible&#39;, &#39;ll_string&#39;, &#39;n_feas_offspring&#39;, &#39;n_offspring&#39;, &#39;ncv&#39;,
+                 &#39;parents&#39;, &#39;representation&#39;, &#39;base_color&#39;]
+    
+    def __init__(self,
+                 string: str,
+                 content: Optional[Structure] = None):
+        self.string: str = string
+        self._content: Structure = content
+        
+        self.age: int = 0
+        self.b_descs: Tuple[float, float] = (0., 0.)
+        self.c_fitness: float = 0.
+        self.fitness: List[float] = []
+        self.hls_mod: Dict[str, Any] = {}  # keys: &#39;string&#39;, &#39;mutable&#39;
+        self.is_feasible: bool = True
+        self.ll_string: str = &#39;&#39;
+        self.n_feas_offspring: int = 0
+        self.n_offspring: int = 0
+        self.ncv: int = 0  # number of constraints violated
+        self.parents: List[CandidateSolution] = []
+        self.representation: List[float] = []
+        self.base_color = Vec.v3f(x=0.45, y=0.45, z=0.45)  # default block color is #737373
+
+    def __str__(self) -&gt; str:
+        return f&#39;{self.string}; fitness: {self.c_fitness}; is_feasible: {self.is_feasible}&#39;
+
+    def __repr__(self) -&gt; str:
+        return str(self)
+
+    def __eq__(self,
+               other: &#39;CandidateSolution&#39;) -&gt; bool:
+        if isinstance(other, CandidateSolution):
+            return self.string == other.string
+        return False
+
+    def __hash__(self):
+        return hash(self.string)
+
+    def set_content(self,
+                    content: Structure):
+        &#34;&#34;&#34;Set the content of the solution.
+
+        Args:
+            content (Structure): The content.
+
+        Raises:
+            Exception: Raised if the solution already has a content set.
+        &#34;&#34;&#34;
+        if self._content:
+            raise Exception(&#39;Structure already exists for this CandidateSolution.&#39;)
+        else:
+            self._content = content
+
+    @property
+    def content(self) -&gt; Structure:
+        if self._content:
+            return self._content
+        else:
+            raise NotImplementedError(&#39;Structure has not been set yet.&#39;)
+    
+    @property
+    def n_blocks(self) -&gt; int:
+        return len(self.content._blocks)
+    
+    @property
+    def size(self) -&gt; Tuple[int, int, int]:
+        return self._content._max_dims
+    
+    @property
+    def unique_blocks(self) -&gt; Dict[str, int]:
+        unique_blocks_dict = {
+            &#39;Gyroscopes&#39;: [&#39;MyObjectBuilder_Gyro_LargeBlockGyro&#39;],
+            &#39;Reactors&#39;: [&#39;MyObjectBuilder_Reactor_LargeBlockSmallGenerator&#39;],
+            &#39;Containers&#39;: [&#39;MyObjectBuilder_CargoContainer_LargeBlockSmallContainer&#39;],
+            &#39;Cockpits&#39;: [&#39;MyObjectBuilder_Cockpit_OpenCockpitLarge&#39;],
+            &#39;Thrusters&#39;: [&#39;MyObjectBuilder_Thrust_LargeBlockSmallThrust&#39;],
+            &#39;Lights&#39;: [&#39;MyObjectBuilder_InteriorLight_SmallLight&#39;, &#39;MyObjectBuilder_InteriorLight_LargeBlockLight_1corner&#39;]
+        }
+        counts = {}
+        for k, vs in unique_blocks_dict.items():
+            counts[k] = 0
+            for v in vs:
+                counts[k] = counts[k] + self._content.unique_blocks_count(block_type=v)
+        return counts
+    
+    def to_json(self) -&gt; Dict[str, Any]:
+        return {
+            &#39;string&#39;: self.string,
+            &#39;age&#39;: self.age,
+            &#39;b_descs&#39;: self.b_descs,
+            &#39;c_fitness&#39;: self.c_fitness,
+            &#39;fitness&#39;: self.fitness,
+            &#39;hls_mod&#39;: self.hls_mod,
+            &#39;is_feasible&#39;: self.is_feasible,
+            &#39;ll_string&#39;: self.ll_string,
+            &#39;n_feas_offspring&#39;: self.n_feas_offspring,
+            &#39;n_offspring&#39;: self.n_offspring,
+            &#39;ncv&#39;: self.ncv,
+            &#39;parents&#39;: [p.to_json() for p in self.parents],
+            &#39;representation&#39;: self.representation
+        }
+    
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -&gt; &#39;CandidateSolution&#39;:
+        cs = CandidateSolution(string=my_args[&#39;string&#39;],
+                               content=None)
+        cs.age = my_args[&#39;age&#39;]
+        cs.b_descs = my_args[&#39;b_descs&#39;]
+        cs.c_fitness = my_args[&#39;c_fitness&#39;]
+        cs.fitness = my_args[&#39;fitness&#39;]
+        cs.hls_mod = my_args[&#39;hls_mod&#39;]
+        cs.is_feasible = my_args[&#39;is_feasible&#39;]
+        cs.ll_string = my_args[&#39;ll_string&#39;]
+        cs.n_feas_offspring = my_args[&#39;n_feas_offspring&#39;]
+        cs.n_offspring = my_args[&#39;n_offspring&#39;]
+        cs.ncv = my_args[&#39;ncv&#39;]
+        cs.parents = [CandidateSolution.from_json(args=p) for p in my_args[&#39;parents&#39;]]
+        cs.representation = my_args[&#39;representation&#39;]
+        return cs</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.from_json"><code class="name flex">
+<span>def <span class="ident">from_json</span></span>(<span>my_args: Dict[str, Any]) ‑> <a title="pcgsepy.lsystem.solution.CandidateSolution" href="#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def from_json(my_args: Dict[str, Any]) -&gt; &#39;CandidateSolution&#39;:
+    cs = CandidateSolution(string=my_args[&#39;string&#39;],
+                           content=None)
+    cs.age = my_args[&#39;age&#39;]
+    cs.b_descs = my_args[&#39;b_descs&#39;]
+    cs.c_fitness = my_args[&#39;c_fitness&#39;]
+    cs.fitness = my_args[&#39;fitness&#39;]
+    cs.hls_mod = my_args[&#39;hls_mod&#39;]
+    cs.is_feasible = my_args[&#39;is_feasible&#39;]
+    cs.ll_string = my_args[&#39;ll_string&#39;]
+    cs.n_feas_offspring = my_args[&#39;n_feas_offspring&#39;]
+    cs.n_offspring = my_args[&#39;n_offspring&#39;]
+    cs.ncv = my_args[&#39;ncv&#39;]
+    cs.parents = [CandidateSolution.from_json(args=p) for p in my_args[&#39;parents&#39;]]
+    cs.representation = my_args[&#39;representation&#39;]
+    return cs</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.age"><code class="name">var <span class="ident">age</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.b_descs"><code class="name">var <span class="ident">b_descs</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.base_color"><code class="name">var <span class="ident">base_color</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.c_fitness"><code class="name">var <span class="ident">c_fitness</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.content"><code class="name">var <span class="ident">content</span> : <a title="pcgsepy.structure.Structure" href="../structure.html#pcgsepy.structure.Structure">Structure</a></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def content(self) -&gt; Structure:
+    if self._content:
+        return self._content
+    else:
+        raise NotImplementedError(&#39;Structure has not been set yet.&#39;)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.fitness"><code class="name">var <span class="ident">fitness</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.hls_mod"><code class="name">var <span class="ident">hls_mod</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.is_feasible"><code class="name">var <span class="ident">is_feasible</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.ll_string"><code class="name">var <span class="ident">ll_string</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.n_blocks"><code class="name">var <span class="ident">n_blocks</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def n_blocks(self) -&gt; int:
+    return len(self.content._blocks)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.n_feas_offspring"><code class="name">var <span class="ident">n_feas_offspring</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.n_offspring"><code class="name">var <span class="ident">n_offspring</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.ncv"><code class="name">var <span class="ident">ncv</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.parents"><code class="name">var <span class="ident">parents</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.representation"><code class="name">var <span class="ident">representation</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.size"><code class="name">var <span class="ident">size</span> : Tuple[int, int, int]</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def size(self) -&gt; Tuple[int, int, int]:
+    return self._content._max_dims</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.string"><code class="name">var <span class="ident">string</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.unique_blocks"><code class="name">var <span class="ident">unique_blocks</span> : Dict[str, int]</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def unique_blocks(self) -&gt; Dict[str, int]:
+    unique_blocks_dict = {
+        &#39;Gyroscopes&#39;: [&#39;MyObjectBuilder_Gyro_LargeBlockGyro&#39;],
+        &#39;Reactors&#39;: [&#39;MyObjectBuilder_Reactor_LargeBlockSmallGenerator&#39;],
+        &#39;Containers&#39;: [&#39;MyObjectBuilder_CargoContainer_LargeBlockSmallContainer&#39;],
+        &#39;Cockpits&#39;: [&#39;MyObjectBuilder_Cockpit_OpenCockpitLarge&#39;],
+        &#39;Thrusters&#39;: [&#39;MyObjectBuilder_Thrust_LargeBlockSmallThrust&#39;],
+        &#39;Lights&#39;: [&#39;MyObjectBuilder_InteriorLight_SmallLight&#39;, &#39;MyObjectBuilder_InteriorLight_LargeBlockLight_1corner&#39;]
+    }
+    counts = {}
+    for k, vs in unique_blocks_dict.items():
+        counts[k] = 0
+        for v in vs:
+            counts[k] = counts[k] + self._content.unique_blocks_count(block_type=v)
+    return counts</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.set_content"><code class="name flex">
+<span>def <span class="ident">set_content</span></span>(<span>self, content: <a title="pcgsepy.structure.Structure" href="../structure.html#pcgsepy.structure.Structure">Structure</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the content of the solution.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>content</code></strong> :&ensp;<code>Structure</code></dt>
+<dd>The content.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>Exception</code></dt>
+<dd>Raised if the solution already has a content set.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_content(self,
+                content: Structure):
+    &#34;&#34;&#34;Set the content of the solution.
+
+    Args:
+        content (Structure): The content.
+
+    Raises:
+        Exception: Raised if the solution already has a content set.
+    &#34;&#34;&#34;
+    if self._content:
+        raise Exception(&#39;Structure already exists for this CandidateSolution.&#39;)
+    else:
+        self._content = content</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.lsystem.solution.CandidateSolution.to_json"><code class="name flex">
+<span>def <span class="ident">to_json</span></span>(<span>self) ‑> Dict[str, Any]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_json(self) -&gt; Dict[str, Any]:
+    return {
+        &#39;string&#39;: self.string,
+        &#39;age&#39;: self.age,
+        &#39;b_descs&#39;: self.b_descs,
+        &#39;c_fitness&#39;: self.c_fitness,
+        &#39;fitness&#39;: self.fitness,
+        &#39;hls_mod&#39;: self.hls_mod,
+        &#39;is_feasible&#39;: self.is_feasible,
+        &#39;ll_string&#39;: self.ll_string,
+        &#39;n_feas_offspring&#39;: self.n_feas_offspring,
+        &#39;n_offspring&#39;: self.n_offspring,
+        &#39;ncv&#39;: self.ncv,
+        &#39;parents&#39;: [p.to_json() for p in self.parents],
+        &#39;representation&#39;: self.representation
+    }</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pcgsepy.lsystem" href="index.html">pcgsepy.lsystem</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pcgsepy.lsystem.solution.merge_solutions" href="#pcgsepy.lsystem.solution.merge_solutions">merge_solutions</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.string_merging" href="#pcgsepy.lsystem.solution.string_merging">string_merging</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pcgsepy.lsystem.solution.CandidateSolution" href="#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a></code></h4>
+<ul class="two-column">
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.age" href="#pcgsepy.lsystem.solution.CandidateSolution.age">age</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.b_descs" href="#pcgsepy.lsystem.solution.CandidateSolution.b_descs">b_descs</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.base_color" href="#pcgsepy.lsystem.solution.CandidateSolution.base_color">base_color</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.c_fitness" href="#pcgsepy.lsystem.solution.CandidateSolution.c_fitness">c_fitness</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.content" href="#pcgsepy.lsystem.solution.CandidateSolution.content">content</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.fitness" href="#pcgsepy.lsystem.solution.CandidateSolution.fitness">fitness</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.from_json" href="#pcgsepy.lsystem.solution.CandidateSolution.from_json">from_json</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.hls_mod" href="#pcgsepy.lsystem.solution.CandidateSolution.hls_mod">hls_mod</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.is_feasible" href="#pcgsepy.lsystem.solution.CandidateSolution.is_feasible">is_feasible</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.ll_string" href="#pcgsepy.lsystem.solution.CandidateSolution.ll_string">ll_string</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.n_blocks" href="#pcgsepy.lsystem.solution.CandidateSolution.n_blocks">n_blocks</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.n_feas_offspring" href="#pcgsepy.lsystem.solution.CandidateSolution.n_feas_offspring">n_feas_offspring</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.n_offspring" href="#pcgsepy.lsystem.solution.CandidateSolution.n_offspring">n_offspring</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.ncv" href="#pcgsepy.lsystem.solution.CandidateSolution.ncv">ncv</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.parents" href="#pcgsepy.lsystem.solution.CandidateSolution.parents">parents</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.representation" href="#pcgsepy.lsystem.solution.CandidateSolution.representation">representation</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.set_content" href="#pcgsepy.lsystem.solution.CandidateSolution.set_content">set_content</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.size" href="#pcgsepy.lsystem.solution.CandidateSolution.size">size</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.string" href="#pcgsepy.lsystem.solution.CandidateSolution.string">string</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.to_json" href="#pcgsepy.lsystem.solution.CandidateSolution.to_json">to_json</a></code></li>
+<li><code><a title="pcgsepy.lsystem.solution.CandidateSolution.unique_blocks" href="#pcgsepy.lsystem.solution.CandidateSolution.unique_blocks">unique_blocks</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,1190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>pcgsepy.guis.ships_comparator.webapp API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pcgsepy.guis.ships_comparator.webapp</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import base64
+import json
+import logging
+import os
+import random
+import sys
+from turtle import width
+from typing import Dict, List, Optional, Tuple
+
+import dash
+import dash_bootstrap_components as dbc
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+from dash import ALL, dcc, html
+from dash.dependencies import Input, Output, State
+from pcgsepy.common.api_call import block_definitions
+from pcgsepy.common.vecs import Vec
+from pcgsepy.evo.genops import expander
+from pcgsepy.guis.ships_comparator.modals_msgs import (rankings_assigned,
+                                                       scores_different_error)
+from pcgsepy.hullbuilder import HullBuilder
+from pcgsepy.lsystem.solution import CandidateSolution
+from pcgsepy.setup_utils import get_default_lsystem
+
+
+def resource_path(relative_path):
+    # get absolute path to resource
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(&#34;.&#34;)
+
+    return os.path.join(base_path, relative_path)
+
+
+used_ll_blocks = [
+    &#39;MyObjectBuilder_CubeBlock_LargeBlockArmorCornerInv&#39;,
+    &#39;MyObjectBuilder_CubeBlock_LargeBlockArmorCorner&#39;,
+    &#39;MyObjectBuilder_CubeBlock_LargeBlockArmorSlope&#39;,
+    &#39;MyObjectBuilder_CubeBlock_LargeBlockArmorBlock&#39;,
+    &#39;MyObjectBuilder_Gyro_LargeBlockGyro&#39;,
+    &#39;MyObjectBuilder_Reactor_LargeBlockSmallGenerator&#39;,
+    &#39;MyObjectBuilder_CargoContainer_LargeBlockSmallContainer&#39;,
+    &#39;MyObjectBuilder_Cockpit_OpenCockpitLarge&#39;,
+    &#39;MyObjectBuilder_Thrust_LargeBlockSmallThrust&#39;,
+    &#39;MyObjectBuilder_InteriorLight_SmallLight&#39;,
+    &#39;MyObjectBuilder_CubeBlock_Window1x1Slope&#39;,
+    &#39;MyObjectBuilder_CubeBlock_Window1x1Flat&#39;,
+    &#39;MyObjectBuilder_InteriorLight_LargeBlockLight_1corner&#39;
+]
+
+lsystem = get_default_lsystem(used_ll_blocks=used_ll_blocks)
+
+expander.initialize(rules=lsystem.hl_solver.parser.rules)
+
+hull_builder = HullBuilder(erosion_type=&#39;bin&#39;,
+                           apply_erosion=True,
+                           apply_smoothing=False)
+
+emitters = [&#39;Human&#39;, &#39;Random&#39;, &#39;Greedy&#39;, &#39;Contextual Bandit&#39;]
+progress = -1
+base_color = Vec.v3f(0.5, 0.5, 0.5)
+rng_seed = None
+
+block_to_colour = {
+    # colours from https://developer.mozilla.org/en-US/docs/Web/CSS/color_value
+    &#39;LargeBlockArmorCorner&#39;: &#39;#778899&#39;,
+    &#39;LargeBlockArmorSlope&#39;: &#39;#778899&#39;,
+    &#39;LargeBlockArmorCornerInv&#39;: &#39;#778899&#39;,
+    &#39;LargeBlockArmorBlock&#39;: &#39;#778899&#39;,
+    &#39;LargeBlockGyro&#39;: &#39;#2f4f4f&#39;,
+    &#39;LargeBlockSmallGenerator&#39;: &#39;#ffa07a&#39;,
+    &#39;LargeBlockSmallContainer&#39;: &#39;#008b8b&#39;,
+    &#39;OpenCockpitLarge&#39;: &#39;#32cd32&#39;,
+    &#39;LargeBlockSmallThrust&#39;: &#39;#ff8c00&#39;,
+    &#39;SmallLight&#39;: &#39;#fffaf0&#39;,
+    &#39;Window1x1Slope&#39;: &#39;#fffff0&#39;,
+    &#39;Window1x1Flat&#39;: &#39;#fffff0&#39;,
+    &#39;LargeBlockLight_1corner&#39;: &#39;#fffaf0&#39;
+}
+
+
+app = dash.Dash(__name__,
+                title=&#39;Spaceships Ranker&#39;,
+                external_stylesheets=[dbc.themes.DARKLY],
+                assets_folder=resource_path(&#34;assets&#34;),
+                update_title=None)
+
+
+def is_base_block(block_type: str) -&gt; bool:
+    &#34;&#34;&#34;Check if the block is a base block. Base blocks are non-functional, structural blocks.
+
+    Args:
+        block_type (str): The type of the block.
+
+    Returns:
+        bool: Whether the block is a base block.
+    &#34;&#34;&#34;
+    return block_type.endswith(&#34;Block&#34;) or block_type.endswith(&#34;Slope&#34;) or block_type.endswith(&#34;Corner&#34;) or block_type.endswith(&#34;CornerInv&#34;)
+
+
+def get_content_div(content_n: int) -&gt; html.Div:
+    &#34;&#34;&#34;Generate the `html.Div` that contains the content plot.
+
+    Args:
+        content_n (int): The number of the content.
+
+    Returns:
+        html.Div: The container for the content plot.
+    &#34;&#34;&#34;
+    w = 100 // len(emitters)
+    return html.Div(children=[
+        # title
+        html.Div(children=[
+            html.H1(children=f&#39;Spaceship {chr(ord(&#34;A&#34;) + content_n)}&#39;,
+                    style={&#39;text-align&#39;: &#39;center&#39;})
+        ]),
+        html.Br(),
+        # content display
+        html.Div(children=[
+            dcc.Graph(id={&#39;type&#39;: &#34;spaceship-content&#34;, &#39;index&#39;: content_n},
+                      figure=px.scatter_3d(x=np.zeros(0, dtype=object),
+                                           y=np.zeros(0, dtype=object),
+                                           z=np.zeros(0, dtype=object),
+                                           title=&#39;&#39;,
+                                           template=&#39;plotly_dark&#39;),
+                      config={&#39;displayModeBar&#39;: False,
+                              &#39;displaylogo&#39;: False})],
+                 className=&#39;content-div&#39;,
+                 style={&#39;width&#39;: &#39;100%&#39;})],
+                    style={&#39;width&#39;: f&#39;{w}%&#39;})
+
+
+def get_rankings_div() -&gt; html.Div:
+    &#34;&#34;&#34;Generate the `html.Div` for the rankings assignment.
+
+    Returns:
+        html.Div: The container for the rankings.
+    &#34;&#34;&#34;
+    rankings_div = html.Div(children=[
+        dbc.Row(children=[
+            dbc.Col(children=[html.H1(&#34;Spaceships Ranking&#34;)],
+                    style={&#39;text-align&#39;: &#39;center&#39;},
+                    width={&#39;offset&#39;: 4, &#39;size&#39;: 4})]),            
+        html.Br(),
+        ],
+                            id=&#39;ranking-div&#39;)    
+    rankings_div.children.append(
+        dbc.Row(children=[
+            dbc.Col(children=[
+                dbc.Row(
+                    dbc.Col(dbc.Label(f&#34;{i + 1}{[&#39;st&#39;, &#39;nd&#39;, &#39;rd&#39;, &#39;th&#39;][i] if i &lt; 4 else &#39;th&#39;} place:&#34;, style={&#39;font-size&#39;: &#39;x-large&#39;})),
+                    ),
+                dbc.Row(
+                    dbc.Col(dbc.DropdownMenu(label=&#39;A&#39;,
+                                             style={&#39;font-size&#39;: &#39;x-large&#39;},
+                                             children=[dbc.DropdownMenuItem(f&#39;{chr(ord(&#34;A&#34;) + j)}&#39;,
+                                                                            id={&#39;type&#39;: &#34;spaceship-ranking&#34;, &#39;index&#39;: (i * len(emitters)) + j}) for j in range(len(emitters))],
+                                             id={&#39;type&#39;: &#34;ranking-dropdown&#34;, &#39;index&#39;: i}))
+                    )
+                ],
+                    style={&#39;text-align&#39;: &#39;center&#39;},
+                    width={&#39;offset&#39;: 4 if i == 0 else 0, &#39;size&#39;: 1}) for i in range(len(emitters))
+            ])
+        )
+            
+    
+    return rankings_div
+
+
+def parse_contents(filename: str,
+                   contents: str) -&gt; Tuple[int, int, str, Vec]:
+    &#34;&#34;&#34;Parse the contents of the uploaded data.
+
+    Args:
+        filename (str): The name of the file.
+        contents (str): The base-64 encoded contents of the file.
+
+    Returns:
+        Tuple[int, int, str]: The RNG seed, the number of the experiment, and the content string.
+    &#34;&#34;&#34;
+    _, rngseed, exp_n = filename.split(&#39;_&#39;)
+    rngseed = int(rngseed)
+    exp_n = int(exp_n.replace(&#39;exp&#39;, &#39;&#39;))
+    _, cs_properties = contents.split(&#39;,&#39;)
+    cs_properties = json.loads(base64.b64decode(cs_properties).decode(encoding=&#39;utf-8&#39;))
+    cs_string, base_color = cs_properties[&#39;string&#39;], Vec.from_json(cs_properties[&#39;base_color&#39;])
+    logging.getLogger(&#39;webapp&#39;).debug(msg=f&#39;[{__name__}.parse_contents] {rngseed=}; {exp_n=}; {cs_string=}; {base_color=}&#39;)
+    return rngseed, exp_n, cs_string, base_color
+
+
+def get_content_plot(spaceship: CandidateSolution) -&gt; go.Figure:
+    &#34;&#34;&#34;Generate the content plot figure.
+
+    Args:
+        spaceship (CandidateSolution): The spaceship to plot.
+
+    Returns:
+        go.Figure: The content plot.
+    &#34;&#34;&#34;
+    spaceship = lsystem._set_structure(cs=lsystem._add_ll_strings(cs=spaceship))
+    hull_builder.add_external_hull(structure=spaceship.content)
+    content = spaceship.content.as_grid_array
+    arr = np.nonzero(content)
+    x, y, z = arr
+    cs = [content[i, j, k] for i, j, k in zip(x, y, z)]
+    ss = [spaceship.content._clean_label(list(block_definitions.keys())[v - 1]) for v in cs]
+    custom_colors = []
+    for (i, j, k) in zip(x, y, z):
+        b = spaceship.content._blocks[(i * spaceship.content.grid_size, j * spaceship.content.grid_size, k * spaceship.content.grid_size)]
+        if is_base_block(block_type=b.block_type):
+            custom_colors.append(f&#39;rgb{base_color.as_tuple()}&#39;)
+        else:
+            custom_colors.append(block_to_colour.get(spaceship.content._clean_label(b.block_type), &#39;#ff0000&#39;))
+    
+    fig = go.Figure()
+    
+    fig.add_scatter3d(x=x,
+                        y=y,
+                        z=z,
+                        mode=&#39;markers&#39;,
+                        marker=dict(size=4,
+                                    line=dict(width=3,
+                                            color=&#39;DarkSlateGrey&#39;),
+                                    color=custom_colors),
+                        showlegend=False
+                        )
+    
+    fig.update_traces(
+        hoverinfo=&#39;text&#39;,
+        hovertext=ss
+    )
+    
+    ux, uy, uz = np.unique(x), np.unique(y), np.unique(z)
+    ptg = .2
+    show_x = [v for i, v in enumerate(ux) if i % (1 / ptg) == 0]
+    show_y = [v for i, v in enumerate(uy) if i % (1 / ptg) == 0]
+    show_z = [v for i, v in enumerate(uz) if i % (1 / ptg) == 0]
+    
+    fig.update_layout(
+        scene=dict(
+            xaxis_title=&#39;&#39;,
+            yaxis_title=&#39;m&#39;,
+            zaxis_title=&#39;&#39;,
+            xaxis={
+                &#39;tickmode&#39;: &#39;array&#39;,
+                &#39;tickvals&#39;: show_x,
+                &#39;ticktext&#39;: [spaceship.content.grid_size * i for i in show_x],
+            },
+            yaxis={
+                # &#39;tickmode&#39;: &#39;array&#39;,
+                &#39;tickvals&#39;: show_y,
+                &#39;ticktext&#39;: [spaceship.content.grid_size * i for i in show_y],
+            },
+            zaxis={
+                # &#39;tickmode&#39;: &#39;array&#39;,
+                &#39;tickvals&#39;: show_z,
+                &#39;ticktext&#39;: [spaceship.content.grid_size * i for i in show_z],
+            }
+        )
+    )
+    camera = dict(
+        up=dict(x=0, y=0, z=1),
+        center=dict(x=0, y=0, z=0),
+        eye=dict(x=2, y=2, z=2)
+        )
+    
+    fig.update_layout(scene=dict(aspectmode=&#39;data&#39;),
+                      scene_camera=camera,
+                      template=&#39;plotly_dark&#39;,
+                    #   paper_bgcolor=&#39;rgba(0,0,0,0)&#39;,
+                    #   plot_bgcolor=&#39;rgba(0,0,0,0)&#39;,
+                    margin=go.layout.Margin(
+                          l=0,
+                          r=0,
+                          b=0,
+                          t=0)
+                      )
+    return fig
+
+
+def set_app_layout():
+    &#34;&#34;&#34;Load resources and set the layout of the web application.&#34;&#34;&#34;
+    # load resource files
+    with open(&#39;./assets/help.md&#39;, &#39;r&#39;, encoding=&#39;utf-8&#39;) as f:
+        info_str = f.read()
+    # create modals
+    info_modal = dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle(&#34;Info&#34;),
+                        style={&#39;flex-direction&#39;: &#39;column-reverse&#39;},
+                        close_button=True),
+        dbc.ModalBody(dcc.Markdown(info_str),
+                      style={&#39;text-align&#39;: &#39;justify&#39;})
+    ],
+        id=&#39;info-modal&#39;,
+        centered=True,
+        backdrop=&#39;static&#39;,
+        is_open=False,
+        scrollable=True,
+        size=&#39;lg&#39;)
+    err_modal = dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle(&#34;❌ Error ❌&#34;),
+                        style={&#39;flex-direction&#39;: &#39;column-reverse&#39;}, 
+                        close_button=False),
+        dbc.ModalBody(dcc.Markdown(scores_different_error))
+    ],
+        id=&#39;err-modal&#39;,
+        centered=True,
+        backdrop=True,
+        is_open=False,
+        scrollable=True)
+    ok_modal = dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle(&#34;✔️ Success ✔️&#34;),
+                        style={&#39;flex-direction&#39;: &#39;column-reverse&#39;}, 
+                        close_button=False),
+        dbc.ModalBody(dcc.Markdown(rankings_assigned))
+    ],
+        id=&#39;ok-modal&#39;,
+        centered=True,
+        backdrop=True,
+        is_open=False,
+        scrollable=True)
+    # create containers
+    header = dbc.Row(children=[
+        dbc.Col(html.H1(children=&#39;🚀Space Engineers Spaceships Ranker🚀&#39;,
+                        className=&#39;title&#39;), width={&#39;size&#39;: 6, &#39;offset&#39;: 3}),
+        dbc.Col(children=[dbc.Button(&#39;Info&#39;,
+                                     id=&#39;info-btn&#39;,
+                                     color=&#39;info&#39;)],
+                align=&#39;center&#39;, width=1)
+    ],
+        className=&#39;header&#39;)
+    upload_component = html.Div(children=[
+        dcc.Upload(id=&#39;upload-data&#39;,
+                   children=html.Div(children=[
+                       &#39;Drag and Drop or &#39;,
+                       html.A(&#39;Select Files&#39;)
+                   ],
+                                     style={&#39;font-size&#39;: &#39;x-large&#39;}),
+                   style={
+                       &#39;width&#39;: &#39;60%&#39;,
+                       &#39;height&#39;: &#39;60px&#39;,
+                       &#39;lineHeight&#39;: &#39;60px&#39;,
+                       &#39;margin&#39;: &#39;10px auto&#39;
+                   },
+                   className=&#39;upload&#39;,
+                   multiple=True
+                   )])
+    upload_progress = html.Div(
+        children=[
+            html.Br(),
+            dbc.Label(&#39;Uploading progress: &#39;),
+            dbc.Progress(id=&#34;upload-progress&#34;,
+                         color=&#39;info&#39;,
+                         striped=True,
+                         animated=True)
+        ],
+        id=&#39;upload-progress-div&#39;,
+        style={&#39;content-visibility&#39;: &#39;visible&#39; if 0 &lt;= progress &lt;= 100 else &#39;hidden&#39;})
+    content_container = html.Div(children=[get_content_div(i) for i in range(len(emitters))],
+                                 style={&#39;width&#39;: &#39;100%&#39;, &#39;display&#39;: &#39;flex&#39;, &#39;flex-direction&#39;: &#39;row&#39;, &#39;justify-content&#39;: &#39;center&#39;})
+    save_data = dbc.Row(children=[
+        dbc.Col(children=[dbc.Button(children=&#39;Save&#39;,
+                                     style={&#39;font-size&#39;: &#39;xx-large&#39;},
+                                     id=&#39;save-btn&#39;,
+                                     n_clicks=0,
+                                     disabled=True,
+                                     color=&#34;primary&#34;,
+                                     size=&#34;lg&#34;,
+                                     className=&#34;me-1&#34;),
+                          dcc.Download(id=&#39;save-data&#39;)],
+                align=&#39;center&#39;,
+                width={&#39;offset&#39;: 4, &#39;size&#39;: 4},
+                style={&#39;text-align&#39;: &#39;center&#39;})])
+    # set the app layout
+    app.layout = dbc.Container(
+        children=[
+            info_modal,
+            err_modal,
+            ok_modal,
+            header,
+            html.Br(),
+            dbc.Row(
+                dbc.Col(
+                    [
+                        upload_component,
+                        html.Br(),
+                        upload_progress,
+                        ],
+                    width={&#39;size&#39;: 10, &#39;offset&#39;: 1}
+                )
+            ),
+            html.Br(),
+            dbc.Row(
+                dbc.Col(
+                    [
+                        content_container,
+                        html.Br(),
+                        dbc.Row(
+                            dbc.Col(
+                                get_rankings_div(),
+                                width=(&#39;offset: 1&#39;)
+                            )
+                        ),
+                        html.Br(),
+                        html.Br(),
+                        save_data
+                        ],
+                    width={&#39;size&#39;: 10, &#39;offset&#39;: 1})
+            ),
+            dcc.Interval(id=&#39;interval&#39;,
+                         interval=1 * 1000,
+                         n_intervals=0),
+        ],
+        fluid=True)
+
+
+@app.callback(
+    Output(&#34;info-modal&#34;, &#34;is_open&#34;),
+    Input(&#34;info-btn&#34;, &#34;n_clicks&#34;),
+    prevent_initial_call=True
+)
+def show_webapp_info(n):
+    return True
+
+
+@app.callback(
+    [Output(&#34;upload-progress&#34;, &#34;value&#34;),
+     Output(&#34;upload-progress&#34;, &#34;label&#34;),
+     Output(&#39;upload-progress-div&#39;, &#39;style&#39;)],
+    [Input(&#34;interval&#34;, &#34;n_intervals&#34;)],
+)
+def update_progress(n):
+    return progress, f&#34;{progress}%&#34;, {&#39;content-visibility&#39;: &#39;visible&#39; if 0 &lt;= progress &lt;= 100 else &#39;hidden&#39;}
+
+
+@app.callback(
+    Output({&#39;type&#39;: &#39;ranking-dropdown&#39;, &#39;index&#39;: ALL}, &#34;label&#34;),
+    Output({&#39;type&#39;: &#39;spaceship-ranking&#39;, &#39;index&#39;: ALL}, &#34;n_clicks&#34;),
+    State({&#39;type&#39;: &#39;ranking-dropdown&#39;, &#39;index&#39;: ALL}, &#34;label&#34;),
+    Input({&#39;type&#39;: &#39;spaceship-ranking&#39;, &#39;index&#39;: ALL}, &#34;n_clicks&#34;),
+    prevent_initial_call=True
+)
+def update_dropdown_value(labels: List[str],
+                          vs: List[Optional[int]]):
+    # super hacky but Dash&#39;s pattern matching fails in this case
+    label_changed = vs.index(1) // len(labels)
+    new_label = chr(ord(&#34;A&#34;) + (vs.index(1) % len(labels)))
+    labels[label_changed] = new_label
+    return labels, [None] * len(vs)
+
+
+@app.callback(
+    Output(&#34;save-data&#34;, &#34;data&#34;),
+    Output(&#39;err-modal&#39;, &#34;is_open&#34;),
+    Output(&#39;ok-modal&#39;, &#34;is_open&#34;),
+
+    Input(&#34;save-btn&#34;, &#34;n_clicks&#34;),
+
+    State({&#39;type&#39;: &#39;ranking-dropdown&#39;, &#39;index&#39;: ALL}, &#34;label&#34;),
+    prevent_initial_call=True
+)
+def download_scores(n_clicks: int,
+                    rankings: List[str]) -&gt; Tuple[Optional[Dict[str, str]], bool, bool]:
+    random.seed(rng_seed)
+    my_emitterslist = emitters.copy()
+    random.shuffle(my_emitterslist)
+    res = {emitter: ord(v) - ord(&#39;A&#39;) + 1 for emitter, v in zip(my_emitterslist, rankings)}
+    if len(set(rankings)) == len(rankings):
+        return dict(content=str(res), filename=f&#39;{str(rng_seed)}_res.json&#39;), False, True
+    else:
+        return None, True, False
+
+
+@app.callback(
+    Output({&#39;type&#39;: &#39;spaceship-content&#39;, &#39;index&#39;: ALL}, &#39;figure&#39;),
+    Output(&#39;upload-data&#39;, &#39;contents&#39;),
+    Output(&#39;upload-data&#39;, &#39;filename&#39;),
+    Output(&#39;save-btn&#39;, &#39;disabled&#39;),
+
+    Input(&#39;upload-data&#39;, &#39;contents&#39;),
+
+    State(&#39;upload-data&#39;, &#39;filename&#39;),
+    State({&#39;type&#39;: &#39;spaceship-content&#39;, &#39;index&#39;: ALL}, &#39;figure&#39;),
+)
+def general_callback(list_of_contents: List[str],
+                     list_of_names: List[str],
+                     spaceship_plot: List[go.Figure]) -&gt; Tuple[List[go.Figure], str, str]:
+    global rng_seed
+    global progress
+    global base_color
+    
+    savebtn_disabled = True
+
+    ctx = dash.callback_context
+
+    if not ctx.triggered:
+        event_trig = None
+    else:
+        event_trig = ctx.triggered[0][&#39;prop_id&#39;].split(&#39;.&#39;)[0]
+
+    logging.getLogger(&#39;webapp&#39;).debug(msg=f&#39;[{__name__}.general_callback] {event_trig=}&#39;)
+    
+    if event_trig == &#39;upload-data&#39;:
+        children = [parse_contents(n, c) for c, n in zip(list_of_contents, list_of_names)]
+        progress = 0
+        for child in children:
+            progress += 100 / len(children)
+            rng_seed, exp_n, cs_string, cs_base_color = child
+            base_color = cs_base_color
+            cs = CandidateSolution(string=cs_string)
+            spaceship_plot[exp_n - 1] = get_content_plot(spaceship=cs)
+        progress = -1
+        savebtn_disabled = False
+
+    return spaceship_plot, &#39;&#39;, &#39;&#39;, savebtn_disabled</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pcgsepy.guis.ships_comparator.webapp.download_scores"><code class="name flex">
+<span>def <span class="ident">download_scores</span></span>(<span>n_clicks: int, rankings: List[str]) ‑> Tuple[Optional[Dict[str, str]], bool, bool]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@app.callback(
+    Output(&#34;save-data&#34;, &#34;data&#34;),
+    Output(&#39;err-modal&#39;, &#34;is_open&#34;),
+    Output(&#39;ok-modal&#39;, &#34;is_open&#34;),
+
+    Input(&#34;save-btn&#34;, &#34;n_clicks&#34;),
+
+    State({&#39;type&#39;: &#39;ranking-dropdown&#39;, &#39;index&#39;: ALL}, &#34;label&#34;),
+    prevent_initial_call=True
+)
+def download_scores(n_clicks: int,
+                    rankings: List[str]) -&gt; Tuple[Optional[Dict[str, str]], bool, bool]:
+    random.seed(rng_seed)
+    my_emitterslist = emitters.copy()
+    random.shuffle(my_emitterslist)
+    res = {emitter: ord(v) - ord(&#39;A&#39;) + 1 for emitter, v in zip(my_emitterslist, rankings)}
+    if len(set(rankings)) == len(rankings):
+        return dict(content=str(res), filename=f&#39;{str(rng_seed)}_res.json&#39;), False, True
+    else:
+        return None, True, False</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.guis.ships_comparator.webapp.general_callback"><code class="name flex">
+<span>def <span class="ident">general_callback</span></span>(<span>list_of_contents: List[str], list_of_names: List[str], spaceship_plot: List[plotly.graph_objs._figure.Figure]) ‑> Tuple[List[plotly.graph_objs._figure.Figure], str, str]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@app.callback(
+    Output({&#39;type&#39;: &#39;spaceship-content&#39;, &#39;index&#39;: ALL}, &#39;figure&#39;),
+    Output(&#39;upload-data&#39;, &#39;contents&#39;),
+    Output(&#39;upload-data&#39;, &#39;filename&#39;),
+    Output(&#39;save-btn&#39;, &#39;disabled&#39;),
+
+    Input(&#39;upload-data&#39;, &#39;contents&#39;),
+
+    State(&#39;upload-data&#39;, &#39;filename&#39;),
+    State({&#39;type&#39;: &#39;spaceship-content&#39;, &#39;index&#39;: ALL}, &#39;figure&#39;),
+)
+def general_callback(list_of_contents: List[str],
+                     list_of_names: List[str],
+                     spaceship_plot: List[go.Figure]) -&gt; Tuple[List[go.Figure], str, str]:
+    global rng_seed
+    global progress
+    global base_color
+    
+    savebtn_disabled = True
+
+    ctx = dash.callback_context
+
+    if not ctx.triggered:
+        event_trig = None
+    else:
+        event_trig = ctx.triggered[0][&#39;prop_id&#39;].split(&#39;.&#39;)[0]
+
+    logging.getLogger(&#39;webapp&#39;).debug(msg=f&#39;[{__name__}.general_callback] {event_trig=}&#39;)
+    
+    if event_trig == &#39;upload-data&#39;:
+        children = [parse_contents(n, c) for c, n in zip(list_of_contents, list_of_names)]
+        progress = 0
+        for child in children:
+            progress += 100 / len(children)
+            rng_seed, exp_n, cs_string, cs_base_color = child
+            base_color = cs_base_color
+            cs = CandidateSolution(string=cs_string)
+            spaceship_plot[exp_n - 1] = get_content_plot(spaceship=cs)
+        progress = -1
+        savebtn_disabled = False
+
+    return spaceship_plot, &#39;&#39;, &#39;&#39;, savebtn_disabled</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.guis.ships_comparator.webapp.get_content_div"><code class="name flex">
+<span>def <span class="ident">get_content_div</span></span>(<span>content_n: int) ‑> dash.html.Div.Div</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generate the <code>html.Div</code> that contains the content plot.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>content_n</code></strong> :&ensp;<code>int</code></dt>
+<dd>The number of the content.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>html.Div</code></dt>
+<dd>The container for the content plot.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_content_div(content_n: int) -&gt; html.Div:
+    &#34;&#34;&#34;Generate the `html.Div` that contains the content plot.
+
+    Args:
+        content_n (int): The number of the content.
+
+    Returns:
+        html.Div: The container for the content plot.
+    &#34;&#34;&#34;
+    w = 100 // len(emitters)
+    return html.Div(children=[
+        # title
+        html.Div(children=[
+            html.H1(children=f&#39;Spaceship {chr(ord(&#34;A&#34;) + content_n)}&#39;,
+                    style={&#39;text-align&#39;: &#39;center&#39;})
+        ]),
+        html.Br(),
+        # content display
+        html.Div(children=[
+            dcc.Graph(id={&#39;type&#39;: &#34;spaceship-content&#34;, &#39;index&#39;: content_n},
+                      figure=px.scatter_3d(x=np.zeros(0, dtype=object),
+                                           y=np.zeros(0, dtype=object),
+                                           z=np.zeros(0, dtype=object),
+                                           title=&#39;&#39;,
+                                           template=&#39;plotly_dark&#39;),
+                      config={&#39;displayModeBar&#39;: False,
+                              &#39;displaylogo&#39;: False})],
+                 className=&#39;content-div&#39;,
+                 style={&#39;width&#39;: &#39;100%&#39;})],
+                    style={&#39;width&#39;: f&#39;{w}%&#39;})</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.guis.ships_comparator.webapp.get_content_plot"><code class="name flex">
+<span>def <span class="ident">get_content_plot</span></span>(<span>spaceship: <a title="pcgsepy.lsystem.solution.CandidateSolution" href="../../lsystem/solution.html#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a>) ‑> plotly.graph_objs._figure.Figure</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generate the content plot figure.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>spaceship</code></strong> :&ensp;<code>CandidateSolution</code></dt>
+<dd>The spaceship to plot.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>go.Figure</code></dt>
+<dd>The content plot.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_content_plot(spaceship: CandidateSolution) -&gt; go.Figure:
+    &#34;&#34;&#34;Generate the content plot figure.
+
+    Args:
+        spaceship (CandidateSolution): The spaceship to plot.
+
+    Returns:
+        go.Figure: The content plot.
+    &#34;&#34;&#34;
+    spaceship = lsystem._set_structure(cs=lsystem._add_ll_strings(cs=spaceship))
+    hull_builder.add_external_hull(structure=spaceship.content)
+    content = spaceship.content.as_grid_array
+    arr = np.nonzero(content)
+    x, y, z = arr
+    cs = [content[i, j, k] for i, j, k in zip(x, y, z)]
+    ss = [spaceship.content._clean_label(list(block_definitions.keys())[v - 1]) for v in cs]
+    custom_colors = []
+    for (i, j, k) in zip(x, y, z):
+        b = spaceship.content._blocks[(i * spaceship.content.grid_size, j * spaceship.content.grid_size, k * spaceship.content.grid_size)]
+        if is_base_block(block_type=b.block_type):
+            custom_colors.append(f&#39;rgb{base_color.as_tuple()}&#39;)
+        else:
+            custom_colors.append(block_to_colour.get(spaceship.content._clean_label(b.block_type), &#39;#ff0000&#39;))
+    
+    fig = go.Figure()
+    
+    fig.add_scatter3d(x=x,
+                        y=y,
+                        z=z,
+                        mode=&#39;markers&#39;,
+                        marker=dict(size=4,
+                                    line=dict(width=3,
+                                            color=&#39;DarkSlateGrey&#39;),
+                                    color=custom_colors),
+                        showlegend=False
+                        )
+    
+    fig.update_traces(
+        hoverinfo=&#39;text&#39;,
+        hovertext=ss
+    )
+    
+    ux, uy, uz = np.unique(x), np.unique(y), np.unique(z)
+    ptg = .2
+    show_x = [v for i, v in enumerate(ux) if i % (1 / ptg) == 0]
+    show_y = [v for i, v in enumerate(uy) if i % (1 / ptg) == 0]
+    show_z = [v for i, v in enumerate(uz) if i % (1 / ptg) == 0]
+    
+    fig.update_layout(
+        scene=dict(
+            xaxis_title=&#39;&#39;,
+            yaxis_title=&#39;m&#39;,
+            zaxis_title=&#39;&#39;,
+            xaxis={
+                &#39;tickmode&#39;: &#39;array&#39;,
+                &#39;tickvals&#39;: show_x,
+                &#39;ticktext&#39;: [spaceship.content.grid_size * i for i in show_x],
+            },
+            yaxis={
+                # &#39;tickmode&#39;: &#39;array&#39;,
+                &#39;tickvals&#39;: show_y,
+                &#39;ticktext&#39;: [spaceship.content.grid_size * i for i in show_y],
+            },
+            zaxis={
+                # &#39;tickmode&#39;: &#39;array&#39;,
+                &#39;tickvals&#39;: show_z,
+                &#39;ticktext&#39;: [spaceship.content.grid_size * i for i in show_z],
+            }
+        )
+    )
+    camera = dict(
+        up=dict(x=0, y=0, z=1),
+        center=dict(x=0, y=0, z=0),
+        eye=dict(x=2, y=2, z=2)
+        )
+    
+    fig.update_layout(scene=dict(aspectmode=&#39;data&#39;),
+                      scene_camera=camera,
+                      template=&#39;plotly_dark&#39;,
+                    #   paper_bgcolor=&#39;rgba(0,0,0,0)&#39;,
+                    #   plot_bgcolor=&#39;rgba(0,0,0,0)&#39;,
+                    margin=go.layout.Margin(
+                          l=0,
+                          r=0,
+                          b=0,
+                          t=0)
+                      )
+    return fig</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.guis.ships_comparator.webapp.get_rankings_div"><code class="name flex">
+<span>def <span class="ident">get_rankings_div</span></span>(<span>) ‑> dash.html.Div.Div</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generate the <code>html.Div</code> for the rankings assignment.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>html.Div</code></dt>
+<dd>The container for the rankings.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_rankings_div() -&gt; html.Div:
+    &#34;&#34;&#34;Generate the `html.Div` for the rankings assignment.
+
+    Returns:
+        html.Div: The container for the rankings.
+    &#34;&#34;&#34;
+    rankings_div = html.Div(children=[
+        dbc.Row(children=[
+            dbc.Col(children=[html.H1(&#34;Spaceships Ranking&#34;)],
+                    style={&#39;text-align&#39;: &#39;center&#39;},
+                    width={&#39;offset&#39;: 4, &#39;size&#39;: 4})]),            
+        html.Br(),
+        ],
+                            id=&#39;ranking-div&#39;)    
+    rankings_div.children.append(
+        dbc.Row(children=[
+            dbc.Col(children=[
+                dbc.Row(
+                    dbc.Col(dbc.Label(f&#34;{i + 1}{[&#39;st&#39;, &#39;nd&#39;, &#39;rd&#39;, &#39;th&#39;][i] if i &lt; 4 else &#39;th&#39;} place:&#34;, style={&#39;font-size&#39;: &#39;x-large&#39;})),
+                    ),
+                dbc.Row(
+                    dbc.Col(dbc.DropdownMenu(label=&#39;A&#39;,
+                                             style={&#39;font-size&#39;: &#39;x-large&#39;},
+                                             children=[dbc.DropdownMenuItem(f&#39;{chr(ord(&#34;A&#34;) + j)}&#39;,
+                                                                            id={&#39;type&#39;: &#34;spaceship-ranking&#34;, &#39;index&#39;: (i * len(emitters)) + j}) for j in range(len(emitters))],
+                                             id={&#39;type&#39;: &#34;ranking-dropdown&#34;, &#39;index&#39;: i}))
+                    )
+                ],
+                    style={&#39;text-align&#39;: &#39;center&#39;},
+                    width={&#39;offset&#39;: 4 if i == 0 else 0, &#39;size&#39;: 1}) for i in range(len(emitters))
+            ])
+        )
+            
+    
+    return rankings_div</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.guis.ships_comparator.webapp.is_base_block"><code class="name flex">
+<span>def <span class="ident">is_base_block</span></span>(<span>block_type: str) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check if the block is a base block. Base blocks are non-functional, structural blocks.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>block_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>The type of the block.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd>Whether the block is a base block.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_base_block(block_type: str) -&gt; bool:
+    &#34;&#34;&#34;Check if the block is a base block. Base blocks are non-functional, structural blocks.
+
+    Args:
+        block_type (str): The type of the block.
+
+    Returns:
+        bool: Whether the block is a base block.
+    &#34;&#34;&#34;
+    return block_type.endswith(&#34;Block&#34;) or block_type.endswith(&#34;Slope&#34;) or block_type.endswith(&#34;Corner&#34;) or block_type.endswith(&#34;CornerInv&#34;)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.guis.ships_comparator.webapp.parse_contents"><code class="name flex">
+<span>def <span class="ident">parse_contents</span></span>(<span>filename: str, contents: str) ‑> Tuple[int, int, str, <a title="pcgsepy.common.vecs.Vec" href="../../common/vecs.html#pcgsepy.common.vecs.Vec">Vec</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Parse the contents of the uploaded data.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>The name of the file.</dd>
+<dt><strong><code>contents</code></strong> :&ensp;<code>str</code></dt>
+<dd>The base-64 encoded contents of the file.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[int, int, str]</code></dt>
+<dd>The RNG seed, the number of the experiment, and the content string.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def parse_contents(filename: str,
+                   contents: str) -&gt; Tuple[int, int, str, Vec]:
+    &#34;&#34;&#34;Parse the contents of the uploaded data.
+
+    Args:
+        filename (str): The name of the file.
+        contents (str): The base-64 encoded contents of the file.
+
+    Returns:
+        Tuple[int, int, str]: The RNG seed, the number of the experiment, and the content string.
+    &#34;&#34;&#34;
+    _, rngseed, exp_n = filename.split(&#39;_&#39;)
+    rngseed = int(rngseed)
+    exp_n = int(exp_n.replace(&#39;exp&#39;, &#39;&#39;))
+    _, cs_properties = contents.split(&#39;,&#39;)
+    cs_properties = json.loads(base64.b64decode(cs_properties).decode(encoding=&#39;utf-8&#39;))
+    cs_string, base_color = cs_properties[&#39;string&#39;], Vec.from_json(cs_properties[&#39;base_color&#39;])
+    logging.getLogger(&#39;webapp&#39;).debug(msg=f&#39;[{__name__}.parse_contents] {rngseed=}; {exp_n=}; {cs_string=}; {base_color=}&#39;)
+    return rngseed, exp_n, cs_string, base_color</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.guis.ships_comparator.webapp.resource_path"><code class="name flex">
+<span>def <span class="ident">resource_path</span></span>(<span>relative_path)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def resource_path(relative_path):
+    # get absolute path to resource
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(&#34;.&#34;)
+
+    return os.path.join(base_path, relative_path)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.guis.ships_comparator.webapp.set_app_layout"><code class="name flex">
+<span>def <span class="ident">set_app_layout</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Load resources and set the layout of the web application.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_app_layout():
+    &#34;&#34;&#34;Load resources and set the layout of the web application.&#34;&#34;&#34;
+    # load resource files
+    with open(&#39;./assets/help.md&#39;, &#39;r&#39;, encoding=&#39;utf-8&#39;) as f:
+        info_str = f.read()
+    # create modals
+    info_modal = dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle(&#34;Info&#34;),
+                        style={&#39;flex-direction&#39;: &#39;column-reverse&#39;},
+                        close_button=True),
+        dbc.ModalBody(dcc.Markdown(info_str),
+                      style={&#39;text-align&#39;: &#39;justify&#39;})
+    ],
+        id=&#39;info-modal&#39;,
+        centered=True,
+        backdrop=&#39;static&#39;,
+        is_open=False,
+        scrollable=True,
+        size=&#39;lg&#39;)
+    err_modal = dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle(&#34;❌ Error ❌&#34;),
+                        style={&#39;flex-direction&#39;: &#39;column-reverse&#39;}, 
+                        close_button=False),
+        dbc.ModalBody(dcc.Markdown(scores_different_error))
+    ],
+        id=&#39;err-modal&#39;,
+        centered=True,
+        backdrop=True,
+        is_open=False,
+        scrollable=True)
+    ok_modal = dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle(&#34;✔️ Success ✔️&#34;),
+                        style={&#39;flex-direction&#39;: &#39;column-reverse&#39;}, 
+                        close_button=False),
+        dbc.ModalBody(dcc.Markdown(rankings_assigned))
+    ],
+        id=&#39;ok-modal&#39;,
+        centered=True,
+        backdrop=True,
+        is_open=False,
+        scrollable=True)
+    # create containers
+    header = dbc.Row(children=[
+        dbc.Col(html.H1(children=&#39;🚀Space Engineers Spaceships Ranker🚀&#39;,
+                        className=&#39;title&#39;), width={&#39;size&#39;: 6, &#39;offset&#39;: 3}),
+        dbc.Col(children=[dbc.Button(&#39;Info&#39;,
+                                     id=&#39;info-btn&#39;,
+                                     color=&#39;info&#39;)],
+                align=&#39;center&#39;, width=1)
+    ],
+        className=&#39;header&#39;)
+    upload_component = html.Div(children=[
+        dcc.Upload(id=&#39;upload-data&#39;,
+                   children=html.Div(children=[
+                       &#39;Drag and Drop or &#39;,
+                       html.A(&#39;Select Files&#39;)
+                   ],
+                                     style={&#39;font-size&#39;: &#39;x-large&#39;}),
+                   style={
+                       &#39;width&#39;: &#39;60%&#39;,
+                       &#39;height&#39;: &#39;60px&#39;,
+                       &#39;lineHeight&#39;: &#39;60px&#39;,
+                       &#39;margin&#39;: &#39;10px auto&#39;
+                   },
+                   className=&#39;upload&#39;,
+                   multiple=True
+                   )])
+    upload_progress = html.Div(
+        children=[
+            html.Br(),
+            dbc.Label(&#39;Uploading progress: &#39;),
+            dbc.Progress(id=&#34;upload-progress&#34;,
+                         color=&#39;info&#39;,
+                         striped=True,
+                         animated=True)
+        ],
+        id=&#39;upload-progress-div&#39;,
+        style={&#39;content-visibility&#39;: &#39;visible&#39; if 0 &lt;= progress &lt;= 100 else &#39;hidden&#39;})
+    content_container = html.Div(children=[get_content_div(i) for i in range(len(emitters))],
+                                 style={&#39;width&#39;: &#39;100%&#39;, &#39;display&#39;: &#39;flex&#39;, &#39;flex-direction&#39;: &#39;row&#39;, &#39;justify-content&#39;: &#39;center&#39;})
+    save_data = dbc.Row(children=[
+        dbc.Col(children=[dbc.Button(children=&#39;Save&#39;,
+                                     style={&#39;font-size&#39;: &#39;xx-large&#39;},
+                                     id=&#39;save-btn&#39;,
+                                     n_clicks=0,
+                                     disabled=True,
+                                     color=&#34;primary&#34;,
+                                     size=&#34;lg&#34;,
+                                     className=&#34;me-1&#34;),
+                          dcc.Download(id=&#39;save-data&#39;)],
+                align=&#39;center&#39;,
+                width={&#39;offset&#39;: 4, &#39;size&#39;: 4},
+                style={&#39;text-align&#39;: &#39;center&#39;})])
+    # set the app layout
+    app.layout = dbc.Container(
+        children=[
+            info_modal,
+            err_modal,
+            ok_modal,
+            header,
+            html.Br(),
+            dbc.Row(
+                dbc.Col(
+                    [
+                        upload_component,
+                        html.Br(),
+                        upload_progress,
+                        ],
+                    width={&#39;size&#39;: 10, &#39;offset&#39;: 1}
+                )
+            ),
+            html.Br(),
+            dbc.Row(
+                dbc.Col(
+                    [
+                        content_container,
+                        html.Br(),
+                        dbc.Row(
+                            dbc.Col(
+                                get_rankings_div(),
+                                width=(&#39;offset: 1&#39;)
+                            )
+                        ),
+                        html.Br(),
+                        html.Br(),
+                        save_data
+                        ],
+                    width={&#39;size&#39;: 10, &#39;offset&#39;: 1})
+            ),
+            dcc.Interval(id=&#39;interval&#39;,
+                         interval=1 * 1000,
+                         n_intervals=0),
+        ],
+        fluid=True)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.guis.ships_comparator.webapp.show_webapp_info"><code class="name flex">
+<span>def <span class="ident">show_webapp_info</span></span>(<span>n)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@app.callback(
+    Output(&#34;info-modal&#34;, &#34;is_open&#34;),
+    Input(&#34;info-btn&#34;, &#34;n_clicks&#34;),
+    prevent_initial_call=True
+)
+def show_webapp_info(n):
+    return True</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.guis.ships_comparator.webapp.update_dropdown_value"><code class="name flex">
+<span>def <span class="ident">update_dropdown_value</span></span>(<span>labels: List[str], vs: List[Optional[int]])</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@app.callback(
+    Output({&#39;type&#39;: &#39;ranking-dropdown&#39;, &#39;index&#39;: ALL}, &#34;label&#34;),
+    Output({&#39;type&#39;: &#39;spaceship-ranking&#39;, &#39;index&#39;: ALL}, &#34;n_clicks&#34;),
+    State({&#39;type&#39;: &#39;ranking-dropdown&#39;, &#39;index&#39;: ALL}, &#34;label&#34;),
+    Input({&#39;type&#39;: &#39;spaceship-ranking&#39;, &#39;index&#39;: ALL}, &#34;n_clicks&#34;),
+    prevent_initial_call=True
+)
+def update_dropdown_value(labels: List[str],
+                          vs: List[Optional[int]]):
+    # super hacky but Dash&#39;s pattern matching fails in this case
+    label_changed = vs.index(1) // len(labels)
+    new_label = chr(ord(&#34;A&#34;) + (vs.index(1) % len(labels)))
+    labels[label_changed] = new_label
+    return labels, [None] * len(vs)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.guis.ships_comparator.webapp.update_progress"><code class="name flex">
+<span>def <span class="ident">update_progress</span></span>(<span>n)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@app.callback(
+    [Output(&#34;upload-progress&#34;, &#34;value&#34;),
+     Output(&#34;upload-progress&#34;, &#34;label&#34;),
+     Output(&#39;upload-progress-div&#39;, &#39;style&#39;)],
+    [Input(&#34;interval&#34;, &#34;n_intervals&#34;)],
+)
+def update_progress(n):
+    return progress, f&#34;{progress}%&#34;, {&#39;content-visibility&#39;: &#39;visible&#39; if 0 &lt;= progress &lt;= 100 else &#39;hidden&#39;}</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pcgsepy.guis.ships_comparator" href="index.html">pcgsepy.guis.ships_comparator</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pcgsepy.guis.ships_comparator.webapp.download_scores" href="#pcgsepy.guis.ships_comparator.webapp.download_scores">download_scores</a></code></li>
+<li><code><a title="pcgsepy.guis.ships_comparator.webapp.general_callback" href="#pcgsepy.guis.ships_comparator.webapp.general_callback">general_callback</a></code></li>
+<li><code><a title="pcgsepy.guis.ships_comparator.webapp.get_content_div" href="#pcgsepy.guis.ships_comparator.webapp.get_content_div">get_content_div</a></code></li>
+<li><code><a title="pcgsepy.guis.ships_comparator.webapp.get_content_plot" href="#pcgsepy.guis.ships_comparator.webapp.get_content_plot">get_content_plot</a></code></li>
+<li><code><a title="pcgsepy.guis.ships_comparator.webapp.get_rankings_div" href="#pcgsepy.guis.ships_comparator.webapp.get_rankings_div">get_rankings_div</a></code></li>
+<li><code><a title="pcgsepy.guis.ships_comparator.webapp.is_base_block" href="#pcgsepy.guis.ships_comparator.webapp.is_base_block">is_base_block</a></code></li>
+<li><code><a title="pcgsepy.guis.ships_comparator.webapp.parse_contents" href="#pcgsepy.guis.ships_comparator.webapp.parse_contents">parse_contents</a></code></li>
+<li><code><a title="pcgsepy.guis.ships_comparator.webapp.resource_path" href="#pcgsepy.guis.ships_comparator.webapp.resource_path">resource_path</a></code></li>
+<li><code><a title="pcgsepy.guis.ships_comparator.webapp.set_app_layout" href="#pcgsepy.guis.ships_comparator.webapp.set_app_layout">set_app_layout</a></code></li>
+<li><code><a title="pcgsepy.guis.ships_comparator.webapp.show_webapp_info" href="#pcgsepy.guis.ships_comparator.webapp.show_webapp_info">show_webapp_info</a></code></li>
+<li><code><a title="pcgsepy.guis.ships_comparator.webapp.update_dropdown_value" href="#pcgsepy.guis.ships_comparator.webapp.update_dropdown_value">update_dropdown_value</a></code></li>
+<li><code><a title="pcgsepy.guis.ships_comparator.webapp.update_progress" href="#pcgsepy.guis.ships_comparator.webapp.update_progress">update_progress</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

@@ -211,3 +211,21 @@ def get_matching_brackets(string: str) -> List[Tuple[int, int]]:
             # add to list of brackets
             brackets.append((i, idx_c))
     return brackets
+
+
+def get_atom_indexes(string: str,
+                     atom: str) -> List[Tuple[int, int]]:
+    """Get the indexes of the positions of the given atom in the string.
+    Args:
+        string (str): The string.
+        atom (str): The atom.
+    Returns:
+        List[Tuple[int, int]]: The list of pair indexes.
+    """
+    indexes = []
+    for i, _ in enumerate(string):
+        if string[i:].startswith(atom):
+            cb = string.find(')', i + len(atom))
+            indexes.append((i, cb))
+            i = cb
+    return indexes

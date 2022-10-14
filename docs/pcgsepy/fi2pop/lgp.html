@@ -1,0 +1,1653 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>pcgsepy.fi2pop.lgp API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pcgsepy.fi2pop.lgp</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from dataclasses import replace
+import math
+from random import choices, sample, uniform
+from tqdm import trange
+from typing import Any, Dict, List, Optional, Tuple
+
+from pcgsepy.config import (CROSSOVER_P, MUTATION_DECAY, MUTATION_INITIAL_P, N_GENS, N_RETRIES,
+                            POP_SIZE)
+from pcgsepy.evo.fitness import Fitness
+from pcgsepy.evo.genops import EvoException, get_atom_indexes, get_matching_brackets, roulette_wheel_selection
+from pcgsepy.fi2pop.utils import reduce_population, subdivide_solutions
+from pcgsepy.lsystem.actions import AtomAction
+from pcgsepy.lsystem.constraints import ConstraintLevel
+from pcgsepy.lsystem.lsystem import LSystem
+from pcgsepy.lsystem.parser import LLParser
+from pcgsepy.lsystem.solution import CandidateSolution
+
+
+class LGPSolver:
+    def __init__(self,
+                 alphabet: Dict[str, Any],
+                 feasible_fitnesses: List[Fitness],
+                 lsystem: LSystem):
+        self.alphabet = alphabet.copy()
+        
+        # remove unneeded atoms from alphabet
+        self.alphabet.pop(&#39;RotXcwY&#39;)
+        self.alphabet.pop(&#39;RotXcwZ&#39;)
+        self.alphabet.pop(&#39;RotXccwY&#39;)
+        self.alphabet.pop(&#39;RotXccwZ&#39;)
+        self.alphabet.pop(&#39;RotZcwX&#39;)
+        self.alphabet.pop(&#39;RotZcwY&#39;)
+        self.alphabet.pop(&#39;RotZccwX&#39;)
+        self.alphabet.pop(&#39;RotZccwY&#39;)
+        self.alphabet.pop(&#39;+&#39;)
+        self.alphabet.pop(&#39;-&#39;)
+        self.alphabet.pop(&#39;!&#39;)
+        self.alphabet.pop(&#39;?&#39;)
+        self.alphabet.pop(&#39;&lt;&#39;)
+        self.alphabet.pop(&#39;&gt;&#39;)
+        
+        self.feasible_fitnesses = feasible_fitnesses
+        self.lsystem = lsystem
+        self.starting_string = &#39;cockpit(1)corridorsimple(1)thrusters(1)&#39;
+        
+        self.inner_lgp_iterations = 5
+        self.mutations = {
+            self.__mutation: 0.5,
+            self.__insertion: 0.4,
+            self.__deletion: 0.1
+        }
+        self.ftop = []
+        self.itop = []
+        self.fmean = []
+        self.imean = []
+
+        self.ffs, self.ifs = [], []
+
+        # number of total soft constraints
+        self.nsc = [c for c in self.lsystem.all_hl_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
+        self.nsc = [c for c in self.lsystem.all_ll_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
+        self.nsc = len(self.nsc) * 0.5
+
+    def reset(self):
+        self.ftop = []
+        self.itop = []
+        self.fmean = []
+        self.imean = []
+        self.ffs, self.ifs = [], []
+    
+    def _compute_fitness(self,
+                         cs: CandidateSolution,
+                         extra_args: Dict[str, Any]) -&gt; List[float]:
+        &#34;&#34;&#34;Compute the fitness of a single candidate solution.
+
+        Args:
+            cs (CandidateSolution): The candidate solution.
+            extra_args (Dict[str, Any]): Additional arguments used in the fitness function.
+
+        Returns:
+            float: The fitness value.
+        &#34;&#34;&#34;
+        return [f(cs, extra_args) for f in self.feasible_fitnesses]
+    
+    def __mutation(self,
+                   i: int,
+                   s: List[str]):
+        &#34;&#34;&#34;Mutate the atom parameters in `s` at index `i`. Mutation only occurs for movements or blocks.
+
+        Args:
+            i (int): The index of the atom.
+            s (List[str]): The list of atoms.
+        &#34;&#34;&#34;
+        # get the atom
+        a = s[i]
+        # if tile, change the repetition amount or block type
+        if self.alphabet[a[&#39;atom&#39;]][&#39;action&#39;] == AtomAction.PLACE:
+            if uniform(a=0, b=1) &gt; 0.5:
+                pop = [-1, 0, 1] if int(a[&#39;n&#39;]) &gt; 1 else [0, 1]
+                a[&#39;n&#39;] = str(int(a[&#39;n&#39;]) + choices(population=pop)[0])
+            else:
+                new_atom = &#39;&#39;
+                placeable = False
+                while not placeable:
+                    new_atom = choices(population=list(self.alphabet.keys()))[0]
+                    placeable = self.alphabet[new_atom][&#39;action&#39;] == AtomAction.PLACE
+                a[&#39;atom&#39;] = new_atom
+    
+    def _brackets_check(self,
+                        s: Dict[str, Any]) -&gt; int:
+        &#34;&#34;&#34;Do a stack simulation to check for `[` and `]` inconsistencies.
+
+        Args:
+            s (Dict[str, Any]): The list of atoms.
+
+        Returns:
+            int: The number of open brackets left.
+        &#34;&#34;&#34;
+        stack = 0  # simulate stack push-pop
+        for c in s:
+            if c[&#39;atom&#39;] == &#39;[&#39;:
+                stack += 1
+            elif c[&#39;atom&#39;] == &#39;]&#39;:
+                stack -= 1
+            # if at any point we have more `]` than `[`, exit
+            if stack &lt; 0:
+                return stack
+        return stack
+    
+    def _interval_indexes(self,
+                          i: int,
+                          s: List[Dict[str, Any]],
+                          c1: str = &#39;[&#39;,
+                          c2: str = &#39;]&#39;) -&gt; Optional[Tuple[int, int]]:
+        &#34;&#34;&#34;Get the indexes between `[` and `]` near `i` (if they exist).
+
+        Args:
+            i (int): The index.
+            s (List[Dict[str, Any]]): The list of atoms.
+
+        Returns:
+            Optional[Tuple[int, int]]: The indexes of the surrounding atoms (if they exist).
+        &#34;&#34;&#34;
+        res = None
+        # get all occurrences&#39; index before and after `i` in `s`
+        ibs = [idx for idx, c in enumerate(s[:i]) if c[&#39;atom&#39;] == c1]
+        ias = [idx for idx, c in enumerate(s[i:]) if c[&#39;atom&#39;] == c2]
+        # if possible, get surrounding indexes
+        if ibs != [] and ias != []:
+            ib, ia = 0, 0
+            # get closest index before `i`
+            for idx in ibs:
+                if idx &lt; i:
+                    ib = idx
+                else:
+                    break
+            # get closest index after `i`
+            for idx in ias:
+                if idx &gt; ib and idx &gt; i:
+                    ia = idx
+                else:
+                    break
+            # assign result
+            res = (ib, ia)
+        return res
+
+    def __insertion(self,
+                   i: int,
+                   s: List[Dict[str, Any]]):
+        &#34;&#34;&#34;Insert a new atom in the list. Additional checks are done for `]` atoms.
+
+        Args:
+            i (int): The index to insert a new atom at.
+            s (List[Dict[str, Any]]): The list of atoms.
+        &#34;&#34;&#34;
+        # pick a random new atom
+        a = choices(population=list(self.alphabet.keys()))[0]
+        # set parameters if it accepts them
+        n = &#39;0&#39;
+        if self.alphabet[a][&#39;action&#39;] == AtomAction.PLACE:
+            n = &#39;1&#39;
+        # In order to have a valid structure, the `]` must be placed only if possible, otherwise don&#39;t add anything
+        # if a == &#39;]&#39;:
+            # if i &gt; 0:
+            #     # check brackets before `i`
+            #     stack = self._brackets_check(s=s[:i])
+            #     # simulate adding the new `]`
+            #     stack -= 1
+            #     if stack &gt;= 0:
+            #         # check brackets after `i` (in case they now are invalid)
+            #         stack += self._brackets_check(s=s[i:])
+            #         # if we have 1 or more `[`, we can add `]`
+            #         if stack &gt;= 0:
+            #             s.insert(i + 1,
+            #                     {&#39;atom&#39;: a,
+            #                     &#39;n&#39;: &#39;0&#39;})
+        # only add `[` with correct syntax
+        if self.alphabet[s[i][&#39;atom&#39;]][&#39;action&#39;] == AtomAction.PLACE:
+            if a == &#39;[&#39;:
+                if not s[i - 1][&#39;atom&#39;].startswith(&#39;Rot&#39;) or not s[i - 1][&#39;atom&#39;] == &#39;[&#39;:
+                    s.insert(i + 1,
+                            {&#39;atom&#39;: a,
+                            &#39;n&#39;: &#39;0&#39;})
+                    s.insert(i + 2,
+                            {&#39;atom&#39;: choices(population=[r for r in self.alphabet.keys() if r.startswith(&#39;Rot&#39;)])[0],
+                            &#39;n&#39;: &#39;0&#39;})
+                    s.insert(i + 3,
+                            {&#39;atom&#39;: choices(population=[r for r in self.alphabet.keys() if r.startswith(&#39;corridor&#39;)])[0],
+                            &#39;n&#39;: &#39;1&#39;})
+                    s.insert(i + 4,
+                            {&#39;atom&#39;: &#39;]&#39;,
+                            &#39;n&#39;: &#39;0&#39;})
+            elif a != &#39;]&#39; and not a.startswith(&#39;Rot&#39;):
+                # freely add the new atom
+                s.insert(i + 1,
+                        {&#39;atom&#39;: a,
+                        &#39;n&#39;: n})
+    
+    def __deletion(self,
+                   i: int,
+                   s: List[str]):
+        &#34;&#34;&#34;Remove the atom at index `i` from the list of atoms.
+        Only tiles and rotations can be removed from the list.
+
+        Args:
+            i (int): The index to insert a new atom at.
+            s (List[str]): The list of atoms.
+        &#34;&#34;&#34;
+        if self.alphabet[s[i][&#39;atom&#39;]][&#39;action&#39;] == AtomAction.PLACE:
+            # idxs = self._interval_indexes(i=i,
+            #                               s=s)
+            # if idxs is not None:
+            #     ib, ia = idxs
+            #     fas = sum([1 if self.alphabet[x[&#39;atom&#39;]][&#39;action&#39;] == AtomAction.PLACE else 0 for x in s[ib:ia]])
+            # else:
+            #     fas = sum([1 if self.alphabet[x[&#39;atom&#39;]][&#39;action&#39;] == AtomAction.PLACE else 0 for x in s])
+            # if fas &gt; 2 and i != 0:
+            #     s.pop(i)
+            if i &gt; 0:
+                if not self.alphabet[s[i - 1][&#39;atom&#39;]][&#39;action&#39;] == AtomAction.ROTATE:
+                    s.pop(i)
+        elif self.alphabet[s[i][&#39;atom&#39;]][&#39;action&#39;] == AtomAction.PUSH:
+            n_o = 0
+            for j, a in enumerate(s[i+1:]):
+                if a[&#39;atom&#39;] == &#39;[&#39;:
+                    n_o += 1
+                elif a[&#39;atom&#39;] == &#39;]&#39;:
+                    if n_o != 0:
+                        n_o -= 1
+                    else:
+                        for k in range(i + j + 1, i - 1, -1):
+                            s.pop(k)
+                        break
+    
+    def _string_as_list(self,
+                        string: str) -&gt; List[Dict[str, Any]]:
+        &#34;&#34;&#34;Convert a string into a list of atoms.
+
+        Args:
+            string (str): The string.
+
+        Returns:
+            List[Dict[str, Any]]: The list of atoms (atom string &amp; parameters).
+        &#34;&#34;&#34;
+        atoms_list = []
+        i = 0
+        while i &lt; len(string):
+            offset = 0
+            for k in self.alphabet.keys():
+                if string[i:].startswith(k):
+                    offset += len(k)
+                    n = &#39;0&#39;
+                    # check if there are parameters (multiplicity)
+                    if i + offset &lt; len(string) and string[i + offset] == &#39;(&#39;:
+                        params = string[i + offset:
+                                        string.index(&#39;)&#39;, i + offset + 1) + 1]
+                        offset += len(params)
+                        n = params.replace(&#39;(&#39;, &#39;&#39;).replace(&#39;)&#39;, &#39;&#39;)
+                    atoms_list.append({&#39;atom&#39;: k,
+                                       &#39;n&#39;: n})
+                    i += len(k) + (len(f&#39;({n})&#39;) if n != &#39;0&#39; else 0) - 1
+                    break
+            i += 1
+        return atoms_list
+
+    def _list_as_string(self,
+                        s: List[Dict[str, Any]]) -&gt; str:
+        &#34;&#34;&#34;Convert a list of atoms to string.
+
+        Args:
+            s (List[Dict[str, Any]]): The list of atoms (string &amp; parameters).
+
+        Returns:
+            str: The string.
+        &#34;&#34;&#34;
+        return &#39;&#39;.join([a[&#39;atom&#39;] + (f&#39;({a[&#34;n&#34;]})&#39; if a[&#34;n&#34;] != &#39;0&#39; else &#39;&#39;) for a in s])
+    
+    def mutate(self,
+               cs: CandidateSolution,
+               n_iteration: int = 0) -&gt; None:
+        &#34;&#34;&#34;Apply mutation to a given solution.
+
+        Args:
+            cs (CandidateSolution): The solution to mutate.
+            n_iteration (int, optional): The current evolution iteration. Defaults to 0.
+        &#34;&#34;&#34;
+        # we only mutate the string
+        s = self._string_as_list(string=cs.string)
+        # select the atoms to mutate
+        p = max(MUTATION_INITIAL_P / math.exp(n_iteration * MUTATION_DECAY), 0)
+        to_mutate = math.ceil(p * len(s))
+        for_mutation = sample(population=list(range(len(s))),
+                              k=to_mutate)
+        # reverse to keep order in case of addition or deletion
+        for_mutation.sort(reverse=True)
+        # mutate each atom
+        for atom in for_mutation:
+            # select possible mutation
+            f = choices(population=list(self.mutations.keys()),
+                        weights=self.mutations.values())[0]
+            # apply mutation
+            f(i=atom,
+              s=s)
+        # assign new mutated low-level string to solution
+        cs.string = self._list_as_string(s=s)
+    
+    def crossover(self,
+                  cs1: CandidateSolution,
+                  cs2: CandidateSolution,
+                  n_childs: int = 2) -&gt; List[CandidateSolution]:
+        &#34;&#34;&#34;Applies 1-point crossover between two solutions.
+
+        Args:
+            cs1 (CandidateSolution): The first solution.
+            cs2 (CandidateSolution): The second solution.
+            n_childs (int, optional): The number of offsprings to create. Defaults to 2.
+
+        Returns:
+            List[CandidateSolution]: The offsprings.
+        &#34;&#34;&#34;
+        idxs1 = get_matching_brackets(string=cs1.string)
+        idxs2 = get_matching_brackets(string=cs2.string)
+        # if crossover can&#39;t be applied, use atoms
+        if not idxs1:
+            for atom in [a for a in self.alphabet.keys() if self.alphabet[a][&#39;action&#39;] == AtomAction.PLACE]:
+                idxs1.extend(get_atom_indexes(string=cs1.string,
+                                              atom=atom))
+        if not idxs2:
+            for atom in [a for a in self.alphabet.keys() if self.alphabet[a][&#39;action&#39;] == AtomAction.PLACE]:
+                idxs2.extend(get_atom_indexes(string=cs2.string,
+                                              atom=atom))
+        i = None
+        for j, idx in enumerate(idxs1):
+            if idx[0] == 0:
+                i = j
+        if i is not None:
+            idxs1.remove(idxs1[i])
+        i = None
+        for j, idx in enumerate(idxs2):
+            if idx[0] == 0:
+                i = j
+        if i is not None:
+            idxs2.remove(idxs2[i])
+        ws1 = [CROSSOVER_P for _ in range(len(idxs1))]
+        ws2 = [CROSSOVER_P for _ in range(len(idxs2))]
+        childs = []
+        if len(idxs1) &gt; 0 and len(idxs2) &gt; 0:
+            while len(childs) &lt; n_childs:
+                s1 = cs1.string[:]
+                s2 = cs2.string[:]
+
+                idx1 = choices(population=idxs1, weights=ws1, k=1)[0]
+                b1 = cs1.string[idx1[0]:idx1[1] + 1]
+
+                idx2 = choices(population=idxs2, weights=ws2, k=1)[0]
+                b2 = cs2.string[idx2[0]:idx2[1] + 1]
+
+                s1 = s1[:idx1[0]] + s1[idx1[0]:].replace(b1, b2, 1)
+                s2 = s2[:idx2[0]] + s2[idx2[0]:].replace(b2, b1, 1)
+
+                for s, idx in [(s1, idx1), (s2, idx2)]:
+                    o = CandidateSolution(string=s)                   
+                    childs.append(o)
+        else:
+            print(cs1.string, idxs1)
+            print(cs2.string, idxs2)
+            raise EvoException(f&#39;No cross-over could be applied ({cs1.string} w/ {cs2.string}).&#39;)
+        return childs[:n_childs]
+        # # convert the strings to list of atoms
+        # ls1 = self._string_as_list(cs1.string)
+        # ls2 = self._string_as_list(cs2.string)
+        # offsprings = set()
+        # while len(offsprings) &lt; n_childs:
+        #     idxs1 = [i for i, x in enumerate(ls1) if self.alphabet[x[&#39;atom&#39;]][&#39;action&#39;] == AtomAction.PLACE]
+        #     idxs2 = [i for i, x in enumerate(ls2) if self.alphabet[x[&#39;atom&#39;]][&#39;action&#39;] == AtomAction.PLACE]
+        #     # pick an atom index for both parents
+        #     idx1 = sample(population=list(range(len(idxs1))),
+        #                   k=1)[0]
+        #     idx2 = sample(population=list(range(len(idxs2))),
+        #                   k=1)[0]
+        #     # apply 1-point swap between parents to generate offsprings
+        #     lo1 = ls1[:idx1] + ls2[idx2:]
+        #     lo2 = ls2[:idx2] + ls1[idx1:]
+            
+        #     if lo1[0][&#39;atom&#39;] == &#39;[&#39; or lo2[0][&#39;atom&#39;] == &#39;[&#39;:
+        #         print(f&#39;error: {cs1.string} and {cs2.string} ({idx1}, {idx2})&#39;)
+        #         continue
+            
+        #     # check consistency requirements
+        #     if self._brackets_check(s=lo1) &lt; 0 or self._brackets_check(s=lo2) &lt; 0:
+        #         continue
+        #     # create offsprings solutions
+        #     o1 = CandidateSolution(string=self._list_as_string(s=lo1))
+        #     offsprings.add(o1)
+        #     o2 = CandidateSolution(string=self._list_as_string(s=lo2))
+        #     offsprings.add(o2)
+        # return list(offsprings)[:n_childs]
+    
+    def _generate_initial_populations(self,
+                                      pops_size: int = POP_SIZE,
+                                      n_retries: int = N_RETRIES) -&gt; Tuple[List[CandidateSolution], List[CandidateSolution]]:
+        &#34;&#34;&#34;Generate initial populations.
+
+        Args:
+            pops_size (int, optional): The size of each population. Defaults to POP_SIZE.
+            n_retries (int, optional): The number of initialization retries. Defaults to N_RETRIES.
+
+        Returns:
+            Tuple[List[CandidateSolution], List[CandidateSolution]]: The feasible and infeasible populations.
+        &#34;&#34;&#34;
+        assert pops_size * 2 &lt; n_retries, f&#39;Invalid pops_size ({pops_size}) and n_retries ({n_retries}): pops_size must be at most half n_retries&#39;
+        fpop, ipop = set(), set()
+        with trange(n_retries, desc=&#39;Initialization &#39;) as iterations:
+            for i in iterations:
+                # create empty solution
+                cs = CandidateSolution(string=self.starting_string)
+                # apply mutations
+                for _ in range(self.inner_lgp_iterations):
+                    self.mutate(cs=cs)
+                # determine feasibility
+                subdivide_solutions(lcs=[cs],
+                                    lsystem=self.lsystem)
+                # assign to corresponding population
+                if cs.is_feasible and len(fpop) &lt; pops_size:
+                    cs.fitness = self._compute_fitness(cs=cs,
+                                                    extra_args={
+                                                        &#39;alphabet&#39;: self.lsystem.ll_solver.atoms_alphabet
+                                                        })
+                    cs.c_fitness = sum(cs.fitness) + (self.nsc - cs.ncv)
+                    fpop.add(cs)
+                elif not cs.is_feasible and len(ipop) &lt; pops_size:
+                    cs.c_fitness = cs.ncv
+                    ipop.add(cs)
+                iterations.set_postfix(ordered_dict={&#39;fpop-size&#39;: f&#39;{len(fpop)}/{pops_size}&#39;,
+                                                     &#39;ipop-size&#39;: f&#39;{len(ipop)}/{pops_size}&#39;},
+                                       refresh=True)
+                # break out if n_retries is reached or both populations are full
+                if i == n_retries or (len(fpop) == pops_size and len(ipop) == pops_size):
+                    break
+        return list(fpop), list(ipop)
+    
+    def initialize(self,
+                   pops_size: int = POP_SIZE,
+                   n_retries: int = N_RETRIES) -&gt; Tuple[List[CandidateSolution], List[CandidateSolution]]:
+        &#34;&#34;&#34;Initialize the solver by generating the initial populations.
+
+        Returns:
+            Tuple[List[CandidateSolution], List[CandidateSolution]]: The Feasible and Infeasible populations.
+        &#34;&#34;&#34;
+        f_pop, i_pop = self._generate_initial_populations(pops_size=pops_size,
+                                                          n_retries=n_retries)
+        f_fitnesses = [cs.c_fitness for cs in f_pop]
+        i_fitnesses = [cs.c_fitness for cs in i_pop]
+        self.ftop.append(max(f_fitnesses))
+        self.fmean.append(sum(f_fitnesses) / len(f_fitnesses))
+        self.itop.append(min(i_fitnesses))
+        self.imean.append(sum(i_fitnesses) / len(i_fitnesses))
+        self.ffs.append([self.ftop[-1], self.fmean[-1]])
+        self.ifs.append([self.itop[-1], self.imean[-1]])
+        print(f&#39;Created Feasible population of size {len(f_pop)}: t:{self.ftop[-1]};m:{self.fmean[-1]}&#39;)
+        print(f&#39;Created Infeasible population of size {len(i_pop)}: t:{self.itop[-1]};m:{self.imean[-1]}&#39;)
+        return f_pop, i_pop
+    
+    def _create_new_pool(self,
+                         population: List[CandidateSolution],
+                         generation: int,
+                         n_individuals: int = POP_SIZE,
+                         minimize: bool = False) -&gt; List[CandidateSolution]:
+        &#34;&#34;&#34;Create a new pool of solutions.
+
+        Args:
+            population (List[CandidateSolution]): Initial population of solutions.
+            generation (int): Current generation number.
+            n_individuals (int, optional): The number of individuals in the pool. Defaults to POP_SIZE.
+            minimize (bool, optional): Whether to minimize or maximize the fitness. Defaults to False.
+
+        Raises:
+            EvoException: If same parent is picked twice for crossover.
+
+        Returns:
+            List[CandidateSolution]: The pool of new solutions.
+        &#34;&#34;&#34;
+        pool = set()
+        while len(pool) &lt; n_individuals:
+            # fitness-proportionate selection
+            p1 = roulette_wheel_selection(pop=population,
+                                          minimize=minimize)
+            new_pop = []
+            new_pop[:] = population[:]
+            new_pop.remove(p1)
+            p2 = roulette_wheel_selection(pop=new_pop,
+                                          minimize=minimize)
+            if p1 != p2:
+                # crossover
+                o1, o2 = self.crossover(cs1=p1, cs2=p2, n_childs=2)
+                for o in [o1, o2]:
+                    # mutation
+                    self.mutate(cs=o, n_iteration=generation)
+                    pool.add(o)
+            else:
+                raise EvoException(&#39;Picked same parents, this should never happen.&#39;)
+        return list(pool)
+    
+    def fi2pop(self,
+               f_pop: List[CandidateSolution],
+               i_pop: List[CandidateSolution],
+               n_iter: int = N_GENS) -&gt; Tuple[List[CandidateSolution], List[CandidateSolution]]:
+        &#34;&#34;&#34;Apply the FI2Pop algorithm to the given populations for `n_iter` steps.
+
+        Args:
+            f_pop (List[CandidateSolution]): The Feasible population.
+            i_pop (List[CandidateSolution]): The Infeasible population.
+            n_iter (int, optional): The number of iterations to run for. Defaults to N_GENS.
+
+        Returns:
+            Tuple[List[CandidateSolution], List[CandidateSolution]]: The Feasible and the Infeasible populations.
+        &#34;&#34;&#34;
+        f_pool = []
+        i_pool = []
+        with trange(n_iter, desc=&#39;Generation &#39;) as gens:
+            for gen in gens:
+                # place the infeasible population in the infeasible pool
+                i_pool.extend(i_pop)
+                
+                f_pool.extend(f_pop)
+                
+                # create offsprings from feasible population
+                new_pool = self._create_new_pool(population=f_pop,
+                                                 generation=gen)
+                # if feasible, add to feasible pool
+                # if infeasible, add to infeasible pool
+                subdivide_solutions(lcs=new_pool,
+                                    lsystem=self.lsystem)
+                for cs in new_pool:
+                    if cs.ll_string == &#39;&#39;:
+                        cs.ll_string = self.lsystem.hl_to_ll(cs=cs).string
+                    if cs.is_feasible:
+                        cs.fitness = self._compute_fitness(cs=cs,
+                                                           extra_args={
+                                                               &#39;alphabet&#39;: self.lsystem.ll_solver.atoms_alphabet
+                                                               })
+                        cs.c_fitness = sum(cs.fitness) + (self.nsc - cs.ncv)
+                        f_pool.append(cs)
+                    else:
+                        cs.c_fitness = cs.ncv
+                        i_pool.append(cs)
+                
+                i_pool = list(set(i_pool))
+                
+                # reduce the infeasible pool if &gt; pops_size
+                if len(i_pool) &gt; POP_SIZE:
+                    i_pool = reduce_population(population=i_pool,
+                                               to=POP_SIZE,
+                                               minimize=True)
+                # set the infeasible pool as the infeasible population
+                i_pop[:] = i_pool[:]
+                # create offsprings from infeasible population
+                new_pool = self._create_new_pool(population=i_pop,
+                                                 generation=gen,
+                                                 minimize=True)
+                # if feasible, add to feasible pool
+                # if infeasible, add to infeasible pool
+                subdivide_solutions(lcs=new_pool,
+                                    lsystem=self.lsystem)
+                for cs in new_pool:
+                    if cs.is_feasible:
+                        f_pool.append(cs)
+                        cs.ll_string = self.lsystem.hl_to_ll(cs=cs).string
+                        cs.fitness = self._compute_fitness(cs=cs,
+                                                           extra_args={
+                                                               &#39;alphabet&#39;: self.lsystem.ll_solver.atoms_alphabet
+                                                               })
+                        cs.c_fitness = sum(cs.fitness) + (self.nsc - cs.ncv)
+                    else:
+                        cs.c_fitness = cs.ncv
+                        i_pool.append(cs)
+                
+                f_pool = list(set(f_pool))        
+                
+                # reduce the feasible pool if &gt; pops_size
+                if len(f_pool) &gt; POP_SIZE:
+                    f_pool = reduce_population(population=f_pool,
+                                               to=POP_SIZE)
+                # set the feasible pool as the feasible population
+                f_pop[:] = f_pool[:]
+                # update tracking
+                f_fitnesses = [cs.c_fitness for cs in f_pop]
+                i_fitnesses = [cs.c_fitness for cs in i_pop]
+                self.ftop.append(max(f_fitnesses))
+                self.fmean.append(sum(f_fitnesses) / len(f_fitnesses))
+                self.itop.append(min(i_fitnesses))
+                self.imean.append(sum(i_fitnesses) / len(i_fitnesses))
+                self.ffs.append([self.ftop[-1], self.fmean[-1]])
+                self.ifs.append([self.itop[-1], self.imean[-1]])
+                gens.set_postfix(ordered_dict={&#39;top-f&#39;: self.ftop[-1],
+                                               &#39;mean-f&#39;: self.fmean[-1],
+                                               &#39;top-i&#39;: self.itop[-1],
+                                               &#39;mean-i&#39;: self.imean[-1]},
+                                 refresh=True)
+
+        return f_pop, i_pop</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pcgsepy.fi2pop.lgp.LGPSolver"><code class="flex name class">
+<span>class <span class="ident">LGPSolver</span></span>
+<span>(</span><span>alphabet: Dict[str, Any], feasible_fitnesses: List[<a title="pcgsepy.evo.fitness.Fitness" href="../evo/fitness.html#pcgsepy.evo.fitness.Fitness">Fitness</a>], lsystem: <a title="pcgsepy.lsystem.lsystem.LSystem" href="../lsystem/lsystem.html#pcgsepy.lsystem.lsystem.LSystem">LSystem</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class LGPSolver:
+    def __init__(self,
+                 alphabet: Dict[str, Any],
+                 feasible_fitnesses: List[Fitness],
+                 lsystem: LSystem):
+        self.alphabet = alphabet.copy()
+        
+        # remove unneeded atoms from alphabet
+        self.alphabet.pop(&#39;RotXcwY&#39;)
+        self.alphabet.pop(&#39;RotXcwZ&#39;)
+        self.alphabet.pop(&#39;RotXccwY&#39;)
+        self.alphabet.pop(&#39;RotXccwZ&#39;)
+        self.alphabet.pop(&#39;RotZcwX&#39;)
+        self.alphabet.pop(&#39;RotZcwY&#39;)
+        self.alphabet.pop(&#39;RotZccwX&#39;)
+        self.alphabet.pop(&#39;RotZccwY&#39;)
+        self.alphabet.pop(&#39;+&#39;)
+        self.alphabet.pop(&#39;-&#39;)
+        self.alphabet.pop(&#39;!&#39;)
+        self.alphabet.pop(&#39;?&#39;)
+        self.alphabet.pop(&#39;&lt;&#39;)
+        self.alphabet.pop(&#39;&gt;&#39;)
+        
+        self.feasible_fitnesses = feasible_fitnesses
+        self.lsystem = lsystem
+        self.starting_string = &#39;cockpit(1)corridorsimple(1)thrusters(1)&#39;
+        
+        self.inner_lgp_iterations = 5
+        self.mutations = {
+            self.__mutation: 0.5,
+            self.__insertion: 0.4,
+            self.__deletion: 0.1
+        }
+        self.ftop = []
+        self.itop = []
+        self.fmean = []
+        self.imean = []
+
+        self.ffs, self.ifs = [], []
+
+        # number of total soft constraints
+        self.nsc = [c for c in self.lsystem.all_hl_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
+        self.nsc = [c for c in self.lsystem.all_ll_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
+        self.nsc = len(self.nsc) * 0.5
+
+    def reset(self):
+        self.ftop = []
+        self.itop = []
+        self.fmean = []
+        self.imean = []
+        self.ffs, self.ifs = [], []
+    
+    def _compute_fitness(self,
+                         cs: CandidateSolution,
+                         extra_args: Dict[str, Any]) -&gt; List[float]:
+        &#34;&#34;&#34;Compute the fitness of a single candidate solution.
+
+        Args:
+            cs (CandidateSolution): The candidate solution.
+            extra_args (Dict[str, Any]): Additional arguments used in the fitness function.
+
+        Returns:
+            float: The fitness value.
+        &#34;&#34;&#34;
+        return [f(cs, extra_args) for f in self.feasible_fitnesses]
+    
+    def __mutation(self,
+                   i: int,
+                   s: List[str]):
+        &#34;&#34;&#34;Mutate the atom parameters in `s` at index `i`. Mutation only occurs for movements or blocks.
+
+        Args:
+            i (int): The index of the atom.
+            s (List[str]): The list of atoms.
+        &#34;&#34;&#34;
+        # get the atom
+        a = s[i]
+        # if tile, change the repetition amount or block type
+        if self.alphabet[a[&#39;atom&#39;]][&#39;action&#39;] == AtomAction.PLACE:
+            if uniform(a=0, b=1) &gt; 0.5:
+                pop = [-1, 0, 1] if int(a[&#39;n&#39;]) &gt; 1 else [0, 1]
+                a[&#39;n&#39;] = str(int(a[&#39;n&#39;]) + choices(population=pop)[0])
+            else:
+                new_atom = &#39;&#39;
+                placeable = False
+                while not placeable:
+                    new_atom = choices(population=list(self.alphabet.keys()))[0]
+                    placeable = self.alphabet[new_atom][&#39;action&#39;] == AtomAction.PLACE
+                a[&#39;atom&#39;] = new_atom
+    
+    def _brackets_check(self,
+                        s: Dict[str, Any]) -&gt; int:
+        &#34;&#34;&#34;Do a stack simulation to check for `[` and `]` inconsistencies.
+
+        Args:
+            s (Dict[str, Any]): The list of atoms.
+
+        Returns:
+            int: The number of open brackets left.
+        &#34;&#34;&#34;
+        stack = 0  # simulate stack push-pop
+        for c in s:
+            if c[&#39;atom&#39;] == &#39;[&#39;:
+                stack += 1
+            elif c[&#39;atom&#39;] == &#39;]&#39;:
+                stack -= 1
+            # if at any point we have more `]` than `[`, exit
+            if stack &lt; 0:
+                return stack
+        return stack
+    
+    def _interval_indexes(self,
+                          i: int,
+                          s: List[Dict[str, Any]],
+                          c1: str = &#39;[&#39;,
+                          c2: str = &#39;]&#39;) -&gt; Optional[Tuple[int, int]]:
+        &#34;&#34;&#34;Get the indexes between `[` and `]` near `i` (if they exist).
+
+        Args:
+            i (int): The index.
+            s (List[Dict[str, Any]]): The list of atoms.
+
+        Returns:
+            Optional[Tuple[int, int]]: The indexes of the surrounding atoms (if they exist).
+        &#34;&#34;&#34;
+        res = None
+        # get all occurrences&#39; index before and after `i` in `s`
+        ibs = [idx for idx, c in enumerate(s[:i]) if c[&#39;atom&#39;] == c1]
+        ias = [idx for idx, c in enumerate(s[i:]) if c[&#39;atom&#39;] == c2]
+        # if possible, get surrounding indexes
+        if ibs != [] and ias != []:
+            ib, ia = 0, 0
+            # get closest index before `i`
+            for idx in ibs:
+                if idx &lt; i:
+                    ib = idx
+                else:
+                    break
+            # get closest index after `i`
+            for idx in ias:
+                if idx &gt; ib and idx &gt; i:
+                    ia = idx
+                else:
+                    break
+            # assign result
+            res = (ib, ia)
+        return res
+
+    def __insertion(self,
+                   i: int,
+                   s: List[Dict[str, Any]]):
+        &#34;&#34;&#34;Insert a new atom in the list. Additional checks are done for `]` atoms.
+
+        Args:
+            i (int): The index to insert a new atom at.
+            s (List[Dict[str, Any]]): The list of atoms.
+        &#34;&#34;&#34;
+        # pick a random new atom
+        a = choices(population=list(self.alphabet.keys()))[0]
+        # set parameters if it accepts them
+        n = &#39;0&#39;
+        if self.alphabet[a][&#39;action&#39;] == AtomAction.PLACE:
+            n = &#39;1&#39;
+        # In order to have a valid structure, the `]` must be placed only if possible, otherwise don&#39;t add anything
+        # if a == &#39;]&#39;:
+            # if i &gt; 0:
+            #     # check brackets before `i`
+            #     stack = self._brackets_check(s=s[:i])
+            #     # simulate adding the new `]`
+            #     stack -= 1
+            #     if stack &gt;= 0:
+            #         # check brackets after `i` (in case they now are invalid)
+            #         stack += self._brackets_check(s=s[i:])
+            #         # if we have 1 or more `[`, we can add `]`
+            #         if stack &gt;= 0:
+            #             s.insert(i + 1,
+            #                     {&#39;atom&#39;: a,
+            #                     &#39;n&#39;: &#39;0&#39;})
+        # only add `[` with correct syntax
+        if self.alphabet[s[i][&#39;atom&#39;]][&#39;action&#39;] == AtomAction.PLACE:
+            if a == &#39;[&#39;:
+                if not s[i - 1][&#39;atom&#39;].startswith(&#39;Rot&#39;) or not s[i - 1][&#39;atom&#39;] == &#39;[&#39;:
+                    s.insert(i + 1,
+                            {&#39;atom&#39;: a,
+                            &#39;n&#39;: &#39;0&#39;})
+                    s.insert(i + 2,
+                            {&#39;atom&#39;: choices(population=[r for r in self.alphabet.keys() if r.startswith(&#39;Rot&#39;)])[0],
+                            &#39;n&#39;: &#39;0&#39;})
+                    s.insert(i + 3,
+                            {&#39;atom&#39;: choices(population=[r for r in self.alphabet.keys() if r.startswith(&#39;corridor&#39;)])[0],
+                            &#39;n&#39;: &#39;1&#39;})
+                    s.insert(i + 4,
+                            {&#39;atom&#39;: &#39;]&#39;,
+                            &#39;n&#39;: &#39;0&#39;})
+            elif a != &#39;]&#39; and not a.startswith(&#39;Rot&#39;):
+                # freely add the new atom
+                s.insert(i + 1,
+                        {&#39;atom&#39;: a,
+                        &#39;n&#39;: n})
+    
+    def __deletion(self,
+                   i: int,
+                   s: List[str]):
+        &#34;&#34;&#34;Remove the atom at index `i` from the list of atoms.
+        Only tiles and rotations can be removed from the list.
+
+        Args:
+            i (int): The index to insert a new atom at.
+            s (List[str]): The list of atoms.
+        &#34;&#34;&#34;
+        if self.alphabet[s[i][&#39;atom&#39;]][&#39;action&#39;] == AtomAction.PLACE:
+            # idxs = self._interval_indexes(i=i,
+            #                               s=s)
+            # if idxs is not None:
+            #     ib, ia = idxs
+            #     fas = sum([1 if self.alphabet[x[&#39;atom&#39;]][&#39;action&#39;] == AtomAction.PLACE else 0 for x in s[ib:ia]])
+            # else:
+            #     fas = sum([1 if self.alphabet[x[&#39;atom&#39;]][&#39;action&#39;] == AtomAction.PLACE else 0 for x in s])
+            # if fas &gt; 2 and i != 0:
+            #     s.pop(i)
+            if i &gt; 0:
+                if not self.alphabet[s[i - 1][&#39;atom&#39;]][&#39;action&#39;] == AtomAction.ROTATE:
+                    s.pop(i)
+        elif self.alphabet[s[i][&#39;atom&#39;]][&#39;action&#39;] == AtomAction.PUSH:
+            n_o = 0
+            for j, a in enumerate(s[i+1:]):
+                if a[&#39;atom&#39;] == &#39;[&#39;:
+                    n_o += 1
+                elif a[&#39;atom&#39;] == &#39;]&#39;:
+                    if n_o != 0:
+                        n_o -= 1
+                    else:
+                        for k in range(i + j + 1, i - 1, -1):
+                            s.pop(k)
+                        break
+    
+    def _string_as_list(self,
+                        string: str) -&gt; List[Dict[str, Any]]:
+        &#34;&#34;&#34;Convert a string into a list of atoms.
+
+        Args:
+            string (str): The string.
+
+        Returns:
+            List[Dict[str, Any]]: The list of atoms (atom string &amp; parameters).
+        &#34;&#34;&#34;
+        atoms_list = []
+        i = 0
+        while i &lt; len(string):
+            offset = 0
+            for k in self.alphabet.keys():
+                if string[i:].startswith(k):
+                    offset += len(k)
+                    n = &#39;0&#39;
+                    # check if there are parameters (multiplicity)
+                    if i + offset &lt; len(string) and string[i + offset] == &#39;(&#39;:
+                        params = string[i + offset:
+                                        string.index(&#39;)&#39;, i + offset + 1) + 1]
+                        offset += len(params)
+                        n = params.replace(&#39;(&#39;, &#39;&#39;).replace(&#39;)&#39;, &#39;&#39;)
+                    atoms_list.append({&#39;atom&#39;: k,
+                                       &#39;n&#39;: n})
+                    i += len(k) + (len(f&#39;({n})&#39;) if n != &#39;0&#39; else 0) - 1
+                    break
+            i += 1
+        return atoms_list
+
+    def _list_as_string(self,
+                        s: List[Dict[str, Any]]) -&gt; str:
+        &#34;&#34;&#34;Convert a list of atoms to string.
+
+        Args:
+            s (List[Dict[str, Any]]): The list of atoms (string &amp; parameters).
+
+        Returns:
+            str: The string.
+        &#34;&#34;&#34;
+        return &#39;&#39;.join([a[&#39;atom&#39;] + (f&#39;({a[&#34;n&#34;]})&#39; if a[&#34;n&#34;] != &#39;0&#39; else &#39;&#39;) for a in s])
+    
+    def mutate(self,
+               cs: CandidateSolution,
+               n_iteration: int = 0) -&gt; None:
+        &#34;&#34;&#34;Apply mutation to a given solution.
+
+        Args:
+            cs (CandidateSolution): The solution to mutate.
+            n_iteration (int, optional): The current evolution iteration. Defaults to 0.
+        &#34;&#34;&#34;
+        # we only mutate the string
+        s = self._string_as_list(string=cs.string)
+        # select the atoms to mutate
+        p = max(MUTATION_INITIAL_P / math.exp(n_iteration * MUTATION_DECAY), 0)
+        to_mutate = math.ceil(p * len(s))
+        for_mutation = sample(population=list(range(len(s))),
+                              k=to_mutate)
+        # reverse to keep order in case of addition or deletion
+        for_mutation.sort(reverse=True)
+        # mutate each atom
+        for atom in for_mutation:
+            # select possible mutation
+            f = choices(population=list(self.mutations.keys()),
+                        weights=self.mutations.values())[0]
+            # apply mutation
+            f(i=atom,
+              s=s)
+        # assign new mutated low-level string to solution
+        cs.string = self._list_as_string(s=s)
+    
+    def crossover(self,
+                  cs1: CandidateSolution,
+                  cs2: CandidateSolution,
+                  n_childs: int = 2) -&gt; List[CandidateSolution]:
+        &#34;&#34;&#34;Applies 1-point crossover between two solutions.
+
+        Args:
+            cs1 (CandidateSolution): The first solution.
+            cs2 (CandidateSolution): The second solution.
+            n_childs (int, optional): The number of offsprings to create. Defaults to 2.
+
+        Returns:
+            List[CandidateSolution]: The offsprings.
+        &#34;&#34;&#34;
+        idxs1 = get_matching_brackets(string=cs1.string)
+        idxs2 = get_matching_brackets(string=cs2.string)
+        # if crossover can&#39;t be applied, use atoms
+        if not idxs1:
+            for atom in [a for a in self.alphabet.keys() if self.alphabet[a][&#39;action&#39;] == AtomAction.PLACE]:
+                idxs1.extend(get_atom_indexes(string=cs1.string,
+                                              atom=atom))
+        if not idxs2:
+            for atom in [a for a in self.alphabet.keys() if self.alphabet[a][&#39;action&#39;] == AtomAction.PLACE]:
+                idxs2.extend(get_atom_indexes(string=cs2.string,
+                                              atom=atom))
+        i = None
+        for j, idx in enumerate(idxs1):
+            if idx[0] == 0:
+                i = j
+        if i is not None:
+            idxs1.remove(idxs1[i])
+        i = None
+        for j, idx in enumerate(idxs2):
+            if idx[0] == 0:
+                i = j
+        if i is not None:
+            idxs2.remove(idxs2[i])
+        ws1 = [CROSSOVER_P for _ in range(len(idxs1))]
+        ws2 = [CROSSOVER_P for _ in range(len(idxs2))]
+        childs = []
+        if len(idxs1) &gt; 0 and len(idxs2) &gt; 0:
+            while len(childs) &lt; n_childs:
+                s1 = cs1.string[:]
+                s2 = cs2.string[:]
+
+                idx1 = choices(population=idxs1, weights=ws1, k=1)[0]
+                b1 = cs1.string[idx1[0]:idx1[1] + 1]
+
+                idx2 = choices(population=idxs2, weights=ws2, k=1)[0]
+                b2 = cs2.string[idx2[0]:idx2[1] + 1]
+
+                s1 = s1[:idx1[0]] + s1[idx1[0]:].replace(b1, b2, 1)
+                s2 = s2[:idx2[0]] + s2[idx2[0]:].replace(b2, b1, 1)
+
+                for s, idx in [(s1, idx1), (s2, idx2)]:
+                    o = CandidateSolution(string=s)                   
+                    childs.append(o)
+        else:
+            print(cs1.string, idxs1)
+            print(cs2.string, idxs2)
+            raise EvoException(f&#39;No cross-over could be applied ({cs1.string} w/ {cs2.string}).&#39;)
+        return childs[:n_childs]
+        # # convert the strings to list of atoms
+        # ls1 = self._string_as_list(cs1.string)
+        # ls2 = self._string_as_list(cs2.string)
+        # offsprings = set()
+        # while len(offsprings) &lt; n_childs:
+        #     idxs1 = [i for i, x in enumerate(ls1) if self.alphabet[x[&#39;atom&#39;]][&#39;action&#39;] == AtomAction.PLACE]
+        #     idxs2 = [i for i, x in enumerate(ls2) if self.alphabet[x[&#39;atom&#39;]][&#39;action&#39;] == AtomAction.PLACE]
+        #     # pick an atom index for both parents
+        #     idx1 = sample(population=list(range(len(idxs1))),
+        #                   k=1)[0]
+        #     idx2 = sample(population=list(range(len(idxs2))),
+        #                   k=1)[0]
+        #     # apply 1-point swap between parents to generate offsprings
+        #     lo1 = ls1[:idx1] + ls2[idx2:]
+        #     lo2 = ls2[:idx2] + ls1[idx1:]
+            
+        #     if lo1[0][&#39;atom&#39;] == &#39;[&#39; or lo2[0][&#39;atom&#39;] == &#39;[&#39;:
+        #         print(f&#39;error: {cs1.string} and {cs2.string} ({idx1}, {idx2})&#39;)
+        #         continue
+            
+        #     # check consistency requirements
+        #     if self._brackets_check(s=lo1) &lt; 0 or self._brackets_check(s=lo2) &lt; 0:
+        #         continue
+        #     # create offsprings solutions
+        #     o1 = CandidateSolution(string=self._list_as_string(s=lo1))
+        #     offsprings.add(o1)
+        #     o2 = CandidateSolution(string=self._list_as_string(s=lo2))
+        #     offsprings.add(o2)
+        # return list(offsprings)[:n_childs]
+    
+    def _generate_initial_populations(self,
+                                      pops_size: int = POP_SIZE,
+                                      n_retries: int = N_RETRIES) -&gt; Tuple[List[CandidateSolution], List[CandidateSolution]]:
+        &#34;&#34;&#34;Generate initial populations.
+
+        Args:
+            pops_size (int, optional): The size of each population. Defaults to POP_SIZE.
+            n_retries (int, optional): The number of initialization retries. Defaults to N_RETRIES.
+
+        Returns:
+            Tuple[List[CandidateSolution], List[CandidateSolution]]: The feasible and infeasible populations.
+        &#34;&#34;&#34;
+        assert pops_size * 2 &lt; n_retries, f&#39;Invalid pops_size ({pops_size}) and n_retries ({n_retries}): pops_size must be at most half n_retries&#39;
+        fpop, ipop = set(), set()
+        with trange(n_retries, desc=&#39;Initialization &#39;) as iterations:
+            for i in iterations:
+                # create empty solution
+                cs = CandidateSolution(string=self.starting_string)
+                # apply mutations
+                for _ in range(self.inner_lgp_iterations):
+                    self.mutate(cs=cs)
+                # determine feasibility
+                subdivide_solutions(lcs=[cs],
+                                    lsystem=self.lsystem)
+                # assign to corresponding population
+                if cs.is_feasible and len(fpop) &lt; pops_size:
+                    cs.fitness = self._compute_fitness(cs=cs,
+                                                    extra_args={
+                                                        &#39;alphabet&#39;: self.lsystem.ll_solver.atoms_alphabet
+                                                        })
+                    cs.c_fitness = sum(cs.fitness) + (self.nsc - cs.ncv)
+                    fpop.add(cs)
+                elif not cs.is_feasible and len(ipop) &lt; pops_size:
+                    cs.c_fitness = cs.ncv
+                    ipop.add(cs)
+                iterations.set_postfix(ordered_dict={&#39;fpop-size&#39;: f&#39;{len(fpop)}/{pops_size}&#39;,
+                                                     &#39;ipop-size&#39;: f&#39;{len(ipop)}/{pops_size}&#39;},
+                                       refresh=True)
+                # break out if n_retries is reached or both populations are full
+                if i == n_retries or (len(fpop) == pops_size and len(ipop) == pops_size):
+                    break
+        return list(fpop), list(ipop)
+    
+    def initialize(self,
+                   pops_size: int = POP_SIZE,
+                   n_retries: int = N_RETRIES) -&gt; Tuple[List[CandidateSolution], List[CandidateSolution]]:
+        &#34;&#34;&#34;Initialize the solver by generating the initial populations.
+
+        Returns:
+            Tuple[List[CandidateSolution], List[CandidateSolution]]: The Feasible and Infeasible populations.
+        &#34;&#34;&#34;
+        f_pop, i_pop = self._generate_initial_populations(pops_size=pops_size,
+                                                          n_retries=n_retries)
+        f_fitnesses = [cs.c_fitness for cs in f_pop]
+        i_fitnesses = [cs.c_fitness for cs in i_pop]
+        self.ftop.append(max(f_fitnesses))
+        self.fmean.append(sum(f_fitnesses) / len(f_fitnesses))
+        self.itop.append(min(i_fitnesses))
+        self.imean.append(sum(i_fitnesses) / len(i_fitnesses))
+        self.ffs.append([self.ftop[-1], self.fmean[-1]])
+        self.ifs.append([self.itop[-1], self.imean[-1]])
+        print(f&#39;Created Feasible population of size {len(f_pop)}: t:{self.ftop[-1]};m:{self.fmean[-1]}&#39;)
+        print(f&#39;Created Infeasible population of size {len(i_pop)}: t:{self.itop[-1]};m:{self.imean[-1]}&#39;)
+        return f_pop, i_pop
+    
+    def _create_new_pool(self,
+                         population: List[CandidateSolution],
+                         generation: int,
+                         n_individuals: int = POP_SIZE,
+                         minimize: bool = False) -&gt; List[CandidateSolution]:
+        &#34;&#34;&#34;Create a new pool of solutions.
+
+        Args:
+            population (List[CandidateSolution]): Initial population of solutions.
+            generation (int): Current generation number.
+            n_individuals (int, optional): The number of individuals in the pool. Defaults to POP_SIZE.
+            minimize (bool, optional): Whether to minimize or maximize the fitness. Defaults to False.
+
+        Raises:
+            EvoException: If same parent is picked twice for crossover.
+
+        Returns:
+            List[CandidateSolution]: The pool of new solutions.
+        &#34;&#34;&#34;
+        pool = set()
+        while len(pool) &lt; n_individuals:
+            # fitness-proportionate selection
+            p1 = roulette_wheel_selection(pop=population,
+                                          minimize=minimize)
+            new_pop = []
+            new_pop[:] = population[:]
+            new_pop.remove(p1)
+            p2 = roulette_wheel_selection(pop=new_pop,
+                                          minimize=minimize)
+            if p1 != p2:
+                # crossover
+                o1, o2 = self.crossover(cs1=p1, cs2=p2, n_childs=2)
+                for o in [o1, o2]:
+                    # mutation
+                    self.mutate(cs=o, n_iteration=generation)
+                    pool.add(o)
+            else:
+                raise EvoException(&#39;Picked same parents, this should never happen.&#39;)
+        return list(pool)
+    
+    def fi2pop(self,
+               f_pop: List[CandidateSolution],
+               i_pop: List[CandidateSolution],
+               n_iter: int = N_GENS) -&gt; Tuple[List[CandidateSolution], List[CandidateSolution]]:
+        &#34;&#34;&#34;Apply the FI2Pop algorithm to the given populations for `n_iter` steps.
+
+        Args:
+            f_pop (List[CandidateSolution]): The Feasible population.
+            i_pop (List[CandidateSolution]): The Infeasible population.
+            n_iter (int, optional): The number of iterations to run for. Defaults to N_GENS.
+
+        Returns:
+            Tuple[List[CandidateSolution], List[CandidateSolution]]: The Feasible and the Infeasible populations.
+        &#34;&#34;&#34;
+        f_pool = []
+        i_pool = []
+        with trange(n_iter, desc=&#39;Generation &#39;) as gens:
+            for gen in gens:
+                # place the infeasible population in the infeasible pool
+                i_pool.extend(i_pop)
+                
+                f_pool.extend(f_pop)
+                
+                # create offsprings from feasible population
+                new_pool = self._create_new_pool(population=f_pop,
+                                                 generation=gen)
+                # if feasible, add to feasible pool
+                # if infeasible, add to infeasible pool
+                subdivide_solutions(lcs=new_pool,
+                                    lsystem=self.lsystem)
+                for cs in new_pool:
+                    if cs.ll_string == &#39;&#39;:
+                        cs.ll_string = self.lsystem.hl_to_ll(cs=cs).string
+                    if cs.is_feasible:
+                        cs.fitness = self._compute_fitness(cs=cs,
+                                                           extra_args={
+                                                               &#39;alphabet&#39;: self.lsystem.ll_solver.atoms_alphabet
+                                                               })
+                        cs.c_fitness = sum(cs.fitness) + (self.nsc - cs.ncv)
+                        f_pool.append(cs)
+                    else:
+                        cs.c_fitness = cs.ncv
+                        i_pool.append(cs)
+                
+                i_pool = list(set(i_pool))
+                
+                # reduce the infeasible pool if &gt; pops_size
+                if len(i_pool) &gt; POP_SIZE:
+                    i_pool = reduce_population(population=i_pool,
+                                               to=POP_SIZE,
+                                               minimize=True)
+                # set the infeasible pool as the infeasible population
+                i_pop[:] = i_pool[:]
+                # create offsprings from infeasible population
+                new_pool = self._create_new_pool(population=i_pop,
+                                                 generation=gen,
+                                                 minimize=True)
+                # if feasible, add to feasible pool
+                # if infeasible, add to infeasible pool
+                subdivide_solutions(lcs=new_pool,
+                                    lsystem=self.lsystem)
+                for cs in new_pool:
+                    if cs.is_feasible:
+                        f_pool.append(cs)
+                        cs.ll_string = self.lsystem.hl_to_ll(cs=cs).string
+                        cs.fitness = self._compute_fitness(cs=cs,
+                                                           extra_args={
+                                                               &#39;alphabet&#39;: self.lsystem.ll_solver.atoms_alphabet
+                                                               })
+                        cs.c_fitness = sum(cs.fitness) + (self.nsc - cs.ncv)
+                    else:
+                        cs.c_fitness = cs.ncv
+                        i_pool.append(cs)
+                
+                f_pool = list(set(f_pool))        
+                
+                # reduce the feasible pool if &gt; pops_size
+                if len(f_pool) &gt; POP_SIZE:
+                    f_pool = reduce_population(population=f_pool,
+                                               to=POP_SIZE)
+                # set the feasible pool as the feasible population
+                f_pop[:] = f_pool[:]
+                # update tracking
+                f_fitnesses = [cs.c_fitness for cs in f_pop]
+                i_fitnesses = [cs.c_fitness for cs in i_pop]
+                self.ftop.append(max(f_fitnesses))
+                self.fmean.append(sum(f_fitnesses) / len(f_fitnesses))
+                self.itop.append(min(i_fitnesses))
+                self.imean.append(sum(i_fitnesses) / len(i_fitnesses))
+                self.ffs.append([self.ftop[-1], self.fmean[-1]])
+                self.ifs.append([self.itop[-1], self.imean[-1]])
+                gens.set_postfix(ordered_dict={&#39;top-f&#39;: self.ftop[-1],
+                                               &#39;mean-f&#39;: self.fmean[-1],
+                                               &#39;top-i&#39;: self.itop[-1],
+                                               &#39;mean-i&#39;: self.imean[-1]},
+                                 refresh=True)
+
+        return f_pop, i_pop</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="pcgsepy.fi2pop.lgp.LGPSolver.crossover"><code class="name flex">
+<span>def <span class="ident">crossover</span></span>(<span>self, cs1: <a title="pcgsepy.lsystem.solution.CandidateSolution" href="../lsystem/solution.html#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a>, cs2: <a title="pcgsepy.lsystem.solution.CandidateSolution" href="../lsystem/solution.html#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a>, n_childs: int = 2) ‑> List[<a title="pcgsepy.lsystem.solution.CandidateSolution" href="../lsystem/solution.html#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Applies 1-point crossover between two solutions.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>cs1</code></strong> :&ensp;<code>CandidateSolution</code></dt>
+<dd>The first solution.</dd>
+<dt><strong><code>cs2</code></strong> :&ensp;<code>CandidateSolution</code></dt>
+<dd>The second solution.</dd>
+<dt><strong><code>n_childs</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The number of offsprings to create. Defaults to 2.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[CandidateSolution]</code></dt>
+<dd>The offsprings.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def crossover(self,
+              cs1: CandidateSolution,
+              cs2: CandidateSolution,
+              n_childs: int = 2) -&gt; List[CandidateSolution]:
+    &#34;&#34;&#34;Applies 1-point crossover between two solutions.
+
+    Args:
+        cs1 (CandidateSolution): The first solution.
+        cs2 (CandidateSolution): The second solution.
+        n_childs (int, optional): The number of offsprings to create. Defaults to 2.
+
+    Returns:
+        List[CandidateSolution]: The offsprings.
+    &#34;&#34;&#34;
+    idxs1 = get_matching_brackets(string=cs1.string)
+    idxs2 = get_matching_brackets(string=cs2.string)
+    # if crossover can&#39;t be applied, use atoms
+    if not idxs1:
+        for atom in [a for a in self.alphabet.keys() if self.alphabet[a][&#39;action&#39;] == AtomAction.PLACE]:
+            idxs1.extend(get_atom_indexes(string=cs1.string,
+                                          atom=atom))
+    if not idxs2:
+        for atom in [a for a in self.alphabet.keys() if self.alphabet[a][&#39;action&#39;] == AtomAction.PLACE]:
+            idxs2.extend(get_atom_indexes(string=cs2.string,
+                                          atom=atom))
+    i = None
+    for j, idx in enumerate(idxs1):
+        if idx[0] == 0:
+            i = j
+    if i is not None:
+        idxs1.remove(idxs1[i])
+    i = None
+    for j, idx in enumerate(idxs2):
+        if idx[0] == 0:
+            i = j
+    if i is not None:
+        idxs2.remove(idxs2[i])
+    ws1 = [CROSSOVER_P for _ in range(len(idxs1))]
+    ws2 = [CROSSOVER_P for _ in range(len(idxs2))]
+    childs = []
+    if len(idxs1) &gt; 0 and len(idxs2) &gt; 0:
+        while len(childs) &lt; n_childs:
+            s1 = cs1.string[:]
+            s2 = cs2.string[:]
+
+            idx1 = choices(population=idxs1, weights=ws1, k=1)[0]
+            b1 = cs1.string[idx1[0]:idx1[1] + 1]
+
+            idx2 = choices(population=idxs2, weights=ws2, k=1)[0]
+            b2 = cs2.string[idx2[0]:idx2[1] + 1]
+
+            s1 = s1[:idx1[0]] + s1[idx1[0]:].replace(b1, b2, 1)
+            s2 = s2[:idx2[0]] + s2[idx2[0]:].replace(b2, b1, 1)
+
+            for s, idx in [(s1, idx1), (s2, idx2)]:
+                o = CandidateSolution(string=s)                   
+                childs.append(o)
+    else:
+        print(cs1.string, idxs1)
+        print(cs2.string, idxs2)
+        raise EvoException(f&#39;No cross-over could be applied ({cs1.string} w/ {cs2.string}).&#39;)
+    return childs[:n_childs]
+    # # convert the strings to list of atoms
+    # ls1 = self._string_as_list(cs1.string)
+    # ls2 = self._string_as_list(cs2.string)
+    # offsprings = set()
+    # while len(offsprings) &lt; n_childs:
+    #     idxs1 = [i for i, x in enumerate(ls1) if self.alphabet[x[&#39;atom&#39;]][&#39;action&#39;] == AtomAction.PLACE]
+    #     idxs2 = [i for i, x in enumerate(ls2) if self.alphabet[x[&#39;atom&#39;]][&#39;action&#39;] == AtomAction.PLACE]
+    #     # pick an atom index for both parents
+    #     idx1 = sample(population=list(range(len(idxs1))),
+    #                   k=1)[0]
+    #     idx2 = sample(population=list(range(len(idxs2))),
+    #                   k=1)[0]
+    #     # apply 1-point swap between parents to generate offsprings
+    #     lo1 = ls1[:idx1] + ls2[idx2:]
+    #     lo2 = ls2[:idx2] + ls1[idx1:]
+        
+    #     if lo1[0][&#39;atom&#39;] == &#39;[&#39; or lo2[0][&#39;atom&#39;] == &#39;[&#39;:
+    #         print(f&#39;error: {cs1.string} and {cs2.string} ({idx1}, {idx2})&#39;)
+    #         continue
+        
+    #     # check consistency requirements
+    #     if self._brackets_check(s=lo1) &lt; 0 or self._brackets_check(s=lo2) &lt; 0:
+    #         continue
+    #     # create offsprings solutions
+    #     o1 = CandidateSolution(string=self._list_as_string(s=lo1))
+    #     offsprings.add(o1)
+    #     o2 = CandidateSolution(string=self._list_as_string(s=lo2))
+    #     offsprings.add(o2)
+    # return list(offsprings)[:n_childs]</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.fi2pop.lgp.LGPSolver.fi2pop"><code class="name flex">
+<span>def <span class="ident">fi2pop</span></span>(<span>self, f_pop: List[<a title="pcgsepy.lsystem.solution.CandidateSolution" href="../lsystem/solution.html#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a>], i_pop: List[<a title="pcgsepy.lsystem.solution.CandidateSolution" href="../lsystem/solution.html#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a>], n_iter: int = 50) ‑> Tuple[List[<a title="pcgsepy.lsystem.solution.CandidateSolution" href="../lsystem/solution.html#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a>], List[<a title="pcgsepy.lsystem.solution.CandidateSolution" href="../lsystem/solution.html#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a>]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Apply the FI2Pop algorithm to the given populations for <code>n_iter</code> steps.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>f_pop</code></strong> :&ensp;<code>List[CandidateSolution]</code></dt>
+<dd>The Feasible population.</dd>
+<dt><strong><code>i_pop</code></strong> :&ensp;<code>List[CandidateSolution]</code></dt>
+<dd>The Infeasible population.</dd>
+<dt><strong><code>n_iter</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The number of iterations to run for. Defaults to N_GENS.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[List[CandidateSolution], List[CandidateSolution]]</code></dt>
+<dd>The Feasible and the Infeasible populations.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fi2pop(self,
+           f_pop: List[CandidateSolution],
+           i_pop: List[CandidateSolution],
+           n_iter: int = N_GENS) -&gt; Tuple[List[CandidateSolution], List[CandidateSolution]]:
+    &#34;&#34;&#34;Apply the FI2Pop algorithm to the given populations for `n_iter` steps.
+
+    Args:
+        f_pop (List[CandidateSolution]): The Feasible population.
+        i_pop (List[CandidateSolution]): The Infeasible population.
+        n_iter (int, optional): The number of iterations to run for. Defaults to N_GENS.
+
+    Returns:
+        Tuple[List[CandidateSolution], List[CandidateSolution]]: The Feasible and the Infeasible populations.
+    &#34;&#34;&#34;
+    f_pool = []
+    i_pool = []
+    with trange(n_iter, desc=&#39;Generation &#39;) as gens:
+        for gen in gens:
+            # place the infeasible population in the infeasible pool
+            i_pool.extend(i_pop)
+            
+            f_pool.extend(f_pop)
+            
+            # create offsprings from feasible population
+            new_pool = self._create_new_pool(population=f_pop,
+                                             generation=gen)
+            # if feasible, add to feasible pool
+            # if infeasible, add to infeasible pool
+            subdivide_solutions(lcs=new_pool,
+                                lsystem=self.lsystem)
+            for cs in new_pool:
+                if cs.ll_string == &#39;&#39;:
+                    cs.ll_string = self.lsystem.hl_to_ll(cs=cs).string
+                if cs.is_feasible:
+                    cs.fitness = self._compute_fitness(cs=cs,
+                                                       extra_args={
+                                                           &#39;alphabet&#39;: self.lsystem.ll_solver.atoms_alphabet
+                                                           })
+                    cs.c_fitness = sum(cs.fitness) + (self.nsc - cs.ncv)
+                    f_pool.append(cs)
+                else:
+                    cs.c_fitness = cs.ncv
+                    i_pool.append(cs)
+            
+            i_pool = list(set(i_pool))
+            
+            # reduce the infeasible pool if &gt; pops_size
+            if len(i_pool) &gt; POP_SIZE:
+                i_pool = reduce_population(population=i_pool,
+                                           to=POP_SIZE,
+                                           minimize=True)
+            # set the infeasible pool as the infeasible population
+            i_pop[:] = i_pool[:]
+            # create offsprings from infeasible population
+            new_pool = self._create_new_pool(population=i_pop,
+                                             generation=gen,
+                                             minimize=True)
+            # if feasible, add to feasible pool
+            # if infeasible, add to infeasible pool
+            subdivide_solutions(lcs=new_pool,
+                                lsystem=self.lsystem)
+            for cs in new_pool:
+                if cs.is_feasible:
+                    f_pool.append(cs)
+                    cs.ll_string = self.lsystem.hl_to_ll(cs=cs).string
+                    cs.fitness = self._compute_fitness(cs=cs,
+                                                       extra_args={
+                                                           &#39;alphabet&#39;: self.lsystem.ll_solver.atoms_alphabet
+                                                           })
+                    cs.c_fitness = sum(cs.fitness) + (self.nsc - cs.ncv)
+                else:
+                    cs.c_fitness = cs.ncv
+                    i_pool.append(cs)
+            
+            f_pool = list(set(f_pool))        
+            
+            # reduce the feasible pool if &gt; pops_size
+            if len(f_pool) &gt; POP_SIZE:
+                f_pool = reduce_population(population=f_pool,
+                                           to=POP_SIZE)
+            # set the feasible pool as the feasible population
+            f_pop[:] = f_pool[:]
+            # update tracking
+            f_fitnesses = [cs.c_fitness for cs in f_pop]
+            i_fitnesses = [cs.c_fitness for cs in i_pop]
+            self.ftop.append(max(f_fitnesses))
+            self.fmean.append(sum(f_fitnesses) / len(f_fitnesses))
+            self.itop.append(min(i_fitnesses))
+            self.imean.append(sum(i_fitnesses) / len(i_fitnesses))
+            self.ffs.append([self.ftop[-1], self.fmean[-1]])
+            self.ifs.append([self.itop[-1], self.imean[-1]])
+            gens.set_postfix(ordered_dict={&#39;top-f&#39;: self.ftop[-1],
+                                           &#39;mean-f&#39;: self.fmean[-1],
+                                           &#39;top-i&#39;: self.itop[-1],
+                                           &#39;mean-i&#39;: self.imean[-1]},
+                             refresh=True)
+
+    return f_pop, i_pop</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.fi2pop.lgp.LGPSolver.initialize"><code class="name flex">
+<span>def <span class="ident">initialize</span></span>(<span>self, pops_size: int = 20, n_retries: int = 100) ‑> Tuple[List[<a title="pcgsepy.lsystem.solution.CandidateSolution" href="../lsystem/solution.html#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a>], List[<a title="pcgsepy.lsystem.solution.CandidateSolution" href="../lsystem/solution.html#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a>]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Initialize the solver by generating the initial populations.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[List[CandidateSolution], List[CandidateSolution]]</code></dt>
+<dd>The Feasible and Infeasible populations.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def initialize(self,
+               pops_size: int = POP_SIZE,
+               n_retries: int = N_RETRIES) -&gt; Tuple[List[CandidateSolution], List[CandidateSolution]]:
+    &#34;&#34;&#34;Initialize the solver by generating the initial populations.
+
+    Returns:
+        Tuple[List[CandidateSolution], List[CandidateSolution]]: The Feasible and Infeasible populations.
+    &#34;&#34;&#34;
+    f_pop, i_pop = self._generate_initial_populations(pops_size=pops_size,
+                                                      n_retries=n_retries)
+    f_fitnesses = [cs.c_fitness for cs in f_pop]
+    i_fitnesses = [cs.c_fitness for cs in i_pop]
+    self.ftop.append(max(f_fitnesses))
+    self.fmean.append(sum(f_fitnesses) / len(f_fitnesses))
+    self.itop.append(min(i_fitnesses))
+    self.imean.append(sum(i_fitnesses) / len(i_fitnesses))
+    self.ffs.append([self.ftop[-1], self.fmean[-1]])
+    self.ifs.append([self.itop[-1], self.imean[-1]])
+    print(f&#39;Created Feasible population of size {len(f_pop)}: t:{self.ftop[-1]};m:{self.fmean[-1]}&#39;)
+    print(f&#39;Created Infeasible population of size {len(i_pop)}: t:{self.itop[-1]};m:{self.imean[-1]}&#39;)
+    return f_pop, i_pop</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.fi2pop.lgp.LGPSolver.mutate"><code class="name flex">
+<span>def <span class="ident">mutate</span></span>(<span>self, cs: <a title="pcgsepy.lsystem.solution.CandidateSolution" href="../lsystem/solution.html#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a>, n_iteration: int = 0) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Apply mutation to a given solution.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>cs</code></strong> :&ensp;<code>CandidateSolution</code></dt>
+<dd>The solution to mutate.</dd>
+<dt><strong><code>n_iteration</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The current evolution iteration. Defaults to 0.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mutate(self,
+           cs: CandidateSolution,
+           n_iteration: int = 0) -&gt; None:
+    &#34;&#34;&#34;Apply mutation to a given solution.
+
+    Args:
+        cs (CandidateSolution): The solution to mutate.
+        n_iteration (int, optional): The current evolution iteration. Defaults to 0.
+    &#34;&#34;&#34;
+    # we only mutate the string
+    s = self._string_as_list(string=cs.string)
+    # select the atoms to mutate
+    p = max(MUTATION_INITIAL_P / math.exp(n_iteration * MUTATION_DECAY), 0)
+    to_mutate = math.ceil(p * len(s))
+    for_mutation = sample(population=list(range(len(s))),
+                          k=to_mutate)
+    # reverse to keep order in case of addition or deletion
+    for_mutation.sort(reverse=True)
+    # mutate each atom
+    for atom in for_mutation:
+        # select possible mutation
+        f = choices(population=list(self.mutations.keys()),
+                    weights=self.mutations.values())[0]
+        # apply mutation
+        f(i=atom,
+          s=s)
+    # assign new mutated low-level string to solution
+    cs.string = self._list_as_string(s=s)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.fi2pop.lgp.LGPSolver.reset"><code class="name flex">
+<span>def <span class="ident">reset</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reset(self):
+    self.ftop = []
+    self.itop = []
+    self.fmean = []
+    self.imean = []
+    self.ffs, self.ifs = [], []</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pcgsepy.fi2pop" href="index.html">pcgsepy.fi2pop</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pcgsepy.fi2pop.lgp.LGPSolver" href="#pcgsepy.fi2pop.lgp.LGPSolver">LGPSolver</a></code></h4>
+<ul class="">
+<li><code><a title="pcgsepy.fi2pop.lgp.LGPSolver.crossover" href="#pcgsepy.fi2pop.lgp.LGPSolver.crossover">crossover</a></code></li>
+<li><code><a title="pcgsepy.fi2pop.lgp.LGPSolver.fi2pop" href="#pcgsepy.fi2pop.lgp.LGPSolver.fi2pop">fi2pop</a></code></li>
+<li><code><a title="pcgsepy.fi2pop.lgp.LGPSolver.initialize" href="#pcgsepy.fi2pop.lgp.LGPSolver.initialize">initialize</a></code></li>
+<li><code><a title="pcgsepy.fi2pop.lgp.LGPSolver.mutate" href="#pcgsepy.fi2pop.lgp.LGPSolver.mutate">mutate</a></code></li>
+<li><code><a title="pcgsepy.fi2pop.lgp.LGPSolver.reset" href="#pcgsepy.fi2pop.lgp.LGPSolver.reset">reset</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

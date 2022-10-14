@@ -1,0 +1,3312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>pcgsepy.mapelites.map API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pcgsepy.mapelites.map</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from http.client import GATEWAY_TIMEOUT
+import random
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
+import logging
+import matplotlib.pyplot as plt
+import numpy as np
+import numpy.typing as npt
+from joblib import Parallel, delayed
+from pcgsepy.common.jsonifier import json_dumps, json_loads
+from pcgsepy.config import (ALIGNMENT_INTERVAL, BIN_POP_SIZE, CS_MAX_AGE,
+                            EPSILON_F, MAX_X_SIZE, MAX_Y_SIZE, MAX_Z_SIZE,
+                            N_ITERATIONS, N_RETRIES, POP_SIZE, USE_TORCH)
+from pcgsepy.evo.fitness import (Fitness, box_filling_fitness,
+                                 func_blocks_fitness, mame_fitness,
+                                 mami_fitness)
+from pcgsepy.evo.genops import EvoException
+from pcgsepy.fi2pop.utils import create_new_pool, subdivide_solutions
+from pcgsepy.hullbuilder import HullBuilder, enforce_symmetry
+from pcgsepy.lsystem.constraints import ConstraintLevel
+from pcgsepy.lsystem.lsystem import LSystem
+from pcgsepy.lsystem.solution import CandidateSolution
+from pcgsepy.mapelites.bandit import EpsilonGreedyAgent
+from pcgsepy.mapelites.behaviors import BehaviorCharacterization
+from pcgsepy.mapelites.bin import MAPBin
+from pcgsepy.mapelites.buffer import Buffer, EmptyBufferException
+from pcgsepy.mapelites.emitters import (Emitter, HumanPrefMatrixEmitter,
+                                        RandomEmitter, emitters,
+                                        get_emitter_by_str)
+from pcgsepy.nn.estimators import (GaussianEstimator, prepare_dataset)
+from tqdm import trange
+from typing_extensions import Self
+
+
+if USE_TORCH:
+    from pcgsepy.nn.estimators import MLPEstimator, train_estimator, QuantileEstimator
+else:
+    class MLPEstimator:
+        def __init__(self):
+            raise NotImplementedError(&#39;This object should never be instantiated&#39;)
+    
+    class QuantileEstimator:
+        def __init__(self):
+            raise NotImplementedError(&#39;This object should never be instantiated&#39;)
+    
+    def train_estimator(estimator, xs, ys, n_epochs):
+        raise NotImplementedError(&#39;This function should never be called&#39;)    
+
+
+def coverage_reward(mapelites: &#39;MAPElites&#39;) -&gt; float:
+    &#34;&#34;&#34;Compute the coverage reward. Coverage reward is a percentage of new bins over total possible number of bins.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+
+    Returns:
+        float: The coverage reward.
+    &#34;&#34;&#34;
+    tot_coverage = mapelites.bins.shape[0] * mapelites.bins.shape[1]
+    inc_coverage = sum([1 if any([cs.age == CS_MAX_AGE for cs in map_bin._feasible]) else 0 for map_bin in mapelites.bins.flatten().tolist()])
+    return inc_coverage / tot_coverage
+
+
+def fitness_reward(mapelites: &#39;MAPElites&#39;) -&gt; float:
+    &#34;&#34;&#34;Compute the fitness reward. Fitness reward is the percentage increase of highest current fitness compared to best fitness in the past.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+
+    Returns:
+        float: The fitness reward.
+    &#34;&#34;&#34;
+    prev_best, current_best = 0, 0
+    for map_bin in mapelites.bins.flatten().tolist():
+        for cs in map_bin._feasible:
+            if cs.age == CS_MAX_AGE and cs.c_fitness &gt; prev_best:
+                current_best = cs.c_fitness
+            elif cs.age != CS_MAX_AGE and cs.c_fitness &gt; prev_best:
+                prev_best = cs.c_fitness
+    fit_diff = current_best - prev_best
+    return fit_diff / prev_best
+
+
+agent_rewards = {
+    &#39;coverage_reward&#39;: coverage_reward,
+    &#39;fitness_reward&#39;: fitness_reward
+}
+
+
+class MAPElites:
+    def __init__(self,
+                 lsystem: LSystem,
+                 feasible_fitnesses: List[Fitness],
+                 buffer: Buffer,
+                 behavior_descriptors: Tuple[BehaviorCharacterization, BehaviorCharacterization],
+                 n_bins: Tuple[int, int] = (8, 8),
+                 estimator: Optional[Union[GaussianEstimator, MLPEstimator, QuantileEstimator]] = None,
+                 emitter: Optional[Emitter] = RandomEmitter(),
+                 agent: Optional[EpsilonGreedyAgent] = None,
+                 agent_rewards: Optional[List[Callable[[Self], float]]] = []):
+        &#34;&#34;&#34;Create a MAP-Elites object.
+
+        Args:
+            lsystem (LSystem): The L-system used to expand strings.
+            feasible_fitnesses (List[Fitness]): The list of fitnesses used.
+            buffer (Buffer): The data buffer.
+            behavior_descriptors (Tuple[BehaviorCharacterization, BehaviorCharacterization]): The X- and Y-axis behavior descriptors.
+            n_bins (Tuple[int, int], optional): The number of X and Y bins. Defaults to `(8, 8)`.
+            estimator (Optional[Union[GaussianEstimator, MLPEstimator, QuantileEstimator]], optional): The estimator used as fitness acquirement for the infeasible population. Defaults to `None`.
+            emitter (Optional[Emitter], optional): The emitter. Defaults to `RandomEmitter()`.
+            agent (Optional[EpsilonGreedyAgent], optional): The selection agent. Defaults to `None`.
+            agent_rewards (Optional[List[Callable[[Self], float]]], optional): The rewards for the selection agent. Defaults to `[]`.
+
+        Raises:
+            AssertionError: Raised if an invalid configuration of properties is passed.
+        &#34;&#34;&#34;
+        assert agent is not None or emitter is not None, &#39;MAP-Elites requires either an agent or an emitter!&#39;
+        if agent is not None and not agent_rewards:
+            raise AssertionError(
+                f&#39;You selected an agent but no reward functions have been provided!&#39;)
+
+        self.lsystem = lsystem
+        self.feasible_fitnesses = feasible_fitnesses
+        self.b_descs = behavior_descriptors
+        self.emitter = emitter
+        self.agent = agent
+        self.agent_rewards = agent_rewards
+        self.estimator = estimator
+        self.buffer = buffer
+        # number of total soft constraints
+        self.nsc = [c for c in self.lsystem.all_hl_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
+        self.nsc = [c for c in self.lsystem.all_ll_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
+        self.nsc = len(self.nsc) * 0.5
+        # behavior map properties
+        self.limits = (self.b_descs[0].bounds[1] if self.b_descs[0].bounds is not None else 20,
+                       self.b_descs[1].bounds[1] if self.b_descs[1].bounds is not None else 20)
+        self._initial_n_bins = n_bins
+        self.bin_qnt = n_bins
+        self.bin_sizes = [[self.limits[0] / self.bin_qnt[0]] * n_bins[0], [self.limits[1] / self.bin_qnt[1]] * n_bins[1]]
+        self.bins: npt.NDarray[MAPBin] = np.empty(shape=self.bin_qnt, dtype=MAPBin)
+        for (i, j), _ in np.ndenumerate(self.bins):
+            self.bins[i, j] = MAPBin(bin_idx=(i, j),
+                                     bin_size=(self.bin_sizes[0][i], self.bin_sizes[1][j]))
+        # enforce choosing only one bin at the time
+        self.enforce_qnt = True
+        # default hull builder
+        self.hull_builder = HullBuilder(erosion_type=&#39;bin&#39;,
+                                        apply_erosion=True,
+                                        apply_smoothing=False)
+        # fitness bounds
+        self.max_f_fitness = sum([f.bounds[1] for f in self.feasible_fitnesses])
+        self.max_i_fitness = len(self.lsystem.all_hl_constraints) if not self.estimator else 1
+        self.infeas_fitness_idx = 1  # 0: min, 1: median, 2: max
+        # MAP-Elites properties
+        self.allow_res_increase = True
+        self.allow_aging = True
+        # tracking properties
+        self.n_new_solutions = 0
+
+    def show_metric(self,
+                    metric: str,
+                    show_mean: bool = True,
+                    population: str = &#39;feasible&#39;,
+                    save_as: Optional[str] = None) -&gt; None:
+        &#34;&#34;&#34;Show the bin metric.
+
+        Args:
+            metric (str): The metric to display.
+            show_mean (bool, optional): Whether to show average metric or elite&#39;s. Defaults to `True`.
+            population (str, optional): Which population to show metric of. Defaults to `&#39;feasible&#39;`.
+            save_as (str, optional): Where to save the metric plot. Defaults to `None`.
+        &#34;&#34;&#34;
+        disp_map = np.zeros(shape=self.bins.shape)
+        for (i, j), cbin in np.ndenumerate(self.bins):
+            disp_map[i, j] = cbin.get_metric(metric=metric,
+                                             use_mean=show_mean,
+                                             population=population)
+        vmaxs = {
+            &#39;fitness&#39;: {
+                &#39;feasible&#39;: self.max_f_fitness,
+                &#39;infeasible&#39;: self.max_i_fitness
+            },
+            &#39;age&#39;: {
+                &#39;feasible&#39;: CS_MAX_AGE,
+                &#39;infeasible&#39;: CS_MAX_AGE
+            },
+            &#39;size&#39;: {
+                &#39;feasible&#39;: BIN_POP_SIZE,
+                &#39;infeasible&#39;: BIN_POP_SIZE
+            }
+        }
+        plt.imshow(disp_map,
+                   origin=&#39;lower&#39;,
+                   cmap=&#39;hot&#39;,
+                   interpolation=&#39;nearest&#39;,
+                   vmin=0,
+                   vmax=vmaxs[metric][population])
+        plt.xticks(np.arange(self.bin_qnt[0]), np.cumsum(self.bin_sizes[0]) + self.b_descs[0].bounds[0])
+        plt.yticks(np.arange(self.bin_qnt[1]), np.cumsum(self.bin_sizes[1]) + self.b_descs[1].bounds[0])
+        plt.xlabel(self.b_descs[0].name)
+        plt.ylabel(self.b_descs[1].name)
+        plt.title(f&#39;CMAP-Elites {&#34;Avg. &#34; if show_mean else &#34;&#34;}{metric} ({population})&#39;)
+        cbar = plt.colorbar()
+        cbar.set_label(
+            f&#39;{&#34;mean&#34; if show_mean else &#34;max&#34;} {metric}&#39;, rotation=270)
+        if save_as:
+            title_part = f&#39;{metric}{&#34;-avg-&#34; if show_mean else &#34;-top-&#34;}{population}&#39;
+            plt.savefig(f&#39;results/{save_as}-{title_part}.png&#39;,
+                        transparent=True, bbox_inches=&#39;tight&#39;)
+        plt.show()
+
+    def compute_fitness(self,
+                        cs: CandidateSolution) -&gt; float:
+        &#34;&#34;&#34;Compute the fitness of the solution. 
+
+        Args:
+            cs (CandidateSolution): The solution.
+
+        Raises:
+            NotImplementedError: Raised if the estimator is not recognized.
+
+        Returns:
+            float: The fitness value.
+        &#34;&#34;&#34;
+        if cs.is_feasible:
+            cs.fitness = [f(cs) for f in self.feasible_fitnesses]
+            cs.representation = cs.fitness[:]
+            x, y, z = cs.content._max_dims
+            cs.representation.extend([x / MAX_X_SIZE, y / MAX_Y_SIZE, z / MAX_Z_SIZE])
+            return sum([self.feasible_fitnesses[i].weight * cs.fitness[i] for i in range(len(cs.fitness))])
+        else:
+            cs.representation = [f(cs) for f in [Fitness(name=&#39;BoxFilling&#39;, f=box_filling_fitness, bounds=(0, 1)),
+                                                 Fitness(name=&#39;FuncionalBlocks&#39;, f=func_blocks_fitness, bounds=(0, 1)),
+                                                 Fitness(name=&#39;MajorMediumProportions&#39;, f=mame_fitness, bounds=(0, 1)),
+                                                 Fitness(name=&#39;MajorMinimumProportions&#39;, f=mami_fitness, bounds=(0, 1))]]
+            if self.estimator is not None:
+                if isinstance(self.estimator, GaussianEstimator):
+                    return self.estimator.predict(x=np.asarray(cs.representation)) if self.estimator.is_trained else EPSILON_F
+                elif USE_TORCH and isinstance(self.estimator, MLPEstimator):
+                    return self.estimator.predict(cs.representation) if self.estimator.is_trained else EPSILON_F
+                elif USE_TORCH and isinstance(self.estimator, QuantileEstimator):
+                    if self.estimator.is_trained:
+                        # set fitness to (3,) array (min, median, max)
+                        cs.fitness = self.estimator.predict(cs.representation)
+                        # set c_fitness to median by default
+                        return cs.fitness[self.infeas_fitness_idx]
+                    else:
+                        cs.fitness = [EPSILON_F, EPSILON_F, EPSILON_F]
+                        return cs.fitness[self.infeas_fitness_idx]
+                else:
+                    raise NotImplementedError(f&#39;Unrecognized estimator type: {type(self.estimator)}.&#39;)
+            else:
+                return cs.ncv
+
+    def _assign_fitness(self,
+                        cs: CandidateSolution) -&gt; CandidateSolution:
+        &#34;&#34;&#34;Assign the fitness and BCs to a candidate solution.
+
+        Args:
+            cs (CandidateSolution): The candidate solution.
+
+        Returns:
+            CandidateSolution: The updated candidate solution.
+        &#34;&#34;&#34;
+        # assign fitness
+        cs.c_fitness = self.compute_fitness(cs=cs) + ((self.nsc - cs.ncv) if cs.is_feasible else 0)
+        # assign behavior descriptors
+        self._set_behavior_descriptors(cs=cs)
+        # set age
+        cs.age = CS_MAX_AGE
+        return cs
+
+    def _prepare_cs_content(self,
+                            cs: CandidateSolution) -&gt; CandidateSolution:
+        &#34;&#34;&#34;Prepare a candidate solution for fitness computation.
+        Add a hull if possible and set the blocks colors.
+
+        Args:
+            cs (CandidateSolution): The candidate solution.
+
+        Returns:
+            CandidateSolution: The updated candidate solution.
+        &#34;&#34;&#34;
+        # add hull if possible
+        if self.hull_builder:
+            threadsafe_hullbuilder = HullBuilder(erosion_type=self.hull_builder.erosion_type,
+                                                 apply_erosion=self.hull_builder.apply_erosion,
+                                                 apply_smoothing=self.hull_builder.apply_smoothing)
+            threadsafe_hullbuilder.add_external_hull(structure=cs.content)
+        # set the color
+        cs.content.set_color(color=cs.base_color)
+        return cs
+    
+    def _set_behavior_descriptors(self,
+                                  cs: CandidateSolution) -&gt; None:
+        &#34;&#34;&#34;Set the behavior descriptors of the solution.
+
+        Args:
+            cs (CandidateSolution): The candidate solution.
+        &#34;&#34;&#34;
+        cs.b_descs = (self.b_descs[0](cs), self.b_descs[1](cs))
+
+    def subdivide_range(self,
+                        bin_idx: Tuple[int, int]) -&gt; None:
+        &#34;&#34;&#34;Subdivide the chosen bin range.
+        For each bin, 4 new bins are created and the solutions are redistributed amongst those.
+
+        Args:
+            bin_idx (Tuple[int, int]): The index of the bin.
+        &#34;&#34;&#34;
+        i, j = bin_idx
+        # get solutions
+        all_cs = []
+        for (_, _), cbin in np.ndenumerate(self.bins):
+            all_cs.extend([*cbin._feasible, *cbin._infeasible])
+            # logging.getLogger(&#39;mapelites&#39;).debug(f&#39;[{__name__}.subdivide_range] {bin_idx=} (pre) - {cbin.bin_idx=}; {cbin.new_elite=}&#39;)
+        # update bin sizes
+        v_i, v_j = self.bin_sizes[0][i], self.bin_sizes[1][j]
+        self.bin_sizes[0][i] = v_i / 2
+        self.bin_sizes[1][j] = v_j / 2
+        self.bin_sizes[0].insert(i + 1, v_i / 2)
+        self.bin_sizes[1].insert(j + 1, v_j / 2)
+        # update bin quantity
+        self.bin_qnt = (self.bin_qnt[0] + 1, self.bin_qnt[1] + 1)
+        # create new bin map
+        new_bins = np.empty(shape=self.bin_qnt, dtype=MAPBin)        
+        # populate newly created bins
+        for (m, n), _ in np.ndenumerate(new_bins):
+            new_bins[m, n] = MAPBin(bin_idx=(m, n),
+                                    bin_size=(self.bin_sizes[0][m],
+                                              self.bin_sizes[1][n]),
+                                    bin_initial_size=(v_i, v_j))
+            if m != i + 1 or n != j + 1:
+                x = m if m &lt;= i else m - 1
+                y = n if n &lt;= j else n - 1
+            else:
+                x = i
+                y = j
+            new_bins[m, n].new_elite = self.bins[x, y].new_elite.copy()
+            # logging.getLogger(&#39;mapelites&#39;).debug(f&#39;[{__name__}.subdivide_range] {bin_idx=} (post) - {(m, n)=}; {new_bins[m, n].new_elite=}&#39;)
+        # assign new bin map
+        self.bins = new_bins
+        # assign solutions to bins
+        self._update_bins(lcs=all_cs)
+        if isinstance(self.emitter, HumanPrefMatrixEmitter):
+            self.emitter._increase_preferences_res(idx=bin_idx)
+
+    def _update_bins(self,
+                     lcs: List[CandidateSolution]) -&gt; None:
+        &#34;&#34;&#34;Update the bins by assigning new solutions.
+
+        Args:
+            lcs (List[CandidateSolution]): The list of new solutions.
+        &#34;&#34;&#34;
+        bc0 = np.cumsum([0] + self.bin_sizes[0][:-1]) + self.b_descs[0].bounds[0]
+        bc1 = np.cumsum([0] + self.bin_sizes[1][:-1]) + self.b_descs[1].bounds[0]
+        for cs in lcs:
+            b0, b1 = cs.b_descs
+            i = np.digitize(x=[b0], bins=bc0, right=False)[0] - 1
+            j = np.digitize(x=[b1], bins=bc1, right=False)[0] - 1
+            self.bins[i, j].insert_cs(cs)
+        if self.allow_aging:
+            for (_, _), b in np.ndenumerate(self.bins):
+                b.remove_old()
+
+    def _age_bins(self,
+                  diff: int = -1) -&gt; None:
+        &#34;&#34;&#34;Age all bins.
+
+        Args:
+            diff (int, optional): The quantity to age for. Defaults to `-1`.
+        &#34;&#34;&#34;
+        if self.allow_aging:
+            for (_, _), cbin in np.ndenumerate(self.bins):
+                cbin.age(diff=diff)
+
+    def _valid_bins(self) -&gt; List[MAPBin]:
+        &#34;&#34;&#34;Get all the valid bins. A valid bin is a bin with at least 2 Feasible solution and 2 Infeasible solution.
+
+        Returns:
+            List[MAPBin]: The list of valid bins.
+        &#34;&#34;&#34;
+        return [cbin for (_, _), cbin in np.ndenumerate(self.bins) if len(cbin._feasible) &gt; 0]
+
+    def _check_res_trigger(self) -&gt; List[Tuple[int, int]]:
+        &#34;&#34;&#34;Trigger a resolution increase if at least 1 bin has reached full population capacity for both Feasible and Infeasible populations.
+
+        Returns:
+            List[Tuple[int, int]]: The indices of bins that were subdivided.
+        &#34;&#34;&#34;
+        if self.allow_res_increase:
+            to_increase_res = [cbin.bin_idx for (_, _), cbin in np.ndenumerate(self.bins) if len(cbin._feasible) &gt;= BIN_POP_SIZE and len(cbin._infeasible) &gt;= BIN_POP_SIZE and cbin.subdividable]
+            for bin_idx in reversed(to_increase_res):
+                self.subdivide_range(bin_idx=bin_idx)
+            return to_increase_res
+        return []
+
+    def _process_expanded_idxs(self,
+                               expanded_idxs: List[Tuple[int, int]],
+                               selected_idxs: List[Tuple[int, int]]) -&gt; List[Tuple[int, int]]:
+        &#34;&#34;&#34;Process the indices of expanded bins and filter out expanded bins that were not selected.
+
+        Args:
+            expanded_idxs (List[Tuple[int, int]]): The indices of expanded bins.
+            selected_idxs (List[Tuple[int, int]]): The indices of selected bins.
+
+        Returns:
+            List[Tuple[int, int]]: The processed indices of expanded bins.
+        &#34;&#34;&#34;
+        logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}._process_expanded_idxs] pre {selected_idxs=}; {expanded_idxs=}&#39;)
+        processed_idxs = [idx for idx in selected_idxs]
+        for (m, n) in selected_idxs:
+            for (i, j) in expanded_idxs:
+                if m == i:
+                    processed_idxs.append((m + 1, n))
+                if n == j:
+                    processed_idxs.append((m, n + 1))
+                if m == i and n == j:
+                    processed_idxs.append((m + 1, n + 1))
+        for i, (m, n) in enumerate(processed_idxs):
+            lm = len([x[0] for x in expanded_idxs if x[0] &lt; m])
+            ln = len([x[1] for x in expanded_idxs if x[1] &lt; n])
+            processed_idxs[i] = (m + lm, n + ln)
+        logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}._process_expanded_idxs] post {processed_idxs=}&#39;)
+        return processed_idxs
+
+    def update_behavior_descriptors(self,
+                                    bs: Tuple[BehaviorCharacterization]) -&gt; None:
+        &#34;&#34;&#34;Update the behavior descriptors used in the MAP-Elites.
+
+        Args:
+            bs (Tuple[BehaviorCharacterization]): The 2 new behavior descriptors.
+        &#34;&#34;&#34;
+        self.b_descs = bs
+        self.limits = (self.b_descs[0].bounds[1] if self.b_descs[0].bounds is not None else 20,
+                       self.b_descs[1].bounds[1] if self.b_descs[1].bounds is not None else 20)
+        lcs = []
+        for (_, _), cbin in np.ndenumerate(self.bins):
+            lcs.extend([*cbin._feasible, *cbin._infeasible])
+            Parallel(n_jobs=-1, prefer=&#34;threads&#34;)(delayed(self._set_behavior_descriptors)(cs) for cs in lcs)
+        self.reset(lcs=lcs)
+
+    def toggle_module_mutability(self,
+                                 module: str) -&gt; None:
+        &#34;&#34;&#34;Toggle the mutability of the module.
+
+        Args:
+            module (str): The module&#39;s name.
+        &#34;&#34;&#34;
+        # toggle module&#39;s mutability in the solution
+        for (_, _), cbin in np.ndenumerate(self.bins):
+            cbin.toggle_module_mutability(module=module)
+        # toggle module&#39;s mutability within the L-system
+        ms = [x.name for x in self.lsystem.modules]
+        self.lsystem.modules[ms.index(module)].active = not self.lsystem.modules[ms.index(module)].active
+
+    def update_fitness_weights(self,
+                               weights: List[float]) -&gt; None:
+        &#34;&#34;&#34;Update the weights of the Feasible fitnesses.
+
+        Args:
+            weights (List[float]): The new list of weights.
+        &#34;&#34;&#34;
+        assert len(weights) == len(self.feasible_fitnesses), f&#39;Wrong number of weights ({len(weights)}) for fitnesses ({len(self.feasible_fitnesses)}) passed.&#39;
+        # update weights
+        for w, f in zip(weights, self.feasible_fitnesses):
+            f.weight = w
+        # update solutions fitnesses
+        for (_, _), cbin in np.ndenumerate(self.bins):
+            for cs in cbin._feasible:
+                cs.c_fitness = sum([self.feasible_fitnesses[i].weight * cs.fitness[i] for i in range(len(cs.fitness))]) + (self.nsc - cs.ncv)
+
+    def reassign_all_content(self, **kwargs) -&gt; None:
+        &#34;&#34;&#34;Reassign all content to the solutions&#34;&#34;&#34;
+        for (_, _), cbin in np.ndenumerate(self.bins):
+            for pop in [cbin._feasible, cbin._infeasible]:
+                for cs in pop:
+                    cs._content = None
+                    cs = self.lsystem._set_structure(cs=self.lsystem._add_ll_strings(cs=cs),
+                                                     make_graph=False)
+                    if cs.is_feasible:
+                        if self.hull_builder is not None:
+                            self.hull_builder.add_external_hull(structure=cs.content)
+                        if kwargs.get(&#39;sym_axis&#39;, None) is not None:
+                            enforce_symmetry(structure=cs.content,
+                                             axis=kwargs.get(&#39;sym_axis&#39;, None),
+                                             upper=kwargs.get(&#39;sym_upper&#39;, None))
+
+    def generate_initial_populations(self,
+                                     pop_size: int = POP_SIZE,
+                                     n_retries: int = N_RETRIES) -&gt; None:
+        &#34;&#34;&#34;Generate the initial populations.
+
+        Args:
+            pop_size (int, optional): The size of the populations. Defaults to `POP_SIZE`.
+            n_retries (int, optional): The number of initialization retries. Defaults to `N_RETRIES`.
+        &#34;&#34;&#34;
+        # create populations
+        feasible_pop, infeasible_pop = [], []
+        self.lsystem.disable_sat_check()
+        with trange(n_retries, desc=&#39;Initialization &#39;) as iterations:
+            for i in iterations:
+                solutions = self.lsystem.apply_rules(starting_strings=[&#39;head&#39;, &#39;body&#39;, &#39;tail&#39;],
+                                                     iterations=[1, N_ITERATIONS, 1],
+                                                     create_structures=True,
+                                                     make_graph=False)
+                subdivide_solutions(lcs=solutions,
+                                    lsystem=self.lsystem)
+                for cs in solutions:
+                    if cs.is_feasible and len(feasible_pop) &lt; pop_size and cs not in feasible_pop:
+                        if self.hull_builder is not None:
+                            self.hull_builder.add_external_hull(structure=cs._content)
+                        feasible_pop.append(self._assign_fitness(cs=cs))
+                    elif not cs.is_feasible and len(infeasible_pop) &lt; pop_size and cs not in feasible_pop:
+                        infeasible_pop.append(self._assign_fitness(cs=cs))
+                iterations.set_postfix(ordered_dict={
+                    &#39;fpop-size&#39;: f&#39;{len(feasible_pop)}/{pop_size}&#39;,
+                    &#39;ipop-size&#39;: f&#39;{len(infeasible_pop)}/{pop_size}&#39;
+                },
+                                       refresh=True)
+                if i == n_retries or (len(feasible_pop) == pop_size and len(infeasible_pop) == pop_size):
+                    break
+        # assign solutions to respective bins
+        self._update_bins(lcs=[*feasible_pop, *infeasible_pop])
+        # if required, initialize the emitter
+        if self.emitter is not None and self.emitter.requires_init:
+            self.emitter.init_emitter(bins=self.bins)
+        # update bins for elites
+        self.update_elites()
+
+    def _step(self,
+              populations: List[List[CandidateSolution]],
+              gen: int) -&gt; List[CandidateSolution]:
+        &#34;&#34;&#34;Apply a single step of modified FI2Pop.
+
+        Args:
+            populations (List[List[CandidateSolution]]): The Feasible and Infeasible populations.
+            gen (int): The current generation number.
+
+        Raises:
+            NotImplementedError: Raised if the estimator is unrecognized.
+
+        Returns:
+            List[CandidateSolution]: The new solutions.
+        &#34;&#34;&#34;
+        # generate solutions from both populations
+        generated = []
+        for pop in populations:
+            logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}._step] {len(pop)=}&#39;)
+            if len(pop) &gt; 0:
+                try:
+                    minimize = False if pop[0].is_feasible else False if self.estimator is not None else True
+                    new_pool = create_new_pool(population=pop,
+                                               generation=gen,
+                                               n_individuals=BIN_POP_SIZE,
+                                               minimize=minimize)
+                    # set low-level strings and structures
+                    new_pool = list(map(lambda cs: self.lsystem._add_ll_strings(cs=cs), new_pool))
+                    new_pool = list(map(lambda cs: self.lsystem._set_structure(cs=cs,
+                                                                               make_graph=False), new_pool))
+                    logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}._step] {len(new_pool)=}&#39;)
+                    subdivide_solutions(lcs=new_pool,
+                                        lsystem=self.lsystem)
+                    logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}._step] Started preparing solutions&#39;)
+                    new_pool = Parallel(n_jobs=-1, prefer=&#34;threads&#34;)(delayed(self._prepare_cs_content)(cs) for cs in new_pool)
+                    logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}._step] Started assigning fitnesses&#39;)
+                    generated.extend(Parallel(n_jobs=-1, prefer=&#34;threads&#34;)(delayed(self._assign_fitness)(cs) for cs in new_pool))
+                # evoexceptions are ignored, though it is possible to get stuck here
+                except EvoException as e:
+                    logging.getLogger(&#39;mapelites&#39;).error(msg=f&#39;[{__name__}._step] {e}&#39;)
+                    pass
+        # if possible, train the estimator for fitness acquirement
+        if self.estimator is not None:
+            # Prepare dataset for estimator
+            xs, ys = prepare_dataset(f_pop=[x for x in generated if x.is_feasible])
+            for x, y in zip(xs, ys):
+                self.buffer.insert(x=x,
+                                   y=y / self.max_f_fitness)
+            # check if we can train the estimator
+            try:
+                xs, ys = self.buffer.get()
+                if isinstance(self.estimator, GaussianEstimator):
+                    self.estimator.fit(xs=xs, ys=ys)
+                elif USE_TORCH and isinstance(self.estimator, MLPEstimator) or isinstance(self.estimator, QuantileEstimator):
+                    train_estimator(self.estimator, xs=xs, ys=ys)
+                else:
+                    raise NotImplementedError(f&#39;Unrecognized estimator type {type(self.estimator)}.&#39;)
+            # we skip training altogether if we don&#39;t have datapoints
+            except EmptyBufferException:
+                pass
+            # realignment check
+            if self.estimator.is_trained and gen % ALIGNMENT_INTERVAL == 0:
+                # Reassign previous infeasible fitnesses
+                for (_, _), cbin in np.ndenumerate(self.bins):
+                    for cs in cbin._infeasible:
+                        if cs.age &gt; ALIGNMENT_INTERVAL:
+                            cs.c_fitness = self.compute_fitness(cs=cs)
+        # metrics tracking
+        self.n_new_solutions += len(generated)
+        return generated
+
+    def rand_step(self,
+                  gen: int = 0) -&gt; None:
+        &#34;&#34;&#34;Apply a random step.
+
+        Args:
+            gen (int, optional): The current number of generations. Defaults to 0.
+        &#34;&#34;&#34;
+        # trigger aging of solution
+        self._age_bins()
+        # pick random bin
+        rnd_bin = random.choice(self._valid_bins())
+        generated = self._step(populations=[rnd_bin._feasible, rnd_bin._infeasible],
+                               gen=gen)
+        if generated:
+            self._update_bins(lcs=generated)
+            self._check_res_trigger()
+        else:
+            self._age_bins(diff=1)
+
+    def seek_nearest_valid(self,
+                           bin_idxs: List[List[int]],
+                           pop: str = &#39;infeasible&#39;) -&gt; List[CandidateSolution]:
+        &#34;&#34;&#34;Collect CandidateSolutions from neighbouring indexes in a pseudo-nearestneighbour style.
+
+        Args:
+            bin_idxs (List[List[int]]): The list of bin indices.
+            pop (str, optional): The population to collect solutions for. Defaults to &#39;infeasible&#39;.
+
+        Returns:
+            List[CandidateSolution]: The list of neighbouring solutions, if it exists.
+        &#34;&#34;&#34;
+        new_pop = []
+        inspecting = [idx for idx in bin_idxs]
+        offsets = [(-1, -1), (-1, 0), (-1,1), (0, -1), (0, 1), (1, -1),  (1, 0), (1, 1)]
+        np.random.shuffle(offsets)
+        logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}.seek_nearest_valid] {pop=}; {inspecting=}&#39;)
+        while new_pop == []:
+            to_inspect = []
+            past_idxs = []
+            for idx in inspecting:
+                for offset in offsets:
+                    new_idx = (idx[0] + offset[0], idx[1] + offset[1])
+                    if 0 &lt;= new_idx[0] &lt; self.bins.shape[0] and 0 &lt;= new_idx[1] &lt; self.bins.shape[1]:
+                        pool = self.bins[new_idx]._feasible if pop == &#39;feasible&#39; else self.bins[new_idx]._infeasible
+                        logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}.seek_nearest_valid] {new_idx=}; {pool=}; {len(new_pop)=}; {to_inspect=}&#39;)
+                        if pool:
+                            new_pop.extend(pool) 
+                            break
+                        else:
+                            if idx not in past_idxs:
+                                to_inspect.append(new_idx)
+            if to_inspect == []:
+                break
+            inspecting = to_inspect
+        logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}.seek_nearest_valid] {new_pop=}&#39;)
+        return new_pop
+    
+    def interactive_step(self,
+                         bin_idxs: List[List[int]],
+                         gen: int = 0) -&gt; None:
+        &#34;&#34;&#34;Applies an interactive step.
+
+        Args:
+            bin_idxs (List[Tuple[int, int]]): The indexes of the bins selected.
+            gen (int, optional): The current number of generations. Defaults to `0`.
+        &#34;&#34;&#34;
+        self._age_bins()
+        bin_idxs = [tuple(b) for b in bin_idxs]
+        chosen_bins = [self.bins[bin_idx] for bin_idx in bin_idxs]
+        f_pop, i_pop = [], []
+        for chosen_bin in chosen_bins:
+            if self.enforce_qnt:
+                assert chosen_bin in self._valid_bins(), f&#39;Bin at {chosen_bin.bin_idx} is not a valid bin.&#39;
+            f_pop.extend(chosen_bin._feasible)
+            i_pop.extend(chosen_bin._infeasible)
+        
+        if i_pop == []:
+            i_pop = self.seek_nearest_valid(bin_idxs=bin_idxs,
+                                            pop=&#39;infeasible&#39;)
+        
+        generated = self._step(populations=[f_pop, i_pop],
+                               gen=gen)
+        if generated:
+            self._update_bins(lcs=generated)
+            expanded_idxs = self._check_res_trigger()
+            # keep track of expanded indexes only if they have also been selected
+            expanded_idxs = self._process_expanded_idxs(expanded_idxs=expanded_idxs,
+                                                        selected_idxs=bin_idxs)
+        else:
+            self._age_bins(diff=1)
+            expanded_idxs = []
+        if self.emitter is not None and self.emitter.requires_pre:
+            self.emitter.pre_step(bins=self.bins,
+                                  selected_idxs=bin_idxs,
+                                  expanded_idxs=expanded_idxs,
+                                  bounds=[b.bounds for b in self.b_descs])
+        
+
+    def emitter_step(self,
+                     gen: int = 0) -&gt; None:
+        &#34;&#34;&#34;Apply a step according to the emitter.
+
+        Args:
+            gen (int, optional): The current generation number. Defaults to `0`.
+
+        Raises:
+            AssertionError: Raised if there is no MultiArmed Bandit Agent or Emitter set in MAP-Elites.
+            NotImplementedError: Raised if the merge method specified in the bandit action is unrecognized.
+            NotImplementedError: Raised if the emitter output is not in the expected data format.
+        &#34;&#34;&#34;
+        assert self.agent or self.emitter, &#39;MAP-Elites requires either a fixed emitter or a MultiArmed Bandit Agent, but neither were provided.&#39;
+        if self.agent is not None:
+            # get bandit
+            bandit = self.agent.choose_bandit()
+            emitter_str, method_str = bandit.action.split(&#39;;&#39;)
+            # set emitter
+            self.emitter = get_emitter_by_str(emitter=emitter_str)
+            # set merge method
+            if method_str == &#39;max&#39;:
+                self.infeas_fitness_idx = 0
+            elif method_str == &#39;median&#39;:
+                self.infeas_fitness_idx = 1
+            elif method_str == &#39;min&#39;:
+                self.infeas_fitness_idx = 2
+            else:
+                raise NotImplementedError(f&#39;Unrecognized merge method from bandit action: {method_str}&#39;)
+            # update existing solution&#39;s fitness
+            for (_, _), cbin in np.ndenumerate(self.bins):
+                for cs in cbin._infeasible:
+                    cs.c_fitness = cs.fitness[self.infeas_fitness_idx]
+        selected_bins = self.emitter.pick_bin(bins=self.bins)
+        logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}.emitter_step] {selected_bins=}&#39;)
+        if selected_bins:
+            fpop, ipop = [], []
+            # TODO: this could be handled better
+            if isinstance(selected_bins[0], MAPBin):
+                for selected_bin in selected_bins:
+                    fpop.extend(selected_bin._feasible)
+                    ipop.extend(selected_bin._infeasible)
+            elif isinstance(selected_bins[0], list):
+                for selected_bin in selected_bins[0]:
+                    fpop.extend(selected_bin._feasible)
+                for selected_bin in selected_bins[1]:
+                    ipop.extend(selected_bin._infeasible)
+            else:
+                raise NotImplementedError(f&#39;Unrecognized emitter output: {selected_bins}.&#39;)
+            logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}.emitter_step] {fpop=}; {ipop=}&#39;)
+            if ipop == []:
+                if isinstance(selected_bins[0], MAPBin):
+                    ipop = self.seek_nearest_valid(bin_idxs=[b.bin_idx for b in selected_bins],
+                                                    pop=&#39;infeasible&#39;)
+                elif isinstance(selected_bins[0], list):
+                    ipop = self.seek_nearest_valid(bin_idxs=[b.bin_idx for b in selected_bins[1]],
+                                                    pop=&#39;infeasible&#39;)
+            
+            generated = self._step(populations=[fpop, ipop],
+                                   gen=gen)
+            if generated:
+                self._update_bins(lcs=generated)
+                self._check_res_trigger()
+            if self.emitter is not None and self.emitter.requires_post:
+                self.emitter.post_step(bins=self.bins)
+            if self.agent is not None:
+                self.agent.reward_bandit(bandit=bandit,
+                                         reward=sum([f(self) for f in self.agent_rewards]))
+
+    def reset(self,
+              lcs: Optional[List[CandidateSolution]] = None) -&gt; None:
+        &#34;&#34;&#34;Reset the current MAP-Elites.
+
+        Args:
+            lcs (Optional[List[CandidateSolution]], optional): If provided, the solutions are assigned to the new MAP-Elites. Defaults to `None`.
+        &#34;&#34;&#34;
+        # reset MAP-Elites properties
+        self.bin_qnt = self._initial_n_bins
+        self.bin_sizes = [[self.limits[0] / self.bin_qnt[0]] * self._initial_n_bins[0],
+                          [self.limits[1] / self.bin_qnt[1]] * self._initial_n_bins[1]]
+        self.bins = np.empty(shape=self.bin_qnt, dtype=MAPBin)
+        for (i, j), _ in np.ndenumerate(self.bins):
+            self.bins[i, j] = MAPBin(bin_idx=(i, j),
+                                     bin_size=(self.bin_sizes[0][i], self.bin_sizes[1][j]))
+        if self.estimator is not None:
+            if isinstance(self.estimator, GaussianEstimator):
+                self.estimator = GaussianEstimator(bound=self.estimator.bound,
+                                                   kernel=self.estimator.kernel,
+                                                   max_f=self.estimator.max_f,
+                                                   min_f=self.estimator.min_f,
+                                                   alpha=self.estimator.alpha,
+                                                   normalize_y=self.estimator.normalize_y)
+            if USE_TORCH and isinstance(self.estimator, MLPEstimator):
+                self.estimator = MLPEstimator(xshape=self.estimator.xshape,
+                                              yshape=self.estimator.yshape)
+            elif USE_TORCH and isinstance(self.estimator, QuantileEstimator):
+                self.estimator = QuantileEstimator(xshape=self.estimator.xshape,
+                                                   yshape=self.estimator.yshape)
+        self.buffer.clear()
+        if self.emitter is not None:
+            self.emitter.reset()
+        # assign solutions if provided
+        if lcs is not None:
+            self._update_bins(lcs=lcs)
+            self._check_res_trigger()
+            if self.emitter is not None and self.emitter.requires_init:
+                self.emitter.init_emitter(bins=self.bins)
+        else:
+            self.generate_initial_populations()
+
+    def save_population(self,
+                        filename: str = &#39;./population.pop&#39;) -&gt; None:
+        all_cs = []
+        for (_, _), b in np.ndenumerate(self.bins):
+            for cs in [*b._feasible, *b._infeasible]:
+                all_cs.append(cs.to_json())
+        with open(filename, &#39;w&#39;) as f:
+            f.write(json_dumps(all_cs))
+       
+    def load_population(self,
+                        filename: str = &#39;./population.pop&#39;) -&gt; None:
+        all_cs = []
+        with open(filename, &#39;r&#39;) as f:
+            all_cs = [CandidateSolution.from_json(x) for x in json_loads(f.read())]
+        # set content
+        all_cs = list(map(lambda cs: self.lsystem._set_structure(cs=cs, make_graph=False), all_cs))
+        # add to population
+        self._update_bins(lcs=all_cs)
+        # add hull only to feas solutions
+        if self.hull_builder is not None:
+            for (_, _), b in np.ndenumerate(self.bins):
+                if b.non_empty(pop=&#39;feasible&#39;):
+                    for cs in b._feasible:
+                        self.hull_builder.add_external_hull(cs.content)
+        # update bins for elites
+        self.update_elites()
+    
+    def update_elites(self,
+                      reset: bool = False):
+        &#34;&#34;&#34;Update the elite tracking for the MAPElites bins.
+
+        Args:
+            reset (bool, optional): Whether to reset the tracking. Defaults to False.
+        &#34;&#34;&#34;
+        for (_, _), b in np.ndenumerate(self.bins):
+            for pop in [&#39;feasible&#39;, &#39;infeasible&#39;]:
+                if reset:
+                    b.new_elite[pop] = False
+                else:
+                    b.check_new_elite(pop=pop)
+                # logging.getLogger(&#39;mapelites&#39;).debug(f&#39;[{__name__}.update_elites] {reset=}; {b.bin_idx} -&gt; {b.new_elite[pop]}&#39;)
+    
+    def population_complexity(self,
+                              pop: str = &#39;feasible&#39;) -&gt; float:
+        &#34;&#34;&#34;Compute the average complexity of the selected population.
+        The complexity in this case is defined as the number of blocks.
+
+        Returns:
+            float: The population complexity.
+        &#34;&#34;&#34;
+        all_lenghts = []
+        for (_, _), b in np.ndenumerate(self.bins):
+            for cs in b._feasible if pop == &#39;feasible&#39; else b._infeasible:
+                all_lenghts.append(len(cs.content._blocks))
+        return np.average(all_lenghts)
+    
+    
+    def total_solutions(self,
+                        pop: str = &#39;feasible&#39;) -&gt; int:
+        &#34;&#34;&#34;Compute the total number of solutions currently in the archive for the selected population.
+
+        Args:
+            pop (str, optional): The population type. Defaults to &#39;feasible&#39;.
+
+        Returns:
+            int: The total number of solutions in the archive for the selected population.
+        &#34;&#34;&#34;
+        return np.sum([b.get_metric(metric=&#39;size&#39;, population=pop) for (_, _), b in np.ndenumerate(self.bins)])
+    
+    
+    def to_json(self) -&gt; Dict[str, Any]:
+        return {
+            &#39;lsystem&#39;: self.lsystem.to_json(),
+            &#39;feasible_fitnesses&#39;: [f.to_json() for f in self.feasible_fitnesses],
+            &#39;b_descs&#39;: [bd.to_json() for bd in list(self.b_descs)],
+            &#39;emitter&#39;: self.emitter.to_json() if self.emitter else None,
+            &#39;agent&#39;: self.agent.to_json() if self.agent else None,
+            &#39;agent_rewards&#39;: [ar.__name__ for ar in self.agent_rewards],
+            &#39;initial_n_bins&#39;: list(self._initial_n_bins),
+            &#39;bin_qnt&#39;: list(self.bin_qnt),
+            &#39;bins&#39;: [b.to_json() for b in self.bins.flatten().tolist()],
+            &#39;enforce_qnt&#39;: self.enforce_qnt,
+            &#39;estimator_type&#39;: self.estimator.__class__.__name__ if self.estimator else None,
+            &#39;estimator&#39;: self.estimator.to_json() if self.estimator else None,
+            &#39;buffer&#39;: self.buffer.to_json(),
+            &#39;allow_res_increase&#39;: self.allow_res_increase,
+            &#39;allow_aging&#39;: self.allow_aging,
+        }
+
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -&gt; &#39;MAPElites&#39;:
+        me = MAPElites(lsystem=LSystem.from_json(my_args[&#39;lsystem&#39;]),
+                       feasible_fitnesses=[Fitness.from_json(
+                           f) for f in my_args[&#39;feasible_fitnesses&#39;]],
+                       buffer=Buffer.from_json(my_args[&#39;buffer&#39;]),
+                       behavior_descriptors=tuple(
+                           [BehaviorCharacterization.from_json(bc) for bc in my_args[&#39;b_descs&#39;]]),
+                       n_bins=tuple(my_args[&#39;bin_qnt&#39;]),
+                       estimator=None,
+                       emitter=RandomEmitter(),
+                       agent=None,
+                       agent_rewards=None)
+        me._initial_n_bins = my_args[&#39;initial_n_bins&#39;]
+        me.enforce_qnt = my_args[&#39;enforce_qnt&#39;]
+        me.allow_res_increase = my_args[&#39;allow_res_increase&#39;]
+        me.allow_aging = my_args[&#39;allow_aging&#39;]
+        if my_args[&#39;emitter&#39;]:
+            me.emitter = emitters[my_args[&#39;emitter&#39;]
+                                  [&#39;name&#39;]].from_json(my_args[&#39;emitter&#39;])
+        if my_args[&#39;estimator_type&#39;]:
+            estimators = {
+                &#39;GaussianEstimator&#39;: GaussianEstimator,
+                &#39;MLPEstimator&#39;: MLPEstimator,
+                &#39;QuantileEstimator&#39;: QuantileEstimator
+            }
+            me.estimator = estimators[my_args[&#39;estimator_type&#39;]].from_json(my_args[&#39;estimator&#39;])
+        if my_args[&#39;agent&#39;]:
+            me.agent = EpsilonGreedyAgent.from_json(my_args[&#39;agent&#39;])
+            me.agent_rewards = [agent_rewards[ar]
+                                for ar in my_args[&#39;agent_rewards&#39;]]
+        me.bins = np.asarray([MAPBin.from_json(mb)
+                             for mb in my_args[&#39;bins&#39;]]).reshape(me.bin_qnt)
+        return me
+
+    # This method is deprecated and was used during initial debugging. Source is kept jsut in case.
+    # def interactive_mode(self,
+    #                      n_steps: int = 10) -&gt; None:
+    #     &#34;&#34;&#34;Start an interactive evolution session. Bins choice is done via `input`.
+
+    #     Args:
+    #         n_steps (int, optional): The number of steps to evolve for. Defaults to 10.
+    #     &#34;&#34;&#34;
+    #     for n in range(n_steps):
+    #         print(f&#39;### STEP {n+1}/{n_steps} ###&#39;)
+    #         valid_bins = self._valid_bins()
+    #         list_valid_bins = &#39;\n-&#39; + &#39;\n-&#39;.join([str(x.bin_idx) for x in valid_bins])
+    #         print(f&#39;Valid bins are: {list_valid_bins}&#39;)
+    #         chosen_bin = None
+    #         while chosen_bin is None:
+    #             choice = input(&#39;Enter valid bin to evolve: &#39;)
+    #             choice = choice.replace(&#39; &#39;, &#39;&#39;).split(&#39;,&#39;)
+    #             selected = self.bins[int(choice[0]), int(choice[1])]
+    #             if selected in valid_bins:
+    #                 chosen_bin = selected
+    #             else:
+    #                 print(&#39;Chosen bin is not amongst valid bins.&#39;)
+    #         self._interactive_step(bin_idxs=[chosen_bin.bin_idx],
+    #                                gen=n)
+
+
+def get_elite(mapelites: MAPElites,
+              bin_idx: Tuple[int, int],
+              pop: str) -&gt; CandidateSolution:
+    &#34;&#34;&#34;Get the elite solution at the selected bin.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+        bin_idx (Tuple[int, int]): The index of the bin.
+        pop (str): The population.
+
+    Returns:
+        CandidateSolution: The elite solution.
+    &#34;&#34;&#34;
+    return mapelites.bins[bin_idx].get_elite(population=pop)
+
+
+def get_coverage(mapelites: MAPElites,
+                 pop: str) -&gt; Tuple[int, int]:
+    &#34;&#34;&#34;Get the grid coverage.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+        pop (str): The population.
+
+    Returns:
+        Tuple[int, int]: The number of non-empty bins and the total number of bins.
+    &#34;&#34;&#34;
+    t = mapelites.bins.shape[0] * mapelites.bins.shape[1]
+    c = sum([1 if cbin.non_empty(pop=pop) else 0 for (_, _), cbin in np.ndenumerate(mapelites.bins)])
+    return c, t
+
+
+def get_fitness_metrics(mapelites: MAPElites,
+                        pop: str) -&gt; Tuple[int, int]:
+    &#34;&#34;&#34;Get the fitness metrics of a population.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+        pop (str): The population.
+
+    Returns:
+        Tuple[int, int]: The top and mean fitness.
+    &#34;&#34;&#34;
+    fs = []
+    for (_, _), cbin in np.ndenumerate(mapelites.bins):
+        for cs in cbin._feasible if pop == &#39;feasible&#39; else cbin._infeasible:
+            fs.append(cs.c_fitness)
+    top = min(fs) if pop == &#39;infeasible&#39; and mapelites.estimator is None else max(fs)
+    return top, np.average(fs)
+
+
+def get_qdscore(mapelites: MAPElites,
+                pop: str) -&gt; float:
+    &#34;&#34;&#34;Get the Quality-Diversity-Score for the selected population. The QD-Score is computed as the sum of the fitness of the elite solution in each bin.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+        pop (str): The population.
+
+    Returns:
+        float: The QD-Score.
+    &#34;&#34;&#34;
+    return sum([cbin.get_elite(population=pop).c_fitness if cbin.non_empty(pop=pop) else 0 for (_, _), cbin in np.ndenumerate(mapelites.bins)])
+
+
+def get_new_feas_with_unfeas_parents(mapelites: MAPElites) -&gt; Tuple[int, int]:
+    &#34;&#34;&#34;Get the number of new feasible solutions with infeasible parents and the total number of new solutions.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+
+    Returns:
+        Tuple[int, int]: The number of new solutions with infeasible parents and the total number of new solutions
+    &#34;&#34;&#34;
+    n_new = 0
+    total = 0
+    for (_, _), cbin in np.ndenumerate(mapelites.bins):
+        for cs in cbin._feasible:
+            if cs.age == CS_MAX_AGE and cs.parents and not cs.parents[0].is_feasible:
+                n_new += 1
+                total += 1
+                break
+        for cs in cbin._infeasible:
+            if cs.age == CS_MAX_AGE:
+                total += 1
+    return n_new, total
+
+
+def get_random_elite(mapelites: MAPElites,
+                     pop: str) -&gt; CandidateSolution:
+    &#34;&#34;&#34;Get a random elite for the selected population.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+        pop (str): The population.
+
+    Returns:
+        CandidateSolution: The random elite.
+    &#34;&#34;&#34;
+    return np.random.choice([cbin for (_, _), cbin in np.ndenumerate(mapelites.bins) if cbin.non_empty(pop=pop)]).get_elite(population=pop)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pcgsepy.mapelites.map.coverage_reward"><code class="name flex">
+<span>def <span class="ident">coverage_reward</span></span>(<span>mapelites: <a title="pcgsepy.mapelites.map.MAPElites" href="#pcgsepy.mapelites.map.MAPElites">MAPElites</a>) ‑> float</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute the coverage reward. Coverage reward is a percentage of new bins over total possible number of bins.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>mapelites</code></strong> :&ensp;<code><a title="pcgsepy.mapelites.map.MAPElites" href="#pcgsepy.mapelites.map.MAPElites">MAPElites</a></code></dt>
+<dd>The MAP-Elites object.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>The coverage reward.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def coverage_reward(mapelites: &#39;MAPElites&#39;) -&gt; float:
+    &#34;&#34;&#34;Compute the coverage reward. Coverage reward is a percentage of new bins over total possible number of bins.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+
+    Returns:
+        float: The coverage reward.
+    &#34;&#34;&#34;
+    tot_coverage = mapelites.bins.shape[0] * mapelites.bins.shape[1]
+    inc_coverage = sum([1 if any([cs.age == CS_MAX_AGE for cs in map_bin._feasible]) else 0 for map_bin in mapelites.bins.flatten().tolist()])
+    return inc_coverage / tot_coverage</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.fitness_reward"><code class="name flex">
+<span>def <span class="ident">fitness_reward</span></span>(<span>mapelites: <a title="pcgsepy.mapelites.map.MAPElites" href="#pcgsepy.mapelites.map.MAPElites">MAPElites</a>) ‑> float</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute the fitness reward. Fitness reward is the percentage increase of highest current fitness compared to best fitness in the past.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>mapelites</code></strong> :&ensp;<code><a title="pcgsepy.mapelites.map.MAPElites" href="#pcgsepy.mapelites.map.MAPElites">MAPElites</a></code></dt>
+<dd>The MAP-Elites object.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>The fitness reward.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fitness_reward(mapelites: &#39;MAPElites&#39;) -&gt; float:
+    &#34;&#34;&#34;Compute the fitness reward. Fitness reward is the percentage increase of highest current fitness compared to best fitness in the past.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+
+    Returns:
+        float: The fitness reward.
+    &#34;&#34;&#34;
+    prev_best, current_best = 0, 0
+    for map_bin in mapelites.bins.flatten().tolist():
+        for cs in map_bin._feasible:
+            if cs.age == CS_MAX_AGE and cs.c_fitness &gt; prev_best:
+                current_best = cs.c_fitness
+            elif cs.age != CS_MAX_AGE and cs.c_fitness &gt; prev_best:
+                prev_best = cs.c_fitness
+    fit_diff = current_best - prev_best
+    return fit_diff / prev_best</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.get_coverage"><code class="name flex">
+<span>def <span class="ident">get_coverage</span></span>(<span>mapelites: <a title="pcgsepy.mapelites.map.MAPElites" href="#pcgsepy.mapelites.map.MAPElites">MAPElites</a>, pop: str) ‑> Tuple[int, int]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the grid coverage.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>mapelites</code></strong> :&ensp;<code><a title="pcgsepy.mapelites.map.MAPElites" href="#pcgsepy.mapelites.map.MAPElites">MAPElites</a></code></dt>
+<dd>The MAP-Elites object.</dd>
+<dt><strong><code>pop</code></strong> :&ensp;<code>str</code></dt>
+<dd>The population.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[int, int]</code></dt>
+<dd>The number of non-empty bins and the total number of bins.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_coverage(mapelites: MAPElites,
+                 pop: str) -&gt; Tuple[int, int]:
+    &#34;&#34;&#34;Get the grid coverage.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+        pop (str): The population.
+
+    Returns:
+        Tuple[int, int]: The number of non-empty bins and the total number of bins.
+    &#34;&#34;&#34;
+    t = mapelites.bins.shape[0] * mapelites.bins.shape[1]
+    c = sum([1 if cbin.non_empty(pop=pop) else 0 for (_, _), cbin in np.ndenumerate(mapelites.bins)])
+    return c, t</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.get_elite"><code class="name flex">
+<span>def <span class="ident">get_elite</span></span>(<span>mapelites: <a title="pcgsepy.mapelites.map.MAPElites" href="#pcgsepy.mapelites.map.MAPElites">MAPElites</a>, bin_idx: Tuple[int, int], pop: str) ‑> <a title="pcgsepy.lsystem.solution.CandidateSolution" href="../lsystem/solution.html#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the elite solution at the selected bin.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>mapelites</code></strong> :&ensp;<code><a title="pcgsepy.mapelites.map.MAPElites" href="#pcgsepy.mapelites.map.MAPElites">MAPElites</a></code></dt>
+<dd>The MAP-Elites object.</dd>
+<dt><strong><code>bin_idx</code></strong> :&ensp;<code>Tuple[int, int]</code></dt>
+<dd>The index of the bin.</dd>
+<dt><strong><code>pop</code></strong> :&ensp;<code>str</code></dt>
+<dd>The population.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>CandidateSolution</code></dt>
+<dd>The elite solution.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_elite(mapelites: MAPElites,
+              bin_idx: Tuple[int, int],
+              pop: str) -&gt; CandidateSolution:
+    &#34;&#34;&#34;Get the elite solution at the selected bin.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+        bin_idx (Tuple[int, int]): The index of the bin.
+        pop (str): The population.
+
+    Returns:
+        CandidateSolution: The elite solution.
+    &#34;&#34;&#34;
+    return mapelites.bins[bin_idx].get_elite(population=pop)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.get_fitness_metrics"><code class="name flex">
+<span>def <span class="ident">get_fitness_metrics</span></span>(<span>mapelites: <a title="pcgsepy.mapelites.map.MAPElites" href="#pcgsepy.mapelites.map.MAPElites">MAPElites</a>, pop: str) ‑> Tuple[int, int]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the fitness metrics of a population.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>mapelites</code></strong> :&ensp;<code><a title="pcgsepy.mapelites.map.MAPElites" href="#pcgsepy.mapelites.map.MAPElites">MAPElites</a></code></dt>
+<dd>The MAP-Elites object.</dd>
+<dt><strong><code>pop</code></strong> :&ensp;<code>str</code></dt>
+<dd>The population.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[int, int]</code></dt>
+<dd>The top and mean fitness.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_fitness_metrics(mapelites: MAPElites,
+                        pop: str) -&gt; Tuple[int, int]:
+    &#34;&#34;&#34;Get the fitness metrics of a population.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+        pop (str): The population.
+
+    Returns:
+        Tuple[int, int]: The top and mean fitness.
+    &#34;&#34;&#34;
+    fs = []
+    for (_, _), cbin in np.ndenumerate(mapelites.bins):
+        for cs in cbin._feasible if pop == &#39;feasible&#39; else cbin._infeasible:
+            fs.append(cs.c_fitness)
+    top = min(fs) if pop == &#39;infeasible&#39; and mapelites.estimator is None else max(fs)
+    return top, np.average(fs)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.get_new_feas_with_unfeas_parents"><code class="name flex">
+<span>def <span class="ident">get_new_feas_with_unfeas_parents</span></span>(<span>mapelites: <a title="pcgsepy.mapelites.map.MAPElites" href="#pcgsepy.mapelites.map.MAPElites">MAPElites</a>) ‑> Tuple[int, int]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the number of new feasible solutions with infeasible parents and the total number of new solutions.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>mapelites</code></strong> :&ensp;<code><a title="pcgsepy.mapelites.map.MAPElites" href="#pcgsepy.mapelites.map.MAPElites">MAPElites</a></code></dt>
+<dd>The MAP-Elites object.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[int, int]</code></dt>
+<dd>The number of new solutions with infeasible parents and the total number of new solutions</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_new_feas_with_unfeas_parents(mapelites: MAPElites) -&gt; Tuple[int, int]:
+    &#34;&#34;&#34;Get the number of new feasible solutions with infeasible parents and the total number of new solutions.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+
+    Returns:
+        Tuple[int, int]: The number of new solutions with infeasible parents and the total number of new solutions
+    &#34;&#34;&#34;
+    n_new = 0
+    total = 0
+    for (_, _), cbin in np.ndenumerate(mapelites.bins):
+        for cs in cbin._feasible:
+            if cs.age == CS_MAX_AGE and cs.parents and not cs.parents[0].is_feasible:
+                n_new += 1
+                total += 1
+                break
+        for cs in cbin._infeasible:
+            if cs.age == CS_MAX_AGE:
+                total += 1
+    return n_new, total</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.get_qdscore"><code class="name flex">
+<span>def <span class="ident">get_qdscore</span></span>(<span>mapelites: <a title="pcgsepy.mapelites.map.MAPElites" href="#pcgsepy.mapelites.map.MAPElites">MAPElites</a>, pop: str) ‑> float</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the Quality-Diversity-Score for the selected population. The QD-Score is computed as the sum of the fitness of the elite solution in each bin.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>mapelites</code></strong> :&ensp;<code><a title="pcgsepy.mapelites.map.MAPElites" href="#pcgsepy.mapelites.map.MAPElites">MAPElites</a></code></dt>
+<dd>The MAP-Elites object.</dd>
+<dt><strong><code>pop</code></strong> :&ensp;<code>str</code></dt>
+<dd>The population.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>The QD-Score.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_qdscore(mapelites: MAPElites,
+                pop: str) -&gt; float:
+    &#34;&#34;&#34;Get the Quality-Diversity-Score for the selected population. The QD-Score is computed as the sum of the fitness of the elite solution in each bin.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+        pop (str): The population.
+
+    Returns:
+        float: The QD-Score.
+    &#34;&#34;&#34;
+    return sum([cbin.get_elite(population=pop).c_fitness if cbin.non_empty(pop=pop) else 0 for (_, _), cbin in np.ndenumerate(mapelites.bins)])</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.get_random_elite"><code class="name flex">
+<span>def <span class="ident">get_random_elite</span></span>(<span>mapelites: <a title="pcgsepy.mapelites.map.MAPElites" href="#pcgsepy.mapelites.map.MAPElites">MAPElites</a>, pop: str) ‑> <a title="pcgsepy.lsystem.solution.CandidateSolution" href="../lsystem/solution.html#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get a random elite for the selected population.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>mapelites</code></strong> :&ensp;<code><a title="pcgsepy.mapelites.map.MAPElites" href="#pcgsepy.mapelites.map.MAPElites">MAPElites</a></code></dt>
+<dd>The MAP-Elites object.</dd>
+<dt><strong><code>pop</code></strong> :&ensp;<code>str</code></dt>
+<dd>The population.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>CandidateSolution</code></dt>
+<dd>The random elite.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_random_elite(mapelites: MAPElites,
+                     pop: str) -&gt; CandidateSolution:
+    &#34;&#34;&#34;Get a random elite for the selected population.
+
+    Args:
+        mapelites (MAPElites): The MAP-Elites object.
+        pop (str): The population.
+
+    Returns:
+        CandidateSolution: The random elite.
+    &#34;&#34;&#34;
+    return np.random.choice([cbin for (_, _), cbin in np.ndenumerate(mapelites.bins) if cbin.non_empty(pop=pop)]).get_elite(population=pop)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.train_estimator"><code class="name flex">
+<span>def <span class="ident">train_estimator</span></span>(<span>estimator, xs, ys, n_epochs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def train_estimator(estimator, xs, ys, n_epochs):
+    raise NotImplementedError(&#39;This function should never be called&#39;)    </code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pcgsepy.mapelites.map.MAPElites"><code class="flex name class">
+<span>class <span class="ident">MAPElites</span></span>
+<span>(</span><span>lsystem: <a title="pcgsepy.lsystem.lsystem.LSystem" href="../lsystem/lsystem.html#pcgsepy.lsystem.lsystem.LSystem">LSystem</a>, feasible_fitnesses: List[<a title="pcgsepy.evo.fitness.Fitness" href="../evo/fitness.html#pcgsepy.evo.fitness.Fitness">Fitness</a>], buffer: <a title="pcgsepy.mapelites.buffer.Buffer" href="buffer.html#pcgsepy.mapelites.buffer.Buffer">Buffer</a>, behavior_descriptors: Tuple[<a title="pcgsepy.mapelites.behaviors.BehaviorCharacterization" href="behaviors.html#pcgsepy.mapelites.behaviors.BehaviorCharacterization">BehaviorCharacterization</a>, <a title="pcgsepy.mapelites.behaviors.BehaviorCharacterization" href="behaviors.html#pcgsepy.mapelites.behaviors.BehaviorCharacterization">BehaviorCharacterization</a>], n_bins: Tuple[int, int] = (8, 8), estimator: Union[<a title="pcgsepy.nn.estimators.GaussianEstimator" href="../nn/estimators.html#pcgsepy.nn.estimators.GaussianEstimator">GaussianEstimator</a>, <a title="pcgsepy.mapelites.map.MLPEstimator" href="#pcgsepy.mapelites.map.MLPEstimator">MLPEstimator</a>, <a title="pcgsepy.mapelites.map.QuantileEstimator" href="#pcgsepy.mapelites.map.QuantileEstimator">QuantileEstimator</a>, None] = None, emitter: Optional[<a title="pcgsepy.mapelites.emitters.Emitter" href="emitters.html#pcgsepy.mapelites.emitters.Emitter">Emitter</a>] = &lt;pcgsepy.mapelites.emitters.RandomEmitter object&gt;, agent: Optional[<a title="pcgsepy.mapelites.bandit.EpsilonGreedyAgent" href="bandit.html#pcgsepy.mapelites.bandit.EpsilonGreedyAgent">EpsilonGreedyAgent</a>] = None, agent_rewards: Optional[List[Callable[[typing_extensions.Self], float]]] = [])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create a MAP-Elites object.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>lsystem</code></strong> :&ensp;<code>LSystem</code></dt>
+<dd>The L-system used to expand strings.</dd>
+<dt><strong><code>feasible_fitnesses</code></strong> :&ensp;<code>List[Fitness]</code></dt>
+<dd>The list of fitnesses used.</dd>
+<dt><strong><code>buffer</code></strong> :&ensp;<code>Buffer</code></dt>
+<dd>The data buffer.</dd>
+<dt><strong><code>behavior_descriptors</code></strong> :&ensp;<code>Tuple[BehaviorCharacterization, BehaviorCharacterization]</code></dt>
+<dd>The X- and Y-axis behavior descriptors.</dd>
+<dt><strong><code>n_bins</code></strong> :&ensp;<code>Tuple[int, int]</code>, optional</dt>
+<dd>The number of X and Y bins. Defaults to <code>(8, 8)</code>.</dd>
+<dt><strong><code>estimator</code></strong> :&ensp;<code>Optional[Union[GaussianEstimator, <a title="pcgsepy.mapelites.map.MLPEstimator" href="#pcgsepy.mapelites.map.MLPEstimator">MLPEstimator</a>, <a title="pcgsepy.mapelites.map.QuantileEstimator" href="#pcgsepy.mapelites.map.QuantileEstimator">QuantileEstimator</a>]]</code>, optional</dt>
+<dd>The estimator used as fitness acquirement for the infeasible population. Defaults to <code>None</code>.</dd>
+<dt><strong><code>emitter</code></strong> :&ensp;<code>Optional[Emitter]</code>, optional</dt>
+<dd>The emitter. Defaults to <code>RandomEmitter()</code>.</dd>
+<dt><strong><code>agent</code></strong> :&ensp;<code>Optional[EpsilonGreedyAgent]</code>, optional</dt>
+<dd>The selection agent. Defaults to <code>None</code>.</dd>
+<dt><strong><code>agent_rewards</code></strong> :&ensp;<code>Optional[List[Callable[[Self], float]]]</code>, optional</dt>
+<dd>The rewards for the selection agent. Defaults to <code>[]</code>.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>AssertionError</code></dt>
+<dd>Raised if an invalid configuration of properties is passed.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MAPElites:
+    def __init__(self,
+                 lsystem: LSystem,
+                 feasible_fitnesses: List[Fitness],
+                 buffer: Buffer,
+                 behavior_descriptors: Tuple[BehaviorCharacterization, BehaviorCharacterization],
+                 n_bins: Tuple[int, int] = (8, 8),
+                 estimator: Optional[Union[GaussianEstimator, MLPEstimator, QuantileEstimator]] = None,
+                 emitter: Optional[Emitter] = RandomEmitter(),
+                 agent: Optional[EpsilonGreedyAgent] = None,
+                 agent_rewards: Optional[List[Callable[[Self], float]]] = []):
+        &#34;&#34;&#34;Create a MAP-Elites object.
+
+        Args:
+            lsystem (LSystem): The L-system used to expand strings.
+            feasible_fitnesses (List[Fitness]): The list of fitnesses used.
+            buffer (Buffer): The data buffer.
+            behavior_descriptors (Tuple[BehaviorCharacterization, BehaviorCharacterization]): The X- and Y-axis behavior descriptors.
+            n_bins (Tuple[int, int], optional): The number of X and Y bins. Defaults to `(8, 8)`.
+            estimator (Optional[Union[GaussianEstimator, MLPEstimator, QuantileEstimator]], optional): The estimator used as fitness acquirement for the infeasible population. Defaults to `None`.
+            emitter (Optional[Emitter], optional): The emitter. Defaults to `RandomEmitter()`.
+            agent (Optional[EpsilonGreedyAgent], optional): The selection agent. Defaults to `None`.
+            agent_rewards (Optional[List[Callable[[Self], float]]], optional): The rewards for the selection agent. Defaults to `[]`.
+
+        Raises:
+            AssertionError: Raised if an invalid configuration of properties is passed.
+        &#34;&#34;&#34;
+        assert agent is not None or emitter is not None, &#39;MAP-Elites requires either an agent or an emitter!&#39;
+        if agent is not None and not agent_rewards:
+            raise AssertionError(
+                f&#39;You selected an agent but no reward functions have been provided!&#39;)
+
+        self.lsystem = lsystem
+        self.feasible_fitnesses = feasible_fitnesses
+        self.b_descs = behavior_descriptors
+        self.emitter = emitter
+        self.agent = agent
+        self.agent_rewards = agent_rewards
+        self.estimator = estimator
+        self.buffer = buffer
+        # number of total soft constraints
+        self.nsc = [c for c in self.lsystem.all_hl_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
+        self.nsc = [c for c in self.lsystem.all_ll_constraints if c.level == ConstraintLevel.SOFT_CONSTRAINT]
+        self.nsc = len(self.nsc) * 0.5
+        # behavior map properties
+        self.limits = (self.b_descs[0].bounds[1] if self.b_descs[0].bounds is not None else 20,
+                       self.b_descs[1].bounds[1] if self.b_descs[1].bounds is not None else 20)
+        self._initial_n_bins = n_bins
+        self.bin_qnt = n_bins
+        self.bin_sizes = [[self.limits[0] / self.bin_qnt[0]] * n_bins[0], [self.limits[1] / self.bin_qnt[1]] * n_bins[1]]
+        self.bins: npt.NDarray[MAPBin] = np.empty(shape=self.bin_qnt, dtype=MAPBin)
+        for (i, j), _ in np.ndenumerate(self.bins):
+            self.bins[i, j] = MAPBin(bin_idx=(i, j),
+                                     bin_size=(self.bin_sizes[0][i], self.bin_sizes[1][j]))
+        # enforce choosing only one bin at the time
+        self.enforce_qnt = True
+        # default hull builder
+        self.hull_builder = HullBuilder(erosion_type=&#39;bin&#39;,
+                                        apply_erosion=True,
+                                        apply_smoothing=False)
+        # fitness bounds
+        self.max_f_fitness = sum([f.bounds[1] for f in self.feasible_fitnesses])
+        self.max_i_fitness = len(self.lsystem.all_hl_constraints) if not self.estimator else 1
+        self.infeas_fitness_idx = 1  # 0: min, 1: median, 2: max
+        # MAP-Elites properties
+        self.allow_res_increase = True
+        self.allow_aging = True
+        # tracking properties
+        self.n_new_solutions = 0
+
+    def show_metric(self,
+                    metric: str,
+                    show_mean: bool = True,
+                    population: str = &#39;feasible&#39;,
+                    save_as: Optional[str] = None) -&gt; None:
+        &#34;&#34;&#34;Show the bin metric.
+
+        Args:
+            metric (str): The metric to display.
+            show_mean (bool, optional): Whether to show average metric or elite&#39;s. Defaults to `True`.
+            population (str, optional): Which population to show metric of. Defaults to `&#39;feasible&#39;`.
+            save_as (str, optional): Where to save the metric plot. Defaults to `None`.
+        &#34;&#34;&#34;
+        disp_map = np.zeros(shape=self.bins.shape)
+        for (i, j), cbin in np.ndenumerate(self.bins):
+            disp_map[i, j] = cbin.get_metric(metric=metric,
+                                             use_mean=show_mean,
+                                             population=population)
+        vmaxs = {
+            &#39;fitness&#39;: {
+                &#39;feasible&#39;: self.max_f_fitness,
+                &#39;infeasible&#39;: self.max_i_fitness
+            },
+            &#39;age&#39;: {
+                &#39;feasible&#39;: CS_MAX_AGE,
+                &#39;infeasible&#39;: CS_MAX_AGE
+            },
+            &#39;size&#39;: {
+                &#39;feasible&#39;: BIN_POP_SIZE,
+                &#39;infeasible&#39;: BIN_POP_SIZE
+            }
+        }
+        plt.imshow(disp_map,
+                   origin=&#39;lower&#39;,
+                   cmap=&#39;hot&#39;,
+                   interpolation=&#39;nearest&#39;,
+                   vmin=0,
+                   vmax=vmaxs[metric][population])
+        plt.xticks(np.arange(self.bin_qnt[0]), np.cumsum(self.bin_sizes[0]) + self.b_descs[0].bounds[0])
+        plt.yticks(np.arange(self.bin_qnt[1]), np.cumsum(self.bin_sizes[1]) + self.b_descs[1].bounds[0])
+        plt.xlabel(self.b_descs[0].name)
+        plt.ylabel(self.b_descs[1].name)
+        plt.title(f&#39;CMAP-Elites {&#34;Avg. &#34; if show_mean else &#34;&#34;}{metric} ({population})&#39;)
+        cbar = plt.colorbar()
+        cbar.set_label(
+            f&#39;{&#34;mean&#34; if show_mean else &#34;max&#34;} {metric}&#39;, rotation=270)
+        if save_as:
+            title_part = f&#39;{metric}{&#34;-avg-&#34; if show_mean else &#34;-top-&#34;}{population}&#39;
+            plt.savefig(f&#39;results/{save_as}-{title_part}.png&#39;,
+                        transparent=True, bbox_inches=&#39;tight&#39;)
+        plt.show()
+
+    def compute_fitness(self,
+                        cs: CandidateSolution) -&gt; float:
+        &#34;&#34;&#34;Compute the fitness of the solution. 
+
+        Args:
+            cs (CandidateSolution): The solution.
+
+        Raises:
+            NotImplementedError: Raised if the estimator is not recognized.
+
+        Returns:
+            float: The fitness value.
+        &#34;&#34;&#34;
+        if cs.is_feasible:
+            cs.fitness = [f(cs) for f in self.feasible_fitnesses]
+            cs.representation = cs.fitness[:]
+            x, y, z = cs.content._max_dims
+            cs.representation.extend([x / MAX_X_SIZE, y / MAX_Y_SIZE, z / MAX_Z_SIZE])
+            return sum([self.feasible_fitnesses[i].weight * cs.fitness[i] for i in range(len(cs.fitness))])
+        else:
+            cs.representation = [f(cs) for f in [Fitness(name=&#39;BoxFilling&#39;, f=box_filling_fitness, bounds=(0, 1)),
+                                                 Fitness(name=&#39;FuncionalBlocks&#39;, f=func_blocks_fitness, bounds=(0, 1)),
+                                                 Fitness(name=&#39;MajorMediumProportions&#39;, f=mame_fitness, bounds=(0, 1)),
+                                                 Fitness(name=&#39;MajorMinimumProportions&#39;, f=mami_fitness, bounds=(0, 1))]]
+            if self.estimator is not None:
+                if isinstance(self.estimator, GaussianEstimator):
+                    return self.estimator.predict(x=np.asarray(cs.representation)) if self.estimator.is_trained else EPSILON_F
+                elif USE_TORCH and isinstance(self.estimator, MLPEstimator):
+                    return self.estimator.predict(cs.representation) if self.estimator.is_trained else EPSILON_F
+                elif USE_TORCH and isinstance(self.estimator, QuantileEstimator):
+                    if self.estimator.is_trained:
+                        # set fitness to (3,) array (min, median, max)
+                        cs.fitness = self.estimator.predict(cs.representation)
+                        # set c_fitness to median by default
+                        return cs.fitness[self.infeas_fitness_idx]
+                    else:
+                        cs.fitness = [EPSILON_F, EPSILON_F, EPSILON_F]
+                        return cs.fitness[self.infeas_fitness_idx]
+                else:
+                    raise NotImplementedError(f&#39;Unrecognized estimator type: {type(self.estimator)}.&#39;)
+            else:
+                return cs.ncv
+
+    def _assign_fitness(self,
+                        cs: CandidateSolution) -&gt; CandidateSolution:
+        &#34;&#34;&#34;Assign the fitness and BCs to a candidate solution.
+
+        Args:
+            cs (CandidateSolution): The candidate solution.
+
+        Returns:
+            CandidateSolution: The updated candidate solution.
+        &#34;&#34;&#34;
+        # assign fitness
+        cs.c_fitness = self.compute_fitness(cs=cs) + ((self.nsc - cs.ncv) if cs.is_feasible else 0)
+        # assign behavior descriptors
+        self._set_behavior_descriptors(cs=cs)
+        # set age
+        cs.age = CS_MAX_AGE
+        return cs
+
+    def _prepare_cs_content(self,
+                            cs: CandidateSolution) -&gt; CandidateSolution:
+        &#34;&#34;&#34;Prepare a candidate solution for fitness computation.
+        Add a hull if possible and set the blocks colors.
+
+        Args:
+            cs (CandidateSolution): The candidate solution.
+
+        Returns:
+            CandidateSolution: The updated candidate solution.
+        &#34;&#34;&#34;
+        # add hull if possible
+        if self.hull_builder:
+            threadsafe_hullbuilder = HullBuilder(erosion_type=self.hull_builder.erosion_type,
+                                                 apply_erosion=self.hull_builder.apply_erosion,
+                                                 apply_smoothing=self.hull_builder.apply_smoothing)
+            threadsafe_hullbuilder.add_external_hull(structure=cs.content)
+        # set the color
+        cs.content.set_color(color=cs.base_color)
+        return cs
+    
+    def _set_behavior_descriptors(self,
+                                  cs: CandidateSolution) -&gt; None:
+        &#34;&#34;&#34;Set the behavior descriptors of the solution.
+
+        Args:
+            cs (CandidateSolution): The candidate solution.
+        &#34;&#34;&#34;
+        cs.b_descs = (self.b_descs[0](cs), self.b_descs[1](cs))
+
+    def subdivide_range(self,
+                        bin_idx: Tuple[int, int]) -&gt; None:
+        &#34;&#34;&#34;Subdivide the chosen bin range.
+        For each bin, 4 new bins are created and the solutions are redistributed amongst those.
+
+        Args:
+            bin_idx (Tuple[int, int]): The index of the bin.
+        &#34;&#34;&#34;
+        i, j = bin_idx
+        # get solutions
+        all_cs = []
+        for (_, _), cbin in np.ndenumerate(self.bins):
+            all_cs.extend([*cbin._feasible, *cbin._infeasible])
+            # logging.getLogger(&#39;mapelites&#39;).debug(f&#39;[{__name__}.subdivide_range] {bin_idx=} (pre) - {cbin.bin_idx=}; {cbin.new_elite=}&#39;)
+        # update bin sizes
+        v_i, v_j = self.bin_sizes[0][i], self.bin_sizes[1][j]
+        self.bin_sizes[0][i] = v_i / 2
+        self.bin_sizes[1][j] = v_j / 2
+        self.bin_sizes[0].insert(i + 1, v_i / 2)
+        self.bin_sizes[1].insert(j + 1, v_j / 2)
+        # update bin quantity
+        self.bin_qnt = (self.bin_qnt[0] + 1, self.bin_qnt[1] + 1)
+        # create new bin map
+        new_bins = np.empty(shape=self.bin_qnt, dtype=MAPBin)        
+        # populate newly created bins
+        for (m, n), _ in np.ndenumerate(new_bins):
+            new_bins[m, n] = MAPBin(bin_idx=(m, n),
+                                    bin_size=(self.bin_sizes[0][m],
+                                              self.bin_sizes[1][n]),
+                                    bin_initial_size=(v_i, v_j))
+            if m != i + 1 or n != j + 1:
+                x = m if m &lt;= i else m - 1
+                y = n if n &lt;= j else n - 1
+            else:
+                x = i
+                y = j
+            new_bins[m, n].new_elite = self.bins[x, y].new_elite.copy()
+            # logging.getLogger(&#39;mapelites&#39;).debug(f&#39;[{__name__}.subdivide_range] {bin_idx=} (post) - {(m, n)=}; {new_bins[m, n].new_elite=}&#39;)
+        # assign new bin map
+        self.bins = new_bins
+        # assign solutions to bins
+        self._update_bins(lcs=all_cs)
+        if isinstance(self.emitter, HumanPrefMatrixEmitter):
+            self.emitter._increase_preferences_res(idx=bin_idx)
+
+    def _update_bins(self,
+                     lcs: List[CandidateSolution]) -&gt; None:
+        &#34;&#34;&#34;Update the bins by assigning new solutions.
+
+        Args:
+            lcs (List[CandidateSolution]): The list of new solutions.
+        &#34;&#34;&#34;
+        bc0 = np.cumsum([0] + self.bin_sizes[0][:-1]) + self.b_descs[0].bounds[0]
+        bc1 = np.cumsum([0] + self.bin_sizes[1][:-1]) + self.b_descs[1].bounds[0]
+        for cs in lcs:
+            b0, b1 = cs.b_descs
+            i = np.digitize(x=[b0], bins=bc0, right=False)[0] - 1
+            j = np.digitize(x=[b1], bins=bc1, right=False)[0] - 1
+            self.bins[i, j].insert_cs(cs)
+        if self.allow_aging:
+            for (_, _), b in np.ndenumerate(self.bins):
+                b.remove_old()
+
+    def _age_bins(self,
+                  diff: int = -1) -&gt; None:
+        &#34;&#34;&#34;Age all bins.
+
+        Args:
+            diff (int, optional): The quantity to age for. Defaults to `-1`.
+        &#34;&#34;&#34;
+        if self.allow_aging:
+            for (_, _), cbin in np.ndenumerate(self.bins):
+                cbin.age(diff=diff)
+
+    def _valid_bins(self) -&gt; List[MAPBin]:
+        &#34;&#34;&#34;Get all the valid bins. A valid bin is a bin with at least 2 Feasible solution and 2 Infeasible solution.
+
+        Returns:
+            List[MAPBin]: The list of valid bins.
+        &#34;&#34;&#34;
+        return [cbin for (_, _), cbin in np.ndenumerate(self.bins) if len(cbin._feasible) &gt; 0]
+
+    def _check_res_trigger(self) -&gt; List[Tuple[int, int]]:
+        &#34;&#34;&#34;Trigger a resolution increase if at least 1 bin has reached full population capacity for both Feasible and Infeasible populations.
+
+        Returns:
+            List[Tuple[int, int]]: The indices of bins that were subdivided.
+        &#34;&#34;&#34;
+        if self.allow_res_increase:
+            to_increase_res = [cbin.bin_idx for (_, _), cbin in np.ndenumerate(self.bins) if len(cbin._feasible) &gt;= BIN_POP_SIZE and len(cbin._infeasible) &gt;= BIN_POP_SIZE and cbin.subdividable]
+            for bin_idx in reversed(to_increase_res):
+                self.subdivide_range(bin_idx=bin_idx)
+            return to_increase_res
+        return []
+
+    def _process_expanded_idxs(self,
+                               expanded_idxs: List[Tuple[int, int]],
+                               selected_idxs: List[Tuple[int, int]]) -&gt; List[Tuple[int, int]]:
+        &#34;&#34;&#34;Process the indices of expanded bins and filter out expanded bins that were not selected.
+
+        Args:
+            expanded_idxs (List[Tuple[int, int]]): The indices of expanded bins.
+            selected_idxs (List[Tuple[int, int]]): The indices of selected bins.
+
+        Returns:
+            List[Tuple[int, int]]: The processed indices of expanded bins.
+        &#34;&#34;&#34;
+        logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}._process_expanded_idxs] pre {selected_idxs=}; {expanded_idxs=}&#39;)
+        processed_idxs = [idx for idx in selected_idxs]
+        for (m, n) in selected_idxs:
+            for (i, j) in expanded_idxs:
+                if m == i:
+                    processed_idxs.append((m + 1, n))
+                if n == j:
+                    processed_idxs.append((m, n + 1))
+                if m == i and n == j:
+                    processed_idxs.append((m + 1, n + 1))
+        for i, (m, n) in enumerate(processed_idxs):
+            lm = len([x[0] for x in expanded_idxs if x[0] &lt; m])
+            ln = len([x[1] for x in expanded_idxs if x[1] &lt; n])
+            processed_idxs[i] = (m + lm, n + ln)
+        logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}._process_expanded_idxs] post {processed_idxs=}&#39;)
+        return processed_idxs
+
+    def update_behavior_descriptors(self,
+                                    bs: Tuple[BehaviorCharacterization]) -&gt; None:
+        &#34;&#34;&#34;Update the behavior descriptors used in the MAP-Elites.
+
+        Args:
+            bs (Tuple[BehaviorCharacterization]): The 2 new behavior descriptors.
+        &#34;&#34;&#34;
+        self.b_descs = bs
+        self.limits = (self.b_descs[0].bounds[1] if self.b_descs[0].bounds is not None else 20,
+                       self.b_descs[1].bounds[1] if self.b_descs[1].bounds is not None else 20)
+        lcs = []
+        for (_, _), cbin in np.ndenumerate(self.bins):
+            lcs.extend([*cbin._feasible, *cbin._infeasible])
+            Parallel(n_jobs=-1, prefer=&#34;threads&#34;)(delayed(self._set_behavior_descriptors)(cs) for cs in lcs)
+        self.reset(lcs=lcs)
+
+    def toggle_module_mutability(self,
+                                 module: str) -&gt; None:
+        &#34;&#34;&#34;Toggle the mutability of the module.
+
+        Args:
+            module (str): The module&#39;s name.
+        &#34;&#34;&#34;
+        # toggle module&#39;s mutability in the solution
+        for (_, _), cbin in np.ndenumerate(self.bins):
+            cbin.toggle_module_mutability(module=module)
+        # toggle module&#39;s mutability within the L-system
+        ms = [x.name for x in self.lsystem.modules]
+        self.lsystem.modules[ms.index(module)].active = not self.lsystem.modules[ms.index(module)].active
+
+    def update_fitness_weights(self,
+                               weights: List[float]) -&gt; None:
+        &#34;&#34;&#34;Update the weights of the Feasible fitnesses.
+
+        Args:
+            weights (List[float]): The new list of weights.
+        &#34;&#34;&#34;
+        assert len(weights) == len(self.feasible_fitnesses), f&#39;Wrong number of weights ({len(weights)}) for fitnesses ({len(self.feasible_fitnesses)}) passed.&#39;
+        # update weights
+        for w, f in zip(weights, self.feasible_fitnesses):
+            f.weight = w
+        # update solutions fitnesses
+        for (_, _), cbin in np.ndenumerate(self.bins):
+            for cs in cbin._feasible:
+                cs.c_fitness = sum([self.feasible_fitnesses[i].weight * cs.fitness[i] for i in range(len(cs.fitness))]) + (self.nsc - cs.ncv)
+
+    def reassign_all_content(self, **kwargs) -&gt; None:
+        &#34;&#34;&#34;Reassign all content to the solutions&#34;&#34;&#34;
+        for (_, _), cbin in np.ndenumerate(self.bins):
+            for pop in [cbin._feasible, cbin._infeasible]:
+                for cs in pop:
+                    cs._content = None
+                    cs = self.lsystem._set_structure(cs=self.lsystem._add_ll_strings(cs=cs),
+                                                     make_graph=False)
+                    if cs.is_feasible:
+                        if self.hull_builder is not None:
+                            self.hull_builder.add_external_hull(structure=cs.content)
+                        if kwargs.get(&#39;sym_axis&#39;, None) is not None:
+                            enforce_symmetry(structure=cs.content,
+                                             axis=kwargs.get(&#39;sym_axis&#39;, None),
+                                             upper=kwargs.get(&#39;sym_upper&#39;, None))
+
+    def generate_initial_populations(self,
+                                     pop_size: int = POP_SIZE,
+                                     n_retries: int = N_RETRIES) -&gt; None:
+        &#34;&#34;&#34;Generate the initial populations.
+
+        Args:
+            pop_size (int, optional): The size of the populations. Defaults to `POP_SIZE`.
+            n_retries (int, optional): The number of initialization retries. Defaults to `N_RETRIES`.
+        &#34;&#34;&#34;
+        # create populations
+        feasible_pop, infeasible_pop = [], []
+        self.lsystem.disable_sat_check()
+        with trange(n_retries, desc=&#39;Initialization &#39;) as iterations:
+            for i in iterations:
+                solutions = self.lsystem.apply_rules(starting_strings=[&#39;head&#39;, &#39;body&#39;, &#39;tail&#39;],
+                                                     iterations=[1, N_ITERATIONS, 1],
+                                                     create_structures=True,
+                                                     make_graph=False)
+                subdivide_solutions(lcs=solutions,
+                                    lsystem=self.lsystem)
+                for cs in solutions:
+                    if cs.is_feasible and len(feasible_pop) &lt; pop_size and cs not in feasible_pop:
+                        if self.hull_builder is not None:
+                            self.hull_builder.add_external_hull(structure=cs._content)
+                        feasible_pop.append(self._assign_fitness(cs=cs))
+                    elif not cs.is_feasible and len(infeasible_pop) &lt; pop_size and cs not in feasible_pop:
+                        infeasible_pop.append(self._assign_fitness(cs=cs))
+                iterations.set_postfix(ordered_dict={
+                    &#39;fpop-size&#39;: f&#39;{len(feasible_pop)}/{pop_size}&#39;,
+                    &#39;ipop-size&#39;: f&#39;{len(infeasible_pop)}/{pop_size}&#39;
+                },
+                                       refresh=True)
+                if i == n_retries or (len(feasible_pop) == pop_size and len(infeasible_pop) == pop_size):
+                    break
+        # assign solutions to respective bins
+        self._update_bins(lcs=[*feasible_pop, *infeasible_pop])
+        # if required, initialize the emitter
+        if self.emitter is not None and self.emitter.requires_init:
+            self.emitter.init_emitter(bins=self.bins)
+        # update bins for elites
+        self.update_elites()
+
+    def _step(self,
+              populations: List[List[CandidateSolution]],
+              gen: int) -&gt; List[CandidateSolution]:
+        &#34;&#34;&#34;Apply a single step of modified FI2Pop.
+
+        Args:
+            populations (List[List[CandidateSolution]]): The Feasible and Infeasible populations.
+            gen (int): The current generation number.
+
+        Raises:
+            NotImplementedError: Raised if the estimator is unrecognized.
+
+        Returns:
+            List[CandidateSolution]: The new solutions.
+        &#34;&#34;&#34;
+        # generate solutions from both populations
+        generated = []
+        for pop in populations:
+            logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}._step] {len(pop)=}&#39;)
+            if len(pop) &gt; 0:
+                try:
+                    minimize = False if pop[0].is_feasible else False if self.estimator is not None else True
+                    new_pool = create_new_pool(population=pop,
+                                               generation=gen,
+                                               n_individuals=BIN_POP_SIZE,
+                                               minimize=minimize)
+                    # set low-level strings and structures
+                    new_pool = list(map(lambda cs: self.lsystem._add_ll_strings(cs=cs), new_pool))
+                    new_pool = list(map(lambda cs: self.lsystem._set_structure(cs=cs,
+                                                                               make_graph=False), new_pool))
+                    logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}._step] {len(new_pool)=}&#39;)
+                    subdivide_solutions(lcs=new_pool,
+                                        lsystem=self.lsystem)
+                    logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}._step] Started preparing solutions&#39;)
+                    new_pool = Parallel(n_jobs=-1, prefer=&#34;threads&#34;)(delayed(self._prepare_cs_content)(cs) for cs in new_pool)
+                    logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}._step] Started assigning fitnesses&#39;)
+                    generated.extend(Parallel(n_jobs=-1, prefer=&#34;threads&#34;)(delayed(self._assign_fitness)(cs) for cs in new_pool))
+                # evoexceptions are ignored, though it is possible to get stuck here
+                except EvoException as e:
+                    logging.getLogger(&#39;mapelites&#39;).error(msg=f&#39;[{__name__}._step] {e}&#39;)
+                    pass
+        # if possible, train the estimator for fitness acquirement
+        if self.estimator is not None:
+            # Prepare dataset for estimator
+            xs, ys = prepare_dataset(f_pop=[x for x in generated if x.is_feasible])
+            for x, y in zip(xs, ys):
+                self.buffer.insert(x=x,
+                                   y=y / self.max_f_fitness)
+            # check if we can train the estimator
+            try:
+                xs, ys = self.buffer.get()
+                if isinstance(self.estimator, GaussianEstimator):
+                    self.estimator.fit(xs=xs, ys=ys)
+                elif USE_TORCH and isinstance(self.estimator, MLPEstimator) or isinstance(self.estimator, QuantileEstimator):
+                    train_estimator(self.estimator, xs=xs, ys=ys)
+                else:
+                    raise NotImplementedError(f&#39;Unrecognized estimator type {type(self.estimator)}.&#39;)
+            # we skip training altogether if we don&#39;t have datapoints
+            except EmptyBufferException:
+                pass
+            # realignment check
+            if self.estimator.is_trained and gen % ALIGNMENT_INTERVAL == 0:
+                # Reassign previous infeasible fitnesses
+                for (_, _), cbin in np.ndenumerate(self.bins):
+                    for cs in cbin._infeasible:
+                        if cs.age &gt; ALIGNMENT_INTERVAL:
+                            cs.c_fitness = self.compute_fitness(cs=cs)
+        # metrics tracking
+        self.n_new_solutions += len(generated)
+        return generated
+
+    def rand_step(self,
+                  gen: int = 0) -&gt; None:
+        &#34;&#34;&#34;Apply a random step.
+
+        Args:
+            gen (int, optional): The current number of generations. Defaults to 0.
+        &#34;&#34;&#34;
+        # trigger aging of solution
+        self._age_bins()
+        # pick random bin
+        rnd_bin = random.choice(self._valid_bins())
+        generated = self._step(populations=[rnd_bin._feasible, rnd_bin._infeasible],
+                               gen=gen)
+        if generated:
+            self._update_bins(lcs=generated)
+            self._check_res_trigger()
+        else:
+            self._age_bins(diff=1)
+
+    def seek_nearest_valid(self,
+                           bin_idxs: List[List[int]],
+                           pop: str = &#39;infeasible&#39;) -&gt; List[CandidateSolution]:
+        &#34;&#34;&#34;Collect CandidateSolutions from neighbouring indexes in a pseudo-nearestneighbour style.
+
+        Args:
+            bin_idxs (List[List[int]]): The list of bin indices.
+            pop (str, optional): The population to collect solutions for. Defaults to &#39;infeasible&#39;.
+
+        Returns:
+            List[CandidateSolution]: The list of neighbouring solutions, if it exists.
+        &#34;&#34;&#34;
+        new_pop = []
+        inspecting = [idx for idx in bin_idxs]
+        offsets = [(-1, -1), (-1, 0), (-1,1), (0, -1), (0, 1), (1, -1),  (1, 0), (1, 1)]
+        np.random.shuffle(offsets)
+        logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}.seek_nearest_valid] {pop=}; {inspecting=}&#39;)
+        while new_pop == []:
+            to_inspect = []
+            past_idxs = []
+            for idx in inspecting:
+                for offset in offsets:
+                    new_idx = (idx[0] + offset[0], idx[1] + offset[1])
+                    if 0 &lt;= new_idx[0] &lt; self.bins.shape[0] and 0 &lt;= new_idx[1] &lt; self.bins.shape[1]:
+                        pool = self.bins[new_idx]._feasible if pop == &#39;feasible&#39; else self.bins[new_idx]._infeasible
+                        logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}.seek_nearest_valid] {new_idx=}; {pool=}; {len(new_pop)=}; {to_inspect=}&#39;)
+                        if pool:
+                            new_pop.extend(pool) 
+                            break
+                        else:
+                            if idx not in past_idxs:
+                                to_inspect.append(new_idx)
+            if to_inspect == []:
+                break
+            inspecting = to_inspect
+        logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}.seek_nearest_valid] {new_pop=}&#39;)
+        return new_pop
+    
+    def interactive_step(self,
+                         bin_idxs: List[List[int]],
+                         gen: int = 0) -&gt; None:
+        &#34;&#34;&#34;Applies an interactive step.
+
+        Args:
+            bin_idxs (List[Tuple[int, int]]): The indexes of the bins selected.
+            gen (int, optional): The current number of generations. Defaults to `0`.
+        &#34;&#34;&#34;
+        self._age_bins()
+        bin_idxs = [tuple(b) for b in bin_idxs]
+        chosen_bins = [self.bins[bin_idx] for bin_idx in bin_idxs]
+        f_pop, i_pop = [], []
+        for chosen_bin in chosen_bins:
+            if self.enforce_qnt:
+                assert chosen_bin in self._valid_bins(), f&#39;Bin at {chosen_bin.bin_idx} is not a valid bin.&#39;
+            f_pop.extend(chosen_bin._feasible)
+            i_pop.extend(chosen_bin._infeasible)
+        
+        if i_pop == []:
+            i_pop = self.seek_nearest_valid(bin_idxs=bin_idxs,
+                                            pop=&#39;infeasible&#39;)
+        
+        generated = self._step(populations=[f_pop, i_pop],
+                               gen=gen)
+        if generated:
+            self._update_bins(lcs=generated)
+            expanded_idxs = self._check_res_trigger()
+            # keep track of expanded indexes only if they have also been selected
+            expanded_idxs = self._process_expanded_idxs(expanded_idxs=expanded_idxs,
+                                                        selected_idxs=bin_idxs)
+        else:
+            self._age_bins(diff=1)
+            expanded_idxs = []
+        if self.emitter is not None and self.emitter.requires_pre:
+            self.emitter.pre_step(bins=self.bins,
+                                  selected_idxs=bin_idxs,
+                                  expanded_idxs=expanded_idxs,
+                                  bounds=[b.bounds for b in self.b_descs])
+        
+
+    def emitter_step(self,
+                     gen: int = 0) -&gt; None:
+        &#34;&#34;&#34;Apply a step according to the emitter.
+
+        Args:
+            gen (int, optional): The current generation number. Defaults to `0`.
+
+        Raises:
+            AssertionError: Raised if there is no MultiArmed Bandit Agent or Emitter set in MAP-Elites.
+            NotImplementedError: Raised if the merge method specified in the bandit action is unrecognized.
+            NotImplementedError: Raised if the emitter output is not in the expected data format.
+        &#34;&#34;&#34;
+        assert self.agent or self.emitter, &#39;MAP-Elites requires either a fixed emitter or a MultiArmed Bandit Agent, but neither were provided.&#39;
+        if self.agent is not None:
+            # get bandit
+            bandit = self.agent.choose_bandit()
+            emitter_str, method_str = bandit.action.split(&#39;;&#39;)
+            # set emitter
+            self.emitter = get_emitter_by_str(emitter=emitter_str)
+            # set merge method
+            if method_str == &#39;max&#39;:
+                self.infeas_fitness_idx = 0
+            elif method_str == &#39;median&#39;:
+                self.infeas_fitness_idx = 1
+            elif method_str == &#39;min&#39;:
+                self.infeas_fitness_idx = 2
+            else:
+                raise NotImplementedError(f&#39;Unrecognized merge method from bandit action: {method_str}&#39;)
+            # update existing solution&#39;s fitness
+            for (_, _), cbin in np.ndenumerate(self.bins):
+                for cs in cbin._infeasible:
+                    cs.c_fitness = cs.fitness[self.infeas_fitness_idx]
+        selected_bins = self.emitter.pick_bin(bins=self.bins)
+        logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}.emitter_step] {selected_bins=}&#39;)
+        if selected_bins:
+            fpop, ipop = [], []
+            # TODO: this could be handled better
+            if isinstance(selected_bins[0], MAPBin):
+                for selected_bin in selected_bins:
+                    fpop.extend(selected_bin._feasible)
+                    ipop.extend(selected_bin._infeasible)
+            elif isinstance(selected_bins[0], list):
+                for selected_bin in selected_bins[0]:
+                    fpop.extend(selected_bin._feasible)
+                for selected_bin in selected_bins[1]:
+                    ipop.extend(selected_bin._infeasible)
+            else:
+                raise NotImplementedError(f&#39;Unrecognized emitter output: {selected_bins}.&#39;)
+            logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}.emitter_step] {fpop=}; {ipop=}&#39;)
+            if ipop == []:
+                if isinstance(selected_bins[0], MAPBin):
+                    ipop = self.seek_nearest_valid(bin_idxs=[b.bin_idx for b in selected_bins],
+                                                    pop=&#39;infeasible&#39;)
+                elif isinstance(selected_bins[0], list):
+                    ipop = self.seek_nearest_valid(bin_idxs=[b.bin_idx for b in selected_bins[1]],
+                                                    pop=&#39;infeasible&#39;)
+            
+            generated = self._step(populations=[fpop, ipop],
+                                   gen=gen)
+            if generated:
+                self._update_bins(lcs=generated)
+                self._check_res_trigger()
+            if self.emitter is not None and self.emitter.requires_post:
+                self.emitter.post_step(bins=self.bins)
+            if self.agent is not None:
+                self.agent.reward_bandit(bandit=bandit,
+                                         reward=sum([f(self) for f in self.agent_rewards]))
+
+    def reset(self,
+              lcs: Optional[List[CandidateSolution]] = None) -&gt; None:
+        &#34;&#34;&#34;Reset the current MAP-Elites.
+
+        Args:
+            lcs (Optional[List[CandidateSolution]], optional): If provided, the solutions are assigned to the new MAP-Elites. Defaults to `None`.
+        &#34;&#34;&#34;
+        # reset MAP-Elites properties
+        self.bin_qnt = self._initial_n_bins
+        self.bin_sizes = [[self.limits[0] / self.bin_qnt[0]] * self._initial_n_bins[0],
+                          [self.limits[1] / self.bin_qnt[1]] * self._initial_n_bins[1]]
+        self.bins = np.empty(shape=self.bin_qnt, dtype=MAPBin)
+        for (i, j), _ in np.ndenumerate(self.bins):
+            self.bins[i, j] = MAPBin(bin_idx=(i, j),
+                                     bin_size=(self.bin_sizes[0][i], self.bin_sizes[1][j]))
+        if self.estimator is not None:
+            if isinstance(self.estimator, GaussianEstimator):
+                self.estimator = GaussianEstimator(bound=self.estimator.bound,
+                                                   kernel=self.estimator.kernel,
+                                                   max_f=self.estimator.max_f,
+                                                   min_f=self.estimator.min_f,
+                                                   alpha=self.estimator.alpha,
+                                                   normalize_y=self.estimator.normalize_y)
+            if USE_TORCH and isinstance(self.estimator, MLPEstimator):
+                self.estimator = MLPEstimator(xshape=self.estimator.xshape,
+                                              yshape=self.estimator.yshape)
+            elif USE_TORCH and isinstance(self.estimator, QuantileEstimator):
+                self.estimator = QuantileEstimator(xshape=self.estimator.xshape,
+                                                   yshape=self.estimator.yshape)
+        self.buffer.clear()
+        if self.emitter is not None:
+            self.emitter.reset()
+        # assign solutions if provided
+        if lcs is not None:
+            self._update_bins(lcs=lcs)
+            self._check_res_trigger()
+            if self.emitter is not None and self.emitter.requires_init:
+                self.emitter.init_emitter(bins=self.bins)
+        else:
+            self.generate_initial_populations()
+
+    def save_population(self,
+                        filename: str = &#39;./population.pop&#39;) -&gt; None:
+        all_cs = []
+        for (_, _), b in np.ndenumerate(self.bins):
+            for cs in [*b._feasible, *b._infeasible]:
+                all_cs.append(cs.to_json())
+        with open(filename, &#39;w&#39;) as f:
+            f.write(json_dumps(all_cs))
+       
+    def load_population(self,
+                        filename: str = &#39;./population.pop&#39;) -&gt; None:
+        all_cs = []
+        with open(filename, &#39;r&#39;) as f:
+            all_cs = [CandidateSolution.from_json(x) for x in json_loads(f.read())]
+        # set content
+        all_cs = list(map(lambda cs: self.lsystem._set_structure(cs=cs, make_graph=False), all_cs))
+        # add to population
+        self._update_bins(lcs=all_cs)
+        # add hull only to feas solutions
+        if self.hull_builder is not None:
+            for (_, _), b in np.ndenumerate(self.bins):
+                if b.non_empty(pop=&#39;feasible&#39;):
+                    for cs in b._feasible:
+                        self.hull_builder.add_external_hull(cs.content)
+        # update bins for elites
+        self.update_elites()
+    
+    def update_elites(self,
+                      reset: bool = False):
+        &#34;&#34;&#34;Update the elite tracking for the MAPElites bins.
+
+        Args:
+            reset (bool, optional): Whether to reset the tracking. Defaults to False.
+        &#34;&#34;&#34;
+        for (_, _), b in np.ndenumerate(self.bins):
+            for pop in [&#39;feasible&#39;, &#39;infeasible&#39;]:
+                if reset:
+                    b.new_elite[pop] = False
+                else:
+                    b.check_new_elite(pop=pop)
+                # logging.getLogger(&#39;mapelites&#39;).debug(f&#39;[{__name__}.update_elites] {reset=}; {b.bin_idx} -&gt; {b.new_elite[pop]}&#39;)
+    
+    def population_complexity(self,
+                              pop: str = &#39;feasible&#39;) -&gt; float:
+        &#34;&#34;&#34;Compute the average complexity of the selected population.
+        The complexity in this case is defined as the number of blocks.
+
+        Returns:
+            float: The population complexity.
+        &#34;&#34;&#34;
+        all_lenghts = []
+        for (_, _), b in np.ndenumerate(self.bins):
+            for cs in b._feasible if pop == &#39;feasible&#39; else b._infeasible:
+                all_lenghts.append(len(cs.content._blocks))
+        return np.average(all_lenghts)
+    
+    
+    def total_solutions(self,
+                        pop: str = &#39;feasible&#39;) -&gt; int:
+        &#34;&#34;&#34;Compute the total number of solutions currently in the archive for the selected population.
+
+        Args:
+            pop (str, optional): The population type. Defaults to &#39;feasible&#39;.
+
+        Returns:
+            int: The total number of solutions in the archive for the selected population.
+        &#34;&#34;&#34;
+        return np.sum([b.get_metric(metric=&#39;size&#39;, population=pop) for (_, _), b in np.ndenumerate(self.bins)])
+    
+    
+    def to_json(self) -&gt; Dict[str, Any]:
+        return {
+            &#39;lsystem&#39;: self.lsystem.to_json(),
+            &#39;feasible_fitnesses&#39;: [f.to_json() for f in self.feasible_fitnesses],
+            &#39;b_descs&#39;: [bd.to_json() for bd in list(self.b_descs)],
+            &#39;emitter&#39;: self.emitter.to_json() if self.emitter else None,
+            &#39;agent&#39;: self.agent.to_json() if self.agent else None,
+            &#39;agent_rewards&#39;: [ar.__name__ for ar in self.agent_rewards],
+            &#39;initial_n_bins&#39;: list(self._initial_n_bins),
+            &#39;bin_qnt&#39;: list(self.bin_qnt),
+            &#39;bins&#39;: [b.to_json() for b in self.bins.flatten().tolist()],
+            &#39;enforce_qnt&#39;: self.enforce_qnt,
+            &#39;estimator_type&#39;: self.estimator.__class__.__name__ if self.estimator else None,
+            &#39;estimator&#39;: self.estimator.to_json() if self.estimator else None,
+            &#39;buffer&#39;: self.buffer.to_json(),
+            &#39;allow_res_increase&#39;: self.allow_res_increase,
+            &#39;allow_aging&#39;: self.allow_aging,
+        }
+
+    @staticmethod
+    def from_json(my_args: Dict[str, Any]) -&gt; &#39;MAPElites&#39;:
+        me = MAPElites(lsystem=LSystem.from_json(my_args[&#39;lsystem&#39;]),
+                       feasible_fitnesses=[Fitness.from_json(
+                           f) for f in my_args[&#39;feasible_fitnesses&#39;]],
+                       buffer=Buffer.from_json(my_args[&#39;buffer&#39;]),
+                       behavior_descriptors=tuple(
+                           [BehaviorCharacterization.from_json(bc) for bc in my_args[&#39;b_descs&#39;]]),
+                       n_bins=tuple(my_args[&#39;bin_qnt&#39;]),
+                       estimator=None,
+                       emitter=RandomEmitter(),
+                       agent=None,
+                       agent_rewards=None)
+        me._initial_n_bins = my_args[&#39;initial_n_bins&#39;]
+        me.enforce_qnt = my_args[&#39;enforce_qnt&#39;]
+        me.allow_res_increase = my_args[&#39;allow_res_increase&#39;]
+        me.allow_aging = my_args[&#39;allow_aging&#39;]
+        if my_args[&#39;emitter&#39;]:
+            me.emitter = emitters[my_args[&#39;emitter&#39;]
+                                  [&#39;name&#39;]].from_json(my_args[&#39;emitter&#39;])
+        if my_args[&#39;estimator_type&#39;]:
+            estimators = {
+                &#39;GaussianEstimator&#39;: GaussianEstimator,
+                &#39;MLPEstimator&#39;: MLPEstimator,
+                &#39;QuantileEstimator&#39;: QuantileEstimator
+            }
+            me.estimator = estimators[my_args[&#39;estimator_type&#39;]].from_json(my_args[&#39;estimator&#39;])
+        if my_args[&#39;agent&#39;]:
+            me.agent = EpsilonGreedyAgent.from_json(my_args[&#39;agent&#39;])
+            me.agent_rewards = [agent_rewards[ar]
+                                for ar in my_args[&#39;agent_rewards&#39;]]
+        me.bins = np.asarray([MAPBin.from_json(mb)
+                             for mb in my_args[&#39;bins&#39;]]).reshape(me.bin_qnt)
+        return me
+
+    # This method is deprecated and was used during initial debugging. Source is kept jsut in case.
+    # def interactive_mode(self,
+    #                      n_steps: int = 10) -&gt; None:
+    #     &#34;&#34;&#34;Start an interactive evolution session. Bins choice is done via `input`.
+
+    #     Args:
+    #         n_steps (int, optional): The number of steps to evolve for. Defaults to 10.
+    #     &#34;&#34;&#34;
+    #     for n in range(n_steps):
+    #         print(f&#39;### STEP {n+1}/{n_steps} ###&#39;)
+    #         valid_bins = self._valid_bins()
+    #         list_valid_bins = &#39;\n-&#39; + &#39;\n-&#39;.join([str(x.bin_idx) for x in valid_bins])
+    #         print(f&#39;Valid bins are: {list_valid_bins}&#39;)
+    #         chosen_bin = None
+    #         while chosen_bin is None:
+    #             choice = input(&#39;Enter valid bin to evolve: &#39;)
+    #             choice = choice.replace(&#39; &#39;, &#39;&#39;).split(&#39;,&#39;)
+    #             selected = self.bins[int(choice[0]), int(choice[1])]
+    #             if selected in valid_bins:
+    #                 chosen_bin = selected
+    #             else:
+    #                 print(&#39;Chosen bin is not amongst valid bins.&#39;)
+    #         self._interactive_step(bin_idxs=[chosen_bin.bin_idx],
+    #                                gen=n)</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="pcgsepy.mapelites.map.MAPElites.from_json"><code class="name flex">
+<span>def <span class="ident">from_json</span></span>(<span>my_args: Dict[str, Any]) ‑> <a title="pcgsepy.mapelites.map.MAPElites" href="#pcgsepy.mapelites.map.MAPElites">MAPElites</a></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def from_json(my_args: Dict[str, Any]) -&gt; &#39;MAPElites&#39;:
+    me = MAPElites(lsystem=LSystem.from_json(my_args[&#39;lsystem&#39;]),
+                   feasible_fitnesses=[Fitness.from_json(
+                       f) for f in my_args[&#39;feasible_fitnesses&#39;]],
+                   buffer=Buffer.from_json(my_args[&#39;buffer&#39;]),
+                   behavior_descriptors=tuple(
+                       [BehaviorCharacterization.from_json(bc) for bc in my_args[&#39;b_descs&#39;]]),
+                   n_bins=tuple(my_args[&#39;bin_qnt&#39;]),
+                   estimator=None,
+                   emitter=RandomEmitter(),
+                   agent=None,
+                   agent_rewards=None)
+    me._initial_n_bins = my_args[&#39;initial_n_bins&#39;]
+    me.enforce_qnt = my_args[&#39;enforce_qnt&#39;]
+    me.allow_res_increase = my_args[&#39;allow_res_increase&#39;]
+    me.allow_aging = my_args[&#39;allow_aging&#39;]
+    if my_args[&#39;emitter&#39;]:
+        me.emitter = emitters[my_args[&#39;emitter&#39;]
+                              [&#39;name&#39;]].from_json(my_args[&#39;emitter&#39;])
+    if my_args[&#39;estimator_type&#39;]:
+        estimators = {
+            &#39;GaussianEstimator&#39;: GaussianEstimator,
+            &#39;MLPEstimator&#39;: MLPEstimator,
+            &#39;QuantileEstimator&#39;: QuantileEstimator
+        }
+        me.estimator = estimators[my_args[&#39;estimator_type&#39;]].from_json(my_args[&#39;estimator&#39;])
+    if my_args[&#39;agent&#39;]:
+        me.agent = EpsilonGreedyAgent.from_json(my_args[&#39;agent&#39;])
+        me.agent_rewards = [agent_rewards[ar]
+                            for ar in my_args[&#39;agent_rewards&#39;]]
+    me.bins = np.asarray([MAPBin.from_json(mb)
+                         for mb in my_args[&#39;bins&#39;]]).reshape(me.bin_qnt)
+    return me</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pcgsepy.mapelites.map.MAPElites.compute_fitness"><code class="name flex">
+<span>def <span class="ident">compute_fitness</span></span>(<span>self, cs: <a title="pcgsepy.lsystem.solution.CandidateSolution" href="../lsystem/solution.html#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a>) ‑> float</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute the fitness of the solution. </p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>cs</code></strong> :&ensp;<code>CandidateSolution</code></dt>
+<dd>The solution.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>NotImplementedError</code></dt>
+<dd>Raised if the estimator is not recognized.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>The fitness value.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compute_fitness(self,
+                    cs: CandidateSolution) -&gt; float:
+    &#34;&#34;&#34;Compute the fitness of the solution. 
+
+    Args:
+        cs (CandidateSolution): The solution.
+
+    Raises:
+        NotImplementedError: Raised if the estimator is not recognized.
+
+    Returns:
+        float: The fitness value.
+    &#34;&#34;&#34;
+    if cs.is_feasible:
+        cs.fitness = [f(cs) for f in self.feasible_fitnesses]
+        cs.representation = cs.fitness[:]
+        x, y, z = cs.content._max_dims
+        cs.representation.extend([x / MAX_X_SIZE, y / MAX_Y_SIZE, z / MAX_Z_SIZE])
+        return sum([self.feasible_fitnesses[i].weight * cs.fitness[i] for i in range(len(cs.fitness))])
+    else:
+        cs.representation = [f(cs) for f in [Fitness(name=&#39;BoxFilling&#39;, f=box_filling_fitness, bounds=(0, 1)),
+                                             Fitness(name=&#39;FuncionalBlocks&#39;, f=func_blocks_fitness, bounds=(0, 1)),
+                                             Fitness(name=&#39;MajorMediumProportions&#39;, f=mame_fitness, bounds=(0, 1)),
+                                             Fitness(name=&#39;MajorMinimumProportions&#39;, f=mami_fitness, bounds=(0, 1))]]
+        if self.estimator is not None:
+            if isinstance(self.estimator, GaussianEstimator):
+                return self.estimator.predict(x=np.asarray(cs.representation)) if self.estimator.is_trained else EPSILON_F
+            elif USE_TORCH and isinstance(self.estimator, MLPEstimator):
+                return self.estimator.predict(cs.representation) if self.estimator.is_trained else EPSILON_F
+            elif USE_TORCH and isinstance(self.estimator, QuantileEstimator):
+                if self.estimator.is_trained:
+                    # set fitness to (3,) array (min, median, max)
+                    cs.fitness = self.estimator.predict(cs.representation)
+                    # set c_fitness to median by default
+                    return cs.fitness[self.infeas_fitness_idx]
+                else:
+                    cs.fitness = [EPSILON_F, EPSILON_F, EPSILON_F]
+                    return cs.fitness[self.infeas_fitness_idx]
+            else:
+                raise NotImplementedError(f&#39;Unrecognized estimator type: {type(self.estimator)}.&#39;)
+        else:
+            return cs.ncv</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.MAPElites.emitter_step"><code class="name flex">
+<span>def <span class="ident">emitter_step</span></span>(<span>self, gen: int = 0) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Apply a step according to the emitter.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>gen</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The current generation number. Defaults to <code>0</code>.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>AssertionError</code></dt>
+<dd>Raised if there is no MultiArmed Bandit Agent or Emitter set in MAP-Elites.</dd>
+<dt><code>NotImplementedError</code></dt>
+<dd>Raised if the merge method specified in the bandit action is unrecognized.</dd>
+<dt><code>NotImplementedError</code></dt>
+<dd>Raised if the emitter output is not in the expected data format.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def emitter_step(self,
+                 gen: int = 0) -&gt; None:
+    &#34;&#34;&#34;Apply a step according to the emitter.
+
+    Args:
+        gen (int, optional): The current generation number. Defaults to `0`.
+
+    Raises:
+        AssertionError: Raised if there is no MultiArmed Bandit Agent or Emitter set in MAP-Elites.
+        NotImplementedError: Raised if the merge method specified in the bandit action is unrecognized.
+        NotImplementedError: Raised if the emitter output is not in the expected data format.
+    &#34;&#34;&#34;
+    assert self.agent or self.emitter, &#39;MAP-Elites requires either a fixed emitter or a MultiArmed Bandit Agent, but neither were provided.&#39;
+    if self.agent is not None:
+        # get bandit
+        bandit = self.agent.choose_bandit()
+        emitter_str, method_str = bandit.action.split(&#39;;&#39;)
+        # set emitter
+        self.emitter = get_emitter_by_str(emitter=emitter_str)
+        # set merge method
+        if method_str == &#39;max&#39;:
+            self.infeas_fitness_idx = 0
+        elif method_str == &#39;median&#39;:
+            self.infeas_fitness_idx = 1
+        elif method_str == &#39;min&#39;:
+            self.infeas_fitness_idx = 2
+        else:
+            raise NotImplementedError(f&#39;Unrecognized merge method from bandit action: {method_str}&#39;)
+        # update existing solution&#39;s fitness
+        for (_, _), cbin in np.ndenumerate(self.bins):
+            for cs in cbin._infeasible:
+                cs.c_fitness = cs.fitness[self.infeas_fitness_idx]
+    selected_bins = self.emitter.pick_bin(bins=self.bins)
+    logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}.emitter_step] {selected_bins=}&#39;)
+    if selected_bins:
+        fpop, ipop = [], []
+        # TODO: this could be handled better
+        if isinstance(selected_bins[0], MAPBin):
+            for selected_bin in selected_bins:
+                fpop.extend(selected_bin._feasible)
+                ipop.extend(selected_bin._infeasible)
+        elif isinstance(selected_bins[0], list):
+            for selected_bin in selected_bins[0]:
+                fpop.extend(selected_bin._feasible)
+            for selected_bin in selected_bins[1]:
+                ipop.extend(selected_bin._infeasible)
+        else:
+            raise NotImplementedError(f&#39;Unrecognized emitter output: {selected_bins}.&#39;)
+        logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}.emitter_step] {fpop=}; {ipop=}&#39;)
+        if ipop == []:
+            if isinstance(selected_bins[0], MAPBin):
+                ipop = self.seek_nearest_valid(bin_idxs=[b.bin_idx for b in selected_bins],
+                                                pop=&#39;infeasible&#39;)
+            elif isinstance(selected_bins[0], list):
+                ipop = self.seek_nearest_valid(bin_idxs=[b.bin_idx for b in selected_bins[1]],
+                                                pop=&#39;infeasible&#39;)
+        
+        generated = self._step(populations=[fpop, ipop],
+                               gen=gen)
+        if generated:
+            self._update_bins(lcs=generated)
+            self._check_res_trigger()
+        if self.emitter is not None and self.emitter.requires_post:
+            self.emitter.post_step(bins=self.bins)
+        if self.agent is not None:
+            self.agent.reward_bandit(bandit=bandit,
+                                     reward=sum([f(self) for f in self.agent_rewards]))</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.MAPElites.generate_initial_populations"><code class="name flex">
+<span>def <span class="ident">generate_initial_populations</span></span>(<span>self, pop_size: int = 20, n_retries: int = 100) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generate the initial populations.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>pop_size</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The size of the populations. Defaults to <code>POP_SIZE</code>.</dd>
+<dt><strong><code>n_retries</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The number of initialization retries. Defaults to <code>N_RETRIES</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_initial_populations(self,
+                                 pop_size: int = POP_SIZE,
+                                 n_retries: int = N_RETRIES) -&gt; None:
+    &#34;&#34;&#34;Generate the initial populations.
+
+    Args:
+        pop_size (int, optional): The size of the populations. Defaults to `POP_SIZE`.
+        n_retries (int, optional): The number of initialization retries. Defaults to `N_RETRIES`.
+    &#34;&#34;&#34;
+    # create populations
+    feasible_pop, infeasible_pop = [], []
+    self.lsystem.disable_sat_check()
+    with trange(n_retries, desc=&#39;Initialization &#39;) as iterations:
+        for i in iterations:
+            solutions = self.lsystem.apply_rules(starting_strings=[&#39;head&#39;, &#39;body&#39;, &#39;tail&#39;],
+                                                 iterations=[1, N_ITERATIONS, 1],
+                                                 create_structures=True,
+                                                 make_graph=False)
+            subdivide_solutions(lcs=solutions,
+                                lsystem=self.lsystem)
+            for cs in solutions:
+                if cs.is_feasible and len(feasible_pop) &lt; pop_size and cs not in feasible_pop:
+                    if self.hull_builder is not None:
+                        self.hull_builder.add_external_hull(structure=cs._content)
+                    feasible_pop.append(self._assign_fitness(cs=cs))
+                elif not cs.is_feasible and len(infeasible_pop) &lt; pop_size and cs not in feasible_pop:
+                    infeasible_pop.append(self._assign_fitness(cs=cs))
+            iterations.set_postfix(ordered_dict={
+                &#39;fpop-size&#39;: f&#39;{len(feasible_pop)}/{pop_size}&#39;,
+                &#39;ipop-size&#39;: f&#39;{len(infeasible_pop)}/{pop_size}&#39;
+            },
+                                   refresh=True)
+            if i == n_retries or (len(feasible_pop) == pop_size and len(infeasible_pop) == pop_size):
+                break
+    # assign solutions to respective bins
+    self._update_bins(lcs=[*feasible_pop, *infeasible_pop])
+    # if required, initialize the emitter
+    if self.emitter is not None and self.emitter.requires_init:
+        self.emitter.init_emitter(bins=self.bins)
+    # update bins for elites
+    self.update_elites()</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.MAPElites.interactive_step"><code class="name flex">
+<span>def <span class="ident">interactive_step</span></span>(<span>self, bin_idxs: List[List[int]], gen: int = 0) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Applies an interactive step.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>bin_idxs</code></strong> :&ensp;<code>List[Tuple[int, int]]</code></dt>
+<dd>The indexes of the bins selected.</dd>
+<dt><strong><code>gen</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The current number of generations. Defaults to <code>0</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def interactive_step(self,
+                     bin_idxs: List[List[int]],
+                     gen: int = 0) -&gt; None:
+    &#34;&#34;&#34;Applies an interactive step.
+
+    Args:
+        bin_idxs (List[Tuple[int, int]]): The indexes of the bins selected.
+        gen (int, optional): The current number of generations. Defaults to `0`.
+    &#34;&#34;&#34;
+    self._age_bins()
+    bin_idxs = [tuple(b) for b in bin_idxs]
+    chosen_bins = [self.bins[bin_idx] for bin_idx in bin_idxs]
+    f_pop, i_pop = [], []
+    for chosen_bin in chosen_bins:
+        if self.enforce_qnt:
+            assert chosen_bin in self._valid_bins(), f&#39;Bin at {chosen_bin.bin_idx} is not a valid bin.&#39;
+        f_pop.extend(chosen_bin._feasible)
+        i_pop.extend(chosen_bin._infeasible)
+    
+    if i_pop == []:
+        i_pop = self.seek_nearest_valid(bin_idxs=bin_idxs,
+                                        pop=&#39;infeasible&#39;)
+    
+    generated = self._step(populations=[f_pop, i_pop],
+                           gen=gen)
+    if generated:
+        self._update_bins(lcs=generated)
+        expanded_idxs = self._check_res_trigger()
+        # keep track of expanded indexes only if they have also been selected
+        expanded_idxs = self._process_expanded_idxs(expanded_idxs=expanded_idxs,
+                                                    selected_idxs=bin_idxs)
+    else:
+        self._age_bins(diff=1)
+        expanded_idxs = []
+    if self.emitter is not None and self.emitter.requires_pre:
+        self.emitter.pre_step(bins=self.bins,
+                              selected_idxs=bin_idxs,
+                              expanded_idxs=expanded_idxs,
+                              bounds=[b.bounds for b in self.b_descs])</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.MAPElites.load_population"><code class="name flex">
+<span>def <span class="ident">load_population</span></span>(<span>self, filename: str = './population.pop') ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_population(self,
+                    filename: str = &#39;./population.pop&#39;) -&gt; None:
+    all_cs = []
+    with open(filename, &#39;r&#39;) as f:
+        all_cs = [CandidateSolution.from_json(x) for x in json_loads(f.read())]
+    # set content
+    all_cs = list(map(lambda cs: self.lsystem._set_structure(cs=cs, make_graph=False), all_cs))
+    # add to population
+    self._update_bins(lcs=all_cs)
+    # add hull only to feas solutions
+    if self.hull_builder is not None:
+        for (_, _), b in np.ndenumerate(self.bins):
+            if b.non_empty(pop=&#39;feasible&#39;):
+                for cs in b._feasible:
+                    self.hull_builder.add_external_hull(cs.content)
+    # update bins for elites
+    self.update_elites()</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.MAPElites.population_complexity"><code class="name flex">
+<span>def <span class="ident">population_complexity</span></span>(<span>self, pop: str = 'feasible') ‑> float</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute the average complexity of the selected population.
+The complexity in this case is defined as the number of blocks.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>The population complexity.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def population_complexity(self,
+                          pop: str = &#39;feasible&#39;) -&gt; float:
+    &#34;&#34;&#34;Compute the average complexity of the selected population.
+    The complexity in this case is defined as the number of blocks.
+
+    Returns:
+        float: The population complexity.
+    &#34;&#34;&#34;
+    all_lenghts = []
+    for (_, _), b in np.ndenumerate(self.bins):
+        for cs in b._feasible if pop == &#39;feasible&#39; else b._infeasible:
+            all_lenghts.append(len(cs.content._blocks))
+    return np.average(all_lenghts)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.MAPElites.rand_step"><code class="name flex">
+<span>def <span class="ident">rand_step</span></span>(<span>self, gen: int = 0) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Apply a random step.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>gen</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The current number of generations. Defaults to 0.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def rand_step(self,
+              gen: int = 0) -&gt; None:
+    &#34;&#34;&#34;Apply a random step.
+
+    Args:
+        gen (int, optional): The current number of generations. Defaults to 0.
+    &#34;&#34;&#34;
+    # trigger aging of solution
+    self._age_bins()
+    # pick random bin
+    rnd_bin = random.choice(self._valid_bins())
+    generated = self._step(populations=[rnd_bin._feasible, rnd_bin._infeasible],
+                           gen=gen)
+    if generated:
+        self._update_bins(lcs=generated)
+        self._check_res_trigger()
+    else:
+        self._age_bins(diff=1)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.MAPElites.reassign_all_content"><code class="name flex">
+<span>def <span class="ident">reassign_all_content</span></span>(<span>self, **kwargs) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reassign all content to the solutions</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reassign_all_content(self, **kwargs) -&gt; None:
+    &#34;&#34;&#34;Reassign all content to the solutions&#34;&#34;&#34;
+    for (_, _), cbin in np.ndenumerate(self.bins):
+        for pop in [cbin._feasible, cbin._infeasible]:
+            for cs in pop:
+                cs._content = None
+                cs = self.lsystem._set_structure(cs=self.lsystem._add_ll_strings(cs=cs),
+                                                 make_graph=False)
+                if cs.is_feasible:
+                    if self.hull_builder is not None:
+                        self.hull_builder.add_external_hull(structure=cs.content)
+                    if kwargs.get(&#39;sym_axis&#39;, None) is not None:
+                        enforce_symmetry(structure=cs.content,
+                                         axis=kwargs.get(&#39;sym_axis&#39;, None),
+                                         upper=kwargs.get(&#39;sym_upper&#39;, None))</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.MAPElites.reset"><code class="name flex">
+<span>def <span class="ident">reset</span></span>(<span>self, lcs: Optional[List[<a title="pcgsepy.lsystem.solution.CandidateSolution" href="../lsystem/solution.html#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a>]] = None) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reset the current MAP-Elites.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>lcs</code></strong> :&ensp;<code>Optional[List[CandidateSolution]]</code>, optional</dt>
+<dd>If provided, the solutions are assigned to the new MAP-Elites. Defaults to <code>None</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reset(self,
+          lcs: Optional[List[CandidateSolution]] = None) -&gt; None:
+    &#34;&#34;&#34;Reset the current MAP-Elites.
+
+    Args:
+        lcs (Optional[List[CandidateSolution]], optional): If provided, the solutions are assigned to the new MAP-Elites. Defaults to `None`.
+    &#34;&#34;&#34;
+    # reset MAP-Elites properties
+    self.bin_qnt = self._initial_n_bins
+    self.bin_sizes = [[self.limits[0] / self.bin_qnt[0]] * self._initial_n_bins[0],
+                      [self.limits[1] / self.bin_qnt[1]] * self._initial_n_bins[1]]
+    self.bins = np.empty(shape=self.bin_qnt, dtype=MAPBin)
+    for (i, j), _ in np.ndenumerate(self.bins):
+        self.bins[i, j] = MAPBin(bin_idx=(i, j),
+                                 bin_size=(self.bin_sizes[0][i], self.bin_sizes[1][j]))
+    if self.estimator is not None:
+        if isinstance(self.estimator, GaussianEstimator):
+            self.estimator = GaussianEstimator(bound=self.estimator.bound,
+                                               kernel=self.estimator.kernel,
+                                               max_f=self.estimator.max_f,
+                                               min_f=self.estimator.min_f,
+                                               alpha=self.estimator.alpha,
+                                               normalize_y=self.estimator.normalize_y)
+        if USE_TORCH and isinstance(self.estimator, MLPEstimator):
+            self.estimator = MLPEstimator(xshape=self.estimator.xshape,
+                                          yshape=self.estimator.yshape)
+        elif USE_TORCH and isinstance(self.estimator, QuantileEstimator):
+            self.estimator = QuantileEstimator(xshape=self.estimator.xshape,
+                                               yshape=self.estimator.yshape)
+    self.buffer.clear()
+    if self.emitter is not None:
+        self.emitter.reset()
+    # assign solutions if provided
+    if lcs is not None:
+        self._update_bins(lcs=lcs)
+        self._check_res_trigger()
+        if self.emitter is not None and self.emitter.requires_init:
+            self.emitter.init_emitter(bins=self.bins)
+    else:
+        self.generate_initial_populations()</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.MAPElites.save_population"><code class="name flex">
+<span>def <span class="ident">save_population</span></span>(<span>self, filename: str = './population.pop') ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_population(self,
+                    filename: str = &#39;./population.pop&#39;) -&gt; None:
+    all_cs = []
+    for (_, _), b in np.ndenumerate(self.bins):
+        for cs in [*b._feasible, *b._infeasible]:
+            all_cs.append(cs.to_json())
+    with open(filename, &#39;w&#39;) as f:
+        f.write(json_dumps(all_cs))</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.MAPElites.seek_nearest_valid"><code class="name flex">
+<span>def <span class="ident">seek_nearest_valid</span></span>(<span>self, bin_idxs: List[List[int]], pop: str = 'infeasible') ‑> List[<a title="pcgsepy.lsystem.solution.CandidateSolution" href="../lsystem/solution.html#pcgsepy.lsystem.solution.CandidateSolution">CandidateSolution</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Collect CandidateSolutions from neighbouring indexes in a pseudo-nearestneighbour style.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>bin_idxs</code></strong> :&ensp;<code>List[List[int]]</code></dt>
+<dd>The list of bin indices.</dd>
+<dt><strong><code>pop</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>The population to collect solutions for. Defaults to 'infeasible'.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[CandidateSolution]</code></dt>
+<dd>The list of neighbouring solutions, if it exists.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def seek_nearest_valid(self,
+                       bin_idxs: List[List[int]],
+                       pop: str = &#39;infeasible&#39;) -&gt; List[CandidateSolution]:
+    &#34;&#34;&#34;Collect CandidateSolutions from neighbouring indexes in a pseudo-nearestneighbour style.
+
+    Args:
+        bin_idxs (List[List[int]]): The list of bin indices.
+        pop (str, optional): The population to collect solutions for. Defaults to &#39;infeasible&#39;.
+
+    Returns:
+        List[CandidateSolution]: The list of neighbouring solutions, if it exists.
+    &#34;&#34;&#34;
+    new_pop = []
+    inspecting = [idx for idx in bin_idxs]
+    offsets = [(-1, -1), (-1, 0), (-1,1), (0, -1), (0, 1), (1, -1),  (1, 0), (1, 1)]
+    np.random.shuffle(offsets)
+    logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}.seek_nearest_valid] {pop=}; {inspecting=}&#39;)
+    while new_pop == []:
+        to_inspect = []
+        past_idxs = []
+        for idx in inspecting:
+            for offset in offsets:
+                new_idx = (idx[0] + offset[0], idx[1] + offset[1])
+                if 0 &lt;= new_idx[0] &lt; self.bins.shape[0] and 0 &lt;= new_idx[1] &lt; self.bins.shape[1]:
+                    pool = self.bins[new_idx]._feasible if pop == &#39;feasible&#39; else self.bins[new_idx]._infeasible
+                    logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}.seek_nearest_valid] {new_idx=}; {pool=}; {len(new_pop)=}; {to_inspect=}&#39;)
+                    if pool:
+                        new_pop.extend(pool) 
+                        break
+                    else:
+                        if idx not in past_idxs:
+                            to_inspect.append(new_idx)
+        if to_inspect == []:
+            break
+        inspecting = to_inspect
+    logging.getLogger(&#39;mapelites&#39;).debug(msg=f&#39;[{__name__}.seek_nearest_valid] {new_pop=}&#39;)
+    return new_pop</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.MAPElites.show_metric"><code class="name flex">
+<span>def <span class="ident">show_metric</span></span>(<span>self, metric: str, show_mean: bool = True, population: str = 'feasible', save_as: Optional[str] = None) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Show the bin metric.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>metric</code></strong> :&ensp;<code>str</code></dt>
+<dd>The metric to display.</dd>
+<dt><strong><code>show_mean</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether to show average metric or elite's. Defaults to <code>True</code>.</dd>
+<dt><strong><code>population</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Which population to show metric of. Defaults to <code>'feasible'</code>.</dd>
+<dt><strong><code>save_as</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Where to save the metric plot. Defaults to <code>None</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def show_metric(self,
+                metric: str,
+                show_mean: bool = True,
+                population: str = &#39;feasible&#39;,
+                save_as: Optional[str] = None) -&gt; None:
+    &#34;&#34;&#34;Show the bin metric.
+
+    Args:
+        metric (str): The metric to display.
+        show_mean (bool, optional): Whether to show average metric or elite&#39;s. Defaults to `True`.
+        population (str, optional): Which population to show metric of. Defaults to `&#39;feasible&#39;`.
+        save_as (str, optional): Where to save the metric plot. Defaults to `None`.
+    &#34;&#34;&#34;
+    disp_map = np.zeros(shape=self.bins.shape)
+    for (i, j), cbin in np.ndenumerate(self.bins):
+        disp_map[i, j] = cbin.get_metric(metric=metric,
+                                         use_mean=show_mean,
+                                         population=population)
+    vmaxs = {
+        &#39;fitness&#39;: {
+            &#39;feasible&#39;: self.max_f_fitness,
+            &#39;infeasible&#39;: self.max_i_fitness
+        },
+        &#39;age&#39;: {
+            &#39;feasible&#39;: CS_MAX_AGE,
+            &#39;infeasible&#39;: CS_MAX_AGE
+        },
+        &#39;size&#39;: {
+            &#39;feasible&#39;: BIN_POP_SIZE,
+            &#39;infeasible&#39;: BIN_POP_SIZE
+        }
+    }
+    plt.imshow(disp_map,
+               origin=&#39;lower&#39;,
+               cmap=&#39;hot&#39;,
+               interpolation=&#39;nearest&#39;,
+               vmin=0,
+               vmax=vmaxs[metric][population])
+    plt.xticks(np.arange(self.bin_qnt[0]), np.cumsum(self.bin_sizes[0]) + self.b_descs[0].bounds[0])
+    plt.yticks(np.arange(self.bin_qnt[1]), np.cumsum(self.bin_sizes[1]) + self.b_descs[1].bounds[0])
+    plt.xlabel(self.b_descs[0].name)
+    plt.ylabel(self.b_descs[1].name)
+    plt.title(f&#39;CMAP-Elites {&#34;Avg. &#34; if show_mean else &#34;&#34;}{metric} ({population})&#39;)
+    cbar = plt.colorbar()
+    cbar.set_label(
+        f&#39;{&#34;mean&#34; if show_mean else &#34;max&#34;} {metric}&#39;, rotation=270)
+    if save_as:
+        title_part = f&#39;{metric}{&#34;-avg-&#34; if show_mean else &#34;-top-&#34;}{population}&#39;
+        plt.savefig(f&#39;results/{save_as}-{title_part}.png&#39;,
+                    transparent=True, bbox_inches=&#39;tight&#39;)
+    plt.show()</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.MAPElites.subdivide_range"><code class="name flex">
+<span>def <span class="ident">subdivide_range</span></span>(<span>self, bin_idx: Tuple[int, int]) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Subdivide the chosen bin range.
+For each bin, 4 new bins are created and the solutions are redistributed amongst those.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>bin_idx</code></strong> :&ensp;<code>Tuple[int, int]</code></dt>
+<dd>The index of the bin.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def subdivide_range(self,
+                    bin_idx: Tuple[int, int]) -&gt; None:
+    &#34;&#34;&#34;Subdivide the chosen bin range.
+    For each bin, 4 new bins are created and the solutions are redistributed amongst those.
+
+    Args:
+        bin_idx (Tuple[int, int]): The index of the bin.
+    &#34;&#34;&#34;
+    i, j = bin_idx
+    # get solutions
+    all_cs = []
+    for (_, _), cbin in np.ndenumerate(self.bins):
+        all_cs.extend([*cbin._feasible, *cbin._infeasible])
+        # logging.getLogger(&#39;mapelites&#39;).debug(f&#39;[{__name__}.subdivide_range] {bin_idx=} (pre) - {cbin.bin_idx=}; {cbin.new_elite=}&#39;)
+    # update bin sizes
+    v_i, v_j = self.bin_sizes[0][i], self.bin_sizes[1][j]
+    self.bin_sizes[0][i] = v_i / 2
+    self.bin_sizes[1][j] = v_j / 2
+    self.bin_sizes[0].insert(i + 1, v_i / 2)
+    self.bin_sizes[1].insert(j + 1, v_j / 2)
+    # update bin quantity
+    self.bin_qnt = (self.bin_qnt[0] + 1, self.bin_qnt[1] + 1)
+    # create new bin map
+    new_bins = np.empty(shape=self.bin_qnt, dtype=MAPBin)        
+    # populate newly created bins
+    for (m, n), _ in np.ndenumerate(new_bins):
+        new_bins[m, n] = MAPBin(bin_idx=(m, n),
+                                bin_size=(self.bin_sizes[0][m],
+                                          self.bin_sizes[1][n]),
+                                bin_initial_size=(v_i, v_j))
+        if m != i + 1 or n != j + 1:
+            x = m if m &lt;= i else m - 1
+            y = n if n &lt;= j else n - 1
+        else:
+            x = i
+            y = j
+        new_bins[m, n].new_elite = self.bins[x, y].new_elite.copy()
+        # logging.getLogger(&#39;mapelites&#39;).debug(f&#39;[{__name__}.subdivide_range] {bin_idx=} (post) - {(m, n)=}; {new_bins[m, n].new_elite=}&#39;)
+    # assign new bin map
+    self.bins = new_bins
+    # assign solutions to bins
+    self._update_bins(lcs=all_cs)
+    if isinstance(self.emitter, HumanPrefMatrixEmitter):
+        self.emitter._increase_preferences_res(idx=bin_idx)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.MAPElites.to_json"><code class="name flex">
+<span>def <span class="ident">to_json</span></span>(<span>self) ‑> Dict[str, Any]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_json(self) -&gt; Dict[str, Any]:
+    return {
+        &#39;lsystem&#39;: self.lsystem.to_json(),
+        &#39;feasible_fitnesses&#39;: [f.to_json() for f in self.feasible_fitnesses],
+        &#39;b_descs&#39;: [bd.to_json() for bd in list(self.b_descs)],
+        &#39;emitter&#39;: self.emitter.to_json() if self.emitter else None,
+        &#39;agent&#39;: self.agent.to_json() if self.agent else None,
+        &#39;agent_rewards&#39;: [ar.__name__ for ar in self.agent_rewards],
+        &#39;initial_n_bins&#39;: list(self._initial_n_bins),
+        &#39;bin_qnt&#39;: list(self.bin_qnt),
+        &#39;bins&#39;: [b.to_json() for b in self.bins.flatten().tolist()],
+        &#39;enforce_qnt&#39;: self.enforce_qnt,
+        &#39;estimator_type&#39;: self.estimator.__class__.__name__ if self.estimator else None,
+        &#39;estimator&#39;: self.estimator.to_json() if self.estimator else None,
+        &#39;buffer&#39;: self.buffer.to_json(),
+        &#39;allow_res_increase&#39;: self.allow_res_increase,
+        &#39;allow_aging&#39;: self.allow_aging,
+    }</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.MAPElites.toggle_module_mutability"><code class="name flex">
+<span>def <span class="ident">toggle_module_mutability</span></span>(<span>self, module: str) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Toggle the mutability of the module.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>module</code></strong> :&ensp;<code>str</code></dt>
+<dd>The module's name.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def toggle_module_mutability(self,
+                             module: str) -&gt; None:
+    &#34;&#34;&#34;Toggle the mutability of the module.
+
+    Args:
+        module (str): The module&#39;s name.
+    &#34;&#34;&#34;
+    # toggle module&#39;s mutability in the solution
+    for (_, _), cbin in np.ndenumerate(self.bins):
+        cbin.toggle_module_mutability(module=module)
+    # toggle module&#39;s mutability within the L-system
+    ms = [x.name for x in self.lsystem.modules]
+    self.lsystem.modules[ms.index(module)].active = not self.lsystem.modules[ms.index(module)].active</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.MAPElites.total_solutions"><code class="name flex">
+<span>def <span class="ident">total_solutions</span></span>(<span>self, pop: str = 'feasible') ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute the total number of solutions currently in the archive for the selected population.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>pop</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>The population type. Defaults to 'feasible'.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>The total number of solutions in the archive for the selected population.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def total_solutions(self,
+                    pop: str = &#39;feasible&#39;) -&gt; int:
+    &#34;&#34;&#34;Compute the total number of solutions currently in the archive for the selected population.
+
+    Args:
+        pop (str, optional): The population type. Defaults to &#39;feasible&#39;.
+
+    Returns:
+        int: The total number of solutions in the archive for the selected population.
+    &#34;&#34;&#34;
+    return np.sum([b.get_metric(metric=&#39;size&#39;, population=pop) for (_, _), b in np.ndenumerate(self.bins)])</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.MAPElites.update_behavior_descriptors"><code class="name flex">
+<span>def <span class="ident">update_behavior_descriptors</span></span>(<span>self, bs: Tuple[<a title="pcgsepy.mapelites.behaviors.BehaviorCharacterization" href="behaviors.html#pcgsepy.mapelites.behaviors.BehaviorCharacterization">BehaviorCharacterization</a>]) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Update the behavior descriptors used in the MAP-Elites.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>bs</code></strong> :&ensp;<code>Tuple[BehaviorCharacterization]</code></dt>
+<dd>The 2 new behavior descriptors.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_behavior_descriptors(self,
+                                bs: Tuple[BehaviorCharacterization]) -&gt; None:
+    &#34;&#34;&#34;Update the behavior descriptors used in the MAP-Elites.
+
+    Args:
+        bs (Tuple[BehaviorCharacterization]): The 2 new behavior descriptors.
+    &#34;&#34;&#34;
+    self.b_descs = bs
+    self.limits = (self.b_descs[0].bounds[1] if self.b_descs[0].bounds is not None else 20,
+                   self.b_descs[1].bounds[1] if self.b_descs[1].bounds is not None else 20)
+    lcs = []
+    for (_, _), cbin in np.ndenumerate(self.bins):
+        lcs.extend([*cbin._feasible, *cbin._infeasible])
+        Parallel(n_jobs=-1, prefer=&#34;threads&#34;)(delayed(self._set_behavior_descriptors)(cs) for cs in lcs)
+    self.reset(lcs=lcs)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.MAPElites.update_elites"><code class="name flex">
+<span>def <span class="ident">update_elites</span></span>(<span>self, reset: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Update the elite tracking for the MAPElites bins.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>reset</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether to reset the tracking. Defaults to False.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_elites(self,
+                  reset: bool = False):
+    &#34;&#34;&#34;Update the elite tracking for the MAPElites bins.
+
+    Args:
+        reset (bool, optional): Whether to reset the tracking. Defaults to False.
+    &#34;&#34;&#34;
+    for (_, _), b in np.ndenumerate(self.bins):
+        for pop in [&#39;feasible&#39;, &#39;infeasible&#39;]:
+            if reset:
+                b.new_elite[pop] = False
+            else:
+                b.check_new_elite(pop=pop)
+            # logging.getLogger(&#39;mapelites&#39;).debug(f&#39;[{__name__}.update_elites] {reset=}; {b.bin_idx} -&gt; {b.new_elite[pop]}&#39;)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.MAPElites.update_fitness_weights"><code class="name flex">
+<span>def <span class="ident">update_fitness_weights</span></span>(<span>self, weights: List[float]) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Update the weights of the Feasible fitnesses.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>weights</code></strong> :&ensp;<code>List[float]</code></dt>
+<dd>The new list of weights.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_fitness_weights(self,
+                           weights: List[float]) -&gt; None:
+    &#34;&#34;&#34;Update the weights of the Feasible fitnesses.
+
+    Args:
+        weights (List[float]): The new list of weights.
+    &#34;&#34;&#34;
+    assert len(weights) == len(self.feasible_fitnesses), f&#39;Wrong number of weights ({len(weights)}) for fitnesses ({len(self.feasible_fitnesses)}) passed.&#39;
+    # update weights
+    for w, f in zip(weights, self.feasible_fitnesses):
+        f.weight = w
+    # update solutions fitnesses
+    for (_, _), cbin in np.ndenumerate(self.bins):
+        for cs in cbin._feasible:
+            cs.c_fitness = sum([self.feasible_fitnesses[i].weight * cs.fitness[i] for i in range(len(cs.fitness))]) + (self.nsc - cs.ncv)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="pcgsepy.mapelites.map.MLPEstimator"><code class="flex name class">
+<span>class <span class="ident">MLPEstimator</span></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MLPEstimator:
+    def __init__(self):
+        raise NotImplementedError(&#39;This object should never be instantiated&#39;)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.mapelites.map.QuantileEstimator"><code class="flex name class">
+<span>class <span class="ident">QuantileEstimator</span></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class QuantileEstimator:
+    def __init__(self):
+        raise NotImplementedError(&#39;This object should never be instantiated&#39;)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pcgsepy.mapelites" href="index.html">pcgsepy.mapelites</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pcgsepy.mapelites.map.coverage_reward" href="#pcgsepy.mapelites.map.coverage_reward">coverage_reward</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.fitness_reward" href="#pcgsepy.mapelites.map.fitness_reward">fitness_reward</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.get_coverage" href="#pcgsepy.mapelites.map.get_coverage">get_coverage</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.get_elite" href="#pcgsepy.mapelites.map.get_elite">get_elite</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.get_fitness_metrics" href="#pcgsepy.mapelites.map.get_fitness_metrics">get_fitness_metrics</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.get_new_feas_with_unfeas_parents" href="#pcgsepy.mapelites.map.get_new_feas_with_unfeas_parents">get_new_feas_with_unfeas_parents</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.get_qdscore" href="#pcgsepy.mapelites.map.get_qdscore">get_qdscore</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.get_random_elite" href="#pcgsepy.mapelites.map.get_random_elite">get_random_elite</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.train_estimator" href="#pcgsepy.mapelites.map.train_estimator">train_estimator</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pcgsepy.mapelites.map.MAPElites" href="#pcgsepy.mapelites.map.MAPElites">MAPElites</a></code></h4>
+<ul class="">
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.compute_fitness" href="#pcgsepy.mapelites.map.MAPElites.compute_fitness">compute_fitness</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.emitter_step" href="#pcgsepy.mapelites.map.MAPElites.emitter_step">emitter_step</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.from_json" href="#pcgsepy.mapelites.map.MAPElites.from_json">from_json</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.generate_initial_populations" href="#pcgsepy.mapelites.map.MAPElites.generate_initial_populations">generate_initial_populations</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.interactive_step" href="#pcgsepy.mapelites.map.MAPElites.interactive_step">interactive_step</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.load_population" href="#pcgsepy.mapelites.map.MAPElites.load_population">load_population</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.population_complexity" href="#pcgsepy.mapelites.map.MAPElites.population_complexity">population_complexity</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.rand_step" href="#pcgsepy.mapelites.map.MAPElites.rand_step">rand_step</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.reassign_all_content" href="#pcgsepy.mapelites.map.MAPElites.reassign_all_content">reassign_all_content</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.reset" href="#pcgsepy.mapelites.map.MAPElites.reset">reset</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.save_population" href="#pcgsepy.mapelites.map.MAPElites.save_population">save_population</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.seek_nearest_valid" href="#pcgsepy.mapelites.map.MAPElites.seek_nearest_valid">seek_nearest_valid</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.show_metric" href="#pcgsepy.mapelites.map.MAPElites.show_metric">show_metric</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.subdivide_range" href="#pcgsepy.mapelites.map.MAPElites.subdivide_range">subdivide_range</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.to_json" href="#pcgsepy.mapelites.map.MAPElites.to_json">to_json</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.toggle_module_mutability" href="#pcgsepy.mapelites.map.MAPElites.toggle_module_mutability">toggle_module_mutability</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.total_solutions" href="#pcgsepy.mapelites.map.MAPElites.total_solutions">total_solutions</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.update_behavior_descriptors" href="#pcgsepy.mapelites.map.MAPElites.update_behavior_descriptors">update_behavior_descriptors</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.update_elites" href="#pcgsepy.mapelites.map.MAPElites.update_elites">update_elites</a></code></li>
+<li><code><a title="pcgsepy.mapelites.map.MAPElites.update_fitness_weights" href="#pcgsepy.mapelites.map.MAPElites.update_fitness_weights">update_fitness_weights</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pcgsepy.mapelites.map.MLPEstimator" href="#pcgsepy.mapelites.map.MLPEstimator">MLPEstimator</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pcgsepy.mapelites.map.QuantileEstimator" href="#pcgsepy.mapelites.map.QuantileEstimator">QuantileEstimator</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

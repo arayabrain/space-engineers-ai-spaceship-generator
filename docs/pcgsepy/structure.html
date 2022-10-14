@@ -1,0 +1,2067 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>pcgsepy.structure API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pcgsepy.structure</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import json
+import os
+from copy import deepcopy
+from functools import cached_property
+from typing import Dict, List, Set, Tuple
+
+import matplotlib.pyplot as plt
+import numpy as np
+import numpy.typing as npt
+
+from pcgsepy.common.api_call import block_definitions
+from pcgsepy.common.vecs import Orientation, Vec
+
+# Sizes of blocks in grid spaces
+_blocks_sizes = {&#39;Small&#39;: 1, &#39;Normal&#39;: 2, &#39;Large&#39;: 5}
+
+
+grid_to_coords = 0.5
+
+
+class MountPoint:
+    def __init__(self,
+                 face: Dict[str, int],
+                 start: Dict[str, float],
+                 end: Dict[str, float],
+                 exclusion_mask: int,
+                 properties_mask: int,
+                 block_size: Vec) -&gt; None:
+        &#34;&#34;&#34;Create a mount point.
+
+        Args:
+            face (Dict[str, int]): The face normal.
+            start (Dict[str, float]): The start vector.
+            end (Dict[str, float]): The end vector.
+            exclusion_mask (int): The exclusion mask.
+            properties_mask (int): The properties mask.
+            block_size (Vec): The size of the block.
+        &#34;&#34;&#34;
+        self.face = Vec.from_json(face)
+        self.start = Vec.from_json(start).dot(block_size)
+        self.end = Vec.from_json(end).dot(block_size)
+        self.exclusion_mask = exclusion_mask
+        self.properties_mask = properties_mask
+
+    def __str__(self) -&gt; str:
+        return f&#39;Normal: {self.face}\tStart: {self.start}\tEnd: {self.end}&#39;
+
+    def __repr__(self) -&gt; str:
+        return str(self.__dict__)
+
+
+class Block:
+    def __init__(self,
+                 block_type: str,
+                 orientation_forward: Orientation = Orientation.FORWARD,
+                 orientation_up: Orientation = Orientation.UP,
+                 position: Vec = Vec.v3f(0., 0., 0.)):
+        &#34;&#34;&#34;Create a Block object.
+
+        Args:
+            block_type (str): The type of the block (unique type from Space Engineers API).
+            orientation_forward (Orientation, optional): The Forward orientation of the block. Defaults to `Orientation.FORWARD`.
+            orientation_up (Orientation, optional): The Up orientation of the block. Defaults to `Orientation.UP`.
+            position (Vec, optional): The position the block. Defaults to `Vec.v3f(0., 0., 0.)`.
+        &#34;&#34;&#34;
+        self.block_type = block_type
+        self.orientation_forward = orientation_forward.value
+        self.orientation_up = orientation_up.value
+        self.position = position
+        self.definition_id = block_definitions[self.block_type][&#39;definition_id&#39;]
+        self.color = Vec.v3f(x=0.45, y=0.45, z=0.45)  # default block color is #737373
+    
+    @cached_property
+    def cube_size(self) -&gt; float:
+        &#34;&#34;&#34;Get the size of the cube block, as provided by the API.
+
+        Returns:
+            float: The size of the cube block.
+        &#34;&#34;&#34;
+        return block_definitions[self.block_type][&#39;cube_size&#39;]
+    
+    @cached_property
+    def size(self) -&gt; Vec:
+        &#34;&#34;&#34;Get the size of the block, as provided by the API.
+
+        Returns:
+            float: The size of the block.
+        &#34;&#34;&#34;
+        return Vec.from_json(block_definitions[self.block_type][&#39;size&#39;])
+    
+    @cached_property
+    def mass(self) -&gt; float:
+        &#34;&#34;&#34;Get the mass of the block, as provided by the API.
+
+        Returns:
+            float: The mass of the block.
+        &#34;&#34;&#34;
+        return float(block_definitions[self.block_type][&#39;mass&#39;])
+    
+    @cached_property
+    def scaled_size(self) -&gt; Vec:
+        &#34;&#34;&#34;Get the scaled size of the block.
+
+        Returns:
+            float: The scaled size of the block.
+        &#34;&#34;&#34;
+        return self.size.scale(_blocks_sizes[self.cube_size])
+
+    @cached_property
+    def volume(self) -&gt; float:
+        &#34;&#34;&#34;Compute the volume of the block.
+
+        Returns:
+            float: The volume of the block.
+        &#34;&#34;&#34;
+        return self.scaled_size.bbox()
+    
+    @cached_property
+    def center(self) -&gt; Vec:
+        &#34;&#34;&#34;Get the center point of the block.
+
+        Returns:
+            Vec: The center point of the vector.
+        &#34;&#34;&#34;
+        return self.scaled_size.scale(v=0.5)
+    
+    @cached_property
+    def mountpoints(self) -&gt; List[MountPoint]:
+        &#34;&#34;&#34;Generate the mountpoints of the block.
+
+        Returns:
+            List[MountPoint]: The list of mountpoints, one per face.
+        &#34;&#34;&#34;
+        return [MountPoint(face=v[&#39;Normal&#39;],
+                           start=v[&#39;Start&#39;],
+                           end=v[&#39;End&#39;],
+                           exclusion_mask=v[&#39;ExclusionMask&#39;],
+                           properties_mask=v[&#39;PropertiesMask&#39;],
+                           block_size=self.scaled_size) for v in block_definitions[self.block_type][&#39;mountpoints&#39;]]
+
+    def duplicate(self,
+                  new_pos: Vec) -&gt; &#34;Block&#34;:
+        &#34;&#34;&#34;Duplicate the current block with a new position.
+
+        Args:
+            new_pos (Vec): The new position.
+
+        Returns:
+            Block: The duplicated block.
+        &#34;&#34;&#34;
+        new_block = deepcopy(self)
+        new_block.position = new_pos
+        return new_block
+
+    def __str__(self) -&gt; str:
+        return f&#39;{self.block_type} at {self.position}; OF {self.orientation_forward}; OU {self.orientation_up}&#39;
+
+    def __repr__(self) -&gt; str:
+        return str(self)
+
+
+class IntersectionException(Exception):
+    &#34;&#34;&#34;
+    Exception to throw when an intersection occurs.
+    &#34;&#34;&#34;
+    pass
+
+
+def _is_base_block(block_type: str) -&gt; bool:
+    &#34;&#34;&#34;Check if the block is a base block. Base blocks are non-functional, structural blocks.
+
+    Args:
+        block_type (str): The type of the block.
+
+    Returns:
+        bool: Whether the block is a base block.
+    &#34;&#34;&#34;
+    return block_type in [&#39;LargeBlockArmorCorner&#39;, &#39;LargeBlockArmorSlope&#39;,
+                          &#39;LargeBlockArmorCornerInv&#39;, &#39;LargeBlockArmorBlock&#39;]
+
+
+def _is_transparent_block(block_type: str) -&gt; bool:
+    &#34;&#34;&#34;Check if the block is a transparent block.
+
+    Args:
+        block_type (str): The type of the block.
+
+    Returns:
+        bool: Whether the block is a transparent block.
+    &#34;&#34;&#34;
+    return block_type in [&#34;Window1x1Slope&#34;, &#34;Window1x1Flat&#34;]
+
+
+class Structure:
+    __slots__ = [&#39;origin_coords&#39;, &#39;orientation_forward&#39;, &#39;orientation_up&#39;, &#39;grid_size&#39;, &#39;_blocks&#39;,
+                 &#39;_has_intersections&#39;, &#39;_scaled_arr&#39;, &#39;_air_gridmask&#39;, &#39;_arr&#39;]
+    
+    def __init__(self, origin: Vec,
+                 orientation_forward: Vec,
+                 orientation_up: Vec,
+                 grid_size: int = 5) -&gt; None:
+        &#34;&#34;&#34;Create a Structure object. A Structure is similar to the `GridBlocks` in Space Engineers&#39; API.
+
+        Args:
+            origin (Vec): The XYZ origin coordinates of the Structure.
+            orientation_forward (Vec): The Forward orientation of the structure as a `Vec` object.
+            orientation_up (Vec): The Up orientation of the structure as a `Vec` object.
+            grid_size (int): The size of the grid. Defaults to `5.`.
+        &#34;&#34;&#34;
+        self.origin_coords = origin
+        self.orientation_forward = orientation_forward
+        self.orientation_up = orientation_up
+        self.grid_size = grid_size
+
+        self._blocks: Dict[Tuple(int, int, int), Block] = {}
+        self._has_intersections: bool = None
+        self._scaled_arr: npt.NDArray[np.uint32] = None
+        self._air_gridmask: npt.NDArray[np.bool8] = None
+        self._arr: npt.NDArray[np.uint32] = None
+
+    def __repr__(self) -&gt; str:
+        return f&#39;{self.grid_size}x Structure with {len(self._blocks.keys())} blocks&#39;
+    
+    def add_block(self,
+                  block: Block,
+                  grid_position: Tuple[int, int, int]) -&gt; None:
+        &#34;&#34;&#34;Add a block to the structure.
+
+        Args:
+            block (Block): The block to add.
+            grid_position (Tuple[int, int, int]): The position in the grid at which the block is placed. Obtained from `Vec.to_tuple()`.
+            exit_on_duplicates (bool): Flag to check for existing blocks when adding new ones. May raise an `IntersectionException`.
+
+        Raises:
+            IntersectionException: Raised if an intersection with another block occurrs.
+        &#34;&#34;&#34;
+        i, j, k = grid_position
+        block.position = Vec.v3i(i, j, k)
+        
+        if grid_position in self._blocks.keys():
+            self._has_intersections = True
+        
+        self._blocks[(i, j, k)] = block
+    
+    def set_color(self,
+                  color: Vec) -&gt; None:
+        &#34;&#34;&#34;Set the color of the base blocks in the structure.
+
+        Args:
+            color (Vec): The color as RGB values vector.
+        &#34;&#34;&#34;
+        for block in self._blocks.values():
+            if _is_base_block(block_type=self._clean_label(a=block.block_type)):
+                block.color = color
+    
+    @property
+    def _max_dims(self) -&gt; Tuple[int, int, int]:
+        &#34;&#34;&#34;Compute the maximum dimension of the Structure.
+
+        Returns:
+            Tuple[int, int, int]: The XYZ maximum dimensions
+        &#34;&#34;&#34;
+        max_x, max_y, max_z = 0, 0, 0
+        for x, y, z in self._blocks.keys():
+            if x &gt; max_x:
+                max_x = x
+            if y &gt; max_y:
+                max_y = y
+            if z &gt; max_z:
+                max_z = z
+        return max_x, max_y, max_z
+
+    @property
+    def _min_dims(self) -&gt; Tuple[int, int, int]:
+        &#34;&#34;&#34;Compute the minimum dimension of the Structure.
+
+        Returns:
+            Tuple[int, int, int]: The XYZ minimum dimensions.
+        &#34;&#34;&#34;
+        min_x, min_y, min_z = self._max_dims
+        for x, y, z in self._blocks.keys():
+            if x &lt; min_x:
+                min_x = x
+            if y &lt; min_y:
+                min_y = y
+            if z &lt; min_z:
+                min_z = z
+        return min_x, min_y, min_z
+
+    @property
+    def as_array(self) -&gt; npt.NDArray[np.uint32]:
+        &#34;&#34;&#34;Convert the structure to its equivalent NumPy array.
+        Each point in the XYZ matrix represents the block type.
+
+        Returns:
+            npt.NDArray[np.uint32]: The 3D NumPy array.
+        &#34;&#34;&#34;
+        if self._scaled_arr is None:
+            self._scaled_arr = np.zeros(shape=Vec.from_tuple(self._max_dims).add(v=self.grid_size).as_tuple(), dtype=np.uint32)
+            for (i, j, k), block in self._blocks.items():
+                r = block.scaled_size
+                if np.sum(self._scaled_arr[i:i + r.x, j:j + r.y, k:k + r.z]) != 0:
+                    self._has_intersections = True
+                self._scaled_arr[i:i + r.x, j:j + r.y, k:k + r.z] = list(block_definitions.keys()).index(block.block_type) + 1
+        return self._scaled_arr
+
+    @property
+    def as_grid_array(self) -&gt; npt.NDArray[np.uint32]:
+        &#34;&#34;&#34;Convert the structure to the grid-sized array.
+        Each point in the XYZ matrix represents the block type.
+
+        Returns:
+            npt.NDArray[np.uint32]: The 3D NumPy grid-sized array.
+        &#34;&#34;&#34;
+        if self._arr is None:
+            self._arr = np.zeros(shape=Vec.from_tuple(self._max_dims).scale(v=1 / self.grid_size).to_veci().add(v=1).as_tuple(), dtype=np.uint32)
+            for r, block in self._blocks.items():
+                r = Vec.from_tuple(r).scale(v=1 / self.grid_size).to_veci().as_tuple()
+                if np.sum(self._arr[r]) != 0:
+                    self._has_intersections = True
+                self._arr[r] = list(block_definitions.keys()).index(block.block_type) + 1
+        return self._arr
+
+    @property
+    def has_intersections(self) -&gt; bool:
+        &#34;&#34;&#34;Check if the Structure contains an intersection between blocks.
+
+        Returns:
+            bool: Whether there is an intersection.
+        &#34;&#34;&#34;
+        if self._has_intersections is None:
+            _ = self.as_array
+            if self._has_intersections is None:
+                self._has_intersections = False
+        return self._has_intersections
+    
+    @property
+    def total_volume(self) -&gt; float:
+        &#34;&#34;&#34;Compute the volume of the grid.
+
+        Returns:
+            float: The volume of the grid.
+        &#34;&#34;&#34;
+        return sum([b.volume for b in self._blocks.values()])
+    
+    @property
+    def mass(self) -&gt; float:
+        &#34;&#34;&#34;Compute the mass of the grid.
+
+        Returns:
+            float: The mass of the grid.
+        &#34;&#34;&#34;
+        return np.round(sum([b.mass for b in self._blocks.values()]), 2)
+    
+    @property
+    def blocks_count(self) -&gt; Tuple[int, int]:
+        &#34;&#34;&#34;Count armor blocks and non-armor blocks contained in the grid.
+
+        Returns:
+            Tuple[int, int]: The number of armor and non-armor blocks.
+        &#34;&#34;&#34;
+        armor_blocks = sum([1 if &#39;armor&#39; in x.block_type.lower() else 0 for x in self._blocks.values()])
+        return armor_blocks, len(self._blocks) - armor_blocks
+    
+    def unique_blocks_count(self,
+                            block_type: str) -&gt; int:
+        &#34;&#34;&#34;Count the number of blocks with the given block type.
+
+        Args:
+            block_type (str): The block type.
+
+        Returns:
+            int: The number of blocks with the given block type.
+        &#34;&#34;&#34;
+        return sum([1 if x.block_type == block_type else 0 for x in self._blocks.values()])
+    
+    @property
+    def air_blocks_gridmask(self) -&gt; npt.NDArray[np.bool8]:
+        &#34;&#34;&#34;Get the grid array of internal air blocks in the structure.
+
+        Returns:
+            npt.NDArray[np.bool8]: A boolean array where `True` elements are internal air blocks in the grid array.
+        &#34;&#34;&#34;
+        if self._air_gridmask is None:
+            self._air_gridmask = np.zeros_like(self.as_grid_array, dtype=np.bool8)
+            # Old code, reliable but very slow
+            # ds = [Vec.v3i(1, 0, 0), Vec.v3i(0, 1, 0), Vec.v3i(0, 0, 1),
+            #     Vec.v3i(-1, 0, 0), Vec.v3i(0, -1, 0), Vec.v3i(0, 0, -1)]
+            # # get existing blocks indices
+            # blocks_idxs = [Vec.from_tuple(k).scale(v=1 / self.grid_size).to_veci() for k in self._blocks.keys()]
+            # # get all indices attached to the blocks indices
+            # next_to_idxs = [b.sum(d) for d in ds for b in blocks_idxs if b.sum(d) not in blocks_idxs]
+            # # internal air cotner blocks have at least 3 blocks next to them
+            # internal_air = [Vec.from_tuple(t) for t in  list({b.as_tuple() : next_to_idxs.count(b) for b in next_to_idxs if next_to_idxs.count(b) &gt; 2}.keys())]
+            # # checking loop
+            # past = blocks_idxs
+            # while internal_air:
+            #     to_check = []
+            #     for idx in internal_air:
+            #         if 0 &lt;= idx.x &lt; self._air_gridmask.shape[0] and 0 &lt;= idx.y &lt; self._air_gridmask.shape[1] and 0 &lt;= idx.z &lt; self._air_gridmask.shape[2] and\
+            #             not self._air_gridmask[idx.as_tuple()]:
+            #                 past.append(idx)
+            #                 if self._blocks.get(idx.scale(self.grid_size).as_tuple(), None) is None:
+            #                     self._air_gridmask[idx.as_tuple()] = True
+            #                     to_check.extend([idx.sum(d) for d in ds if idx.sum(d) not in past])
+            #     internal_air = list(set(to_check))
+            # new code, faster but less readable
+            i1, j1, k1 = self.as_grid_array.shape
+            for (i, j, k) in zip(*np.nonzero(self.as_grid_array == 0)):
+                # basically, check for every empty block index if it&#39;s surrounded on all 6 sides by at least a block
+                self._air_gridmask[i, j, k] = np.sum(self.as_grid_array[0:i, j, k]) != 0 and \
+                    np.sum(self.as_grid_array[i:i1, j, k]) != 0 and \
+                    np.sum(self.as_grid_array[i, 0:j, k]) != 0 and \
+                    np.sum(self.as_grid_array[i, j:j1, k]) != 0 and \
+                    np.sum(self.as_grid_array[i, j, 0:k]) != 0 and \
+                    np.sum(self.as_grid_array[i, j, k:k1]) != 0
+        return self._air_gridmask
+    
+    def sanify(self) -&gt; None:
+        &#34;&#34;&#34;Correct the structure&#39;s blocks to be &gt;=0 on every axis.&#34;&#34;&#34;
+        min_x, min_y, min_z = self._min_dims
+        updated_blocks = {}
+        for x, y, z in self._blocks.keys():
+            block = self._blocks[(x, y, z)]
+            new_pos = Vec.v3i(x=x - min_x, y=y - min_y, z=z - min_z)
+            block.position = self.origin_coords.sum(new_pos)
+            updated_blocks[new_pos.as_tuple()] = block
+        self._blocks = updated_blocks
+        self._scaled_arr = None
+        self._arr = None
+
+    def update(self, origin: Vec,
+               orientation_forward: Vec,
+               orientation_up: Vec) -&gt; None:
+        &#34;&#34;&#34;Update the structure position and orientations.
+
+        Args:
+            origin (Vec): The new XYZ origin coordinates of the Structure.
+            orientation_forward (Vec): The new Forward orientation of the structure as a `Vec` object.
+            orientation_up (Vec): The new Up orientation of the structure as a `Vec` object.
+        &#34;&#34;&#34;
+        # update structure position and orientation
+        self.origin_coords = origin
+        self.orientation_forward = orientation_forward
+        self.orientation_up = orientation_up
+        # update all blocks accordingly
+        self.sanify()
+
+    def get_all_blocks(self,
+                       to_place: bool = True,
+                       scaled: bool = False) -&gt; List[Block]:
+        &#34;&#34;&#34;Get all the blocks in the structure.
+
+        Args:
+            to_place (bool): Flag for placement position correction. Dafaults to `True`.
+            scaled (bool): Flag for block grid position correction. Defaults to `False`.
+
+        Returns:
+            List[Block]: The list of all blocks.
+        &#34;&#34;&#34;
+        all_blocks = list(self._blocks.values())
+        if to_place:
+            return [b.duplicate(b.position.scale(grid_to_coords)) for b in all_blocks]
+        elif scaled:
+            return [b.duplicate(b.position.scale(1 / self.grid_size)) for b in all_blocks]
+        else:
+            return all_blocks
+
+    def _clean_label(self,
+                     a: str) -&gt; str:
+        &#34;&#34;&#34;Remove prefix block type from label.
+
+        Args:
+            a (str): The label.
+
+        Returns:
+            str: The label without prefix.
+        &#34;&#34;&#34;
+        for d in [
+            &#39;MyObjectBuilder_CubeBlock_&#39;,
+            &#39;MyObjectBuilder_Gyro_&#39;,
+            &#39;MyObjectBuilder_Reactor_&#39;,
+            &#39;MyObjectBuilder_CargoContainer_&#39;,
+            &#39;MyObjectBuilder_Cockpit_&#39;,
+            &#39;MyObjectBuilder_Thrust_&#39;,
+            &#39;MyObjectBuilder_InteriorLight_&#39;
+        ]:
+            a = a.replace(d, &#39;&#39;)
+        return a
+
+    def show(self,
+             title: str,
+             title_len: int = 90,
+             save: bool = False) -&gt; plt.Axes:
+        &#34;&#34;&#34;Plot the structure.
+
+        Args:
+            title (str): Title of the plot.
+            title_len (int, optional): Maximum length of the title. Defaults to `90`.
+            save (bool, optional): Flag to salve the plot as picture. Defaults to `False`.
+
+        Returns:
+            plt.Axes: The figure object.
+        &#34;&#34;&#34;
+        structure = self.as_grid_array
+        ax = plt.axes(projection=&#39;3d&#39;)
+        x, y, z = np.nonzero(structure)
+        cs = [structure[i, j, k] for i, j, k in zip(x, y, z)]
+        ax.set_box_aspect((np.ptp(x), np.ptp(y), np.ptp(z)))
+        scatter = ax.scatter(x, y, z, c=cs, cmap=&#39;jet&#39;, linewidth=0.1)
+        legend = scatter.legend_elements(num=len(np.unique(structure[(x, y, z)])) - 1)
+        for i, v in zip(range(len(legend[1])), np.unique(structure[(x, y, z)])):
+            legend[1][i] = self._clean_label(list(block_definitions.keys())[v - 1])
+        ax.legend(*legend,
+                  bbox_to_anchor=(1.2, 1),
+                  loc=&#34;upper left&#34;,
+                  title=&#34;Block types&#34;)
+        axis_limit = Vec.from_tuple(self._max_dims).scale(1 / self.grid_size).as_tuple()
+        ax.set_xlim3d(0, axis_limit[0])
+        ax.set_ylim3d(0, axis_limit[1])
+        ax.set_zlim3d(0, axis_limit[2])
+        ax.set_xlabel(&#34;$\\vec{x}$&#34;)
+        ax.set_ylabel(&#34;$\\vec{y}$&#34;)
+        ax.set_zlabel(&#34;$\\vec{z}$&#34;)
+        plt.title(title if len(title) &lt;= title_len else f&#39;{title[:title_len - 3]}...&#39;)
+        plt.autoscale(enable=True,
+                      axis=&#39;x&#39;,
+                      tight=True)
+        if save:
+            plt.savefig(&#39;content_plot.png&#39;,
+                        transparent=True,
+                        bbox_inches=&#39;tight&#39;)
+        plt.show()
+        return ax</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pcgsepy.structure.Block"><code class="flex name class">
+<span>class <span class="ident">Block</span></span>
+<span>(</span><span>block_type: str, orientation_forward: <a title="pcgsepy.common.vecs.Orientation" href="common/vecs.html#pcgsepy.common.vecs.Orientation">Orientation</a> = Orientation.FORWARD, orientation_up: <a title="pcgsepy.common.vecs.Orientation" href="common/vecs.html#pcgsepy.common.vecs.Orientation">Orientation</a> = Orientation.UP, position: <a title="pcgsepy.common.vecs.Vec" href="common/vecs.html#pcgsepy.common.vecs.Vec">Vec</a> = {'x': 0.0, 'y': 0.0, 'z': 0.0})</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create a Block object.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>block_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>The type of the block (unique type from Space Engineers API).</dd>
+<dt><strong><code>orientation_forward</code></strong> :&ensp;<code>Orientation</code>, optional</dt>
+<dd>The Forward orientation of the block. Defaults to <code>Orientation.FORWARD</code>.</dd>
+<dt><strong><code>orientation_up</code></strong> :&ensp;<code>Orientation</code>, optional</dt>
+<dd>The Up orientation of the block. Defaults to <code>Orientation.UP</code>.</dd>
+<dt><strong><code>position</code></strong> :&ensp;<code>Vec</code>, optional</dt>
+<dd>The position the block. Defaults to <code>Vec.v3f(0., 0., 0.)</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Block:
+    def __init__(self,
+                 block_type: str,
+                 orientation_forward: Orientation = Orientation.FORWARD,
+                 orientation_up: Orientation = Orientation.UP,
+                 position: Vec = Vec.v3f(0., 0., 0.)):
+        &#34;&#34;&#34;Create a Block object.
+
+        Args:
+            block_type (str): The type of the block (unique type from Space Engineers API).
+            orientation_forward (Orientation, optional): The Forward orientation of the block. Defaults to `Orientation.FORWARD`.
+            orientation_up (Orientation, optional): The Up orientation of the block. Defaults to `Orientation.UP`.
+            position (Vec, optional): The position the block. Defaults to `Vec.v3f(0., 0., 0.)`.
+        &#34;&#34;&#34;
+        self.block_type = block_type
+        self.orientation_forward = orientation_forward.value
+        self.orientation_up = orientation_up.value
+        self.position = position
+        self.definition_id = block_definitions[self.block_type][&#39;definition_id&#39;]
+        self.color = Vec.v3f(x=0.45, y=0.45, z=0.45)  # default block color is #737373
+    
+    @cached_property
+    def cube_size(self) -&gt; float:
+        &#34;&#34;&#34;Get the size of the cube block, as provided by the API.
+
+        Returns:
+            float: The size of the cube block.
+        &#34;&#34;&#34;
+        return block_definitions[self.block_type][&#39;cube_size&#39;]
+    
+    @cached_property
+    def size(self) -&gt; Vec:
+        &#34;&#34;&#34;Get the size of the block, as provided by the API.
+
+        Returns:
+            float: The size of the block.
+        &#34;&#34;&#34;
+        return Vec.from_json(block_definitions[self.block_type][&#39;size&#39;])
+    
+    @cached_property
+    def mass(self) -&gt; float:
+        &#34;&#34;&#34;Get the mass of the block, as provided by the API.
+
+        Returns:
+            float: The mass of the block.
+        &#34;&#34;&#34;
+        return float(block_definitions[self.block_type][&#39;mass&#39;])
+    
+    @cached_property
+    def scaled_size(self) -&gt; Vec:
+        &#34;&#34;&#34;Get the scaled size of the block.
+
+        Returns:
+            float: The scaled size of the block.
+        &#34;&#34;&#34;
+        return self.size.scale(_blocks_sizes[self.cube_size])
+
+    @cached_property
+    def volume(self) -&gt; float:
+        &#34;&#34;&#34;Compute the volume of the block.
+
+        Returns:
+            float: The volume of the block.
+        &#34;&#34;&#34;
+        return self.scaled_size.bbox()
+    
+    @cached_property
+    def center(self) -&gt; Vec:
+        &#34;&#34;&#34;Get the center point of the block.
+
+        Returns:
+            Vec: The center point of the vector.
+        &#34;&#34;&#34;
+        return self.scaled_size.scale(v=0.5)
+    
+    @cached_property
+    def mountpoints(self) -&gt; List[MountPoint]:
+        &#34;&#34;&#34;Generate the mountpoints of the block.
+
+        Returns:
+            List[MountPoint]: The list of mountpoints, one per face.
+        &#34;&#34;&#34;
+        return [MountPoint(face=v[&#39;Normal&#39;],
+                           start=v[&#39;Start&#39;],
+                           end=v[&#39;End&#39;],
+                           exclusion_mask=v[&#39;ExclusionMask&#39;],
+                           properties_mask=v[&#39;PropertiesMask&#39;],
+                           block_size=self.scaled_size) for v in block_definitions[self.block_type][&#39;mountpoints&#39;]]
+
+    def duplicate(self,
+                  new_pos: Vec) -&gt; &#34;Block&#34;:
+        &#34;&#34;&#34;Duplicate the current block with a new position.
+
+        Args:
+            new_pos (Vec): The new position.
+
+        Returns:
+            Block: The duplicated block.
+        &#34;&#34;&#34;
+        new_block = deepcopy(self)
+        new_block.position = new_pos
+        return new_block
+
+    def __str__(self) -&gt; str:
+        return f&#39;{self.block_type} at {self.position}; OF {self.orientation_forward}; OU {self.orientation_up}&#39;
+
+    def __repr__(self) -&gt; str:
+        return str(self)</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pcgsepy.structure.Block.center"><code class="name">var <span class="ident">center</span></code></dt>
+<dd>
+<div class="desc"><p>Get the center point of the block.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Vec</code></dt>
+<dd>The center point of the vector.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, instance, owner=None):
+    if instance is None:
+        return self
+    if self.attrname is None:
+        raise TypeError(
+            &#34;Cannot use cached_property instance without calling __set_name__ on it.&#34;)
+    try:
+        cache = instance.__dict__
+    except AttributeError:  # not all objects have __dict__ (e.g. class defines slots)
+        msg = (
+            f&#34;No &#39;__dict__&#39; attribute on {type(instance).__name__!r} &#34;
+            f&#34;instance to cache {self.attrname!r} property.&#34;
+        )
+        raise TypeError(msg) from None
+    val = cache.get(self.attrname, _NOT_FOUND)
+    if val is _NOT_FOUND:
+        with self.lock:
+            # check if another thread filled cache while we awaited lock
+            val = cache.get(self.attrname, _NOT_FOUND)
+            if val is _NOT_FOUND:
+                val = self.func(instance)
+                try:
+                    cache[self.attrname] = val
+                except TypeError:
+                    msg = (
+                        f&#34;The &#39;__dict__&#39; attribute on {type(instance).__name__!r} instance &#34;
+                        f&#34;does not support item assignment for caching {self.attrname!r} property.&#34;
+                    )
+                    raise TypeError(msg) from None
+    return val</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.structure.Block.cube_size"><code class="name">var <span class="ident">cube_size</span></code></dt>
+<dd>
+<div class="desc"><p>Get the size of the cube block, as provided by the API.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>The size of the cube block.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, instance, owner=None):
+    if instance is None:
+        return self
+    if self.attrname is None:
+        raise TypeError(
+            &#34;Cannot use cached_property instance without calling __set_name__ on it.&#34;)
+    try:
+        cache = instance.__dict__
+    except AttributeError:  # not all objects have __dict__ (e.g. class defines slots)
+        msg = (
+            f&#34;No &#39;__dict__&#39; attribute on {type(instance).__name__!r} &#34;
+            f&#34;instance to cache {self.attrname!r} property.&#34;
+        )
+        raise TypeError(msg) from None
+    val = cache.get(self.attrname, _NOT_FOUND)
+    if val is _NOT_FOUND:
+        with self.lock:
+            # check if another thread filled cache while we awaited lock
+            val = cache.get(self.attrname, _NOT_FOUND)
+            if val is _NOT_FOUND:
+                val = self.func(instance)
+                try:
+                    cache[self.attrname] = val
+                except TypeError:
+                    msg = (
+                        f&#34;The &#39;__dict__&#39; attribute on {type(instance).__name__!r} instance &#34;
+                        f&#34;does not support item assignment for caching {self.attrname!r} property.&#34;
+                    )
+                    raise TypeError(msg) from None
+    return val</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.structure.Block.mass"><code class="name">var <span class="ident">mass</span></code></dt>
+<dd>
+<div class="desc"><p>Get the mass of the block, as provided by the API.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>The mass of the block.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, instance, owner=None):
+    if instance is None:
+        return self
+    if self.attrname is None:
+        raise TypeError(
+            &#34;Cannot use cached_property instance without calling __set_name__ on it.&#34;)
+    try:
+        cache = instance.__dict__
+    except AttributeError:  # not all objects have __dict__ (e.g. class defines slots)
+        msg = (
+            f&#34;No &#39;__dict__&#39; attribute on {type(instance).__name__!r} &#34;
+            f&#34;instance to cache {self.attrname!r} property.&#34;
+        )
+        raise TypeError(msg) from None
+    val = cache.get(self.attrname, _NOT_FOUND)
+    if val is _NOT_FOUND:
+        with self.lock:
+            # check if another thread filled cache while we awaited lock
+            val = cache.get(self.attrname, _NOT_FOUND)
+            if val is _NOT_FOUND:
+                val = self.func(instance)
+                try:
+                    cache[self.attrname] = val
+                except TypeError:
+                    msg = (
+                        f&#34;The &#39;__dict__&#39; attribute on {type(instance).__name__!r} instance &#34;
+                        f&#34;does not support item assignment for caching {self.attrname!r} property.&#34;
+                    )
+                    raise TypeError(msg) from None
+    return val</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.structure.Block.mountpoints"><code class="name">var <span class="ident">mountpoints</span></code></dt>
+<dd>
+<div class="desc"><p>Generate the mountpoints of the block.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[<a title="pcgsepy.structure.MountPoint" href="#pcgsepy.structure.MountPoint">MountPoint</a>]</code></dt>
+<dd>The list of mountpoints, one per face.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, instance, owner=None):
+    if instance is None:
+        return self
+    if self.attrname is None:
+        raise TypeError(
+            &#34;Cannot use cached_property instance without calling __set_name__ on it.&#34;)
+    try:
+        cache = instance.__dict__
+    except AttributeError:  # not all objects have __dict__ (e.g. class defines slots)
+        msg = (
+            f&#34;No &#39;__dict__&#39; attribute on {type(instance).__name__!r} &#34;
+            f&#34;instance to cache {self.attrname!r} property.&#34;
+        )
+        raise TypeError(msg) from None
+    val = cache.get(self.attrname, _NOT_FOUND)
+    if val is _NOT_FOUND:
+        with self.lock:
+            # check if another thread filled cache while we awaited lock
+            val = cache.get(self.attrname, _NOT_FOUND)
+            if val is _NOT_FOUND:
+                val = self.func(instance)
+                try:
+                    cache[self.attrname] = val
+                except TypeError:
+                    msg = (
+                        f&#34;The &#39;__dict__&#39; attribute on {type(instance).__name__!r} instance &#34;
+                        f&#34;does not support item assignment for caching {self.attrname!r} property.&#34;
+                    )
+                    raise TypeError(msg) from None
+    return val</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.structure.Block.scaled_size"><code class="name">var <span class="ident">scaled_size</span></code></dt>
+<dd>
+<div class="desc"><p>Get the scaled size of the block.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>The scaled size of the block.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, instance, owner=None):
+    if instance is None:
+        return self
+    if self.attrname is None:
+        raise TypeError(
+            &#34;Cannot use cached_property instance without calling __set_name__ on it.&#34;)
+    try:
+        cache = instance.__dict__
+    except AttributeError:  # not all objects have __dict__ (e.g. class defines slots)
+        msg = (
+            f&#34;No &#39;__dict__&#39; attribute on {type(instance).__name__!r} &#34;
+            f&#34;instance to cache {self.attrname!r} property.&#34;
+        )
+        raise TypeError(msg) from None
+    val = cache.get(self.attrname, _NOT_FOUND)
+    if val is _NOT_FOUND:
+        with self.lock:
+            # check if another thread filled cache while we awaited lock
+            val = cache.get(self.attrname, _NOT_FOUND)
+            if val is _NOT_FOUND:
+                val = self.func(instance)
+                try:
+                    cache[self.attrname] = val
+                except TypeError:
+                    msg = (
+                        f&#34;The &#39;__dict__&#39; attribute on {type(instance).__name__!r} instance &#34;
+                        f&#34;does not support item assignment for caching {self.attrname!r} property.&#34;
+                    )
+                    raise TypeError(msg) from None
+    return val</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.structure.Block.size"><code class="name">var <span class="ident">size</span></code></dt>
+<dd>
+<div class="desc"><p>Get the size of the block, as provided by the API.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>The size of the block.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, instance, owner=None):
+    if instance is None:
+        return self
+    if self.attrname is None:
+        raise TypeError(
+            &#34;Cannot use cached_property instance without calling __set_name__ on it.&#34;)
+    try:
+        cache = instance.__dict__
+    except AttributeError:  # not all objects have __dict__ (e.g. class defines slots)
+        msg = (
+            f&#34;No &#39;__dict__&#39; attribute on {type(instance).__name__!r} &#34;
+            f&#34;instance to cache {self.attrname!r} property.&#34;
+        )
+        raise TypeError(msg) from None
+    val = cache.get(self.attrname, _NOT_FOUND)
+    if val is _NOT_FOUND:
+        with self.lock:
+            # check if another thread filled cache while we awaited lock
+            val = cache.get(self.attrname, _NOT_FOUND)
+            if val is _NOT_FOUND:
+                val = self.func(instance)
+                try:
+                    cache[self.attrname] = val
+                except TypeError:
+                    msg = (
+                        f&#34;The &#39;__dict__&#39; attribute on {type(instance).__name__!r} instance &#34;
+                        f&#34;does not support item assignment for caching {self.attrname!r} property.&#34;
+                    )
+                    raise TypeError(msg) from None
+    return val</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.structure.Block.volume"><code class="name">var <span class="ident">volume</span></code></dt>
+<dd>
+<div class="desc"><p>Compute the volume of the block.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>The volume of the block.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, instance, owner=None):
+    if instance is None:
+        return self
+    if self.attrname is None:
+        raise TypeError(
+            &#34;Cannot use cached_property instance without calling __set_name__ on it.&#34;)
+    try:
+        cache = instance.__dict__
+    except AttributeError:  # not all objects have __dict__ (e.g. class defines slots)
+        msg = (
+            f&#34;No &#39;__dict__&#39; attribute on {type(instance).__name__!r} &#34;
+            f&#34;instance to cache {self.attrname!r} property.&#34;
+        )
+        raise TypeError(msg) from None
+    val = cache.get(self.attrname, _NOT_FOUND)
+    if val is _NOT_FOUND:
+        with self.lock:
+            # check if another thread filled cache while we awaited lock
+            val = cache.get(self.attrname, _NOT_FOUND)
+            if val is _NOT_FOUND:
+                val = self.func(instance)
+                try:
+                    cache[self.attrname] = val
+                except TypeError:
+                    msg = (
+                        f&#34;The &#39;__dict__&#39; attribute on {type(instance).__name__!r} instance &#34;
+                        f&#34;does not support item assignment for caching {self.attrname!r} property.&#34;
+                    )
+                    raise TypeError(msg) from None
+    return val</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pcgsepy.structure.Block.duplicate"><code class="name flex">
+<span>def <span class="ident">duplicate</span></span>(<span>self, new_pos: <a title="pcgsepy.common.vecs.Vec" href="common/vecs.html#pcgsepy.common.vecs.Vec">Vec</a>) ‑> <a title="pcgsepy.structure.Block" href="#pcgsepy.structure.Block">Block</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Duplicate the current block with a new position.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>new_pos</code></strong> :&ensp;<code>Vec</code></dt>
+<dd>The new position.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="pcgsepy.structure.Block" href="#pcgsepy.structure.Block">Block</a></code></dt>
+<dd>The duplicated block.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def duplicate(self,
+              new_pos: Vec) -&gt; &#34;Block&#34;:
+    &#34;&#34;&#34;Duplicate the current block with a new position.
+
+    Args:
+        new_pos (Vec): The new position.
+
+    Returns:
+        Block: The duplicated block.
+    &#34;&#34;&#34;
+    new_block = deepcopy(self)
+    new_block.position = new_pos
+    return new_block</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="pcgsepy.structure.IntersectionException"><code class="flex name class">
+<span>class <span class="ident">IntersectionException</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Exception to throw when an intersection occurs.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class IntersectionException(Exception):
+    &#34;&#34;&#34;
+    Exception to throw when an intersection occurs.
+    &#34;&#34;&#34;
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="pcgsepy.structure.MountPoint"><code class="flex name class">
+<span>class <span class="ident">MountPoint</span></span>
+<span>(</span><span>face: Dict[str, int], start: Dict[str, float], end: Dict[str, float], exclusion_mask: int, properties_mask: int, block_size: <a title="pcgsepy.common.vecs.Vec" href="common/vecs.html#pcgsepy.common.vecs.Vec">Vec</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create a mount point.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>face</code></strong> :&ensp;<code>Dict[str, int]</code></dt>
+<dd>The face normal.</dd>
+<dt><strong><code>start</code></strong> :&ensp;<code>Dict[str, float]</code></dt>
+<dd>The start vector.</dd>
+<dt><strong><code>end</code></strong> :&ensp;<code>Dict[str, float]</code></dt>
+<dd>The end vector.</dd>
+<dt><strong><code>exclusion_mask</code></strong> :&ensp;<code>int</code></dt>
+<dd>The exclusion mask.</dd>
+<dt><strong><code>properties_mask</code></strong> :&ensp;<code>int</code></dt>
+<dd>The properties mask.</dd>
+<dt><strong><code>block_size</code></strong> :&ensp;<code>Vec</code></dt>
+<dd>The size of the block.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MountPoint:
+    def __init__(self,
+                 face: Dict[str, int],
+                 start: Dict[str, float],
+                 end: Dict[str, float],
+                 exclusion_mask: int,
+                 properties_mask: int,
+                 block_size: Vec) -&gt; None:
+        &#34;&#34;&#34;Create a mount point.
+
+        Args:
+            face (Dict[str, int]): The face normal.
+            start (Dict[str, float]): The start vector.
+            end (Dict[str, float]): The end vector.
+            exclusion_mask (int): The exclusion mask.
+            properties_mask (int): The properties mask.
+            block_size (Vec): The size of the block.
+        &#34;&#34;&#34;
+        self.face = Vec.from_json(face)
+        self.start = Vec.from_json(start).dot(block_size)
+        self.end = Vec.from_json(end).dot(block_size)
+        self.exclusion_mask = exclusion_mask
+        self.properties_mask = properties_mask
+
+    def __str__(self) -&gt; str:
+        return f&#39;Normal: {self.face}\tStart: {self.start}\tEnd: {self.end}&#39;
+
+    def __repr__(self) -&gt; str:
+        return str(self.__dict__)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.structure.Structure"><code class="flex name class">
+<span>class <span class="ident">Structure</span></span>
+<span>(</span><span>origin: <a title="pcgsepy.common.vecs.Vec" href="common/vecs.html#pcgsepy.common.vecs.Vec">Vec</a>, orientation_forward: <a title="pcgsepy.common.vecs.Vec" href="common/vecs.html#pcgsepy.common.vecs.Vec">Vec</a>, orientation_up: <a title="pcgsepy.common.vecs.Vec" href="common/vecs.html#pcgsepy.common.vecs.Vec">Vec</a>, grid_size: int = 5)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create a Structure object. A Structure is similar to the <code>GridBlocks</code> in Space Engineers' API.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>origin</code></strong> :&ensp;<code>Vec</code></dt>
+<dd>The XYZ origin coordinates of the Structure.</dd>
+<dt><strong><code>orientation_forward</code></strong> :&ensp;<code>Vec</code></dt>
+<dd>The Forward orientation of the structure as a <code>Vec</code> object.</dd>
+<dt><strong><code>orientation_up</code></strong> :&ensp;<code>Vec</code></dt>
+<dd>The Up orientation of the structure as a <code>Vec</code> object.</dd>
+<dt><strong><code>grid_size</code></strong> :&ensp;<code>int</code></dt>
+<dd>The size of the grid. Defaults to <code>5.</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Structure:
+    __slots__ = [&#39;origin_coords&#39;, &#39;orientation_forward&#39;, &#39;orientation_up&#39;, &#39;grid_size&#39;, &#39;_blocks&#39;,
+                 &#39;_has_intersections&#39;, &#39;_scaled_arr&#39;, &#39;_air_gridmask&#39;, &#39;_arr&#39;]
+    
+    def __init__(self, origin: Vec,
+                 orientation_forward: Vec,
+                 orientation_up: Vec,
+                 grid_size: int = 5) -&gt; None:
+        &#34;&#34;&#34;Create a Structure object. A Structure is similar to the `GridBlocks` in Space Engineers&#39; API.
+
+        Args:
+            origin (Vec): The XYZ origin coordinates of the Structure.
+            orientation_forward (Vec): The Forward orientation of the structure as a `Vec` object.
+            orientation_up (Vec): The Up orientation of the structure as a `Vec` object.
+            grid_size (int): The size of the grid. Defaults to `5.`.
+        &#34;&#34;&#34;
+        self.origin_coords = origin
+        self.orientation_forward = orientation_forward
+        self.orientation_up = orientation_up
+        self.grid_size = grid_size
+
+        self._blocks: Dict[Tuple(int, int, int), Block] = {}
+        self._has_intersections: bool = None
+        self._scaled_arr: npt.NDArray[np.uint32] = None
+        self._air_gridmask: npt.NDArray[np.bool8] = None
+        self._arr: npt.NDArray[np.uint32] = None
+
+    def __repr__(self) -&gt; str:
+        return f&#39;{self.grid_size}x Structure with {len(self._blocks.keys())} blocks&#39;
+    
+    def add_block(self,
+                  block: Block,
+                  grid_position: Tuple[int, int, int]) -&gt; None:
+        &#34;&#34;&#34;Add a block to the structure.
+
+        Args:
+            block (Block): The block to add.
+            grid_position (Tuple[int, int, int]): The position in the grid at which the block is placed. Obtained from `Vec.to_tuple()`.
+            exit_on_duplicates (bool): Flag to check for existing blocks when adding new ones. May raise an `IntersectionException`.
+
+        Raises:
+            IntersectionException: Raised if an intersection with another block occurrs.
+        &#34;&#34;&#34;
+        i, j, k = grid_position
+        block.position = Vec.v3i(i, j, k)
+        
+        if grid_position in self._blocks.keys():
+            self._has_intersections = True
+        
+        self._blocks[(i, j, k)] = block
+    
+    def set_color(self,
+                  color: Vec) -&gt; None:
+        &#34;&#34;&#34;Set the color of the base blocks in the structure.
+
+        Args:
+            color (Vec): The color as RGB values vector.
+        &#34;&#34;&#34;
+        for block in self._blocks.values():
+            if _is_base_block(block_type=self._clean_label(a=block.block_type)):
+                block.color = color
+    
+    @property
+    def _max_dims(self) -&gt; Tuple[int, int, int]:
+        &#34;&#34;&#34;Compute the maximum dimension of the Structure.
+
+        Returns:
+            Tuple[int, int, int]: The XYZ maximum dimensions
+        &#34;&#34;&#34;
+        max_x, max_y, max_z = 0, 0, 0
+        for x, y, z in self._blocks.keys():
+            if x &gt; max_x:
+                max_x = x
+            if y &gt; max_y:
+                max_y = y
+            if z &gt; max_z:
+                max_z = z
+        return max_x, max_y, max_z
+
+    @property
+    def _min_dims(self) -&gt; Tuple[int, int, int]:
+        &#34;&#34;&#34;Compute the minimum dimension of the Structure.
+
+        Returns:
+            Tuple[int, int, int]: The XYZ minimum dimensions.
+        &#34;&#34;&#34;
+        min_x, min_y, min_z = self._max_dims
+        for x, y, z in self._blocks.keys():
+            if x &lt; min_x:
+                min_x = x
+            if y &lt; min_y:
+                min_y = y
+            if z &lt; min_z:
+                min_z = z
+        return min_x, min_y, min_z
+
+    @property
+    def as_array(self) -&gt; npt.NDArray[np.uint32]:
+        &#34;&#34;&#34;Convert the structure to its equivalent NumPy array.
+        Each point in the XYZ matrix represents the block type.
+
+        Returns:
+            npt.NDArray[np.uint32]: The 3D NumPy array.
+        &#34;&#34;&#34;
+        if self._scaled_arr is None:
+            self._scaled_arr = np.zeros(shape=Vec.from_tuple(self._max_dims).add(v=self.grid_size).as_tuple(), dtype=np.uint32)
+            for (i, j, k), block in self._blocks.items():
+                r = block.scaled_size
+                if np.sum(self._scaled_arr[i:i + r.x, j:j + r.y, k:k + r.z]) != 0:
+                    self._has_intersections = True
+                self._scaled_arr[i:i + r.x, j:j + r.y, k:k + r.z] = list(block_definitions.keys()).index(block.block_type) + 1
+        return self._scaled_arr
+
+    @property
+    def as_grid_array(self) -&gt; npt.NDArray[np.uint32]:
+        &#34;&#34;&#34;Convert the structure to the grid-sized array.
+        Each point in the XYZ matrix represents the block type.
+
+        Returns:
+            npt.NDArray[np.uint32]: The 3D NumPy grid-sized array.
+        &#34;&#34;&#34;
+        if self._arr is None:
+            self._arr = np.zeros(shape=Vec.from_tuple(self._max_dims).scale(v=1 / self.grid_size).to_veci().add(v=1).as_tuple(), dtype=np.uint32)
+            for r, block in self._blocks.items():
+                r = Vec.from_tuple(r).scale(v=1 / self.grid_size).to_veci().as_tuple()
+                if np.sum(self._arr[r]) != 0:
+                    self._has_intersections = True
+                self._arr[r] = list(block_definitions.keys()).index(block.block_type) + 1
+        return self._arr
+
+    @property
+    def has_intersections(self) -&gt; bool:
+        &#34;&#34;&#34;Check if the Structure contains an intersection between blocks.
+
+        Returns:
+            bool: Whether there is an intersection.
+        &#34;&#34;&#34;
+        if self._has_intersections is None:
+            _ = self.as_array
+            if self._has_intersections is None:
+                self._has_intersections = False
+        return self._has_intersections
+    
+    @property
+    def total_volume(self) -&gt; float:
+        &#34;&#34;&#34;Compute the volume of the grid.
+
+        Returns:
+            float: The volume of the grid.
+        &#34;&#34;&#34;
+        return sum([b.volume for b in self._blocks.values()])
+    
+    @property
+    def mass(self) -&gt; float:
+        &#34;&#34;&#34;Compute the mass of the grid.
+
+        Returns:
+            float: The mass of the grid.
+        &#34;&#34;&#34;
+        return np.round(sum([b.mass for b in self._blocks.values()]), 2)
+    
+    @property
+    def blocks_count(self) -&gt; Tuple[int, int]:
+        &#34;&#34;&#34;Count armor blocks and non-armor blocks contained in the grid.
+
+        Returns:
+            Tuple[int, int]: The number of armor and non-armor blocks.
+        &#34;&#34;&#34;
+        armor_blocks = sum([1 if &#39;armor&#39; in x.block_type.lower() else 0 for x in self._blocks.values()])
+        return armor_blocks, len(self._blocks) - armor_blocks
+    
+    def unique_blocks_count(self,
+                            block_type: str) -&gt; int:
+        &#34;&#34;&#34;Count the number of blocks with the given block type.
+
+        Args:
+            block_type (str): The block type.
+
+        Returns:
+            int: The number of blocks with the given block type.
+        &#34;&#34;&#34;
+        return sum([1 if x.block_type == block_type else 0 for x in self._blocks.values()])
+    
+    @property
+    def air_blocks_gridmask(self) -&gt; npt.NDArray[np.bool8]:
+        &#34;&#34;&#34;Get the grid array of internal air blocks in the structure.
+
+        Returns:
+            npt.NDArray[np.bool8]: A boolean array where `True` elements are internal air blocks in the grid array.
+        &#34;&#34;&#34;
+        if self._air_gridmask is None:
+            self._air_gridmask = np.zeros_like(self.as_grid_array, dtype=np.bool8)
+            # Old code, reliable but very slow
+            # ds = [Vec.v3i(1, 0, 0), Vec.v3i(0, 1, 0), Vec.v3i(0, 0, 1),
+            #     Vec.v3i(-1, 0, 0), Vec.v3i(0, -1, 0), Vec.v3i(0, 0, -1)]
+            # # get existing blocks indices
+            # blocks_idxs = [Vec.from_tuple(k).scale(v=1 / self.grid_size).to_veci() for k in self._blocks.keys()]
+            # # get all indices attached to the blocks indices
+            # next_to_idxs = [b.sum(d) for d in ds for b in blocks_idxs if b.sum(d) not in blocks_idxs]
+            # # internal air cotner blocks have at least 3 blocks next to them
+            # internal_air = [Vec.from_tuple(t) for t in  list({b.as_tuple() : next_to_idxs.count(b) for b in next_to_idxs if next_to_idxs.count(b) &gt; 2}.keys())]
+            # # checking loop
+            # past = blocks_idxs
+            # while internal_air:
+            #     to_check = []
+            #     for idx in internal_air:
+            #         if 0 &lt;= idx.x &lt; self._air_gridmask.shape[0] and 0 &lt;= idx.y &lt; self._air_gridmask.shape[1] and 0 &lt;= idx.z &lt; self._air_gridmask.shape[2] and\
+            #             not self._air_gridmask[idx.as_tuple()]:
+            #                 past.append(idx)
+            #                 if self._blocks.get(idx.scale(self.grid_size).as_tuple(), None) is None:
+            #                     self._air_gridmask[idx.as_tuple()] = True
+            #                     to_check.extend([idx.sum(d) for d in ds if idx.sum(d) not in past])
+            #     internal_air = list(set(to_check))
+            # new code, faster but less readable
+            i1, j1, k1 = self.as_grid_array.shape
+            for (i, j, k) in zip(*np.nonzero(self.as_grid_array == 0)):
+                # basically, check for every empty block index if it&#39;s surrounded on all 6 sides by at least a block
+                self._air_gridmask[i, j, k] = np.sum(self.as_grid_array[0:i, j, k]) != 0 and \
+                    np.sum(self.as_grid_array[i:i1, j, k]) != 0 and \
+                    np.sum(self.as_grid_array[i, 0:j, k]) != 0 and \
+                    np.sum(self.as_grid_array[i, j:j1, k]) != 0 and \
+                    np.sum(self.as_grid_array[i, j, 0:k]) != 0 and \
+                    np.sum(self.as_grid_array[i, j, k:k1]) != 0
+        return self._air_gridmask
+    
+    def sanify(self) -&gt; None:
+        &#34;&#34;&#34;Correct the structure&#39;s blocks to be &gt;=0 on every axis.&#34;&#34;&#34;
+        min_x, min_y, min_z = self._min_dims
+        updated_blocks = {}
+        for x, y, z in self._blocks.keys():
+            block = self._blocks[(x, y, z)]
+            new_pos = Vec.v3i(x=x - min_x, y=y - min_y, z=z - min_z)
+            block.position = self.origin_coords.sum(new_pos)
+            updated_blocks[new_pos.as_tuple()] = block
+        self._blocks = updated_blocks
+        self._scaled_arr = None
+        self._arr = None
+
+    def update(self, origin: Vec,
+               orientation_forward: Vec,
+               orientation_up: Vec) -&gt; None:
+        &#34;&#34;&#34;Update the structure position and orientations.
+
+        Args:
+            origin (Vec): The new XYZ origin coordinates of the Structure.
+            orientation_forward (Vec): The new Forward orientation of the structure as a `Vec` object.
+            orientation_up (Vec): The new Up orientation of the structure as a `Vec` object.
+        &#34;&#34;&#34;
+        # update structure position and orientation
+        self.origin_coords = origin
+        self.orientation_forward = orientation_forward
+        self.orientation_up = orientation_up
+        # update all blocks accordingly
+        self.sanify()
+
+    def get_all_blocks(self,
+                       to_place: bool = True,
+                       scaled: bool = False) -&gt; List[Block]:
+        &#34;&#34;&#34;Get all the blocks in the structure.
+
+        Args:
+            to_place (bool): Flag for placement position correction. Dafaults to `True`.
+            scaled (bool): Flag for block grid position correction. Defaults to `False`.
+
+        Returns:
+            List[Block]: The list of all blocks.
+        &#34;&#34;&#34;
+        all_blocks = list(self._blocks.values())
+        if to_place:
+            return [b.duplicate(b.position.scale(grid_to_coords)) for b in all_blocks]
+        elif scaled:
+            return [b.duplicate(b.position.scale(1 / self.grid_size)) for b in all_blocks]
+        else:
+            return all_blocks
+
+    def _clean_label(self,
+                     a: str) -&gt; str:
+        &#34;&#34;&#34;Remove prefix block type from label.
+
+        Args:
+            a (str): The label.
+
+        Returns:
+            str: The label without prefix.
+        &#34;&#34;&#34;
+        for d in [
+            &#39;MyObjectBuilder_CubeBlock_&#39;,
+            &#39;MyObjectBuilder_Gyro_&#39;,
+            &#39;MyObjectBuilder_Reactor_&#39;,
+            &#39;MyObjectBuilder_CargoContainer_&#39;,
+            &#39;MyObjectBuilder_Cockpit_&#39;,
+            &#39;MyObjectBuilder_Thrust_&#39;,
+            &#39;MyObjectBuilder_InteriorLight_&#39;
+        ]:
+            a = a.replace(d, &#39;&#39;)
+        return a
+
+    def show(self,
+             title: str,
+             title_len: int = 90,
+             save: bool = False) -&gt; plt.Axes:
+        &#34;&#34;&#34;Plot the structure.
+
+        Args:
+            title (str): Title of the plot.
+            title_len (int, optional): Maximum length of the title. Defaults to `90`.
+            save (bool, optional): Flag to salve the plot as picture. Defaults to `False`.
+
+        Returns:
+            plt.Axes: The figure object.
+        &#34;&#34;&#34;
+        structure = self.as_grid_array
+        ax = plt.axes(projection=&#39;3d&#39;)
+        x, y, z = np.nonzero(structure)
+        cs = [structure[i, j, k] for i, j, k in zip(x, y, z)]
+        ax.set_box_aspect((np.ptp(x), np.ptp(y), np.ptp(z)))
+        scatter = ax.scatter(x, y, z, c=cs, cmap=&#39;jet&#39;, linewidth=0.1)
+        legend = scatter.legend_elements(num=len(np.unique(structure[(x, y, z)])) - 1)
+        for i, v in zip(range(len(legend[1])), np.unique(structure[(x, y, z)])):
+            legend[1][i] = self._clean_label(list(block_definitions.keys())[v - 1])
+        ax.legend(*legend,
+                  bbox_to_anchor=(1.2, 1),
+                  loc=&#34;upper left&#34;,
+                  title=&#34;Block types&#34;)
+        axis_limit = Vec.from_tuple(self._max_dims).scale(1 / self.grid_size).as_tuple()
+        ax.set_xlim3d(0, axis_limit[0])
+        ax.set_ylim3d(0, axis_limit[1])
+        ax.set_zlim3d(0, axis_limit[2])
+        ax.set_xlabel(&#34;$\\vec{x}$&#34;)
+        ax.set_ylabel(&#34;$\\vec{y}$&#34;)
+        ax.set_zlabel(&#34;$\\vec{z}$&#34;)
+        plt.title(title if len(title) &lt;= title_len else f&#39;{title[:title_len - 3]}...&#39;)
+        plt.autoscale(enable=True,
+                      axis=&#39;x&#39;,
+                      tight=True)
+        if save:
+            plt.savefig(&#39;content_plot.png&#39;,
+                        transparent=True,
+                        bbox_inches=&#39;tight&#39;)
+        plt.show()
+        return ax</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pcgsepy.structure.Structure.air_blocks_gridmask"><code class="name">var <span class="ident">air_blocks_gridmask</span> : numpy.ndarray[typing.Any, numpy.dtype[numpy.bool_]]</code></dt>
+<dd>
+<div class="desc"><p>Get the grid array of internal air blocks in the structure.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>npt.NDArray[np.bool8]</code></dt>
+<dd>A boolean array where <code>True</code> elements are internal air blocks in the grid array.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def air_blocks_gridmask(self) -&gt; npt.NDArray[np.bool8]:
+    &#34;&#34;&#34;Get the grid array of internal air blocks in the structure.
+
+    Returns:
+        npt.NDArray[np.bool8]: A boolean array where `True` elements are internal air blocks in the grid array.
+    &#34;&#34;&#34;
+    if self._air_gridmask is None:
+        self._air_gridmask = np.zeros_like(self.as_grid_array, dtype=np.bool8)
+        # Old code, reliable but very slow
+        # ds = [Vec.v3i(1, 0, 0), Vec.v3i(0, 1, 0), Vec.v3i(0, 0, 1),
+        #     Vec.v3i(-1, 0, 0), Vec.v3i(0, -1, 0), Vec.v3i(0, 0, -1)]
+        # # get existing blocks indices
+        # blocks_idxs = [Vec.from_tuple(k).scale(v=1 / self.grid_size).to_veci() for k in self._blocks.keys()]
+        # # get all indices attached to the blocks indices
+        # next_to_idxs = [b.sum(d) for d in ds for b in blocks_idxs if b.sum(d) not in blocks_idxs]
+        # # internal air cotner blocks have at least 3 blocks next to them
+        # internal_air = [Vec.from_tuple(t) for t in  list({b.as_tuple() : next_to_idxs.count(b) for b in next_to_idxs if next_to_idxs.count(b) &gt; 2}.keys())]
+        # # checking loop
+        # past = blocks_idxs
+        # while internal_air:
+        #     to_check = []
+        #     for idx in internal_air:
+        #         if 0 &lt;= idx.x &lt; self._air_gridmask.shape[0] and 0 &lt;= idx.y &lt; self._air_gridmask.shape[1] and 0 &lt;= idx.z &lt; self._air_gridmask.shape[2] and\
+        #             not self._air_gridmask[idx.as_tuple()]:
+        #                 past.append(idx)
+        #                 if self._blocks.get(idx.scale(self.grid_size).as_tuple(), None) is None:
+        #                     self._air_gridmask[idx.as_tuple()] = True
+        #                     to_check.extend([idx.sum(d) for d in ds if idx.sum(d) not in past])
+        #     internal_air = list(set(to_check))
+        # new code, faster but less readable
+        i1, j1, k1 = self.as_grid_array.shape
+        for (i, j, k) in zip(*np.nonzero(self.as_grid_array == 0)):
+            # basically, check for every empty block index if it&#39;s surrounded on all 6 sides by at least a block
+            self._air_gridmask[i, j, k] = np.sum(self.as_grid_array[0:i, j, k]) != 0 and \
+                np.sum(self.as_grid_array[i:i1, j, k]) != 0 and \
+                np.sum(self.as_grid_array[i, 0:j, k]) != 0 and \
+                np.sum(self.as_grid_array[i, j:j1, k]) != 0 and \
+                np.sum(self.as_grid_array[i, j, 0:k]) != 0 and \
+                np.sum(self.as_grid_array[i, j, k:k1]) != 0
+    return self._air_gridmask</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.structure.Structure.as_array"><code class="name">var <span class="ident">as_array</span> : numpy.ndarray[typing.Any, numpy.dtype[numpy.uint32]]</code></dt>
+<dd>
+<div class="desc"><p>Convert the structure to its equivalent NumPy array.
+Each point in the XYZ matrix represents the block type.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>npt.NDArray[np.uint32]</code></dt>
+<dd>The 3D NumPy array.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def as_array(self) -&gt; npt.NDArray[np.uint32]:
+    &#34;&#34;&#34;Convert the structure to its equivalent NumPy array.
+    Each point in the XYZ matrix represents the block type.
+
+    Returns:
+        npt.NDArray[np.uint32]: The 3D NumPy array.
+    &#34;&#34;&#34;
+    if self._scaled_arr is None:
+        self._scaled_arr = np.zeros(shape=Vec.from_tuple(self._max_dims).add(v=self.grid_size).as_tuple(), dtype=np.uint32)
+        for (i, j, k), block in self._blocks.items():
+            r = block.scaled_size
+            if np.sum(self._scaled_arr[i:i + r.x, j:j + r.y, k:k + r.z]) != 0:
+                self._has_intersections = True
+            self._scaled_arr[i:i + r.x, j:j + r.y, k:k + r.z] = list(block_definitions.keys()).index(block.block_type) + 1
+    return self._scaled_arr</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.structure.Structure.as_grid_array"><code class="name">var <span class="ident">as_grid_array</span> : numpy.ndarray[typing.Any, numpy.dtype[numpy.uint32]]</code></dt>
+<dd>
+<div class="desc"><p>Convert the structure to the grid-sized array.
+Each point in the XYZ matrix represents the block type.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>npt.NDArray[np.uint32]</code></dt>
+<dd>The 3D NumPy grid-sized array.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def as_grid_array(self) -&gt; npt.NDArray[np.uint32]:
+    &#34;&#34;&#34;Convert the structure to the grid-sized array.
+    Each point in the XYZ matrix represents the block type.
+
+    Returns:
+        npt.NDArray[np.uint32]: The 3D NumPy grid-sized array.
+    &#34;&#34;&#34;
+    if self._arr is None:
+        self._arr = np.zeros(shape=Vec.from_tuple(self._max_dims).scale(v=1 / self.grid_size).to_veci().add(v=1).as_tuple(), dtype=np.uint32)
+        for r, block in self._blocks.items():
+            r = Vec.from_tuple(r).scale(v=1 / self.grid_size).to_veci().as_tuple()
+            if np.sum(self._arr[r]) != 0:
+                self._has_intersections = True
+            self._arr[r] = list(block_definitions.keys()).index(block.block_type) + 1
+    return self._arr</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.structure.Structure.blocks_count"><code class="name">var <span class="ident">blocks_count</span> : Tuple[int, int]</code></dt>
+<dd>
+<div class="desc"><p>Count armor blocks and non-armor blocks contained in the grid.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[int, int]</code></dt>
+<dd>The number of armor and non-armor blocks.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def blocks_count(self) -&gt; Tuple[int, int]:
+    &#34;&#34;&#34;Count armor blocks and non-armor blocks contained in the grid.
+
+    Returns:
+        Tuple[int, int]: The number of armor and non-armor blocks.
+    &#34;&#34;&#34;
+    armor_blocks = sum([1 if &#39;armor&#39; in x.block_type.lower() else 0 for x in self._blocks.values()])
+    return armor_blocks, len(self._blocks) - armor_blocks</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.structure.Structure.grid_size"><code class="name">var <span class="ident">grid_size</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="pcgsepy.structure.Structure.has_intersections"><code class="name">var <span class="ident">has_intersections</span> : bool</code></dt>
+<dd>
+<div class="desc"><p>Check if the Structure contains an intersection between blocks.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd>Whether there is an intersection.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def has_intersections(self) -&gt; bool:
+    &#34;&#34;&#34;Check if the Structure contains an intersection between blocks.
+
+    Returns:
+        bool: Whether there is an intersection.
+    &#34;&#34;&#34;
+    if self._has_intersections is None:
+        _ = self.as_array
+        if self._has_intersections is None:
+            self._has_intersections = False
+    return self._has_intersections</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.structure.Structure.mass"><code class="name">var <span class="ident">mass</span> : float</code></dt>
+<dd>
+<div class="desc"><p>Compute the mass of the grid.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>The mass of the grid.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def mass(self) -&gt; float:
+    &#34;&#34;&#34;Compute the mass of the grid.
+
+    Returns:
+        float: The mass of the grid.
+    &#34;&#34;&#34;
+    return np.round(sum([b.mass for b in self._blocks.values()]), 2)</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.structure.Structure.orientation_forward"><code class="name">var <span class="ident">orientation_forward</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="pcgsepy.structure.Structure.orientation_up"><code class="name">var <span class="ident">orientation_up</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="pcgsepy.structure.Structure.origin_coords"><code class="name">var <span class="ident">origin_coords</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="pcgsepy.structure.Structure.total_volume"><code class="name">var <span class="ident">total_volume</span> : float</code></dt>
+<dd>
+<div class="desc"><p>Compute the volume of the grid.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>The volume of the grid.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def total_volume(self) -&gt; float:
+    &#34;&#34;&#34;Compute the volume of the grid.
+
+    Returns:
+        float: The volume of the grid.
+    &#34;&#34;&#34;
+    return sum([b.volume for b in self._blocks.values()])</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pcgsepy.structure.Structure.add_block"><code class="name flex">
+<span>def <span class="ident">add_block</span></span>(<span>self, block: <a title="pcgsepy.structure.Block" href="#pcgsepy.structure.Block">Block</a>, grid_position: Tuple[int, int, int]) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add a block to the structure.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>block</code></strong> :&ensp;<code><a title="pcgsepy.structure.Block" href="#pcgsepy.structure.Block">Block</a></code></dt>
+<dd>The block to add.</dd>
+<dt><strong><code>grid_position</code></strong> :&ensp;<code>Tuple[int, int, int]</code></dt>
+<dd>The position in the grid at which the block is placed. Obtained from <code>Vec.to_tuple()</code>.</dd>
+<dt><strong><code>exit_on_duplicates</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag to check for existing blocks when adding new ones. May raise an <code><a title="pcgsepy.structure.IntersectionException" href="#pcgsepy.structure.IntersectionException">IntersectionException</a></code>.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code><a title="pcgsepy.structure.IntersectionException" href="#pcgsepy.structure.IntersectionException">IntersectionException</a></code></dt>
+<dd>Raised if an intersection with another block occurrs.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_block(self,
+              block: Block,
+              grid_position: Tuple[int, int, int]) -&gt; None:
+    &#34;&#34;&#34;Add a block to the structure.
+
+    Args:
+        block (Block): The block to add.
+        grid_position (Tuple[int, int, int]): The position in the grid at which the block is placed. Obtained from `Vec.to_tuple()`.
+        exit_on_duplicates (bool): Flag to check for existing blocks when adding new ones. May raise an `IntersectionException`.
+
+    Raises:
+        IntersectionException: Raised if an intersection with another block occurrs.
+    &#34;&#34;&#34;
+    i, j, k = grid_position
+    block.position = Vec.v3i(i, j, k)
+    
+    if grid_position in self._blocks.keys():
+        self._has_intersections = True
+    
+    self._blocks[(i, j, k)] = block</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.structure.Structure.get_all_blocks"><code class="name flex">
+<span>def <span class="ident">get_all_blocks</span></span>(<span>self, to_place: bool = True, scaled: bool = False) ‑> List[<a title="pcgsepy.structure.Block" href="#pcgsepy.structure.Block">Block</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get all the blocks in the structure.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>to_place</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for placement position correction. Dafaults to <code>True</code>.</dd>
+<dt><strong><code>scaled</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for block grid position correction. Defaults to <code>False</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[<a title="pcgsepy.structure.Block" href="#pcgsepy.structure.Block">Block</a>]</code></dt>
+<dd>The list of all blocks.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_all_blocks(self,
+                   to_place: bool = True,
+                   scaled: bool = False) -&gt; List[Block]:
+    &#34;&#34;&#34;Get all the blocks in the structure.
+
+    Args:
+        to_place (bool): Flag for placement position correction. Dafaults to `True`.
+        scaled (bool): Flag for block grid position correction. Defaults to `False`.
+
+    Returns:
+        List[Block]: The list of all blocks.
+    &#34;&#34;&#34;
+    all_blocks = list(self._blocks.values())
+    if to_place:
+        return [b.duplicate(b.position.scale(grid_to_coords)) for b in all_blocks]
+    elif scaled:
+        return [b.duplicate(b.position.scale(1 / self.grid_size)) for b in all_blocks]
+    else:
+        return all_blocks</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.structure.Structure.sanify"><code class="name flex">
+<span>def <span class="ident">sanify</span></span>(<span>self) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Correct the structure's blocks to be &gt;=0 on every axis.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sanify(self) -&gt; None:
+    &#34;&#34;&#34;Correct the structure&#39;s blocks to be &gt;=0 on every axis.&#34;&#34;&#34;
+    min_x, min_y, min_z = self._min_dims
+    updated_blocks = {}
+    for x, y, z in self._blocks.keys():
+        block = self._blocks[(x, y, z)]
+        new_pos = Vec.v3i(x=x - min_x, y=y - min_y, z=z - min_z)
+        block.position = self.origin_coords.sum(new_pos)
+        updated_blocks[new_pos.as_tuple()] = block
+    self._blocks = updated_blocks
+    self._scaled_arr = None
+    self._arr = None</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.structure.Structure.set_color"><code class="name flex">
+<span>def <span class="ident">set_color</span></span>(<span>self, color: <a title="pcgsepy.common.vecs.Vec" href="common/vecs.html#pcgsepy.common.vecs.Vec">Vec</a>) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the color of the base blocks in the structure.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>color</code></strong> :&ensp;<code>Vec</code></dt>
+<dd>The color as RGB values vector.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_color(self,
+              color: Vec) -&gt; None:
+    &#34;&#34;&#34;Set the color of the base blocks in the structure.
+
+    Args:
+        color (Vec): The color as RGB values vector.
+    &#34;&#34;&#34;
+    for block in self._blocks.values():
+        if _is_base_block(block_type=self._clean_label(a=block.block_type)):
+            block.color = color</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.structure.Structure.show"><code class="name flex">
+<span>def <span class="ident">show</span></span>(<span>self, title: str, title_len: int = 90, save: bool = False) ‑> matplotlib.axes._axes.Axes</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Plot the structure.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>title</code></strong> :&ensp;<code>str</code></dt>
+<dd>Title of the plot.</dd>
+<dt><strong><code>title_len</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Maximum length of the title. Defaults to <code>90</code>.</dd>
+<dt><strong><code>save</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Flag to salve the plot as picture. Defaults to <code>False</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>plt.Axes</code></dt>
+<dd>The figure object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def show(self,
+         title: str,
+         title_len: int = 90,
+         save: bool = False) -&gt; plt.Axes:
+    &#34;&#34;&#34;Plot the structure.
+
+    Args:
+        title (str): Title of the plot.
+        title_len (int, optional): Maximum length of the title. Defaults to `90`.
+        save (bool, optional): Flag to salve the plot as picture. Defaults to `False`.
+
+    Returns:
+        plt.Axes: The figure object.
+    &#34;&#34;&#34;
+    structure = self.as_grid_array
+    ax = plt.axes(projection=&#39;3d&#39;)
+    x, y, z = np.nonzero(structure)
+    cs = [structure[i, j, k] for i, j, k in zip(x, y, z)]
+    ax.set_box_aspect((np.ptp(x), np.ptp(y), np.ptp(z)))
+    scatter = ax.scatter(x, y, z, c=cs, cmap=&#39;jet&#39;, linewidth=0.1)
+    legend = scatter.legend_elements(num=len(np.unique(structure[(x, y, z)])) - 1)
+    for i, v in zip(range(len(legend[1])), np.unique(structure[(x, y, z)])):
+        legend[1][i] = self._clean_label(list(block_definitions.keys())[v - 1])
+    ax.legend(*legend,
+              bbox_to_anchor=(1.2, 1),
+              loc=&#34;upper left&#34;,
+              title=&#34;Block types&#34;)
+    axis_limit = Vec.from_tuple(self._max_dims).scale(1 / self.grid_size).as_tuple()
+    ax.set_xlim3d(0, axis_limit[0])
+    ax.set_ylim3d(0, axis_limit[1])
+    ax.set_zlim3d(0, axis_limit[2])
+    ax.set_xlabel(&#34;$\\vec{x}$&#34;)
+    ax.set_ylabel(&#34;$\\vec{y}$&#34;)
+    ax.set_zlabel(&#34;$\\vec{z}$&#34;)
+    plt.title(title if len(title) &lt;= title_len else f&#39;{title[:title_len - 3]}...&#39;)
+    plt.autoscale(enable=True,
+                  axis=&#39;x&#39;,
+                  tight=True)
+    if save:
+        plt.savefig(&#39;content_plot.png&#39;,
+                    transparent=True,
+                    bbox_inches=&#39;tight&#39;)
+    plt.show()
+    return ax</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.structure.Structure.unique_blocks_count"><code class="name flex">
+<span>def <span class="ident">unique_blocks_count</span></span>(<span>self, block_type: str) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Count the number of blocks with the given block type.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>block_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>The block type.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>The number of blocks with the given block type.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def unique_blocks_count(self,
+                        block_type: str) -&gt; int:
+    &#34;&#34;&#34;Count the number of blocks with the given block type.
+
+    Args:
+        block_type (str): The block type.
+
+    Returns:
+        int: The number of blocks with the given block type.
+    &#34;&#34;&#34;
+    return sum([1 if x.block_type == block_type else 0 for x in self._blocks.values()])</code></pre>
+</details>
+</dd>
+<dt id="pcgsepy.structure.Structure.update"><code class="name flex">
+<span>def <span class="ident">update</span></span>(<span>self, origin: <a title="pcgsepy.common.vecs.Vec" href="common/vecs.html#pcgsepy.common.vecs.Vec">Vec</a>, orientation_forward: <a title="pcgsepy.common.vecs.Vec" href="common/vecs.html#pcgsepy.common.vecs.Vec">Vec</a>, orientation_up: <a title="pcgsepy.common.vecs.Vec" href="common/vecs.html#pcgsepy.common.vecs.Vec">Vec</a>) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Update the structure position and orientations.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>origin</code></strong> :&ensp;<code>Vec</code></dt>
+<dd>The new XYZ origin coordinates of the Structure.</dd>
+<dt><strong><code>orientation_forward</code></strong> :&ensp;<code>Vec</code></dt>
+<dd>The new Forward orientation of the structure as a <code>Vec</code> object.</dd>
+<dt><strong><code>orientation_up</code></strong> :&ensp;<code>Vec</code></dt>
+<dd>The new Up orientation of the structure as a <code>Vec</code> object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update(self, origin: Vec,
+           orientation_forward: Vec,
+           orientation_up: Vec) -&gt; None:
+    &#34;&#34;&#34;Update the structure position and orientations.
+
+    Args:
+        origin (Vec): The new XYZ origin coordinates of the Structure.
+        orientation_forward (Vec): The new Forward orientation of the structure as a `Vec` object.
+        orientation_up (Vec): The new Up orientation of the structure as a `Vec` object.
+    &#34;&#34;&#34;
+    # update structure position and orientation
+    self.origin_coords = origin
+    self.orientation_forward = orientation_forward
+    self.orientation_up = orientation_up
+    # update all blocks accordingly
+    self.sanify()</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pcgsepy" href="index.html">pcgsepy</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pcgsepy.structure.Block" href="#pcgsepy.structure.Block">Block</a></code></h4>
+<ul class="two-column">
+<li><code><a title="pcgsepy.structure.Block.center" href="#pcgsepy.structure.Block.center">center</a></code></li>
+<li><code><a title="pcgsepy.structure.Block.cube_size" href="#pcgsepy.structure.Block.cube_size">cube_size</a></code></li>
+<li><code><a title="pcgsepy.structure.Block.duplicate" href="#pcgsepy.structure.Block.duplicate">duplicate</a></code></li>
+<li><code><a title="pcgsepy.structure.Block.mass" href="#pcgsepy.structure.Block.mass">mass</a></code></li>
+<li><code><a title="pcgsepy.structure.Block.mountpoints" href="#pcgsepy.structure.Block.mountpoints">mountpoints</a></code></li>
+<li><code><a title="pcgsepy.structure.Block.scaled_size" href="#pcgsepy.structure.Block.scaled_size">scaled_size</a></code></li>
+<li><code><a title="pcgsepy.structure.Block.size" href="#pcgsepy.structure.Block.size">size</a></code></li>
+<li><code><a title="pcgsepy.structure.Block.volume" href="#pcgsepy.structure.Block.volume">volume</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pcgsepy.structure.IntersectionException" href="#pcgsepy.structure.IntersectionException">IntersectionException</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pcgsepy.structure.MountPoint" href="#pcgsepy.structure.MountPoint">MountPoint</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pcgsepy.structure.Structure" href="#pcgsepy.structure.Structure">Structure</a></code></h4>
+<ul class="two-column">
+<li><code><a title="pcgsepy.structure.Structure.add_block" href="#pcgsepy.structure.Structure.add_block">add_block</a></code></li>
+<li><code><a title="pcgsepy.structure.Structure.air_blocks_gridmask" href="#pcgsepy.structure.Structure.air_blocks_gridmask">air_blocks_gridmask</a></code></li>
+<li><code><a title="pcgsepy.structure.Structure.as_array" href="#pcgsepy.structure.Structure.as_array">as_array</a></code></li>
+<li><code><a title="pcgsepy.structure.Structure.as_grid_array" href="#pcgsepy.structure.Structure.as_grid_array">as_grid_array</a></code></li>
+<li><code><a title="pcgsepy.structure.Structure.blocks_count" href="#pcgsepy.structure.Structure.blocks_count">blocks_count</a></code></li>
+<li><code><a title="pcgsepy.structure.Structure.get_all_blocks" href="#pcgsepy.structure.Structure.get_all_blocks">get_all_blocks</a></code></li>
+<li><code><a title="pcgsepy.structure.Structure.grid_size" href="#pcgsepy.structure.Structure.grid_size">grid_size</a></code></li>
+<li><code><a title="pcgsepy.structure.Structure.has_intersections" href="#pcgsepy.structure.Structure.has_intersections">has_intersections</a></code></li>
+<li><code><a title="pcgsepy.structure.Structure.mass" href="#pcgsepy.structure.Structure.mass">mass</a></code></li>
+<li><code><a title="pcgsepy.structure.Structure.orientation_forward" href="#pcgsepy.structure.Structure.orientation_forward">orientation_forward</a></code></li>
+<li><code><a title="pcgsepy.structure.Structure.orientation_up" href="#pcgsepy.structure.Structure.orientation_up">orientation_up</a></code></li>
+<li><code><a title="pcgsepy.structure.Structure.origin_coords" href="#pcgsepy.structure.Structure.origin_coords">origin_coords</a></code></li>
+<li><code><a title="pcgsepy.structure.Structure.sanify" href="#pcgsepy.structure.Structure.sanify">sanify</a></code></li>
+<li><code><a title="pcgsepy.structure.Structure.set_color" href="#pcgsepy.structure.Structure.set_color">set_color</a></code></li>
+<li><code><a title="pcgsepy.structure.Structure.show" href="#pcgsepy.structure.Structure.show">show</a></code></li>
+<li><code><a title="pcgsepy.structure.Structure.total_volume" href="#pcgsepy.structure.Structure.total_volume">total_volume</a></code></li>
+<li><code><a title="pcgsepy.structure.Structure.unique_blocks_count" href="#pcgsepy.structure.Structure.unique_blocks_count">unique_blocks_count</a></code></li>
+<li><code><a title="pcgsepy.structure.Structure.update" href="#pcgsepy.structure.Structure.update">update</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
