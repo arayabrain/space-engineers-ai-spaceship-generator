@@ -10,16 +10,13 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from zipfile import ZipFile
 
-from click import style
-from torch import conv_tbc
-
 from pcgsepy.guis.voxel import VoxelData
 
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     os.chdir(sys._MEIPASS)
     curr_folder = os.path.dirname(sys.executable)
 else:
-    curr_folder = os.path.dirname(sys.path[0])
+    curr_folder = sys.path[0]
 
 import dash
 import dash_bootstrap_components as dbc
@@ -647,14 +644,11 @@ def serve_layout() -> dbc.Container:
                       'displaylogo': False},
                   style={'overflow': 'auto'}),
         html.Div(children=[
-            dbc.InputGroup(children=[
-                dbc.InputGroupText('Toggle Voxel Preview:'),
-                dbc.Switch(
+            dbc.Switch(
                     id="voxel-preview-toggle",
-                    label="",
+                    label="Toggle Voxel Preview",
                     value=False,
-                )],
-                           className="mb-3"),
+                )
             ],
                  style={'display': 'inline-flex', 'justify-content': 'center'}
                  ),
@@ -1586,7 +1580,7 @@ def _get_elite_content(mapelites: MAPElites,
                             z=z,
                             mode='markers',
                             marker=dict(size=2,
-                                        line=dict(width=3,
+                                        line=dict(width=4,
                                                     color='DarkSlateGrey'),
                                         color=custom_colors),
                             opacity=1. if not show_voxel else 0.,
@@ -1777,7 +1771,7 @@ def __apply_step(**kwargs) -> Dict[str, Any]:
     eoe_modal_show = kwargs['eoe_modal_show']
     nbs_err_modal_show = kwargs['nbs_err_modal_show']
     dlbtn_label = kwargs['dlbtn_label']
-    curr_camera = kwargs['curr_camera']    
+    curr_camera = kwargs['curr_camera']   
     voxel_display = kwargs['curr_voxel_display']
     
     if app_settings.selected_bins or kwargs['event_trig'] == 'rand-step-btn':
@@ -2120,6 +2114,24 @@ def __update_content(**kwargs) -> Dict[str, Any]:
         'content-string.value': cs_string,
         'spaceship-properties.children': cs_properties,
         }
+
+
+def __toggle_voxelization(**kwargs) -> Dict[str, Any]:
+    global app_settings
+    
+    curr_camera = kwargs['curr_camera'] 
+    voxel_display = kwargs['curr_voxel_display']
+    
+    lb = _switch([app_settings.selected_bins[-1]])[0]
+    curr_content = _get_elite_content(mapelites=app_settings.current_mapelites,
+                                      bin_idx=lb,
+                                      pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible',
+                                      camera=curr_camera.get('scene.camera', None),
+                                      show_voxel=voxel_display)
+
+    return {
+        'content-plot.figure': curr_content,
+    }
 
 
 def __selection(**kwargs) -> Dict[str, Any]:
@@ -2598,7 +2610,7 @@ triggers_map = {
     'webapp-quickstart-btn': __show_quickstart_modal,
     'qus-btn': __show_quit_user_study_modal,
     'qus-y-btn': __quit_user_study,
-    'voxel-preview-toggle': __update_content,
+    'voxel-preview-toggle': __toggle_voxelization,
     None: __default
 }
 
