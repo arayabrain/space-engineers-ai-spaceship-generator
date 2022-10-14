@@ -1252,22 +1252,25 @@ def download_mapelites(n_clicks):
 @app.callback(
     Output("download-content", "data"),
     Output('download-spinner', 'children'),
+    State('content-plot', 'figure'),
+    State("content-plot", "relayoutData"),
     Input("download-btn", "n_clicks"),
-    prevent_initial_call=True,
+    # prevent_initial_call=True,
 )
-def download_content(n):
+def download_content(curr_content, curr_camera,
+                     n):
     global base_color
     global download_semaphore
     
+        
     def write_archive(bytes_io):
         with ZipFile(bytes_io, mode="w") as zf:
             # with open('./assets/thumb.png', 'rb') as f:
             #     thumbnail_img = f.read()
-            curr_content = _get_elite_content(mapelites=app_settings.current_mapelites,
-                                              bin_idx=_switch([app_settings.selected_bins[-1]])[0],
-                                              pop='feasible',
-                                              show_voxel=True)
-            thumbnail_img = curr_content.to_image(format="png")
+            content_fig = go.Figure(data=curr_content['data'],
+                                     layout=curr_content['layout'])
+            content_fig.update_layout(scene_camera=curr_camera)
+            thumbnail_img = content_fig.to_image(format="png")
             zf.writestr('thumb.png', thumbnail_img)
             elite = get_elite(mapelites=app_settings.current_mapelites,
                               bin_idx=_switch([app_settings.selected_bins[-1]])[0],
