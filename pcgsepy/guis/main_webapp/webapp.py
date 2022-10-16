@@ -1855,6 +1855,8 @@ def _get_elite_content(mapelites: MAPElites,
                                           line=dict(width=4,
                                                     color='DarkSlateGrey'),
                                           color=custom_colors),
+                              hoverinfo='text',
+                              text=ss,
                               opacity=1. if not show_voxel else 0.,
                               showlegend=False)
 
