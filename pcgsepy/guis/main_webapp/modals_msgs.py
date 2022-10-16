@@ -25,6 +25,10 @@ Hovering over the spaceship blocks preview will show the corresponding block typ
 """
 
 download_help = """
+### Colors
+You can select a different color for the armor blocks in your spaceship! Simply pick a color from the palette below and press the "Apply" button to update the existing spaceships color.
+
+### Download
 You can download the currently selected spaceship as a `.zip` file by clicking the **Download** button. 
 The compressed folder, located in your default download directory, contains the files needed to load the spaceship in Space Engineers as a blueprint (`bp.sbc` and `thumb.png`), as well as a program-specific file used in the "Spaceship Comparator" application.
 
