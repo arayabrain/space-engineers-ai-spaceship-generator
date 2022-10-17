@@ -1904,7 +1904,7 @@ def _get_elite_content(mapelites: MAPElites,
                            facecolor=[custom_colors[ix]
                                       for ix in voxels.intensities],
                            opacity=1.,
-                           flatshading=True,
+                           flatshading=False,
                            showlegend=False,
                            hoverinfo='text',
                            hovertext=ss
@@ -1939,7 +1939,7 @@ def _get_elite_content(mapelites: MAPElites,
                            facecolor=[custom_colors[ix]
                                       for ix in voxels.intensities],
                            opacity=0.75,
-                           flatshading=True,
+                           flatshading=False,
                            showlegend=False,
                            hoverinfo='text',
                            hovertext=ss
