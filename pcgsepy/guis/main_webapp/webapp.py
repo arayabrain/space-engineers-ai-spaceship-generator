@@ -466,7 +466,7 @@ def serve_layout() -> dbc.Container:
         scrollable=True)
 
     download_help_modal = dbc.Modal([
-        dbc.ModalHeader(dbc.ModalTitle("Spaceship Controls"),
+        dbc.ModalHeader(dbc.ModalTitle("Spaceship Controls Help"),
                         style={'justify-content': 'center'},
                         close_button=False),
         dbc.ModalBody(dcc.Markdown(download_help,
