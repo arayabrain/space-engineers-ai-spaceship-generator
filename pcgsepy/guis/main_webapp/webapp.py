@@ -604,10 +604,12 @@ def serve_layout() -> dbc.Container:
         html.Div(children=[
             html.H4('Spaceship Population',
                     className='section-title'),
-            dbc.Button('🛈',
-                       color='info',
-                       id='heatmap-help',
-                       className='help'),
+            html.Div(children=[
+                dbc.Button('🛈',
+                           color='info',
+                           id='heatmap-help',
+                           className='help')],
+                     style={'margin': '1vh 1vh 1vh 1vh'})
         ],
             style={
             'display': 'inline-flex',
@@ -681,10 +683,12 @@ def serve_layout() -> dbc.Container:
         html.Div(children=[
             html.H4('Selected Spaceship',
                     className='section-title'),
-            dbc.Button('🛈',
-                       color='info',
-                       id='content-help',
-                       className='help')
+            html.Div(children=[
+                dbc.Button('🛈',
+                           color='info',
+                           id='content-help',
+                           className='help')],
+                     style={'margin': '1vh 1vh 1vh 1vh'})
         ],
             style={
             'display': 'inline-flex',
@@ -784,10 +788,12 @@ def serve_layout() -> dbc.Container:
                 html.Div(children=[
                     html.H4(children='Spaceship Controls',
                             className='section-title'),
-                    dbc.Button('🛈',
-                               color='info',
-                               id='download-help',
-                               className='help')
+                    html.Div(children=[
+                        dbc.Button('🛈',
+                                   color='info',
+                                   id='download-help',
+                                   className='help')],
+                     style={'margin': '1vh 1vh 1vh 1vh'})
                 ],
                     style={'display': 'inline-flex', 'flex-direction': 'row',
                            'justify-content': 'center', 'text-align': 'center'}
