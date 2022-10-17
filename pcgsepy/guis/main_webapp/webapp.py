@@ -1535,6 +1535,7 @@ def disable_privacy_modal_buttons(ny: int,
               Output('eous-body-loading', 'children'),
               Output('eus-body-loading', 'children'),
               Output('color-picker-btn', 'disabled'),
+              Output('voxel-preview-toggle', 'disabled'),
 
               State({'type': 'fitness-sldr', 'index': ALL}, 'disabled'),
               State('method-radio', 'options'),
@@ -1619,6 +1620,7 @@ def interval_updates(fdis: List[Dict[str, bool]],
         'eous-body-loading.children': [],
         'eus-body-loading.children': [],
         'color-picker-btn.disabled': running_something,
+        'voxel-preview-toggle.disabled': running_something
     }
 
     if running_something and consent_loading_data_children == []:
