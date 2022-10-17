@@ -795,8 +795,11 @@ def serve_layout() -> dbc.Container:
                                    className='help')],
                      style={'margin': '1vh 1vh 1vh 1vh'})
                 ],
-                    style={'display': 'inline-flex', 'flex-direction': 'row',
-                           'justify-content': 'center', 'text-align': 'center'}
+                    style={'display': 'inline-flex',
+                           'flex-direction': 'row',
+                           'justify-content': 'center',
+                           'align-items': 'center',
+                           'text-align': 'center'}
                 ),
 
                 html.Br(),
