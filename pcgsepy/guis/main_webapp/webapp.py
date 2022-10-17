@@ -1442,7 +1442,7 @@ def download_content(curr_content: Dict[str, Any],
             #     thumbnail_img = f.read()
             content_fig = go.Figure(data=curr_content['data'],
                                     layout=curr_content['layout'])
-            content_fig.update_layout(scene_camera=curr_camera)
+            content_fig.update_layout(scene_camera=curr_camera.get('scene.camera', None))
             thumbnail_img = content_fig.to_image(format="png")
             zf.writestr('thumb.png', thumbnail_img)
             elite = get_elite(mapelites=app_settings.current_mapelites,
@@ -1853,8 +1853,8 @@ def _get_elite_content(mapelites: MAPElites,
                               y=y,
                               z=z,
                               mode='markers',
-                              marker=dict(size=2,
-                                          line=dict(width=4,
+                              marker=dict(size=4,
+                                          line=dict(width=2,
                                                     color='DarkSlateGrey'),
                                           color=custom_colors),
                               hoverinfo='text',
