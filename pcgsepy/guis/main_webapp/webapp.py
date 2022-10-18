@@ -624,7 +624,11 @@ def serve_layout() -> dbc.Container:
         html.Div(className='container',
                  children=[
                      dcc.Graph(id="heatmap-plot",
-                               figure=go.Figure(data=[]),
+                            #    figure=go.Figure(data=[]),
+                               figure=_build_heatmap(mapelites=app_settings.current_mapelites,
+                                                     pop_name='Feasible',
+                                                     metric_name='Fitness',
+                                                     method_name='Population'),
                                config={
                                    'displayModeBar': False,
                                    'displaylogo': False,
@@ -701,7 +705,12 @@ def serve_layout() -> dbc.Container:
 
         html.Br(),
         dcc.Graph(id="content-plot",
-                  figure=go.Figure(data=[]),
+                #   figure=go.Figure(data=[]),
+                  figure=_get_elite_content(mapelites=app_settings.current_mapelites,
+                                            bin_idx=None,
+                                            pop='Feasible',
+                                            camera=None,
+                                            show_voxel=False),
                   config={
                       'displayModeBar': False,
                       'displaylogo': False},
