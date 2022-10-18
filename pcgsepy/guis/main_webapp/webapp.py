@@ -264,7 +264,7 @@ def serve_layout() -> dbc.Container:
     # check if user has completed the user study already
     if not app_settings.app_mode:
         if os.path.isfile(os.path.join(curr_folder, '.userstudyover')):
-            app_settings.consent_ok = False
+            app_settings.consent_ok = None
             app_settings.app_mode = AppMode.USER
 
     webapp_info_file = './assets/webapp_help_dev.md' if app_settings.app_mode == AppMode.DEV else './assets/webapp_info.md'
@@ -2865,7 +2865,7 @@ def __consent(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
     cm_modal_show = kwargs['cm_modal_show']
     study_style = kwargs['study_style']
 
-    app_settings.app_mode = AppMode.USERSTUDY if nclicks_yes else AppMode.USER if nclicks_no else None
+    app_settings.app_mode = AppMode.USERSTUDY if nclicks_yes else AppMode.USER# if nclicks_no else None
     if nclicks_yes:
         logging.getLogger('webapp').info(
             msg=f'Thank you for participating in the user study! Please do not refresh the page.')
@@ -2896,6 +2896,9 @@ def __consent(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
                                               pop_name=kwargs['pop_name'],
                                               metric_name=kwargs['metric_name'],
                                               method_name=kwargs['method_name']),
+        'content-plot.figure': _get_elite_content(mapelites=app_settings.current_mapelites,
+                                                  bin_idx=None,
+                                                  pop=None),
         'consent-modal.is_open': cm_modal_show,
         'quickstart-modal.is_open': qs_modal_show,
         'quickstart-usermode-modal.is_open': qs_um_modal_show,
@@ -3390,6 +3393,11 @@ def general_callback(curr_heatmap: Dict[str, Any],
             logging.getLogger('webapp').error(
                 msg=f'[{__name__}.general_callback] Unrecognized {event_trig=}. No operations have been applied!')
 
+    logging.getLogger('webapp').error(msg=f'[{__name__}.general_callback] {event_trig=} {cm_modal_show=} {app_settings.consent_ok=} {app_settings.app_mode=}')
+    if event_trig is None and app_settings.consent_ok is None and app_settings.app_mode == AppMode.USER:
+        event_trig = 'consent-no'  # simulate declining privacy policy
+        app_settings.consent_ok = False
+    
     vars = locals()
 
     output = {
