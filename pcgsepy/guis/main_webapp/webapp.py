@@ -3402,7 +3402,6 @@ def general_callback(curr_heatmap: Dict[str, Any],
             logging.getLogger('webapp').error(
                 msg=f'[{__name__}.general_callback] Unrecognized {event_trig=}. No operations have been applied!')
 
-    logging.getLogger('webapp').error(msg=f'[{__name__}.general_callback] {event_trig=} {cm_modal_show=} {app_settings.consent_ok=} {app_settings.app_mode=}')
     if event_trig is None and app_settings.consent_ok is None and app_settings.app_mode == AppMode.USER:
         event_trig = 'consent-no'  # simulate declining privacy policy
         app_settings.consent_ok = False

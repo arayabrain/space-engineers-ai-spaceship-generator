@@ -9,4 +9,4 @@ You can check system messages in the "**Log**" window on the right.
 
 You can also follow this video tutorial:
 
-[![Tutorial Video](https://img.youtube.com/vi/LS44auRG7Js/0.jpg)](https://youtu.be/LS44auRG7Js "Space Engineers AI Spaceship Generator] User-study Quick start")
+[![Tutorial Video](https://img.youtube.com/vi/bVASWQj6DHc/0.jpg)](https://youtu.be/bVASWQj6DHc "Space Engineers AI Spaceship Generator] User-study Quick start")
