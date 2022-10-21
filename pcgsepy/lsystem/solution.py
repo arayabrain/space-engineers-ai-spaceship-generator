@@ -11,7 +11,7 @@ from ..structure import Structure
 class CandidateSolution:
     __slots__ = ['string', '_content', 'age', 'b_descs', 'c_fitness', 'fitness', 'hls_mod',
                  'is_feasible', 'll_string', 'n_feas_offspring', 'n_offspring', 'ncv',
-                 'parents', 'representation', 'base_color']
+                 'parents', 'representation', 'base_color', 'n_blocks']
     
     def __init__(self,
                  string: str,
@@ -32,6 +32,7 @@ class CandidateSolution:
         self.parents: List[CandidateSolution] = []
         self.representation: List[float] = []
         self.base_color = Vec.v3f(x=0.45, y=0.45, z=0.45)  # default block color is #737373
+        self.n_blocks = 0
 
     def __str__(self) -> str:
         return f'{self.string}; fitness: {self.c_fitness}; is_feasible: {self.is_feasible}'
@@ -62,6 +63,7 @@ class CandidateSolution:
             raise Exception('Structure already exists for this CandidateSolution.')
         else:
             self._content = content
+            self.n_blocks = len(content._blocks)
 
     @property
     def content(self) -> Structure:
@@ -69,11 +71,7 @@ class CandidateSolution:
             return self._content
         else:
             raise NotImplementedError('Structure has not been set yet.')
-    
-    @property
-    def n_blocks(self) -> int:
-        return len(self.content._blocks)
-    
+        
     @property
     def size(self) -> Tuple[int, int, int]:
         return self._content._max_dims

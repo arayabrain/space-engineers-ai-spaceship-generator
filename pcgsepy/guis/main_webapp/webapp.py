@@ -43,9 +43,8 @@ from pcgsepy.lsystem.solution import CandidateSolution
 from pcgsepy.mapelites.bin import MAPBin
 from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, Emitter,
                                         GreedyEmitter, HumanEmitter,
-                                        HumanPrefMatrixEmitter, KNNEmitter, LinearKernelEmitter,
-                                        PreferenceBanditEmitter, RBFKernelEmitter, RandomEmitter,
-                                        emitters)
+                                        HumanPrefMatrixEmitter, KNEmitter, KernelEmitter,
+                                        PreferenceBanditEmitter, RandomEmitter, SimpleTabularEmitter)
 from pcgsepy.mapelites.map import MAPElites, get_elite
 from pcgsepy.structure import _is_base_block, _is_transparent_block
 from pcgsepy.xml_conversion import convert_structure_to_xml
@@ -95,10 +94,6 @@ app_settings = AppSettings()
 n_spaceships_inspected = Metric(name='n_spaceships_inspected',
                                 emitters=app_settings.my_emitterslist,
                                 exp_n=app_settings.exp_n)
-time_elapsed_user = Metric(name='time_elapsed_user',
-                           emitters=app_settings.my_emitterslist,
-                           exp_n=app_settings.exp_n,
-                           multiple_values=True)
 time_elapsed_emitter = Metric(name='time_elapsed_emitter',
                               emitters=app_settings.my_emitterslist,
                               exp_n=app_settings.exp_n,
@@ -116,7 +111,6 @@ n_solutions_infeas = Metric(name='n_solutions_infeas',
 
 
 all_metrics = [n_spaceships_inspected,
-               time_elapsed_user,
                time_elapsed_emitter,
                population_complexity,
                n_solutions_feas,
@@ -235,8 +229,7 @@ def _get_emitter() -> Emitter:
     Returns:
         Emitter: The emitter.
     """
-    curr_emitter = app_settings.my_emitterslist[app_settings.exp_n].replace(
-        '.json', '').split('_')[1]
+    curr_emitter = app_settings.my_emitterslist[app_settings.exp_n].replace('.json', '').split('_')[1]
     if curr_emitter == 'human':
         return HumanEmitter()
     elif curr_emitter == 'random':
@@ -1362,8 +1355,8 @@ def update_progress(n: int) -> Tuple[int, str]:
     Returns:
         Tuple[int, str]: The current progress value and string percentage representation.
     """
-    return app_settings.step_progress, f"{np.round(app_settings.step_progress, 2)}%", {'content-visibility': 'visible' if 0 <= app_settings.step_progress <= 100 else 'hidden',
-                                                                                       'display': 'inline-block' if 0 <= app_settings.step_progress <= 100 else 'none',
+    return app_settings.step_progress, f"{np.round(app_settings.step_progress, 2)}%", {'content-visibility': 'visible' if app_settings.step_progress >= 0 else 'hidden',
+                                                                                       'display': 'inline-block' if app_settings.step_progress >= 0 else 'none',
                                                                                        'width': '100%'}
 
 
@@ -2025,7 +2018,6 @@ def _apply_step(mapelites: MAPElites,
         bool: Whether the step was applied successfully.
     """
     global app_settings
-    global time_elapsed_user
     global time_elapsed_emitter
 
     perc_step = 100 / (1 + N_EMITTER_STEPS)
@@ -2038,38 +2030,40 @@ def _apply_step(mapelites: MAPElites,
     if valid:
         logging.getLogger('webapp').info(
             msg=f'Started step {gen_counter + 1}...')
+        emitter_time = 0
         # reset bins new_elite flags
         mapelites.update_elites(reset=True)
         app_settings.step_progress = 0
         if not only_emitter:
-            s = time.perf_counter()
             logging.getLogger('webapp').debug(
                 msg=f'[{__name__}._apply_step] human; {selected_bins=}')
-            mapelites.interactive_step(bin_idxs=selected_bins,
-                                       gen=gen_counter)
-            elapsed_user = time.perf_counter() - s
-            if app_settings.app_mode == AppMode.USERSTUDY:
-                time_elapsed_user.add(elapsed_user)
-
+            emitter_time += mapelites.interactive_step(bin_idxs=selected_bins,
+                                                          gen=gen_counter)
         app_settings.step_progress += perc_step
         logging.getLogger('webapp').info(
             msg=f'Completed step {gen_counter + 1} (created {mapelites.n_new_solutions} solutions); running {N_EMITTER_STEPS} additional emitter steps if available...')
         mapelites.n_new_solutions = 0
-        all_elapsed_emitter = []
         with trange(N_EMITTER_STEPS, desc='Emitter steps: ') as iterations:
             for _ in iterations:
                 if not only_human:
-                    s = time.perf_counter()
-                    mapelites.emitter_step(gen=gen_counter)
-                    all_elapsed_emitter.append(time.perf_counter() - s)
+                    emitter_time += mapelites.emitter_step(gen=gen_counter)
                 app_settings.step_progress += perc_step
         if app_settings.app_mode == AppMode.USERSTUDY:
-            time_elapsed_emitter.add(np.average(all_elapsed_emitter))
+            time_elapsed_emitter.add(emitter_time)
         logging.getLogger('webapp').info(
             msg=f'Emitter step(s) completed (created {mapelites.n_new_solutions} solutions).')
         mapelites.n_new_solutions = 0
-        app_settings.step_progress = -1
+        logging.getLogger('webapp').debug(f'[{__name__}._apply_step] Started updating elites and reassigning content if needed...')
+        # TODO: Parallelise if possible
         mapelites.update_elites()
+        for (_, _), b in np.ndenumerate(mapelites.bins):
+            for pop in ['feasible', 'infeasible']:
+                if b.non_empty(pop=pop):
+                    e = b.get_elite(population=pop)
+                    if e._content is None:
+                        mapelites.lsystem._set_structure(cs=e, make_graph=False)
+                        mapelites._prepare_cs_content(cs=e)
+        app_settings.step_progress = -1
         return True
     else:
         logging.getLogger('webapp').info(
@@ -2089,7 +2083,8 @@ def _update_base_color(color: Vec) -> None:
     for (_, _), b in np.ndenumerate(app_settings.current_mapelites.bins):
         for cs in [*b._feasible, *b._infeasible]:
             cs.base_color = color
-            cs.content.set_color(color)
+            if cs._content is not None:
+                cs.content.set_color(color)
 
 
 def __apply_step(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
@@ -2202,7 +2197,6 @@ def __reset(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
     """
     global app_settings
     global n_spaceships_inspected
-    global time_elapsed_user
     global time_elapsed_emitter
     global population_complexity
     global n_solutions_feas
@@ -2217,7 +2211,6 @@ def __reset(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
     app_settings.selected_bins = []
     if app_settings.app_mode == AppMode.USERSTUDY:
         n_spaceships_inspected.reset()
-        time_elapsed_user.reset()
         time_elapsed_emitter.reset()
         population_complexity.reset()
         n_solutions_feas.reset()
@@ -2625,13 +2618,10 @@ def __emitter(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
         app_settings.current_mapelites.emitter = PreferenceBanditEmitter()
         logging.getLogger('webapp').info(msg=f'Emitter set to {emitter_name}')
     elif emitter_name == 'KNN':
-        app_settings.current_mapelites.emitter = KNNEmitter()
+        app_settings.current_mapelites.emitter = KNEmitter()
         logging.getLogger('webapp').info(msg=f'Emitter set to {emitter_name}')
     elif emitter_name == 'Linear Kernel':
-        app_settings.current_mapelites.emitter = LinearKernelEmitter()
-        logging.getLogger('webapp').info(msg=f'Emitter set to {emitter_name}')
-    elif emitter_name == 'RBF Kernel':
-        app_settings.current_mapelites.emitter = RBFKernelEmitter()
+        app_settings.current_mapelites.emitter = KernelEmitter()
         logging.getLogger('webapp').info(msg=f'Emitter set to {emitter_name}')
     elif emitter_name == 'Human':
         app_settings.current_mapelites.emitter = HumanEmitter()
@@ -2652,7 +2642,6 @@ def __experiment_loop_control(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
         Dict[str, Any]: The updated application components.
     """
     global app_settings
-    global time_elapsed_user
     global time_elapsed_emitter
     global population_complexity
     global n_solutions_feas
@@ -2704,7 +2693,6 @@ def __experiment_loop_control(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
                 cs_properties = get_properties_table()
                 if app_settings.app_mode == AppMode.USERSTUDY:
                     metrics_dl = dict(content=json.dumps({
-                        'time_elapsed_user': time_elapsed_user.history,
                         'time_elapsed_emitter': time_elapsed_emitter.history,
                         'n_interactions': n_spaceships_inspected.get_averages(),
                         'avg_complexity': population_complexity.history,
@@ -2757,8 +2745,6 @@ def __experiment_loop_control(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
                         msg='Next population loaded.')
                     n_spaceships_inspected.new_generation(emitters=app_settings.my_emitterslist,
                                                           exp_n=app_settings.exp_n)
-                    time_elapsed_user.new_generation(emitters=app_settings.my_emitterslist,
-                                                     exp_n=app_settings.exp_n)
                     time_elapsed_emitter.new_generation(emitters=app_settings.my_emitterslist,
                                                         exp_n=app_settings.exp_n)
                     population_complexity.new_generation(emitters=app_settings.my_emitterslist,
@@ -2842,7 +2828,6 @@ def __population_upload(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
         msg=f'Set population from file successfully.')
     app_settings.gen_counter = 0
     app_settings.selected_bins = []
-    _update_base_color(color=base_color)
 
     return {
         'heatmap-plot.figure': _build_heatmap(mapelites=app_settings.current_mapelites,
@@ -3001,7 +2986,6 @@ def __quit_user_study(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
     """
     global app_settings
     global n_spaceships_inspected
-    global time_elapsed_user
     global time_elapsed_emitter
     global population_complexity
     global n_solutions_feas
@@ -3023,7 +3007,6 @@ def __quit_user_study(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
     _update_base_color(color=base_color)
 
     n_spaceships_inspected.reset()
-    time_elapsed_user.reset()
     time_elapsed_emitter.reset()
     population_complexity.reset()
     n_solutions_feas.reset()
@@ -3441,7 +3424,7 @@ def general_callback(curr_heatmap: Dict[str, Any],
     }
 
     logging.getLogger('webapp').debug(
-        f'[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {app_settings.current_mapelites.emitter.name=}; {process_semaphore.is_locked=}')
+        f'[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {app_settings.current_mapelites.emitter=}; {process_semaphore.is_locked=}')
 
     for metric in all_metrics:
         logging.getLogger('webapp').debug(

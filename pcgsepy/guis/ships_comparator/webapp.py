@@ -347,7 +347,8 @@ def set_app_layout():
                    },
                    className='upload',
                    multiple=True
-                   )])
+                   )],
+                                style={'text-align': 'center', 'content-align': 'center'})
     upload_progress = html.Div(
         children=[
             html.Br(),

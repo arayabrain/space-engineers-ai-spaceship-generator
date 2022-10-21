@@ -1,5 +1,6 @@
 from http.client import GATEWAY_TIMEOUT
 import random
+import time
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import logging
@@ -156,7 +157,7 @@ class MAPElites:
         self.allow_aging = True
         # tracking properties
         self.n_new_solutions = 0
-
+        
     def show_metric(self,
                     metric: str,
                     show_mean: bool = True,
@@ -522,11 +523,11 @@ class MAPElites:
                     break
         # assign solutions to respective bins
         self._update_bins(lcs=[*feasible_pop, *infeasible_pop])
+        # update bins for elites
+        self.update_elites()
         # if required, initialize the emitter
         if self.emitter is not None and self.emitter.requires_init:
             self.emitter.init_emitter(bins=self.bins)
-        # update bins for elites
-        self.update_elites()
 
     def _step(self,
               populations: List[List[CandidateSolution]],
@@ -544,7 +545,7 @@ class MAPElites:
             List[CandidateSolution]: The new solutions.
         """
         # generate solutions from both populations
-        generated = []
+        generated: List[CandidateSolution] = []
         for pop in populations:
             logging.getLogger('mapelites').debug(msg=f'[{__name__}._step] {len(pop)=}')
             if len(pop) > 0:
@@ -594,6 +595,10 @@ class MAPElites:
                 for (_, _), cbin in np.ndenumerate(self.bins):
                     for cs in cbin._infeasible:
                         if cs.age > ALIGNMENT_INTERVAL:
+                            if cs._content is None:
+                                self.lsystem._set_structure(cs=cs,
+                                                            make_graph=False)
+                            self._prepare_cs_content(cs)
                             cs.c_fitness = self.compute_fitness(cs=cs)
         # metrics tracking
         self.n_new_solutions += len(generated)
@@ -658,12 +663,15 @@ class MAPElites:
     
     def interactive_step(self,
                          bin_idxs: List[List[int]],
-                         gen: int = 0) -> None:
+                         gen: int = 0) -> float:
         """Applies an interactive step.
 
         Args:
             bin_idxs (List[Tuple[int, int]]): The indexes of the bins selected.
-            gen (int, optional): The current number of generations. Defaults to `0`.
+            gen (int, optional): The current number of generations. Defaults to 0.
+
+        Returns:
+            float: Time elapsed by the emitter (if it exists) in the `pre_step`.
         """
         self._age_bins()
         bin_idxs = [tuple(b) for b in bin_idxs]
@@ -690,13 +698,14 @@ class MAPElites:
         else:
             self._age_bins(diff=1)
             expanded_idxs = []
+        s = time.perf_counter()
         if self.emitter is not None and self.emitter.requires_pre:
             self.emitter.pre_step(bins=self.bins,
                                   selected_idxs=bin_idxs,
                                   expanded_idxs=expanded_idxs,
                                   bounds=[b.bounds for b in self.b_descs])
+        return time.perf_counter() - s
         
-
     def emitter_step(self,
                      gen: int = 0) -> None:
         """Apply a step according to the emitter.
@@ -704,11 +713,15 @@ class MAPElites:
         Args:
             gen (int, optional): The current generation number. Defaults to `0`.
 
+        Returns:
+            float: Time elapsed by the emitter (if it exists) for sampling a bin and running `post_step`.
+        
         Raises:
             AssertionError: Raised if there is no MultiArmed Bandit Agent or Emitter set in MAP-Elites.
             NotImplementedError: Raised if the merge method specified in the bandit action is unrecognized.
             NotImplementedError: Raised if the emitter output is not in the expected data format.
         """
+        emitter_time = 0
         assert self.agent or self.emitter, 'MAP-Elites requires either a fixed emitter or a MultiArmed Bandit Agent, but neither were provided.'
         if self.agent is not None:
             # get bandit
@@ -729,7 +742,9 @@ class MAPElites:
             for (_, _), cbin in np.ndenumerate(self.bins):
                 for cs in cbin._infeasible:
                     cs.c_fitness = cs.fitness[self.infeas_fitness_idx]
+        s = time.perf_counter()
         selected_bins = self.emitter.pick_bin(bins=self.bins)
+        emitter_time += time.perf_counter() - s
         logging.getLogger('mapelites').debug(msg=f'[{__name__}.emitter_step] {selected_bins=}')
         if selected_bins:
             fpop, ipop = [], []
@@ -759,11 +774,14 @@ class MAPElites:
             if generated:
                 self._update_bins(lcs=generated)
                 self._check_res_trigger()
+            s = time.perf_counter()
             if self.emitter is not None and self.emitter.requires_post:
                 self.emitter.post_step(bins=self.bins)
+            emitter_time += time.perf_counter() - s
             if self.agent is not None:
                 self.agent.reward_bandit(bandit=bandit,
                                          reward=sum([f(self) for f in self.agent_rewards]))
+        return emitter_time
 
     def reset(self,
               lcs: Optional[List[CandidateSolution]] = None) -> None:
@@ -820,18 +838,20 @@ class MAPElites:
         all_cs = []
         with open(filename, 'r') as f:
             all_cs = [CandidateSolution.from_json(x) for x in json_loads(f.read())]
-        # set content
-        all_cs = list(map(lambda cs: self.lsystem._set_structure(cs=cs, make_graph=False), all_cs))
         # add to population
         self._update_bins(lcs=all_cs)
-        # add hull only to feas solutions
-        if self.hull_builder is not None:
-            for (_, _), b in np.ndenumerate(self.bins):
-                if b.non_empty(pop='feasible'):
-                    for cs in b._feasible:
-                        self.hull_builder.add_external_hull(cs.content)
         # update bins for elites
         self.update_elites()
+        for (_, _), b in np.ndenumerate(self.bins):
+            for pop in ['feasible', 'infeasible']:
+                if b.non_empty(pop=pop):
+                    e = b.get_elite(population=pop)
+                    if e._content is None:
+                        self.lsystem._set_structure(cs=e, make_graph=False)
+                        self._prepare_cs_content(cs=e)
+        # initialise emitter if needed
+        if self.emitter is not None and self.emitter.requires_init:
+                self.emitter.init_emitter(bins=self.bins)
     
     def update_elites(self,
                       reset: bool = False):
@@ -847,7 +867,7 @@ class MAPElites:
                 else:
                     b.check_new_elite(pop=pop)
                 # logging.getLogger('mapelites').debug(f'[{__name__}.update_elites] {reset=}; {b.bin_idx} -> {b.new_elite[pop]}')
-    
+            
     def population_complexity(self,
                               pop: str = 'feasible') -> float:
         """Compute the average complexity of the selected population.
@@ -859,7 +879,7 @@ class MAPElites:
         all_lenghts = []
         for (_, _), b in np.ndenumerate(self.bins):
             for cs in b._feasible if pop == 'feasible' else b._infeasible:
-                all_lenghts.append(len(cs.content._blocks))
+                all_lenghts.append(cs.n_blocks)
         return np.average(all_lenghts)
     
     

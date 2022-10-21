@@ -1,3 +1,4 @@
+import logging
 from tabnanny import check
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -106,6 +107,9 @@ class MAPBin:
         if elite is not None and (self.new_elite[checking] is None or elite.string != self.new_elite[checking].string):
             self.new_elite[pop] = True
             self.new_elite[checking] = elite
+            for cs in self._feasible if pop == 'feasible' else self._infeasible:
+                if cs.string != elite.string:
+                    cs._content = None
     
     def age(self,
             diff: int = -1):
