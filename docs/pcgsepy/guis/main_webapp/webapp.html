@@ -71,9 +71,8 @@ from pcgsepy.lsystem.solution import CandidateSolution
 from pcgsepy.mapelites.bin import MAPBin
 from pcgsepy.mapelites.emitters import (ContextualBanditEmitter, Emitter,
                                         GreedyEmitter, HumanEmitter,
-                                        HumanPrefMatrixEmitter, KNNEmitter, LinearKernelEmitter,
-                                        PreferenceBanditEmitter, RBFKernelEmitter, RandomEmitter,
-                                        emitters)
+                                        HumanPrefMatrixEmitter, KNEmitter, KernelEmitter,
+                                        PreferenceBanditEmitter, RandomEmitter, SimpleTabularEmitter)
 from pcgsepy.mapelites.map import MAPElites, get_elite
 from pcgsepy.structure import _is_base_block, _is_transparent_block
 from pcgsepy.xml_conversion import convert_structure_to_xml
@@ -123,10 +122,6 @@ app_settings = AppSettings()
 n_spaceships_inspected = Metric(name=&#39;n_spaceships_inspected&#39;,
                                 emitters=app_settings.my_emitterslist,
                                 exp_n=app_settings.exp_n)
-time_elapsed_user = Metric(name=&#39;time_elapsed_user&#39;,
-                           emitters=app_settings.my_emitterslist,
-                           exp_n=app_settings.exp_n,
-                           multiple_values=True)
 time_elapsed_emitter = Metric(name=&#39;time_elapsed_emitter&#39;,
                               emitters=app_settings.my_emitterslist,
                               exp_n=app_settings.exp_n,
@@ -144,7 +139,6 @@ n_solutions_infeas = Metric(name=&#39;n_solutions_infeas&#39;,
 
 
 all_metrics = [n_spaceships_inspected,
-               time_elapsed_user,
                time_elapsed_emitter,
                population_complexity,
                n_solutions_feas,
@@ -263,8 +257,7 @@ def _get_emitter() -&gt; Emitter:
     Returns:
         Emitter: The emitter.
     &#34;&#34;&#34;
-    curr_emitter = app_settings.my_emitterslist[app_settings.exp_n].replace(
-        &#39;.json&#39;, &#39;&#39;).split(&#39;_&#39;)[1]
+    curr_emitter = app_settings.my_emitterslist[app_settings.exp_n].replace(&#39;.json&#39;, &#39;&#39;).split(&#39;_&#39;)[1]
     if curr_emitter == &#39;human&#39;:
         return HumanEmitter()
     elif curr_emitter == &#39;random&#39;:
@@ -292,7 +285,7 @@ def serve_layout() -&gt; dbc.Container:
     # check if user has completed the user study already
     if not app_settings.app_mode:
         if os.path.isfile(os.path.join(curr_folder, &#39;.userstudyover&#39;)):
-            app_settings.consent_ok = False
+            app_settings.consent_ok = None
             app_settings.app_mode = AppMode.USER
 
     webapp_info_file = &#39;./assets/webapp_help_dev.md&#39; if app_settings.app_mode == AppMode.DEV else &#39;./assets/webapp_info.md&#39;
@@ -494,7 +487,7 @@ def serve_layout() -&gt; dbc.Container:
         scrollable=True)
 
     download_help_modal = dbc.Modal([
-        dbc.ModalHeader(dbc.ModalTitle(&#34;Download Help&#34;),
+        dbc.ModalHeader(dbc.ModalTitle(&#34;Spaceship Controls Help&#34;),
                         style={&#39;justify-content&#39;: &#39;center&#39;},
                         close_button=False),
         dbc.ModalBody(dcc.Markdown(download_help,
@@ -632,10 +625,12 @@ def serve_layout() -&gt; dbc.Container:
         html.Div(children=[
             html.H4(&#39;Spaceship Population&#39;,
                     className=&#39;section-title&#39;),
-            dbc.Button(&#39;🛈&#39;,
-                       color=&#39;info&#39;,
-                       id=&#39;heatmap-help&#39;,
-                       className=&#39;help&#39;),
+            html.Div(children=[
+                dbc.Button(&#39;🛈&#39;,
+                           color=&#39;info&#39;,
+                           id=&#39;heatmap-help&#39;,
+                           className=&#39;help&#39;)],
+                     style={&#39;margin&#39;: &#39;1vh 1vh 1vh 1vh&#39;})
         ],
             style={
             &#39;display&#39;: &#39;inline-flex&#39;,
@@ -650,7 +645,11 @@ def serve_layout() -&gt; dbc.Container:
         html.Div(className=&#39;container&#39;,
                  children=[
                      dcc.Graph(id=&#34;heatmap-plot&#34;,
-                               figure=go.Figure(data=[]),
+                            #    figure=go.Figure(data=[]),
+                               figure=_build_heatmap(mapelites=app_settings.current_mapelites,
+                                                     pop_name=&#39;Feasible&#39;,
+                                                     metric_name=&#39;Fitness&#39;,
+                                                     method_name=&#39;Population&#39;),
                                config={
                                    &#39;displayModeBar&#39;: False,
                                    &#39;displaylogo&#39;: False,
@@ -709,10 +708,12 @@ def serve_layout() -&gt; dbc.Container:
         html.Div(children=[
             html.H4(&#39;Selected Spaceship&#39;,
                     className=&#39;section-title&#39;),
-            dbc.Button(&#39;🛈&#39;,
-                       color=&#39;info&#39;,
-                       id=&#39;content-help&#39;,
-                       className=&#39;help&#39;)
+            html.Div(children=[
+                dbc.Button(&#39;🛈&#39;,
+                           color=&#39;info&#39;,
+                           id=&#39;content-help&#39;,
+                           className=&#39;help&#39;)],
+                     style={&#39;margin&#39;: &#39;1vh 1vh 1vh 1vh&#39;})
         ],
             style={
             &#39;display&#39;: &#39;inline-flex&#39;,
@@ -725,7 +726,12 @@ def serve_layout() -&gt; dbc.Container:
 
         html.Br(),
         dcc.Graph(id=&#34;content-plot&#34;,
-                  figure=go.Figure(data=[]),
+                #   figure=go.Figure(data=[]),
+                  figure=_get_elite_content(mapelites=app_settings.current_mapelites,
+                                            bin_idx=None,
+                                            pop=&#39;Feasible&#39;,
+                                            camera=None,
+                                            show_voxel=False),
                   config={
                       &#39;displayModeBar&#39;: False,
                       &#39;displaylogo&#39;: False},
@@ -812,13 +818,18 @@ def serve_layout() -&gt; dbc.Container:
                 html.Div(children=[
                     html.H4(children=&#39;Spaceship Controls&#39;,
                             className=&#39;section-title&#39;),
-                    dbc.Button(&#39;🛈&#39;,
-                               color=&#39;info&#39;,
-                               id=&#39;download-help&#39;,
-                               className=&#39;help&#39;)
+                    html.Div(children=[
+                        dbc.Button(&#39;🛈&#39;,
+                                   color=&#39;info&#39;,
+                                   id=&#39;download-help&#39;,
+                                   className=&#39;help&#39;)],
+                     style={&#39;margin&#39;: &#39;1vh 1vh 1vh 1vh&#39;})
                 ],
-                    style={&#39;display&#39;: &#39;inline-flex&#39;, &#39;flex-direction&#39;: &#39;row&#39;,
-                           &#39;justify-content&#39;: &#39;center&#39;, &#39;text-align&#39;: &#39;center&#39;}
+                    style={&#39;display&#39;: &#39;inline-flex&#39;,
+                           &#39;flex-direction&#39;: &#39;row&#39;,
+                           &#39;justify-content&#39;: &#39;center&#39;,
+                           &#39;align-items&#39;: &#39;center&#39;,
+                           &#39;text-align&#39;: &#39;center&#39;}
                 ),
 
                 html.Br(),
@@ -1372,8 +1383,8 @@ def update_progress(n: int) -&gt; Tuple[int, str]:
     Returns:
         Tuple[int, str]: The current progress value and string percentage representation.
     &#34;&#34;&#34;
-    return app_settings.step_progress, f&#34;{np.round(app_settings.step_progress, 2)}%&#34;, {&#39;content-visibility&#39;: &#39;visible&#39; if 0 &lt;= app_settings.step_progress &lt;= 100 else &#39;hidden&#39;,
-                                                                                       &#39;display&#39;: &#39;inline-block&#39; if 0 &lt;= app_settings.step_progress &lt;= 100 else &#39;none&#39;,
+    return app_settings.step_progress, f&#34;{np.round(app_settings.step_progress, 2)}%&#34;, {&#39;content-visibility&#39;: &#39;visible&#39; if app_settings.step_progress &gt;= 0 else &#39;hidden&#39;,
+                                                                                       &#39;display&#39;: &#39;inline-block&#39; if app_settings.step_progress &gt;= 0 else &#39;none&#39;,
                                                                                        &#39;width&#39;: &#39;100%&#39;}
 
 
@@ -1392,7 +1403,7 @@ def update_gen_progress(n: int) -&gt; Tuple[int, str]:
     Returns:
         Tuple[int, str]: The current progress value and string percentage representation.
     &#34;&#34;&#34;
-    if app_settings.app_mode != AppMode.DEV:
+    if app_settings.app_mode == AppMode.USERSTUDY:
         val = np.round(100 * ((app_settings.gen_counter) / N_GENS_ALLOWED), 2)
         return val, f&#34;{app_settings.gen_counter} / {N_GENS_ALLOWED}&#34;
     else:
@@ -1470,7 +1481,7 @@ def download_content(curr_content: Dict[str, Any],
             #     thumbnail_img = f.read()
             content_fig = go.Figure(data=curr_content[&#39;data&#39;],
                                     layout=curr_content[&#39;layout&#39;])
-            content_fig.update_layout(scene_camera=curr_camera)
+            content_fig.update_layout(scene_camera=curr_camera.get(&#39;scene.camera&#39;, None))
             thumbnail_img = content_fig.to_image(format=&#34;png&#34;)
             zf.writestr(&#39;thumb.png&#39;, thumbnail_img)
             elite = get_elite(mapelites=app_settings.current_mapelites,
@@ -1563,6 +1574,7 @@ def disable_privacy_modal_buttons(ny: int,
               Output(&#39;eous-body-loading&#39;, &#39;children&#39;),
               Output(&#39;eus-body-loading&#39;, &#39;children&#39;),
               Output(&#39;color-picker-btn&#39;, &#39;disabled&#39;),
+              Output(&#39;voxel-preview-toggle&#39;, &#39;disabled&#39;),
 
               State({&#39;type&#39;: &#39;fitness-sldr&#39;, &#39;index&#39;: ALL}, &#39;disabled&#39;),
               State(&#39;method-radio&#39;, &#39;options&#39;),
@@ -1647,6 +1659,7 @@ def interval_updates(fdis: List[Dict[str, bool]],
         &#39;eous-body-loading.children&#39;: [],
         &#39;eus-body-loading.children&#39;: [],
         &#39;color-picker-btn.disabled&#39;: running_something,
+        &#39;voxel-preview-toggle.disabled&#39;: running_something
     }
 
     if running_something and consent_loading_data_children == []:
@@ -1879,10 +1892,12 @@ def _get_elite_content(mapelites: MAPElites,
                               y=y,
                               z=z,
                               mode=&#39;markers&#39;,
-                              marker=dict(size=2,
-                                          line=dict(width=4,
+                              marker=dict(size=4,
+                                          line=dict(width=2,
                                                     color=&#39;DarkSlateGrey&#39;),
                                           color=custom_colors),
+                              hoverinfo=&#39;text&#39;,
+                              text=ss,
                               opacity=1. if not show_voxel else 0.,
                               showlegend=False)
 
@@ -1919,7 +1934,7 @@ def _get_elite_content(mapelites: MAPElites,
                            facecolor=[custom_colors[ix]
                                       for ix in voxels.intensities],
                            opacity=1.,
-                           flatshading=True,
+                           flatshading=False,
                            showlegend=False,
                            hoverinfo=&#39;text&#39;,
                            hovertext=ss
@@ -1954,7 +1969,7 @@ def _get_elite_content(mapelites: MAPElites,
                            facecolor=[custom_colors[ix]
                                       for ix in voxels.intensities],
                            opacity=0.75,
-                           flatshading=True,
+                           flatshading=False,
                            showlegend=False,
                            hoverinfo=&#39;text&#39;,
                            hovertext=ss
@@ -2031,7 +2046,6 @@ def _apply_step(mapelites: MAPElites,
         bool: Whether the step was applied successfully.
     &#34;&#34;&#34;
     global app_settings
-    global time_elapsed_user
     global time_elapsed_emitter
 
     perc_step = 100 / (1 + N_EMITTER_STEPS)
@@ -2044,38 +2058,40 @@ def _apply_step(mapelites: MAPElites,
     if valid:
         logging.getLogger(&#39;webapp&#39;).info(
             msg=f&#39;Started step {gen_counter + 1}...&#39;)
+        emitter_time = 0
         # reset bins new_elite flags
         mapelites.update_elites(reset=True)
         app_settings.step_progress = 0
         if not only_emitter:
-            s = time.perf_counter()
             logging.getLogger(&#39;webapp&#39;).debug(
                 msg=f&#39;[{__name__}._apply_step] human; {selected_bins=}&#39;)
-            mapelites.interactive_step(bin_idxs=selected_bins,
-                                       gen=gen_counter)
-            elapsed_user = time.perf_counter() - s
-            if app_settings.app_mode == AppMode.USERSTUDY:
-                time_elapsed_user.add(elapsed_user)
-
+            emitter_time += mapelites.interactive_step(bin_idxs=selected_bins,
+                                                          gen=gen_counter)
         app_settings.step_progress += perc_step
         logging.getLogger(&#39;webapp&#39;).info(
             msg=f&#39;Completed step {gen_counter + 1} (created {mapelites.n_new_solutions} solutions); running {N_EMITTER_STEPS} additional emitter steps if available...&#39;)
         mapelites.n_new_solutions = 0
-        all_elapsed_emitter = []
         with trange(N_EMITTER_STEPS, desc=&#39;Emitter steps: &#39;) as iterations:
             for _ in iterations:
                 if not only_human:
-                    s = time.perf_counter()
-                    mapelites.emitter_step(gen=gen_counter)
-                    all_elapsed_emitter.append(time.perf_counter() - s)
+                    emitter_time += mapelites.emitter_step(gen=gen_counter)
                 app_settings.step_progress += perc_step
         if app_settings.app_mode == AppMode.USERSTUDY:
-            time_elapsed_emitter.add(np.average(all_elapsed_emitter))
+            time_elapsed_emitter.add(emitter_time)
         logging.getLogger(&#39;webapp&#39;).info(
             msg=f&#39;Emitter step(s) completed (created {mapelites.n_new_solutions} solutions).&#39;)
         mapelites.n_new_solutions = 0
-        app_settings.step_progress = -1
+        logging.getLogger(&#39;webapp&#39;).debug(f&#39;[{__name__}._apply_step] Started updating elites and reassigning content if needed...&#39;)
+        # TODO: Parallelise if possible
         mapelites.update_elites()
+        for (_, _), b in np.ndenumerate(mapelites.bins):
+            for pop in [&#39;feasible&#39;, &#39;infeasible&#39;]:
+                if b.non_empty(pop=pop):
+                    e = b.get_elite(population=pop)
+                    if e._content is None:
+                        mapelites.lsystem._set_structure(cs=e, make_graph=False)
+                        mapelites._prepare_cs_content(cs=e)
+        app_settings.step_progress = -1
         return True
     else:
         logging.getLogger(&#39;webapp&#39;).info(
@@ -2095,7 +2111,8 @@ def _update_base_color(color: Vec) -&gt; None:
     for (_, _), b in np.ndenumerate(app_settings.current_mapelites.bins):
         for cs in [*b._feasible, *b._infeasible]:
             cs.base_color = color
-            cs.content.set_color(color)
+            if cs._content is not None:
+                cs.content.set_color(color)
 
 
 def __apply_step(**kwargs: Dict[str, Any]) -&gt; Dict[str, Any]:
@@ -2208,7 +2225,6 @@ def __reset(**kwargs: Dict[str, Any]) -&gt; Dict[str, Any]:
     &#34;&#34;&#34;
     global app_settings
     global n_spaceships_inspected
-    global time_elapsed_user
     global time_elapsed_emitter
     global population_complexity
     global n_solutions_feas
@@ -2223,7 +2239,6 @@ def __reset(**kwargs: Dict[str, Any]) -&gt; Dict[str, Any]:
     app_settings.selected_bins = []
     if app_settings.app_mode == AppMode.USERSTUDY:
         n_spaceships_inspected.reset()
-        time_elapsed_user.reset()
         time_elapsed_emitter.reset()
         population_complexity.reset()
         n_solutions_feas.reset()
@@ -2631,13 +2646,10 @@ def __emitter(**kwargs: Dict[str, Any]) -&gt; Dict[str, Any]:
         app_settings.current_mapelites.emitter = PreferenceBanditEmitter()
         logging.getLogger(&#39;webapp&#39;).info(msg=f&#39;Emitter set to {emitter_name}&#39;)
     elif emitter_name == &#39;KNN&#39;:
-        app_settings.current_mapelites.emitter = KNNEmitter()
+        app_settings.current_mapelites.emitter = KNEmitter()
         logging.getLogger(&#39;webapp&#39;).info(msg=f&#39;Emitter set to {emitter_name}&#39;)
     elif emitter_name == &#39;Linear Kernel&#39;:
-        app_settings.current_mapelites.emitter = LinearKernelEmitter()
-        logging.getLogger(&#39;webapp&#39;).info(msg=f&#39;Emitter set to {emitter_name}&#39;)
-    elif emitter_name == &#39;RBF Kernel&#39;:
-        app_settings.current_mapelites.emitter = RBFKernelEmitter()
+        app_settings.current_mapelites.emitter = KernelEmitter()
         logging.getLogger(&#39;webapp&#39;).info(msg=f&#39;Emitter set to {emitter_name}&#39;)
     elif emitter_name == &#39;Human&#39;:
         app_settings.current_mapelites.emitter = HumanEmitter()
@@ -2658,7 +2670,6 @@ def __experiment_loop_control(**kwargs: Dict[str, Any]) -&gt; Dict[str, Any]:
         Dict[str, Any]: The updated application components.
     &#34;&#34;&#34;
     global app_settings
-    global time_elapsed_user
     global time_elapsed_emitter
     global population_complexity
     global n_solutions_feas
@@ -2710,7 +2721,6 @@ def __experiment_loop_control(**kwargs: Dict[str, Any]) -&gt; Dict[str, Any]:
                 cs_properties = get_properties_table()
                 if app_settings.app_mode == AppMode.USERSTUDY:
                     metrics_dl = dict(content=json.dumps({
-                        &#39;time_elapsed_user&#39;: time_elapsed_user.history,
                         &#39;time_elapsed_emitter&#39;: time_elapsed_emitter.history,
                         &#39;n_interactions&#39;: n_spaceships_inspected.get_averages(),
                         &#39;avg_complexity&#39;: population_complexity.history,
@@ -2763,8 +2773,6 @@ def __experiment_loop_control(**kwargs: Dict[str, Any]) -&gt; Dict[str, Any]:
                         msg=&#39;Next population loaded.&#39;)
                     n_spaceships_inspected.new_generation(emitters=app_settings.my_emitterslist,
                                                           exp_n=app_settings.exp_n)
-                    time_elapsed_user.new_generation(emitters=app_settings.my_emitterslist,
-                                                     exp_n=app_settings.exp_n)
                     time_elapsed_emitter.new_generation(emitters=app_settings.my_emitterslist,
                                                         exp_n=app_settings.exp_n)
                     population_complexity.new_generation(emitters=app_settings.my_emitterslist,
@@ -2848,7 +2856,6 @@ def __population_upload(**kwargs: Dict[str, Any]) -&gt; Dict[str, Any]:
         msg=f&#39;Set population from file successfully.&#39;)
     app_settings.gen_counter = 0
     app_settings.selected_bins = []
-    _update_base_color(color=base_color)
 
     return {
         &#39;heatmap-plot.figure&#39;: _build_heatmap(mapelites=app_settings.current_mapelites,
@@ -2880,7 +2887,7 @@ def __consent(**kwargs: Dict[str, Any]) -&gt; Dict[str, Any]:
     cm_modal_show = kwargs[&#39;cm_modal_show&#39;]
     study_style = kwargs[&#39;study_style&#39;]
 
-    app_settings.app_mode = AppMode.USERSTUDY if nclicks_yes else AppMode.USER if nclicks_no else None
+    app_settings.app_mode = AppMode.USERSTUDY if nclicks_yes else AppMode.USER# if nclicks_no else None
     if nclicks_yes:
         logging.getLogger(&#39;webapp&#39;).info(
             msg=f&#39;Thank you for participating in the user study! Please do not refresh the page.&#39;)
@@ -2911,6 +2918,9 @@ def __consent(**kwargs: Dict[str, Any]) -&gt; Dict[str, Any]:
                                               pop_name=kwargs[&#39;pop_name&#39;],
                                               metric_name=kwargs[&#39;metric_name&#39;],
                                               method_name=kwargs[&#39;method_name&#39;]),
+        &#39;content-plot.figure&#39;: _get_elite_content(mapelites=app_settings.current_mapelites,
+                                                  bin_idx=None,
+                                                  pop=None),
         &#39;consent-modal.is_open&#39;: cm_modal_show,
         &#39;quickstart-modal.is_open&#39;: qs_modal_show,
         &#39;quickstart-usermode-modal.is_open&#39;: qs_um_modal_show,
@@ -3004,7 +3014,6 @@ def __quit_user_study(**kwargs: Dict[str, Any]) -&gt; Dict[str, Any]:
     &#34;&#34;&#34;
     global app_settings
     global n_spaceships_inspected
-    global time_elapsed_user
     global time_elapsed_emitter
     global population_complexity
     global n_solutions_feas
@@ -3026,7 +3035,6 @@ def __quit_user_study(**kwargs: Dict[str, Any]) -&gt; Dict[str, Any]:
     _update_base_color(color=base_color)
 
     n_spaceships_inspected.reset()
-    time_elapsed_user.reset()
     time_elapsed_emitter.reset()
     population_complexity.reset()
     n_solutions_feas.reset()
@@ -3405,6 +3413,10 @@ def general_callback(curr_heatmap: Dict[str, Any],
             logging.getLogger(&#39;webapp&#39;).error(
                 msg=f&#39;[{__name__}.general_callback] Unrecognized {event_trig=}. No operations have been applied!&#39;)
 
+    if event_trig is None and app_settings.consent_ok is None and app_settings.app_mode == AppMode.USER:
+        event_trig = &#39;consent-no&#39;  # simulate declining privacy policy
+        app_settings.consent_ok = False
+    
     vars = locals()
 
     output = {
@@ -3440,7 +3452,7 @@ def general_callback(curr_heatmap: Dict[str, Any],
     }
 
     logging.getLogger(&#39;webapp&#39;).debug(
-        f&#39;[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {app_settings.current_mapelites.emitter.name=}; {process_semaphore.is_locked=}&#39;)
+        f&#39;[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {app_settings.current_mapelites.emitter=}; {process_semaphore.is_locked=}&#39;)
 
     for metric in all_metrics:
         logging.getLogger(&#39;webapp&#39;).debug(
@@ -3577,7 +3589,7 @@ def download_content(curr_content: Dict[str, Any],
             #     thumbnail_img = f.read()
             content_fig = go.Figure(data=curr_content[&#39;data&#39;],
                                     layout=curr_content[&#39;layout&#39;])
-            content_fig.update_layout(scene_camera=curr_camera)
+            content_fig.update_layout(scene_camera=curr_camera.get(&#39;scene.camera&#39;, None))
             thumbnail_img = content_fig.to_image(format=&#34;png&#34;)
             zf.writestr(&#39;thumb.png&#39;, thumbnail_img)
             elite = get_elite(mapelites=app_settings.current_mapelites,
@@ -4112,6 +4124,10 @@ def general_callback(curr_heatmap: Dict[str, Any],
             logging.getLogger(&#39;webapp&#39;).error(
                 msg=f&#39;[{__name__}.general_callback] Unrecognized {event_trig=}. No operations have been applied!&#39;)
 
+    if event_trig is None and app_settings.consent_ok is None and app_settings.app_mode == AppMode.USER:
+        event_trig = &#39;consent-no&#39;  # simulate declining privacy policy
+        app_settings.consent_ok = False
+    
     vars = locals()
 
     output = {
@@ -4147,7 +4163,7 @@ def general_callback(curr_heatmap: Dict[str, Any],
     }
 
     logging.getLogger(&#39;webapp&#39;).debug(
-        f&#39;[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {app_settings.current_mapelites.emitter.name=}; {process_semaphore.is_locked=}&#39;)
+        f&#39;[{__name__}.general_callback] {event_trig=}; {app_settings.exp_n=}; {app_settings.gen_counter=}; {app_settings.selected_bins=}; {app_settings.current_mapelites.emitter=}; {process_semaphore.is_locked=}&#39;)
 
     for metric in all_metrics:
         logging.getLogger(&#39;webapp&#39;).debug(
@@ -4350,6 +4366,7 @@ def general_callback(curr_heatmap: Dict[str, Any],
               Output(&#39;eous-body-loading&#39;, &#39;children&#39;),
               Output(&#39;eus-body-loading&#39;, &#39;children&#39;),
               Output(&#39;color-picker-btn&#39;, &#39;disabled&#39;),
+              Output(&#39;voxel-preview-toggle&#39;, &#39;disabled&#39;),
 
               State({&#39;type&#39;: &#39;fitness-sldr&#39;, &#39;index&#39;: ALL}, &#39;disabled&#39;),
               State(&#39;method-radio&#39;, &#39;options&#39;),
@@ -4434,6 +4451,7 @@ def interval_updates(fdis: List[Dict[str, bool]],
         &#39;eous-body-loading.children&#39;: [],
         &#39;eus-body-loading.children&#39;: [],
         &#39;color-picker-btn.disabled&#39;: running_something,
+        &#39;voxel-preview-toggle.disabled&#39;: running_something
     }
 
     if running_something and consent_loading_data_children == []:
@@ -4529,7 +4547,7 @@ or after being compiled to an executable with PyInstaller.</p>
     # check if user has completed the user study already
     if not app_settings.app_mode:
         if os.path.isfile(os.path.join(curr_folder, &#39;.userstudyover&#39;)):
-            app_settings.consent_ok = False
+            app_settings.consent_ok = None
             app_settings.app_mode = AppMode.USER
 
     webapp_info_file = &#39;./assets/webapp_help_dev.md&#39; if app_settings.app_mode == AppMode.DEV else &#39;./assets/webapp_info.md&#39;
@@ -4731,7 +4749,7 @@ or after being compiled to an executable with PyInstaller.</p>
         scrollable=True)
 
     download_help_modal = dbc.Modal([
-        dbc.ModalHeader(dbc.ModalTitle(&#34;Download Help&#34;),
+        dbc.ModalHeader(dbc.ModalTitle(&#34;Spaceship Controls Help&#34;),
                         style={&#39;justify-content&#39;: &#39;center&#39;},
                         close_button=False),
         dbc.ModalBody(dcc.Markdown(download_help,
@@ -4869,10 +4887,12 @@ or after being compiled to an executable with PyInstaller.</p>
         html.Div(children=[
             html.H4(&#39;Spaceship Population&#39;,
                     className=&#39;section-title&#39;),
-            dbc.Button(&#39;🛈&#39;,
-                       color=&#39;info&#39;,
-                       id=&#39;heatmap-help&#39;,
-                       className=&#39;help&#39;),
+            html.Div(children=[
+                dbc.Button(&#39;🛈&#39;,
+                           color=&#39;info&#39;,
+                           id=&#39;heatmap-help&#39;,
+                           className=&#39;help&#39;)],
+                     style={&#39;margin&#39;: &#39;1vh 1vh 1vh 1vh&#39;})
         ],
             style={
             &#39;display&#39;: &#39;inline-flex&#39;,
@@ -4887,7 +4907,11 @@ or after being compiled to an executable with PyInstaller.</p>
         html.Div(className=&#39;container&#39;,
                  children=[
                      dcc.Graph(id=&#34;heatmap-plot&#34;,
-                               figure=go.Figure(data=[]),
+                            #    figure=go.Figure(data=[]),
+                               figure=_build_heatmap(mapelites=app_settings.current_mapelites,
+                                                     pop_name=&#39;Feasible&#39;,
+                                                     metric_name=&#39;Fitness&#39;,
+                                                     method_name=&#39;Population&#39;),
                                config={
                                    &#39;displayModeBar&#39;: False,
                                    &#39;displaylogo&#39;: False,
@@ -4946,10 +4970,12 @@ or after being compiled to an executable with PyInstaller.</p>
         html.Div(children=[
             html.H4(&#39;Selected Spaceship&#39;,
                     className=&#39;section-title&#39;),
-            dbc.Button(&#39;🛈&#39;,
-                       color=&#39;info&#39;,
-                       id=&#39;content-help&#39;,
-                       className=&#39;help&#39;)
+            html.Div(children=[
+                dbc.Button(&#39;🛈&#39;,
+                           color=&#39;info&#39;,
+                           id=&#39;content-help&#39;,
+                           className=&#39;help&#39;)],
+                     style={&#39;margin&#39;: &#39;1vh 1vh 1vh 1vh&#39;})
         ],
             style={
             &#39;display&#39;: &#39;inline-flex&#39;,
@@ -4962,7 +4988,12 @@ or after being compiled to an executable with PyInstaller.</p>
 
         html.Br(),
         dcc.Graph(id=&#34;content-plot&#34;,
-                  figure=go.Figure(data=[]),
+                #   figure=go.Figure(data=[]),
+                  figure=_get_elite_content(mapelites=app_settings.current_mapelites,
+                                            bin_idx=None,
+                                            pop=&#39;Feasible&#39;,
+                                            camera=None,
+                                            show_voxel=False),
                   config={
                       &#39;displayModeBar&#39;: False,
                       &#39;displaylogo&#39;: False},
@@ -5049,13 +5080,18 @@ or after being compiled to an executable with PyInstaller.</p>
                 html.Div(children=[
                     html.H4(children=&#39;Spaceship Controls&#39;,
                             className=&#39;section-title&#39;),
-                    dbc.Button(&#39;🛈&#39;,
-                               color=&#39;info&#39;,
-                               id=&#39;download-help&#39;,
-                               className=&#39;help&#39;)
+                    html.Div(children=[
+                        dbc.Button(&#39;🛈&#39;,
+                                   color=&#39;info&#39;,
+                                   id=&#39;download-help&#39;,
+                                   className=&#39;help&#39;)],
+                     style={&#39;margin&#39;: &#39;1vh 1vh 1vh 1vh&#39;})
                 ],
-                    style={&#39;display&#39;: &#39;inline-flex&#39;, &#39;flex-direction&#39;: &#39;row&#39;,
-                           &#39;justify-content&#39;: &#39;center&#39;, &#39;text-align&#39;: &#39;center&#39;}
+                    style={&#39;display&#39;: &#39;inline-flex&#39;,
+                           &#39;flex-direction&#39;: &#39;row&#39;,
+                           &#39;justify-content&#39;: &#39;center&#39;,
+                           &#39;align-items&#39;: &#39;center&#39;,
+                           &#39;text-align&#39;: &#39;center&#39;}
                 ),
 
                 html.Br(),
@@ -5697,7 +5733,7 @@ def update_gen_progress(n: int) -&gt; Tuple[int, str]:
     Returns:
         Tuple[int, str]: The current progress value and string percentage representation.
     &#34;&#34;&#34;
-    if app_settings.app_mode != AppMode.DEV:
+    if app_settings.app_mode == AppMode.USERSTUDY:
         val = np.round(100 * ((app_settings.gen_counter) / N_GENS_ALLOWED), 2)
         return val, f&#34;{app_settings.gen_counter} / {N_GENS_ALLOWED}&#34;
     else:
@@ -5773,8 +5809,8 @@ def update_progress(n: int) -&gt; Tuple[int, str]:
     Returns:
         Tuple[int, str]: The current progress value and string percentage representation.
     &#34;&#34;&#34;
-    return app_settings.step_progress, f&#34;{np.round(app_settings.step_progress, 2)}%&#34;, {&#39;content-visibility&#39;: &#39;visible&#39; if 0 &lt;= app_settings.step_progress &lt;= 100 else &#39;hidden&#39;,
-                                                                                       &#39;display&#39;: &#39;inline-block&#39; if 0 &lt;= app_settings.step_progress &lt;= 100 else &#39;none&#39;,
+    return app_settings.step_progress, f&#34;{np.round(app_settings.step_progress, 2)}%&#34;, {&#39;content-visibility&#39;: &#39;visible&#39; if app_settings.step_progress &gt;= 0 else &#39;hidden&#39;,
+                                                                                       &#39;display&#39;: &#39;inline-block&#39; if app_settings.step_progress &gt;= 0 else &#39;none&#39;,
                                                                                        &#39;width&#39;: &#39;100%&#39;}</code></pre>
 </details>
 </dd>

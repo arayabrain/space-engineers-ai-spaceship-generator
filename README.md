@@ -10,7 +10,7 @@
   <img src="media/pcgsepy_banner.png" alt="pcgsepy_banner" height="120"/>
 </p>
 
-Apps and code (`PCGSEPy` library) developed for the [Space Engineers](https://www.spaceengineersgame.com/) PCG project, supported by a [GoodAI research grant](https://www.goodai.com/using-open-ended-algorithms-to-generate-video-game-content-in-space-engineers/). The main app is the AI Spaceship Generator, which creates spaceships for Space Engineers using AI (for more information, see the [publications](#publications)). The second app is a Spaceships Ranker, which is used for conducting a user study. The AI Spaceship Generator and Spaceships Ranker apps are available for Windows on the [releases page](https://github.com/martinpoliak-goodai/space-engineers-ai-spaceship-generator/releases).
+Apps and code (`PCGSEPy` library) developed for the [Space Engineers](https://www.spaceengineersgame.com/) PCG project, supported by a [GoodAI research grant](https://www.goodai.com/using-open-ended-algorithms-to-generate-video-game-content-in-space-engineers/). The main app is the AI Spaceship Generator, which creates spaceships for Space Engineers using AI (for more information, see the [publications](#publications)). The second app is a Spaceships Ranker, which is used for conducting a user study. The AI Spaceship Generator and Spaceships Ranker apps are available for Windows on the [releases page](https://github.com/GoodAI/space-engineers-ai-spaceship-generator/releases).
 
 ## Apps
 The following is a quick overview of the apps (AI Spaceship Generator and Spaceships Ranker). Further documentation is available within the apps themselves.
@@ -40,7 +40,7 @@ An advanced mode, with full access to every part of the system that can be chang
 This app is used for the user study. You can upload and rank different spaceships from the AI Spaceship Generator.
 
 ## Roadmap
-This project is under active development in the [Araya Inc. repository](https://github.com/arayabrain/space-engineers-ai-spaceship-generator) until the end of October 2022. This project will then transition to maintenance support in the [GoodAI fork repository](https://github.com/martinpoliak-goodai/space-engineers-ai-spaceship-generator) until the end of December 2022.
+This project is under active development in the [Araya Inc. repository](https://github.com/arayabrain/space-engineers-ai-spaceship-generator) until the end of October 2022. This project will then transition to maintenance support in the [GoodAI fork repository](https://github.com/GoodAI/space-engineers-ai-spaceship-generator/releases) until the end of December 2022.
 
 The user study is planned to run from mid-October to mid-November 2022.
 
@@ -53,7 +53,7 @@ The apps can be built using the provided `.py` files placed in the `user-study` 
 The AI Spaceship Generator can be built by running `python build_main_webapp.py`. The Spaceships Ranker can be built by running `python build_comparator.py`.
 
 ### Documentation
-An explorable documentation is provided in `docs`. You can build the documentation by first installing `pdoc3` (`pip install pdoc3`) and then running the command `pdoc --html pcgsepy --output-dir --force ./docs`.
+An explorable documentation is provided in `docs`. You can build the documentation by first installing `pdoc3` (`pip install pdoc3`) and then running the command `pdoc --html pcgsepy --force --output-dir  ./docs`.
 
 #### Modifiable files
 Some files can be modified before building the apps. These are:

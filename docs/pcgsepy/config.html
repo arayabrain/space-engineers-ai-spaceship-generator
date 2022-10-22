@@ -107,6 +107,8 @@ BIN_SMALLEST_PERC = config[&#39;MAPELITES&#39;].getfloat(&#39;bin_min_resolution
 # whether to use a linear estimator or a NN estimator in the emitter (if possible)
 USE_LINEAR_ESTIMATOR = config[&#39;MAPELITES&#39;].getboolean(&#39;use_linear_estimator&#39;)
 
+N_EPOCHS = config[&#39;MAPELITES&#39;].getint(&#39;n_epochs&#39;)
+
 # number of experiments to run
 N_RUNS = config[&#39;EXPERIMENT&#39;].getint(&#39;n_runs&#39;)
 # name of the current experiment
