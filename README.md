@@ -10,7 +10,7 @@
   <img src="media/pcgsepy_banner.png" alt="pcgsepy_banner" height="120"/>
 </p>
 
-Apps and code (`PCGSEPy` library) developed for the [Space Engineers](https://www.spaceengineersgame.com/) PCG project, supported by a [GoodAI research grant](https://www.goodai.com/using-open-ended-algorithms-to-generate-video-game-content-in-space-engineers/). The main app is the AI Spaceship Generator, which creates spaceships for Space Engineers using AI (for more information, see the [publications](#publications)). The second app is a Spaceships Ranker, which is used for conducting a user study. The AI Spaceship Generator and Spaceships Ranker apps are available for Windows on the [releases page](https://github.com/GoodAI/space-engineers-ai-spaceship-generator/releases).
+Apps and code (`PCGSEPy` library) developed for the [Space Engineers](https://www.spaceengineersgame.com/) PCG project, supported by a [GoodAI research grant](https://www.goodai.com/using-open-ended-algorithms-to-generate-video-game-content-in-space-engineers/). The main app is the AI Spaceship Generator, which creates spaceships for Space Engineers using AI (for more information, see our [research explainer](#research) and [publications](#publications)). The second app is a Spaceships Ranker, which is used for conducting a user study. The AI Spaceship Generator and Spaceships Ranker apps are available for Windows on the [releases page](https://github.com/GoodAI/space-engineers-ai-spaceship-generator/releases).
 
 ## Apps
 The following is a quick overview of the apps (AI Spaceship Generator and Spaceships Ranker). Further documentation is available within the apps themselves.
@@ -70,6 +70,14 @@ Some files can be modified before building the apps. These are:
 - `user-study`: this directory contains additional code used in the user study.
 
 For more information, refer to the `README`s in each directory.
+
+## Research
+
+The AI Spaceship Generator consists of several components, allowing it to generate both functional and aesthetically-pleasing spaceships for Space Engineers. The basis is a rule-based procedural content generation algorithm that generates working ships, which is combined with an evolutionary algorithm that optimises their appearance, resulting in a novel hybrid evolutionary algorithm. The basic heuristics for the evolutionary algorithm to optimise were derived by analysing the properties of spaceships available on the Space Engineers’ Steam Workshop page.
+
+This is then combined with a novel algorithm that finds a diverse set of spaceships, making more choices available. Finally, we have built a graphical interface for these algorithms so that you can influence the spaceship generator’s choices, alongside another novel algorithm that tries to tune the system to better follow the your ideas.
+
+Starting from an initial population of vessels, you can select a spaceship to "evolve" - the underlying evolutionary algorithm then "mutates" this, creating new spaceships with similar properties (shape, size, etc.). This process can be repeated to continuously generate new spaceships.
 
 ## Publications
 This code was developed for use in the following research publications:
