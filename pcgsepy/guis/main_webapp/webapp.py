@@ -237,7 +237,7 @@ def _get_emitter() -> Emitter:
     elif curr_emitter == 'greedy':
         return GreedyEmitter()
     elif curr_emitter == 'contbandit':
-        return ContextualBanditEmitter()
+        return ContextualBanditEmitter(estimator='mlp',
                                        tau=0.5,
                                        sampling_decay=0.05)
     else:
