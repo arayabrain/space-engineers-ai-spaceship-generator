@@ -9,7 +9,7 @@ from pcgsepy.config import BETA_A, BETA_B, CONTEXT_IDXS, CS_MAX_AGE, N_EPOCHS, U
 from pcgsepy.mapelites.bin import MAPBin
 from pcgsepy.mapelites.buffer import Buffer, mean_merge
 from scipy.special import softmax
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.utils._testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.kernel_ridge import KernelRidge
@@ -474,7 +474,7 @@ class ContextualBanditEmitter(Emitter):
             epsilon (float, optional): The probability threshold value used if sampling strategy is 'epsilon-greedy'. Defaults to 9e-1.
             tau (float, optional): The temperature used if sampling strategy is `gibbs`. Defaults to `1.`.
             sampling_decay (float, optional): The sampling decay. Defaults to 1e-1.
-            estimator (str, optional): The estimator type. Valid values are 'linear' and 'mlp'. Defaults to 'linear'
+            estimator (str, optional): The estimator type. Valid values are 'linear', 'ridge', and 'mlp'. Defaults to 'linear'
         """
         super().__init__()
         self.name: str = 'contextual-bandit-emitter'
@@ -483,7 +483,7 @@ class ContextualBanditEmitter(Emitter):
         self._n_features_context: int = n_features_context
         self._buffer: Buffer = Buffer(merge_method=mean_merge)
         self._estimator: str = estimator
-        self.estimator: Union[LinearRegression, NonLinearEstimator, MLPRegressor] = None
+        self.estimator: Union[LinearRegression, Ridge, NonLinearEstimator, MLPRegressor] = None
         self._fitted: bool = False
         
         self.sampling_strategy: str = sampling_strategy
@@ -501,7 +501,9 @@ class ContextualBanditEmitter(Emitter):
         xs, ys = self._buffer.get()
         if self._estimator == 'linear':
             self.estimator = LinearRegression().fit(X=xs, y=ys)
-            logging.getLogger('mapelites').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self.estimator.score(xs, ys):.2%}')
+        elif self._estimator == 'ridge':
+            self.estimator = Ridge(solver='svd',
+                                   max_iter=N_EPOCHS).fit(X=xs, y=ys)
         elif self._estimator == 'mlp':
             # if USE_TORCH:
             #     self.estimator = NonLinearEstimator(xshape=self._n_features_context,
@@ -511,15 +513,15 @@ class ContextualBanditEmitter(Emitter):
             #                     ys=ys,
             #                     n_epochs=20)
             # else:
-                self.estimator = MLPRegressor(hidden_layer_sizes=(100, 100),
+                self.estimator = MLPRegressor(hidden_layer_sizes=(200, 200),
                                               activation='relu',
-                                              alpha=1e-4,
-                                              solver='lbfgs',
+                                              alpha=1e-3,
+                                              solver='Adam',
                                               verbose=1 if logging.getLogger('mapelites').level == logging.DEBUG else 0,
                                               max_iter=N_EPOCHS).fit(X=xs, y=ys)
-                logging.getLogger('mapelites').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self.estimator.score(xs, ys):.2%}')
         else:
             raise ValueError(f'Unrecognized estimator type: {self._estimator}')
+        logging.getLogger('mapelites').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self.estimator.score(xs, ys):.2%}')
         self._fitted = True
     
     def _extract_bin_context(self,
@@ -601,10 +603,14 @@ class ContextualBanditEmitter(Emitter):
             'fitted': self._fitted,
         }
         j['estimator_name'] = self._estimator
-        if isinstance(self._estimator, LinearRegression):
-            j['estimator_params'] = self.estimator.get_params(),
-            j['estimator_coefs'] = self.estimator.coef_.tolist() if self._fitted else None,
-            j['estimator_intercept'] = np.asarray(self.estimator.intercept_).tolist() if self._fitted else None,
+        if isinstance(self.estimator, LinearRegression):
+            j['estimator_params'] = self.estimator.get_params()
+            j['estimator_coefs'] = self.estimator.coef_.tolist() if self._fitted else None
+            j['estimator_intercept'] = np.asarray(self.estimator.intercept_).tolist() if self._fitted else None
+        elif isinstance(self.estimator, Ridge):
+            j['estimator_params'] = self.estimator.get_params()
+            j['estimator_coefs'] = self.estimator.coef_.tolist() if self._fitted else None
+            j['estimator_intercept'] = np.asarray(self.estimator.intercept_).tolist() if self._fitted else None
         elif isinstance(self.estimator, MLPRegressor):
             j['coefs_'] = self.estimator.coefs_
             j['intercepts_']: self.estimator.intercepts_
@@ -645,6 +651,14 @@ class ContextualBanditEmitter(Emitter):
                     re.estimator.coef_ = np.asarray(my_args['estimator_coefs'])
                 if my_args['estimator_intercept'] is not None:
                     re.estimator.intercept_ = np.asarray(my_args['estimator_intercept'])
+            elif my_args['estimator_name'] == 'ridge':
+                re._estimator = 'ridge'
+                re.estimator = Ridge()
+                re.estimator.set_params(my_args['estimator_params'])
+                if my_args['estimator_coefs'] is not None:
+                    re.estimator.coef_ = np.asarray(my_args['estimator_coefs'])
+                if my_args['estimator_intercept'] is not None:
+                    re.estimator.intercept_ = np.asarray(my_args['estimator_intercept'])
             elif my_args['estimator_name'] == 'mlp':
                 re._estimator = 'mlp'
                 re.estimator = MLPRegressor()
@@ -675,7 +689,7 @@ class PreferenceBanditEmitter(Emitter):
             epsilon (float, optional): The probability threshold value used if sampling strategy is 'epsilon-greedy'. Defaults to 0.9.
             tau (float, optional): The temperature used if sampling strategy is `gibbs`. Defaults to 1..
             sampling_decay (float, optional): The sampling decay. Defaults to 0.01.
-            estimator (str, optional):  The estimator type. Valid values are 'linear' and 'mlp'. Defaults to 'linear'.
+            estimator (str, optional): The estimator type. Valid values are 'linear', 'ridge', and 'mlp'. Defaults to 'linear'
         """
         super().__init__()
         self.name: str = 'preference-bandit-emitter'
@@ -683,7 +697,7 @@ class PreferenceBanditEmitter(Emitter):
         
         self._buffer: Buffer = Buffer(merge_method=mean_merge)
         self._estimator: str = estimator
-        self.estimator: Union[LinearRegression, NonLinearEstimator, MLPRegressor] = None
+        self.estimator: Union[LinearRegression, Ridge, NonLinearEstimator, MLPRegressor] = None
         self._fitted: bool = False
         
         self.sampling_strategy: str = sampling_strategy
@@ -701,7 +715,9 @@ class PreferenceBanditEmitter(Emitter):
         xs, ys = self._buffer.get()
         if self._estimator == 'linear':
             self.estimator = LinearRegression().fit(X=xs, y=ys)
-            logging.getLogger('mapelites').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self.estimator.score(xs, ys):.2%}')
+        elif self._estimator == 'ridge':
+            self.estimator = Ridge(solver='svd',
+                                   max_iter=N_EPOCHS).fit(X=xs, y=ys)
         elif self._estimator == 'mlp':
             # if USE_TORCH:
             #     self.estimator = NonLinearEstimator(xshape=self._n_features_context,
@@ -711,15 +727,15 @@ class PreferenceBanditEmitter(Emitter):
             #                     ys=ys,
             #                     n_epochs=20)
             # else:
-                self.estimator = MLPRegressor(hidden_layer_sizes=(100, 100),
+                self.estimator = MLPRegressor(hidden_layer_sizes=(200, 200),
                                               activation='relu',
-                                              alpha=1e-4,
-                                              solver='lbfgs',
+                                              alpha=1e-3,
+                                              solver='Adam',
                                               verbose=1 if logging.getLogger('mapelites').level == logging.DEBUG else 0,
                                               max_iter=N_EPOCHS).fit(X=xs, y=ys)
-                logging.getLogger('mapelites').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self.estimator.score(xs, ys):.2%}')
         else:
             raise ValueError(f'Unrecognized estimator type: {self._estimator}')
+        logging.getLogger('mapelites').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self.estimator.score(xs, ys):.2%}')
         self._fitted = True
         
     def _predict(self,
@@ -778,7 +794,7 @@ class PreferenceBanditEmitter(Emitter):
         self.epsilon = self._initial_epsilon
         self.tau = self._initial_tau
         self._buffer.clear()
-        self._estimator = None
+        self.estimator = None
         self._fitted = False
 
     def to_json(self) -> Dict[str, Any]:
@@ -801,6 +817,10 @@ class PreferenceBanditEmitter(Emitter):
             j['estimator_params'] = self.estimator.get_params(),
             j['estimator_coefs'] = self.estimator.coef_.tolist() if self._fitted else None,
             j['estimator_intercept'] = np.asarray(self.estimator.intercept_).tolist() if self._fitted else None,
+        elif isinstance(self.estimator, Ridge):
+            j['estimator_params'] = self.estimator.get_params()
+            j['estimator_coefs'] = self.estimator.coef_.tolist() if self._fitted else None
+            j['estimator_intercept'] = np.asarray(self.estimator.intercept_).tolist() if self._fitted else None
         elif isinstance(self.estimator, MLPRegressor):
             j['coefs_'] = self.estimator.coefs_
             j['intercepts_']: self.estimator.intercepts_
@@ -836,6 +856,14 @@ class PreferenceBanditEmitter(Emitter):
             if my_args['estimator_name'] == 'linear':
                 re._estimator = 'linear'
                 re.estimator = LinearRegression()
+                re.estimator.set_params(my_args['estimator_params'])
+                if my_args['estimator_coefs'] is not None:
+                    re.estimator.coef_ = np.asarray(my_args['estimator_coefs'])
+                if my_args['estimator_intercept'] is not None:
+                    re.estimator.intercept_ = np.asarray(my_args['estimator_intercept'])
+            elif my_args['estimator_name'] == 'ridge':
+                re._estimator = 'ridge'
+                re.estimator = Ridge()
                 re.estimator.set_params(my_args['estimator_params'])
                 if my_args['estimator_coefs'] is not None:
                     re.estimator.coef_ = np.asarray(my_args['estimator_coefs'])
@@ -1007,6 +1035,7 @@ class KNEmitter(Emitter):
 
 class KernelEmitter(Emitter):
     def __init__(self,
+                 alpha: float = 1.0,
                  sampling_strategy: str = 'gibbs',
                  epsilon: float = 0.9,
                  tau: float = 1.,
@@ -1015,6 +1044,7 @@ class KernelEmitter(Emitter):
         """Create a kernel-based emitter.
 
         Args:
+            alpha (float, optional): The L2 regularisation term. Defaults to 1.0.
             sampling_strategy (str, optional): The sampling strategy. Valid values are `epsilon-greedy` and `gibbs`. Defaults to 'gibbs'.
             epsilon (float, optional): The probability threshold value used if sampling strategy is 'epsilon-greedy'. Defaults to 0.9.
             tau (float, optional): The temperature used if sampling strategy is `gibbs`. Defaults to 1..
@@ -1028,6 +1058,7 @@ class KernelEmitter(Emitter):
         self._buffer: Buffer = Buffer(merge_method=mean_merge)
         self._estimator: str = estimator
         self.estimator: KernelRidge = None
+        self.alpha: float = alpha
         self._fitted: bool = False
         
         self.sampling_strategy: str = sampling_strategy
@@ -1044,7 +1075,7 @@ class KernelEmitter(Emitter):
     def _fit(self) -> None:
         xs, ys = self._buffer.get()
         self.estimator = KernelRidge(kernel=self._estimator,
-                                     alpha=1.0).fit(X=xs, y=ys)
+                                     alpha=self.alpha).fit(X=xs, y=ys)
         logging.getLogger('mapelites').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self.estimator.score(xs, ys):.2%}')
         self._fitted = True
     
@@ -1104,7 +1135,7 @@ class KernelEmitter(Emitter):
         self.epsilon = self._initial_epsilon
         self.tau = self._initial_tau
         self._buffer.clear()
-        self._estimator = None
+        self.estimator = None
         self._fitted = False
 
     def to_json(self) -> Dict[str, Any]:
@@ -1169,7 +1200,7 @@ class SimpleTabularEmitter(Emitter):
             epsilon (float, optional): The probability threshold value used if sampling strategy is 'epsilon-greedy'. Defaults to 0.9.
             tau (float, optional): The temperature used if sampling strategy is `gibbs`. Defaults to 1..
             sampling_decay (float, optional): The sampling decay. Defaults to 0.01.
-            estimator (str, optional):  The estimator type. Valid values are 'linear' and 'mlp'. Defaults to 'linear'.
+            estimator (str, optional): The estimator type. Valid values are 'linear', 'ridge', and 'mlp'. Defaults to 'linear'
         """
         super().__init__()
         self.name = 'simple-tabular-emitter'
@@ -1177,7 +1208,7 @@ class SimpleTabularEmitter(Emitter):
         
         self._buffer: Buffer = Buffer(merge_method=mean_merge)
         self._estimator: str = estimator
-        self.estimator: LinearRegression = None
+        self.estimator: Union[LinearRegression, Ridge, NonLinearEstimator, MLPRegressor] = None
         self._fitted: bool = False
         
         self.sampling_strategy: str = sampling_strategy
@@ -1195,7 +1226,29 @@ class SimpleTabularEmitter(Emitter):
     @ignore_warnings(category=ConvergenceWarning)
     def _fit(self) -> None:
         xs, ys = self._buffer.get()
-        self.estimator = LinearRegression().fit(X=xs, y=ys)
+        if self._estimator == 'linear':
+            self.estimator = LinearRegression().fit(X=xs, y=ys)
+        elif self._estimator == 'ridge':
+            self.estimator = Ridge(solver='svd',
+                                   max_iter=N_EPOCHS).fit(X=xs, y=ys)
+        elif self._estimator == 'mlp':
+            # if USE_TORCH:
+            #     self.estimator = NonLinearEstimator(xshape=self._n_features_context,
+            #                                         yshape=1)
+            #     train_estimator(estimator=self._estimator,
+            #                     xs=xs,
+            #                     ys=ys,
+            #                     n_epochs=20)
+            # else:
+                self.estimator = MLPRegressor(hidden_layer_sizes=(200, 200),
+                                              activation='relu',
+                                              alpha=1e-3,
+                                              solver='Adam',
+                                              verbose=1 if logging.getLogger('mapelites').level == logging.DEBUG else 0,
+                                              max_iter=N_EPOCHS).fit(X=xs, y=ys)
+        else:
+            raise ValueError(f'Unrecognized estimator type: {self._estimator}')
+        
         logging.getLogger('mapelites').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self.estimator.score(xs, ys):.2%}')
         self._fitted = True
         
@@ -1266,7 +1319,7 @@ class SimpleTabularEmitter(Emitter):
         self.epsilon = self._initial_epsilon
         self.tau = self._initial_tau
         self._buffer.clear()
-        self._estimator = None
+        self.estimator = None
         self._fitted = False
         self.ts_priors = {}
         self._tot_actions = 0
@@ -1294,6 +1347,10 @@ class SimpleTabularEmitter(Emitter):
             j['estimator_params'] = self.estimator.get_params(),
             j['estimator_coefs'] = self.estimator.coef_.tolist() if self._fitted else None,
             j['estimator_intercept'] = np.asarray(self.estimator.intercept_).tolist() if self._fitted else None,
+        elif isinstance(self.estimator, Ridge):
+            j['estimator_params'] = self.estimator.get_params()
+            j['estimator_coefs'] = self.estimator.coef_.tolist() if self._fitted else None
+            j['estimator_intercept'] = np.asarray(self.estimator.intercept_).tolist() if self._fitted else None
         elif isinstance(self.estimator, MLPRegressor):
             j['coefs_'] = self.estimator.coefs_
             j['intercepts_']: self.estimator.intercepts_
@@ -1332,6 +1389,14 @@ class SimpleTabularEmitter(Emitter):
             if my_args['estimator_name'] == 'linear':
                 re._estimator = 'linear'
                 re.estimator = LinearRegression()
+                re.estimator.set_params(my_args['estimator_params'])
+                if my_args['estimator_coefs'] is not None:
+                    re.estimator.coef_ = np.asarray(my_args['estimator_coefs'])
+                if my_args['estimator_intercept'] is not None:
+                    re.estimator.intercept_ = np.asarray(my_args['estimator_intercept'])
+            elif my_args['estimator_name'] == 'ridge':
+                re._estimator = 'ridge'
+                re.estimator = Ridge()
                 re.estimator.set_params(my_args['estimator_params'])
                 if my_args['estimator_coefs'] is not None:
                     re.estimator.coef_ = np.asarray(my_args['estimator_coefs'])

@@ -238,6 +238,8 @@ def _get_emitter() -> Emitter:
         return GreedyEmitter()
     elif curr_emitter == 'contbandit':
         return ContextualBanditEmitter()
+                                       tau=0.5,
+                                       sampling_decay=0.05)
     else:
         raise ValueError(
             f'Unexpected emitter type: {curr_emitter} (from "{app_settings.my_emitterslist[app_settings.exp_n]}"')
@@ -2045,8 +2047,8 @@ def _apply_step(mapelites: MAPElites,
         mapelites.n_new_solutions = 0
         with trange(N_EMITTER_STEPS, desc='Emitter steps: ') as iterations:
             for _ in iterations:
-                if not only_human:
-                    emitter_time += mapelites.emitter_step(gen=gen_counter)
+                # if not only_human:
+                emitter_time += mapelites.emitter_step(gen=gen_counter)
                 app_settings.step_progress += perc_step
         if app_settings.app_mode == AppMode.USERSTUDY:
             time_elapsed_emitter.add(emitter_time)
