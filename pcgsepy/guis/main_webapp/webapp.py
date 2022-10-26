@@ -52,6 +52,7 @@ from tqdm import trange
 
 
 dashLoggerHandler = DashLoggerHandler()
+dashLoggerHandler.addFilter(lambda record: record.levelno >= logging.INFO)
 logging.getLogger('webapp').addHandler(dashLoggerHandler)
 
 

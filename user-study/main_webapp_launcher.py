@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 import os
 import sys
@@ -41,8 +42,20 @@ args = parser.parse_args()
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
+current_datetime = datetime.now().strftime("%Y%m%d%H%M%S")
+file_handler = logging.FileHandler(filename=f'{current_datetime}.log', mode='w+')
+file_handler.addFilter(lambda record: record.levelno >= logging.DEBUG)
+sysout_handler = logging.StreamHandler(sys.stdout)
+sysout_handler.addFilter(lambda record: record.levelno >= (logging.DEBUG if args.debug else logging.INFO))
+
+logging.basicConfig(level=logging.WARNING,
+                    handlers=[
+                        sysout_handler,
+                        file_handler
+                    ])
+
 for logger_name in ACTIVE_LOGGERS:
-    logging.getLogger(logger_name).setLevel(logging.DEBUG if args.debug else logging.INFO)    
+    logging.getLogger(logger_name).setLevel(logging.DEBUG)
 
 setup_matplotlib(larger_fonts=False)
 
@@ -99,8 +112,6 @@ behavior_descriptors = [
 buffer = Buffer(merge_method=mean_merge)
 mapelites = MAPElites(lsystem=lsystem,
                       feasible_fitnesses=feasible_fitnesses,
-                    #   estimator=MLPEstimator(xshape=len(feasible_fitnesses),
-                    #                          yshape=1) if USE_TORCH else GaussianEstimator(),
                       estimator=GaussianEstimator(bound='upper',
                                                   kernel=DotProduct() + WhiteKernel(),
                                                   max_f=sum([f.bounds[1] for f in feasible_fitnesses])),
