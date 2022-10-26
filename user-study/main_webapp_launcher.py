@@ -23,7 +23,7 @@ from pcgsepy.setup_utils import get_default_lsystem, setup_matplotlib
 from pcgsepy.mapelites.buffer import Buffer, mean_merge
 from pcgsepy.nn.estimators import GaussianEstimator
 from pcgsepy.mapelites.map import MAPElites
-from pcgsepy.mapelites.emitters import RandomEmitter
+from pcgsepy.mapelites.emitters import ContextualBanditEmitter, RandomEmitter
 from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel
 
 parser = argparse.ArgumentParser()
@@ -118,7 +118,9 @@ mapelites = MAPElites(lsystem=lsystem,
                       buffer=buffer,
                       behavior_descriptors=behavior_descriptors,
                       n_bins=BIN_N,
-                      emitter=RandomEmitter())
+                      emitter=ContextualBanditEmitter(estimator='mlp',
+                                                      tau=0.5,
+                                                      sampling_decay=0.05))
 mapelites.allow_aging = False
 
 mapelites.hull_builder.apply_smoothing = False

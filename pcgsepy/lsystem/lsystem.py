@@ -119,12 +119,12 @@ class LSystemModule:
         """
         self.hlsolver.set_constraints(cs=self.hl_constraints)
         self.llsolver.set_constraints(cs=self.ll_constraints)
-        logging.getLogger('lsystem').info(f'[{__name__}.create_new_pool] Started high level solving...')
+        logging.getLogger('lsystem').debug(f'[{__name__}.create_new_pool] Started high level solving...')
         hl_solutions = self._get_hl_solutions(starting_string=starting_string,
                                               iterations=iterations)
         logging.getLogger('lsystem').debug(f'[{__name__}.create_new_pool] Converting HL strings to ML...')
         ml_strings = self._get_ml_strings([cs.string for cs in hl_solutions])
-        logging.getLogger('lsystem').info(f'[{__name__}.create_new_pool] Started low level solving...')
+        logging.getLogger('lsystem').debug(f'[{__name__}.create_new_pool] Started low level solving...')
         _, to_keep = self._get_ll_solutions([CandidateSolution(string=s,
                                                                content=hl_cs._content) for s, hl_cs in zip(ml_strings, hl_solutions)])
         hl_solutions = [x for x, k in zip(hl_solutions, to_keep) if k]

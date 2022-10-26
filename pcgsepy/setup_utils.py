@@ -80,7 +80,7 @@ def get_default_lsystem(used_ll_blocks: List[str]) -> LSystem:
     ll_alphabet.update({k: {"action": AtomAction.PLACE, "args": [k]}
                        for k in used_ll_blocks})
     # create the rulesets
-    hl_rules = RuleMaker(ruleset='hlrules').get_rules()
+    hl_rules = RuleMaker(ruleset='hlrules_sm').get_rules()
     ll_rules = RuleMaker(ruleset='llrules').get_rules()
     # create the parsers
     hl_parser = HLParser(rules=hl_rules)

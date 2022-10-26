@@ -42,3 +42,9 @@ Do you really want to quit the user study?
 If you quit the user study, we won't collect data anymore and you won't be able to complete the experiment.
 Make sure to close the questionnaire afterwards.
 """
+
+toggle_safe_rules_mesg = """
+Do you really want to toggle safe mode?
+
+By toggling off this feature, we will not check that thrusters are placed on all six sides of the spaceship, making it difficult to manuever. The population will also be reinitialised afterward.
+"""
