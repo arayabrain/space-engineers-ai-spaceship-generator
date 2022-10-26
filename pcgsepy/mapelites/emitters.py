@@ -516,7 +516,7 @@ class ContextualBanditEmitter(Emitter):
                 self.estimator = MLPRegressor(hidden_layer_sizes=(200, 200),
                                               activation='relu',
                                               alpha=1e-3,
-                                              solver='Adam',
+                                              solver='adam',
                                               verbose=1 if logging.getLogger('mapelites').level == logging.DEBUG else 0,
                                               max_iter=N_EPOCHS).fit(X=xs, y=ys)
         else:
@@ -730,7 +730,7 @@ class PreferenceBanditEmitter(Emitter):
                 self.estimator = MLPRegressor(hidden_layer_sizes=(200, 200),
                                               activation='relu',
                                               alpha=1e-3,
-                                              solver='Adam',
+                                              solver='adam',
                                               verbose=1 if logging.getLogger('mapelites').level == logging.DEBUG else 0,
                                               max_iter=N_EPOCHS).fit(X=xs, y=ys)
         else:
@@ -1243,7 +1243,7 @@ class SimpleTabularEmitter(Emitter):
                 self.estimator = MLPRegressor(hidden_layer_sizes=(200, 200),
                                               activation='relu',
                                               alpha=1e-3,
-                                              solver='Adam',
+                                              solver='adam',
                                               verbose=1 if logging.getLogger('mapelites').level == logging.DEBUG else 0,
                                               max_iter=N_EPOCHS).fit(X=xs, y=ys)
         else:
