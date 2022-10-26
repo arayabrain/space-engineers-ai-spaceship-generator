@@ -128,9 +128,11 @@ def mutate(cs: CandidateSolution,
                     offset += len(rhs) - len(match.lhs_string)
                     mutated |= True
     if not mutated:
+        logging.getLogger('genops').error(f'[{__name__}.mutate] No mutation could be applied to {cs.string}.')
         raise EvoException(f'No mutation could be applied to {cs.string}.')
     # Update solution string
     cs.string = string_merging(ls=[x['string'] for x in cs.hls_mod.values()])
+    logging.getLogger('genops').debug(f'[{__name__}.mutate] New string {cs.string=}.')
 
 
 def crossover(a1: CandidateSolution,
@@ -157,11 +159,16 @@ def crossover(a1: CandidateSolution,
             string2 = a2.hls_mod[module]['string'][:]
             idxs1 = get_matching_brackets(string=string1)
             idxs2 = get_matching_brackets(string=string2)
+            logging.getLogger('genops').debug(f'[{__name__}.crossover] brackets1: {len(idxs1)=}.')
+            logging.getLogger('genops').debug(f'[{__name__}.crossover] brackets2: {len(idxs2)=}.')
             if not idxs1:
                 idxs1 = [match.span() for match in atoms_re.finditer(string=string1)]
+                logging.getLogger('genops').debug(f'[{__name__}.crossover] Extended brackets1: {len(idxs1)=}.')
             if not idxs2:
                 idxs2 = [match.span() for match in atoms_re.finditer(string=string2)]
+                logging.getLogger('genops').debug(f'[{__name__}.crossover] Extended brackets2: {len(idxs2)=}.')
             if len(idxs1) == 0 or len(idxs2) == 0:
+                logging.getLogger('genops').debug(f'[{__name__}.crossover] Module {module} skipped.')
                 pass
             else:
                 ws1 = [CROSSOVER_P for _ in range(len(idxs1))]
@@ -180,12 +187,13 @@ def crossover(a1: CandidateSolution,
                     modified_string = string_merging([x['string'] for x in modified_hls_mod.values()])
                     o = CandidateSolution(string=modified_string)
                     o.hls_mod = modified_hls_mod
+                    logging.getLogger('genops').debug(f'[{__name__}.crossover] Added child {o.string}.')
                     childs.append(o)
                     a1.n_offspring += 1
                     a2.n_offspring += 1
     if len(childs) == 0:
-        raise EvoException(
-            f'No cross-over could be applied ({a1.string} w/ {a2.string}).')
+        logging.getLogger('genops').error(f'[{__name__}.crossover] No cross-over could be applied ({a1.string} w/ {a2.string}).')
+        raise EvoException(f'No cross-over could be applied ({a1.string} w/ {a2.string}).')
     return childs[:n_childs]
 
 

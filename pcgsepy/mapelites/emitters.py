@@ -15,7 +15,7 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.neighbors import KNeighborsRegressor
 
-logging.getLogger('mapelites').info(msg=f'PyTorch set to {USE_TORCH}')
+logging.getLogger('emitter').info(msg=f'PyTorch set to {USE_TORCH}')
 
 if USE_TORCH:
     from pcgsepy.nn.estimators import NonLinearEstimator, train_estimator
@@ -218,6 +218,9 @@ class GreedyEmitter(Emitter):
         self.requires_pre = True
         self._last_selected: List[List[int]] = []
     
+    def __repr__(self) -> str:
+        return f'{self.name}'
+    
     def pick_bin(self,
                  bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:
         selected = [bins[idx] for idx in self._last_selected if bins[idx].non_empty(pop='feasible') or bins[idx].non_empty(pop='infeasbile')]
@@ -357,7 +360,7 @@ class HumanPrefMatrixEmitter(Emitter):
         valid_idxs = list(non_empty.intersection(valid_prefs))
         if self.sampling_strategy == 'epsilon-greedy':
             p = (np.random.uniform(low=0, high=1, size=1) < self.epsilon)[0]
-            logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {p=}')
+            logging.getLogger('emitter').debug(f'[{__name__}.pick_bin] {p=}')
             self.epsilon -= self.sampling_decay * self.epsilon
             if p:
                 np.random.shuffle(valid_idxs)
@@ -367,7 +370,7 @@ class HumanPrefMatrixEmitter(Emitter):
         elif self.sampling_strategy == 'gibbs':
             idxs = tuple(np.asarray(valid_idxs).transpose())
             logits = softmax(self._prefs[idxs] / self.tau)
-            logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {logits=}')
+            logging.getLogger('emitter').debug(f'[{__name__}.pick_bin] {logits=}')
             self.tau -= self.sampling_decay * self.tau
             valid_bins = bins[idxs]
             sampled_bins = np.random.choice(valid_bins,
@@ -517,11 +520,12 @@ class ContextualBanditEmitter(Emitter):
                                               activation='relu',
                                               alpha=1e-3,
                                               solver='adam',
-                                              verbose=1 if logging.getLogger('mapelites').level == logging.DEBUG else 0,
+                                            #   verbose=1 if logging.getLogger('emitter').level == logging.DEBUG else 0,
+                                              verbose=0,
                                               max_iter=N_EPOCHS).fit(X=xs, y=ys)
         else:
             raise ValueError(f'Unrecognized estimator type: {self._estimator}')
-        logging.getLogger('mapelites').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self.estimator.score(xs, ys):.2%}')
+        logging.getLogger('emitter').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self.estimator.score(xs, ys):.2%}')
         self._fitted = True
     
     def _extract_bin_context(self,
@@ -536,7 +540,7 @@ class ContextualBanditEmitter(Emitter):
     def pre_step(self, **kwargs) -> None:
         bins: 'np.ndarray[MAPBin]' = kwargs['bins']
         idxs: List[Tuple[int, int]] = [*kwargs['selected_idxs'], *kwargs['expanded_idxs']]
-        logging.getLogger('mapelites').debug(f'[{__name__}.pre_step] {idxs=}')
+        logging.getLogger('emitter').debug(f'[{__name__}.pre_step] {idxs=}')
         for (i, j), b in np.ndenumerate(bins):
             if b.non_empty(pop='feasible'):
                 self._buffer.insert(x=self._extract_bin_context(b),
@@ -552,7 +556,7 @@ class ContextualBanditEmitter(Emitter):
         predicted_prefs = self._predict(bins=valid_bins)
         if self.sampling_strategy == 'epsilon-greedy':
             p = (np.random.uniform(low=0, high=1, size=1) < self.epsilon)[0]
-            logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {p=}')
+            logging.getLogger('emitter').debug(f'[{__name__}.pick_bin] {p=}')
             self.epsilon -= self.sampling_decay * self.epsilon
             if p:
                 np.random.shuffle(valid_idxs)
@@ -561,7 +565,7 @@ class ContextualBanditEmitter(Emitter):
             sampled_bins = bins[tuple(np.asarray(valid_idxs).transpose())]
         elif self.sampling_strategy == 'gibbs':
             logits = softmax(predicted_prefs / self.tau)
-            logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {logits=}')
+            logging.getLogger('emitter').debug(f'[{__name__}.pick_bin] {logits=}')
             self.tau -= self.sampling_decay * self.tau
             sampled_bins = np.random.choice(valid_bins,
                                             size=len(valid_bins),
@@ -731,11 +735,12 @@ class PreferenceBanditEmitter(Emitter):
                                               activation='relu',
                                               alpha=1e-3,
                                               solver='adam',
-                                              verbose=1 if logging.getLogger('mapelites').level == logging.DEBUG else 0,
+                                            #   verbose=1 if logging.getLogger('emitter').level == logging.DEBUG else 0,
+                                              verbose=0,
                                               max_iter=N_EPOCHS).fit(X=xs, y=ys)
         else:
             raise ValueError(f'Unrecognized estimator type: {self._estimator}')
-        logging.getLogger('mapelites').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self.estimator.score(xs, ys):.2%}')
+        logging.getLogger('emitter').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self.estimator.score(xs, ys):.2%}')
         self._fitted = True
         
     def _predict(self,
@@ -746,7 +751,7 @@ class PreferenceBanditEmitter(Emitter):
     def pre_step(self, **kwargs) -> None:
         bins: 'np.ndarray[MAPBin]' = kwargs['bins']
         idxs: List[Tuple[int, int]] = [*kwargs['selected_idxs'], *kwargs['expanded_idxs']]
-        logging.getLogger('mapelites').debug(f'[{__name__}.pre_step] {idxs=}')
+        logging.getLogger('emitter').debug(f'[{__name__}.pre_step] {idxs=}')
         bcs0 = np.cumsum([b.bin_size[0] for b in bins[0, :]])[:-1]
         bcs1 = np.cumsum([b.bin_size[1] for b in bins[:, 0]])[:-1]
         for (i, j), b in np.ndenumerate(bins):
@@ -764,7 +769,7 @@ class PreferenceBanditEmitter(Emitter):
         predicted_prefs = self._predict(bins=valid_bins)
         if self.sampling_strategy == 'epsilon-greedy':
             p = (np.random.uniform(low=0, high=1, size=1) < self.epsilon)[0]
-            logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {p=}')
+            logging.getLogger('emitter').debug(f'[{__name__}.pick_bin] {p=}')
             self.epsilon -= self.sampling_decay * self.epsilon
             if p:
                 np.random.shuffle(valid_idxs)
@@ -773,7 +778,7 @@ class PreferenceBanditEmitter(Emitter):
             sampled_bins = bins[tuple(np.asarray(valid_idxs).transpose())]
         elif self.sampling_strategy == 'gibbs':
             logits = softmax(predicted_prefs / self.tau)
-            logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {logits=}')
+            logging.getLogger('emitter').debug(f'[{__name__}.pick_bin] {logits=}')
             self.tau -= self.sampling_decay * self.tau
             sampled_bins = np.random.choice(valid_bins,
                                             size=len(valid_bins),
@@ -922,7 +927,7 @@ class KNEmitter(Emitter):
                                              weights='distance',
                                              p=2,
                                              metric='minkowski').fit(X=xs, y=ys)
-        logging.getLogger('mapelites').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self.estimator.score(xs, ys):.2%}')
+        logging.getLogger('emitter').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self.estimator.score(xs, ys):.2%}')
         self._fitted = True
     
     def __repr__(self) -> str:
@@ -936,7 +941,7 @@ class KNEmitter(Emitter):
     def pre_step(self, **kwargs) -> None:
         bins: 'np.ndarray[MAPBin]' = kwargs['bins']
         idxs: List[Tuple[int, int]] = [*kwargs['selected_idxs'], *kwargs['expanded_idxs']]
-        logging.getLogger('mapelites').debug(f'[{__name__}.pre_step] {idxs=}')
+        logging.getLogger('emitter').debug(f'[{__name__}.pre_step] {idxs=}')
         bcs0 = np.cumsum([b.bin_size[0] for b in bins[0, :]])[:-1]
         bcs1 = np.cumsum([b.bin_size[1] for b in bins[:, 0]])[:-1]
         for (i, j), b in np.ndenumerate(bins):
@@ -954,7 +959,7 @@ class KNEmitter(Emitter):
         predicted_prefs = self._predict(bins=valid_bins)
         if self.sampling_strategy == 'epsilon-greedy':
             p = (np.random.uniform(low=0, high=1, size=1) < self.epsilon)[0]
-            logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {p=}')
+            logging.getLogger('emitter').debug(f'[{__name__}.pick_bin] {p=}')
             self.epsilon -= self.sampling_decay * self.epsilon
             if p:
                 np.random.shuffle(valid_idxs)
@@ -963,7 +968,7 @@ class KNEmitter(Emitter):
             sampled_bins = bins[tuple(np.asarray(valid_idxs).transpose())]
         elif self.sampling_strategy == 'gibbs':
             logits = softmax(predicted_prefs / self.tau)
-            logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {logits=}')
+            logging.getLogger('emitter').debug(f'[{__name__}.pick_bin] {logits=}')
             self.tau -= self.sampling_decay * self.tau
             sampled_bins = np.random.choice(valid_bins,
                                             size=len(valid_bins),
@@ -1076,7 +1081,7 @@ class KernelEmitter(Emitter):
         xs, ys = self._buffer.get()
         self.estimator = KernelRidge(kernel=self._estimator,
                                      alpha=self.alpha).fit(X=xs, y=ys)
-        logging.getLogger('mapelites').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self.estimator.score(xs, ys):.2%}')
+        logging.getLogger('emitter').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self.estimator.score(xs, ys):.2%}')
         self._fitted = True
     
     def _predict(self,
@@ -1087,7 +1092,7 @@ class KernelEmitter(Emitter):
     def pre_step(self, **kwargs) -> None:
         bins: 'np.ndarray[MAPBin]' = kwargs['bins']
         idxs: List[Tuple[int, int]] = [*kwargs['selected_idxs'], *kwargs['expanded_idxs']]
-        logging.getLogger('mapelites').debug(f'[{__name__}.pre_step] {idxs=}')
+        logging.getLogger('emitter').debug(f'[{__name__}.pre_step] {idxs=}')
         bcs0 = np.cumsum([b.bin_size[0] for b in bins[0, :]])[:-1]
         bcs1 = np.cumsum([b.bin_size[1] for b in bins[:, 0]])[:-1]
         for (i, j), b in np.ndenumerate(bins):
@@ -1105,7 +1110,7 @@ class KernelEmitter(Emitter):
         predicted_prefs = self._predict(bins=valid_bins)
         if self.sampling_strategy == 'epsilon-greedy':
             p = (np.random.uniform(low=0, high=1, size=1) < self.epsilon)[0]
-            logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {p=}')
+            logging.getLogger('emitter').debug(f'[{__name__}.pick_bin] {p=}')
             self.epsilon -= self.sampling_decay * self.epsilon
             if p:
                 np.random.shuffle(valid_idxs)
@@ -1114,7 +1119,7 @@ class KernelEmitter(Emitter):
             sampled_bins = bins[tuple(np.asarray(valid_idxs).transpose())]
         elif self.sampling_strategy == 'gibbs':
             logits = softmax(predicted_prefs / self.tau)
-            logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {logits=}')
+            logging.getLogger('emitter').debug(f'[{__name__}.pick_bin] {logits=}')
             self.tau -= self.sampling_decay * self.tau
             sampled_bins = np.random.choice(valid_bins,
                                             size=len(valid_bins),
@@ -1244,12 +1249,13 @@ class SimpleTabularEmitter(Emitter):
                                               activation='relu',
                                               alpha=1e-3,
                                               solver='adam',
-                                              verbose=1 if logging.getLogger('mapelites').level == logging.DEBUG else 0,
+                                            #   verbose=1 if logging.getLogger('emitter').level == logging.DEBUG else 0,
+                                              verbose=0,
                                               max_iter=N_EPOCHS).fit(X=xs, y=ys)
         else:
             raise ValueError(f'Unrecognized estimator type: {self._estimator}')
         
-        logging.getLogger('mapelites').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self.estimator.score(xs, ys):.2%}')
+        logging.getLogger('emitter').debug(f'[{__name__}._fit] datapoints={len(xs)}; nonzero_count={len(np.nonzero(ys)[0])}; estimator_score={self.estimator.score(xs, ys):.2%}')
         self._fitted = True
         
     def _predict(self,
@@ -1259,7 +1265,7 @@ class SimpleTabularEmitter(Emitter):
     def pre_step(self, **kwargs) -> None:
         bins: 'np.ndarray[MAPBin]' = kwargs['bins']
         idxs: List[Tuple[int, int]] = [*kwargs['selected_idxs'], *kwargs['expanded_idxs']]
-        logging.getLogger('mapelites').debug(f'[{__name__}.pre_step] {idxs=}')
+        logging.getLogger('emitter').debug(f'[{__name__}.pre_step] {idxs=}')
         for (i, j), b in np.ndenumerate(bins):
             if b.non_empty(pop='feasible'):
                 self._buffer.insert(x=np.asarray([i, j]),
@@ -1281,7 +1287,7 @@ class SimpleTabularEmitter(Emitter):
         predicted_prefs = self._predict(idxs=valid_idxs)
         if self.sampling_strategy == 'epsilon-greedy':
             p = (np.random.uniform(low=0, high=1, size=1) < self.epsilon)[0]
-            logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {p=}')
+            logging.getLogger('emitter').debug(f'[{__name__}.pick_bin] {p=}')
             self.epsilon -= self.sampling_decay * self.epsilon
             if p:
                 np.random.shuffle(valid_idxs)
@@ -1290,14 +1296,14 @@ class SimpleTabularEmitter(Emitter):
             sampled_bins = bins[tuple(np.asarray(valid_idxs).transpose())]
         elif self.sampling_strategy == 'gibbs':
             logits = softmax(predicted_prefs / self.tau)
-            logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {logits=}')
+            logging.getLogger('emitter').debug(f'[{__name__}.pick_bin] {logits=}')
             self.tau -= self.sampling_decay * self.tau
             sampled_bins = np.random.choice(valid_bins,
                                             size=len(valid_bins),
                                             replace=False,
                                             p=logits)
         elif self.sampling_strategy == 'thompson':
-            logging.getLogger('mapelites').debug(f'[{__name__}.pick_bin] {self.ts_priors=}')
+            logging.getLogger('emitter').debug(f'[{__name__}.pick_bin] {self.ts_priors=}')
             logits = [np.random.beta(a=self.ts_priors[idx]['a'] if idx in self.ts_priors else 1,
                                      b=self.ts_priors[idx]['b'] if idx in self.ts_priors else 1 + self._tot_actions,
                                      size=1) for idx in valid_idxs]
@@ -1422,6 +1428,9 @@ class HumanEmitter(Emitter):
     def __init__(self) -> None:
         super().__init__()
         self.name = 'human-emitter'
+    
+    def __repr__(self) -> str:
+        return f'{self.name}'
     
     def pick_bin(self,
                  bins: 'np.ndarray[MAPBin]') -> List[MAPBin]:

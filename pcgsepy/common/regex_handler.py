@@ -22,7 +22,7 @@ class MyMatch:
         return isinstance(__o, MyMatch) and (self.start < __o.start or (self.start == __o.start and self.end > __o.end))
     
     def __str__(self) -> str:
-        return f'{self.lhs=}\n\tself.span={self.start},{self.end}\n\t{self.lhs_string=}'
+        return f'{self.lhs=}; self.span={self.start},{self.end}; {self.lhs_string=}'
     
     def __repr__(self) -> str:
         return str(self)

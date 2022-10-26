@@ -33,6 +33,7 @@ class LSolver:
                            cs: CandidateSolution,
                            n: int,
                            dc_check: bool = False) -> Optional[CandidateSolution]:
+        logging.getLogger('solver').debug(f'[{__name__}._forward_expansion] Expanding {cs.string=}.')
         for i in range(n):
             cs.string = self.parser.expand(string=cs.string)
         if dc_check and len([c for c in self.constraints if c.when == ConstraintTime.DURING]) > 0:
@@ -45,6 +46,7 @@ class LSolver:
                            cs: CandidateSolution,
                            when: ConstraintTime,
                            keep_track: bool = False) -> Dict[ConstraintLevel, List[Union[bool, int]]]:
+        logging.getLogger('solver').debug(f'[{__name__}._check_constraints] Checking constraints on {cs.string=}.')
         sat = {
             ConstraintLevel.SOFT_CONSTRAINT: [True, 0],
             ConstraintLevel.HARD_CONSTRAINT: [True, 0],
@@ -54,7 +56,7 @@ class LSolver:
                 if c.when == when and c.level == lev:
                     s = c.constraint(cs=cs,
                                      extra_args=c.extra_args)
-                    logging.getLogger('base-logger').debug(msg=f'\t{c}:\t{s}')
+                    logging.getLogger('solver').debug(f'[{__name__}._forward_expansion] \t{c}:\t{s}.')
                     sat[lev][0] &= s
                     if keep_track:
                         sat[lev][1] += (
@@ -70,7 +72,7 @@ class LSolver:
         all_solutions = [CandidateSolution(string=string)]
         # forward expansion + DURING constraints check
         for i in range(iterations):
-            logging.getLogger('base-logger').info(f'Expansion n.{i+1}/{iterations}; current number of strings: {len(all_solutions)}')
+            logging.getLogger('solver').debug(f'[{__name__}.solve] Expansion {i+1}/{iterations}; current number of strings: {len(all_solutions)}')
             new_all_solutions = []
             for cs in all_solutions:
                 for _ in range(strings_per_iteration):
@@ -87,7 +89,7 @@ class LSolver:
         if check_sat and len([c for c in self.constraints if c.when == ConstraintTime.END]) > 0:
             to_keep = np.zeros(shape=len(all_solutions), dtype=np.bool8)
             for i, cs in enumerate(all_solutions):
-                logging.getLogger('base-logger').debug(f'Finalizing string {cs.string}')
+                logging.getLogger('solver').debug(f'[{__name__}.solve] Finalizing string {cs.string}')
                 to_keep[i] = self._check_constraints(cs=cs,
                                                      when=ConstraintTime.END)[ConstraintLevel.HARD_CONSTRAINT][0]
             # remaining strings are SAT

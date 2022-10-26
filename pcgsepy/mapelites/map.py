@@ -314,7 +314,7 @@ class MAPElites:
         all_cs = []
         for (_, _), cbin in np.ndenumerate(self.bins):
             all_cs.extend([*cbin._feasible, *cbin._infeasible])
-            # logging.getLogger('mapelites').debug(f'[{__name__}.subdivide_range] {bin_idx=} (pre) - {cbin.bin_idx=}; {cbin.new_elite=}')
+        logging.getLogger('mapelites').debug(f'[{__name__}.subdivide_range] Starting subdivision at {bin_idx=}; {self.bins.shape=}.')
         # update bin sizes
         v_i, v_j = self.bin_sizes[0][i], self.bin_sizes[1][j]
         self.bin_sizes[0][i] = v_i / 2
@@ -338,9 +338,9 @@ class MAPElites:
                 x = i
                 y = j
             new_bins[m, n].new_elite = self.bins[x, y].new_elite.copy()
-            # logging.getLogger('mapelites').debug(f'[{__name__}.subdivide_range] {bin_idx=} (post) - {(m, n)=}; {new_bins[m, n].new_elite=}')
         # assign new bin map
         self.bins = new_bins
+        logging.getLogger('mapelites').debug(f'[{__name__}.subdivide_range] Completed subdivision at {bin_idx=}; {self.bins.shape=}.')
         # assign solutions to bins
         self._update_bins(lcs=all_cs)
         if isinstance(self.emitter, HumanPrefMatrixEmitter):
@@ -355,6 +355,7 @@ class MAPElites:
         """
         bc0 = np.cumsum([0] + self.bin_sizes[0][:-1]) + self.b_descs[0].bounds[0]
         bc1 = np.cumsum([0] + self.bin_sizes[1][:-1]) + self.b_descs[1].bounds[0]
+        logging.getLogger('mapelites').debug(f'[{__name__}._update_bins] Started updating bins...')
         for cs in lcs:
             b0, b1 = cs.b_descs
             i = np.digitize(x=[b0], bins=bc0, right=False)[0] - 1
@@ -588,8 +589,10 @@ class MAPElites:
                     raise NotImplementedError(f'Unrecognized estimator type {type(self.estimator)}.')
             # we skip training altogether if we don't have datapoints
             except EmptyBufferException:
+                logging.getLogger('mapelites').debug(f'[{__name__}._step] Skipped training; no datapoints in buffer.')
                 pass
             # realignment check
+            logging.getLogger('mapelites').debug(f'[{__name__}._step] Started realignment...')
             if self.estimator.is_trained and gen % ALIGNMENT_INTERVAL == 0:
                 # Reassign previous infeasible fitnesses
                 for (_, _), cbin in np.ndenumerate(self.bins):
@@ -648,7 +651,6 @@ class MAPElites:
                     new_idx = (idx[0] + offset[0], idx[1] + offset[1])
                     if 0 <= new_idx[0] < self.bins.shape[0] and 0 <= new_idx[1] < self.bins.shape[1]:
                         pool = self.bins[new_idx]._feasible if pop == 'feasible' else self.bins[new_idx]._infeasible
-                        logging.getLogger('mapelites').debug(msg=f'[{__name__}.seek_nearest_valid] {new_idx=}; {pool=}; {len(new_pop)=}; {to_inspect=}')
                         if pool:
                             new_pop.extend(pool) 
                             break
@@ -675,6 +677,7 @@ class MAPElites:
         """
         self._age_bins()
         bin_idxs = [tuple(b) for b in bin_idxs]
+        logging.getLogger('mapelites').debug(f'[{__name__}.interactive_step] Picked {bin_idxs=}.')
         chosen_bins = [self.bins[bin_idx] for bin_idx in bin_idxs]
         f_pop, i_pop = [], []
         for chosen_bin in chosen_bins:
@@ -682,11 +685,9 @@ class MAPElites:
                 assert chosen_bin in self._valid_bins(), f'Bin at {chosen_bin.bin_idx} is not a valid bin.'
             f_pop.extend(chosen_bin._feasible)
             i_pop.extend(chosen_bin._infeasible)
-        
         if i_pop == []:
             i_pop = self.seek_nearest_valid(bin_idxs=bin_idxs,
                                             pop='infeasible')
-        
         generated = self._step(populations=[f_pop, i_pop],
                                gen=gen)
         if generated:
@@ -700,6 +701,7 @@ class MAPElites:
             expanded_idxs = []
         s = time.perf_counter()
         if self.emitter is not None and self.emitter.requires_pre:
+            logging.getLogger('mapelites').debug(f'[{__name__}.interactive_step] Started {self.emitter.name} pre step.')
             self.emitter.pre_step(bins=self.bins,
                                   selected_idxs=bin_idxs,
                                   expanded_idxs=expanded_idxs,
@@ -760,7 +762,7 @@ class MAPElites:
                     ipop.extend(selected_bin._infeasible)
             else:
                 raise NotImplementedError(f'Unrecognized emitter output: {selected_bins}.')
-            logging.getLogger('mapelites').debug(msg=f'[{__name__}.emitter_step] {fpop=}; {ipop=}')
+            logging.getLogger('mapelites').debug(msg=f'[{__name__}.emitter_step] {len(fpop)=}; {len(ipop)=}')
             if ipop == []:
                 if isinstance(selected_bins[0], MAPBin):
                     ipop = self.seek_nearest_valid(bin_idxs=[b.bin_idx for b in selected_bins],
@@ -768,7 +770,6 @@ class MAPElites:
                 elif isinstance(selected_bins[0], list):
                     ipop = self.seek_nearest_valid(bin_idxs=[b.bin_idx for b in selected_bins[1]],
                                                     pop='infeasible')
-            
             generated = self._step(populations=[fpop, ipop],
                                    gen=gen)
             if generated:

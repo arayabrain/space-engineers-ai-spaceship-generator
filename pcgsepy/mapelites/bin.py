@@ -105,6 +105,7 @@ class MAPBin:
         checking = f'_elite_{pop}'
         elite = self.get_elite(population=pop)
         if elite is not None and (self.new_elite[checking] is None or elite.string != self.new_elite[checking].string):
+            logging.getLogger('bin').debug(f'[{__name__}.check_new_elite] Found new elite: {elite.string}.')
             self.new_elite[pop] = True
             self.new_elite[checking] = elite
             for cs in self._feasible if pop == 'feasible' else self._infeasible:

@@ -38,13 +38,14 @@ class LParser(ABC):
 class HLParser(LParser):
     def expand(self,
                string: str) -> str:
-
+        logging.getLogger('parser').debug(f'[{__name__}.expand] Initial {string=}.')
         # get all matches with regex
         matches: List[MyMatch] = []
         for r, rule in zip(self.compiled_lhs, self.rules.get_lhs()):
             matches.extend([MyMatch(lhs=rule,
                                     span=match.span(),
                                     lhs_string=match.group()) for match in r.finditer(string=string)])
+        logging.getLogger('parser').debug(f'[{__name__}.expand] {len(matches)=}.')
         # sort matches in-place
         matches.sort()
         # filter out matches
@@ -52,6 +53,7 @@ class HLParser(LParser):
         for match in matches:
             if match.start != filtered_matches[-1].start:
                 filtered_matches.append(match)
+        logging.getLogger('parser').debug(f'[{__name__}.expand] {len(filtered_matches)=}.')
         # expand using filtered_matches
         offset = 0
         for match in filtered_matches:
@@ -69,7 +71,7 @@ class HLParser(LParser):
             # apply expansion in string
             string = string[:match.start + offset] + rhs + string[match.end + offset:]
             offset += len(rhs) - len(match.lhs_string)
-
+        logging.getLogger('parser').debug(f'[{__name__}.expand] Final {string=}.')
         return string
 
 
@@ -199,20 +201,18 @@ class HLtoMLTranslator:
         # add intersection types
         for i, b in enumerate(brackets):
             # get rotation
-            logging.getLogger('hl-to-ml').info(f'[{__name__}._add_intersections] {i+1}/{len(brackets)}; checking in substring={string[b[0]:b[1]+1]}')
+            logging.getLogger('parser').debug(f'[{__name__}._add_intersections] {i+1}/{len(brackets)}; checking in substring={string[b[0]:b[1]+1]}')
             rot_scores = [len(string) for _ in Rotations]
             rots = [x.value for x in Rotations]
             for i, r in enumerate(rots):
-                logging.getLogger('hl-to-ml').info(f'[{__name__}._add_intersections] checking {r=}')
                 if string.find(r, b[0], b[1]) != -1:
                     rot_scores[i] = string.index(r, b[0], b[1])
             if max(rot_scores) != -1:
                 rot = rots[min(range(len(rot_scores)), key=lambda x : rot_scores[x])]
-            logging.getLogger('hl-to-ml').info(f'[{__name__}._add_intersections] set {rot=}')
+            logging.getLogger('parser').debug(f'[{__name__}._add_intersections] set {rot=}')
             # check for neighboring rotations
             has_neighbours = False
             for t0, t1 in brackets[:i]:
-                logging.getLogger('hl-to-ml').info(f'[{__name__}._add_intersections] {b[1]=} {t0 - 1=} {b[1] == t0 - 1=}')
                 if b[1] == t0 - 1:
                     has_neighbours = True
                     if b[1] not in to_add.keys():
@@ -226,12 +226,11 @@ class HLtoMLTranslator:
                     to_add[b[1]] = [rot]
                 else:
                     to_add[b[1]].append(rot)
-        logging.getLogger('hl-to-ml').info(f'[{__name__}._add_intersections] {to_add=}')
+        logging.getLogger('parser').debug(f'[{__name__}._add_intersections] {to_add=}')
         # add to the string
         offset = 0
         for i in sorted(list(to_add.keys())):
             rot = ''.join(sorted(list(set(to_add[i]))))
-            logging.getLogger('hl-to-ml').debug(f'[{__name__}._add_intersections] {i+offset=}; {rot=}')
             s = f'{rot}intersection!(25)'
             string = string[:i + 1 + offset] + s + string[i + 1 + offset:]
             offset += len(s)
@@ -239,15 +238,15 @@ class HLtoMLTranslator:
 
     def transform(self,
                   string: str) -> str:
+        logging.getLogger('parser').debug(f'[{__name__}.transform] Transforming {string=}')
         atoms_list = self._string_as_list(string)
-        logging.getLogger('mapelites').info(f'[{__name__}.transform] {atoms_list=}')
         try:
             new_string = self._to_midlvl(atoms_list)
-            logging.getLogger('hl-to-ml').info(f'[{__name__}.transform] {new_string=}')
+            logging.getLogger('parser').debug(f'[{__name__}.transform] {new_string=}')
             new_string = self._add_intersections(new_string)
-            logging.getLogger('hl-to-ml').info(f'[{__name__}.transform] {new_string=}')
+            logging.getLogger('parser').debug(f'[{__name__}.transform] {new_string=}')
         except Exception as e:
-            logging.getLogger('hl-to-ml').error(f'[{__name__}.transform] {string=} {e=}')
+            logging.getLogger('parser').error(f'[{__name__}.transform] {string=} {e=}')
             raise e
         return new_string
 

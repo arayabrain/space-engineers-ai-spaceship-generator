@@ -1,3 +1,4 @@
+import logging
 import os
 import random
 import xml.etree.ElementTree as ET
@@ -983,6 +984,6 @@ def convert_structure_to_xml(structure: Structure,
 		 </ShipBlueprints>
 	 </Definitions>"""
 
-    cube_blocks = ''.join([block_xml[block.block_type](
-        block) for block in structure._blocks.values() if block_xml.get(block.block_type, None)])
+    cube_blocks = ''.join([block_xml[block.block_type](block) for block in structure._blocks.values() if block_xml.get(block.block_type, None)])
+    logging.getLogger('xmlconversion').debug(f'[{__name__}.convert_structure_to_xml] Structure converted to XML.')
     return f'{header}{cube_blocks}{footer}'

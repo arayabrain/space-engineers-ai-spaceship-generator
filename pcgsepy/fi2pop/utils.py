@@ -24,6 +24,7 @@ def subdivide_solutions(lcs: List[CandidateSolution],
     lsystem.hl_solver.set_constraints(cs=lsystem.all_hl_constraints)
     lsystem.ll_solver.set_constraints(cs=lsystem.all_ll_constraints)
     removable = []
+    logging.getLogger('fi2pop').debug(f'[{__name__}.subdivide_solutions] Initial {len(lcs)=}.')
     for i, cs in enumerate(lcs):
         try:
             for t in [ConstraintTime.DURING, ConstraintTime.END]:
@@ -42,11 +43,14 @@ def subdivide_solutions(lcs: List[CandidateSolution],
                     cs.ncv += sat[ConstraintLevel.HARD_CONSTRAINT][1]
                     cs.ncv += sat[ConstraintLevel.SOFT_CONSTRAINT][1]
         except IntersectionException:
+            logging.getLogger('fi2pop').debug(f'[{__name__}.subdivide_solutions] {cs.string} removed: intersection.')
             pass
         except MemoryError:
+            logging.getLogger('fi2pop').debug(f'[{__name__}.subdivide_solutions] {cs.string} removed: too large.')
             removable.append(i)
     for i in list(reversed(removable)):
         lcs.pop(i)
+    logging.getLogger('fi2pop').debug(f'[{__name__}.subdivide_solutions] Final {len(lcs)=}.')
 
 
 def create_new_pool(population: List[CandidateSolution],

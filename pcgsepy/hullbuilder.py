@@ -638,6 +638,7 @@ class HullBuilder:
         hull = self._get_convex_hull(arr=arr)
         hull[np.nonzero(air)] = BlockValue.AIR_BLOCK
         hull[np.nonzero(arr)] = BlockValue.AIR_BLOCK
+        logging.getLogger('hullbuilder').debug(f'[{__name__}.add_external_hull] Added external hull.')
         
         if self.apply_erosion:
             if self.erosion_type == 'grey':
@@ -656,6 +657,7 @@ class HullBuilder:
                                       iterations=self.iterations)
                 hull = hull.astype(int)
                 hull *= BlockValue.BASE_BLOCK
+        logging.getLogger('hullbuilder').debug(f'[{__name__}.add_external_hull] Applied erosion.')
                 
         # add blocks to self._blocks_set
         for i in range(hull.shape[0]):
@@ -671,14 +673,17 @@ class HullBuilder:
         # remove all blocks that obstruct target block type
         hull = self._remove_obstructing_blocks(hull=hull,
                                             structure=structure)
+        logging.getLogger('hullbuilder').debug(f'[{__name__}.add_external_hull] Removed obstructing blocks.')
         
         # remove "floating" blocks
         # i.e.: blocks not connected to the spaceship
         hull = self._remove_floating_blocks(hull=hull,
                                             structure=structure)
+        logging.getLogger('hullbuilder').debug(f'[{__name__}.add_external_hull] Removed non-connected blocks.')
 
         # apply iterative smoothing algorithm
         if self.apply_smoothing:
+            logging.getLogger('hullbuilder').debug(f'[{__name__}.add_external_hull] Applying smoothing...')
             my_arr = np.ones_like(hull) * BlockValue.AIR_BLOCK
             my_arr[np.nonzero(structure.as_grid_array)] = BlockValue.BASE_BLOCK
             my_arr[np.nonzero(hull)] = BlockValue.BASE_BLOCK
@@ -698,6 +703,7 @@ class HullBuilder:
                         substitute_block.position = block.position
                         self._blocks_set[(i, j, k)] = substitute_block
                         to_inspect.extend(self.adj_in_hull(idx=(i, j, k)))
+                        logging.getLogger('hullbuilder').debug(f'[{__name__}.add_external_hull] Updated {substitute_block}.')
                     elif substitute_block is None and val == BlockValue.AIR_BLOCK:
                         to_rem.append((i, j, k))
                         to_inspect.extend(self.adj_in_hull(idx=(i, j, k)))
@@ -708,7 +714,9 @@ class HullBuilder:
                     self._blocks_set.pop(r)
                     if r in to_inspect:
                         to_inspect.remove(r)
+                    logging.getLogger('hullbuilder').debug(f'[{__name__}.add_external_hull] Removed {r}.')
                 curr_checking = to_inspect
+        logging.getLogger('hullbuilder').debug(f'[{__name__}.add_external_hull] Smoothing applied.')
 
         # add blocks to structure
         for k, block in self._blocks_set.items():
