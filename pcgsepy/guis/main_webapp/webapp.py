@@ -36,7 +36,8 @@ from pcgsepy.guis.main_webapp.modals_msgs import (end_of_experiment,
                                                   spaceship_preview_help,
                                                   download_help,
                                                   user_study_quit_msg,
-                                                  toggle_safe_rules_mesg)
+                                                  toggle_safe_rules_off_msg,
+                                                  toggle_safe_rules_on_msg)
 from pcgsepy.guis.utils import AppMode, AppSettings, DashLoggerHandler, Metric, Semaphore
 from pcgsepy.hullbuilder import HullBuilder
 from pcgsepy.lsystem.rules import RuleMaker, StochasticRules
@@ -499,11 +500,13 @@ def serve_layout() -> dbc.Container:
         scrollable=True)
     
     toggle_unsaferules_modal = dbc.Modal(children=[
-        dbc.ModalHeader(dbc.ModalTitle("Toggle Safe Mode?"),
+        dbc.ModalHeader(dbc.ModalTitle("Turn off safe mode?"),
+                        id='sm-modal-title',
                         style={'justify-content': 'center'},
                         close_button=True),
         dbc.ModalBody(children=[
-            dcc.Markdown(toggle_safe_rules_mesg,
+            dcc.Markdown(toggle_safe_rules_off_msg,
+                         id='sm-modal-body',
                          style={'text-align': 'justify'}),
             html.Div(id='tsm-body-loading',
                      children=[])
@@ -3127,7 +3130,6 @@ def __toggle_unsafe_mode(**kwargs) -> Dict[str, Any]:
         logging.getLogger('webapp').info(msg=f'L-system rules updated.')
     except AssertionError as e:
         logging.getLogger('webapp').warn(msg=f'Failed updating L-system rules ({e}).')
-
     logging.getLogger('webapp').info(msg='Started resetting all bins (this may take a while)...')
     app_settings.current_mapelites.hull_builder.apply_smoothing = False
     app_settings.current_mapelites.reset()
@@ -3138,9 +3140,9 @@ def __toggle_unsafe_mode(**kwargs) -> Dict[str, Any]:
     return {
         'sm-modal.is_open': False,
         'unsaferules-mode-toggle.value': not curr_unsafemode,
-        
+        'sm-modal-title.children': dbc.ModalTitle("Turn on safe mode?") if curr_unsafemode else dbc.ModalTitle("Turn off safe mode?"),
+        'sm-modal-body.children': toggle_safe_rules_on_msg if curr_unsafemode else toggle_safe_rules_off_msg,
         'hl-rules.value': str(app_settings.current_mapelites.lsystem.hl_solver.parser.rules),
-        
         'heatmap-plot.figure': _build_heatmap(mapelites=app_settings.current_mapelites,
                                               pop_name=kwargs['pop_name'],
                                               metric_name=kwargs['metric_name'],
@@ -3242,6 +3244,8 @@ triggers_map = {
               Output('sm-modal', 'is_open'),
               Output("unsaferules-mode-toggle", "value"),
               Output('unsafemode-div', 'style'),
+              Output('sm-modal-title', 'children'),
+              Output('sm-modal-body', 'children'),
 
               State('heatmap-plot', 'figure'),
               State('hl-rules', 'value'),
@@ -3272,6 +3276,8 @@ triggers_map = {
               State("voxel-preview-toggle", "value"),
               State("unsaferules-mode-toggle", "value"),
               State('unsafemode-div', 'style'),
+              State('sm-modal-title', 'children'),
+              State('sm-modal-body', 'children'),
 
               Input('population-feasible', 'n_clicks'),
               Input('population-infeasible', 'n_clicks'),
@@ -3354,6 +3360,8 @@ def general_callback(curr_heatmap: Dict[str, Any],
                      curr_voxel_display: bool,
                      curr_unsafemode: bool,
                      curr_unsafemode_div_style: Dict[str, str],
+                     curr_unsafemode_title: str,
+                     curr_unsafemode_body: str,
                      
                      pop_feas: int,
                      pop_infeas: int,
@@ -3546,6 +3554,8 @@ def general_callback(curr_heatmap: Dict[str, Any],
         'sm-modal.is_open': False,
         'unsaferules-mode-toggle.value': curr_unsafemode,
         'unsafemode-div.style': curr_unsafemode_div_style,
+        'sm-modal-title.children': curr_unsafemode_title,
+        'sm-modal-body.children': curr_unsafemode_body,
     }
 
     logging.getLogger('webapp').debug(

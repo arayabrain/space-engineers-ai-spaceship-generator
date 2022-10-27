@@ -43,8 +43,14 @@ If you quit the user study, we won't collect data anymore and you won't be able 
 Make sure to close the questionnaire afterwards.
 """
 
-toggle_safe_rules_mesg = """
-Do you really want to toggle safe mode?
+toggle_safe_rules_off_msg = """
+Do you really want to turn off safe mode? This will reset the current progress of evolution, because the population of spaceships will need to be re-initialized.
 
-By toggling off this feature, we will not check that thrusters are placed on all six sides of the spaceship, making it difficult to manuever. The population will also be reinitialised afterward.
+By toggling off this feature, we will not check that thrusters are placed on all six sides of the spaceship, making it difficult to maneuver without manually editing the ship in Space Engineers.
+
+On the other hand, the evolution will be able to propose a more diverse population of spaceships, allowing you to explore a richer set of hull shapes.
+"""
+
+toggle_safe_rules_on_msg = """
+Do you want to turn on safe mode again? This will reset the current progress of evolution, because the population of spaceships will need to be re-initialized.
 """
