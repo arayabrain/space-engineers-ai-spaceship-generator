@@ -7,17 +7,17 @@ tail 1 corridorsimple(1)[RotYcwXcorridorsimple(1)thrusters(1)][RotYccwXcorridors
 #  - body
 body 1 corridorsimple(X)
 #    extension
-corridorsimple(x) 0.25 corridorsimple(Y)corridorsimple(X)
+corridorsimple(x) 0.125 corridorsimple(Y)corridorsimple(X)
 #    introduce special blocks
-corridorsimple(x)[ 0.25 corridorreactors(X)corridorsimple(1)[
-corridorsimple(x)[ 0.5 corridorcargo(X)corridorsimple(1)[
-corridorsimple(x)[ 0.25 corridorgyros(X)corridorsimple(1)[
-corridorsimple(x)] 0.15 corridorsimple(1)thrusters(1)]
-corridorsimple(x)] 0.15 corridorsimple(Y)corridorsimple(1)]
-corridorsimple(x)] 0.70 corridorsimple(x)]
-corridorsimple(x) 0.05 corridorsimple(1)corridorreactors(X)
-corridorsimple(x) 0.15 corridorsimple(1)corridorcargo(X)
-corridorsimple(x) 0.05 corridorsimple(1)corridorgyros(X)
+corridorsimple(x)[ 0.33 corridorreactors(X)corridorsimple(1)[
+corridorsimple(x)[ 0.34 corridorcargo(X)corridorsimple(1)[
+corridorsimple(x)[ 0.33 corridorgyros(X)corridorsimple(1)[
+corridorsimple(x)] 0.33 corridorsimple(1)thrusters(1)]
+corridorsimple(x)] 0.33 corridorsimple(Y)corridorsimple(1)]
+corridorsimple(x)] 0.34 corridorsimple(x)]
+corridorsimple(x) 0.125 corridorsimple(1)corridorreactors(X)
+corridorsimple(x) 0.125 corridorsimple(1)corridorcargo(X)
+corridorsimple(x) 0.125 corridorsimple(1)corridorgyros(X)
 #    rotate
 corridorsimple(x) 0.125 corridorsimple(Y)[RotYcwXcorridorsimple(X)]
 corridorsimple(x) 0.125 corridorsimple(Y)[RotYccwXcorridorsimple(X)]
