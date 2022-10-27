@@ -46,9 +46,9 @@ An advanced mode, with full access to every part of the system that can be chang
 This app is used for the user study. You can upload and rank different spaceships from the AI Spaceship Generator.
 
 ## Roadmap
-This project is under active development in the [Araya Inc. repository](https://github.com/arayabrain/space-engineers-ai-spaceship-generator) until the end of October 2022. This project will be actively supported until the end of December 2022.
+This project will be actively supported until the end of December 2022.
 
-The user study is planned to run from mid-October to mid-November 2022.
+The user study is planned to run from the duration of November 2022.
 
 ## Development
 This project requires Python 3. The `PCGSEPy` library (including its requirements) can be installed by running `pip install -e .`. To use PyTorch in the library (required for some research experiments, but not the apps), first set the `use_torch` flag in `configs.ini`.
