@@ -43,7 +43,7 @@ args = parser.parse_args()
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
 current_datetime = datetime.now().strftime("%Y%m%d%H%M%S")
-file_handler = logging.FileHandler(filename=f'{current_datetime}.log', mode='w+')
+file_handler = logging.FileHandler(filename=f'log_{current_datetime}.log', mode='w+')
 file_handler.addFilter(lambda record: record.levelno >= logging.DEBUG)
 sysout_handler = logging.StreamHandler(sys.stdout)
 sysout_handler.addFilter(lambda record: record.levelno >= (logging.DEBUG if args.debug else logging.INFO))
@@ -131,7 +131,7 @@ app_settings.initialize(mapelites=mapelites,
 app.layout = serve_layout
 
 webapp_url = f'http://{args.host}:{args.port}/'
-print(f'Serving webapp on http://{args.host}:{args.port}/...')
+logging.getLogger().info(f'Serving webapp on http://{args.host}:{args.port}/...')
 webbrowser.open_new(webapp_url)
 
 # close the splash screen if launched via application
