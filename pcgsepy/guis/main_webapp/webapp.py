@@ -1083,7 +1083,7 @@ def serve_layout() -> dbc.Container:
                 style={'justify-content': 'center', 'text-align': 'center'} if (app_settings.app_mode == AppMode.USER or app_settings.app_mode == AppMode.DEV) else hidden_style),
             dbc.Row(children=[
                 dbc.Col(children=[
-                    dbc.Label('Evolution iterations:'),
+                    dbc.Label('Evolution Iterations:'),
                     dcc.Slider(min=0,
                             max=10,
                             step=None,
