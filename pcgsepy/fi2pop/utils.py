@@ -86,7 +86,7 @@ def create_new_pool(population: List[CandidateSolution],
             new_pop.remove(p1)
             p2 = roulette_wheel_selection(pop=new_pop,
                                         minimize=minimize)
-            if p1 != p2:
+            if p1.string != p2.string:
                 # crossover
                 o1, o2 = crossover(a1=p1, a2=p2, n_childs=2)
                 # set parents
@@ -129,6 +129,7 @@ def create_new_pool(population: List[CandidateSolution],
         else:
             patience = GEN_PATIENCE
         if patience == 0:
+            logging.getLogger('fi2pop').debug(f'[{__name__}.create_new_pool] Patience limit reached ({len(pool)=}')
             break
     return pool
 

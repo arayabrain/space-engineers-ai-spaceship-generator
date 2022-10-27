@@ -4,7 +4,7 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-from pcgsepy.config import BIN_POP_SIZE, CS_MAX_AGE, MY_EMITTERS
+from pcgsepy.config import BIN_POP_SIZE, CS_MAX_AGE, MY_EMITTERS, N_EMITTER_STEPS
 from pcgsepy.mapelites.behaviors import (BehaviorCharacterization, avg_ma,
                                          mame, mami, symmetry)
 
@@ -164,6 +164,7 @@ class AppSettings:
         self.use_custom_colors: bool = True
         self.app_mode: AppMode = None
         self.consent_ok: bool = None
+        self.emitter_steps: int = N_EMITTER_STEPS
 
     def initialize(self,
                    mapelites: MAPElites,

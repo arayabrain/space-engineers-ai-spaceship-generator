@@ -26,7 +26,7 @@ from dash.dependencies import Input, Output, State
 from pcgsepy.common.api_call import block_definitions
 from pcgsepy.common.jsonifier import json_dumps
 from pcgsepy.common.vecs import Vec
-from pcgsepy.config import (MY_EMITTERS, N_EMITTER_STEPS, N_GENS_ALLOWED)
+from pcgsepy.config import (MY_EMITTERS, N_GENS_ALLOWED)
 from pcgsepy.guis.main_webapp.modals_msgs import (end_of_experiment,
                                                   end_of_userstudy,
                                                   no_selection_error,
@@ -1080,7 +1080,29 @@ def serve_layout() -> dbc.Container:
                 ],
                     width=6)],
                 id='unsafemode-div',
-                style={'justify-content': 'center', 'text-align': 'center'} if (app_settings.app_mode == AppMode.USERSTUDY or app_settings.app_mode == AppMode.DEV) else hidden_style),
+                style={'justify-content': 'center', 'text-align': 'center'} if (app_settings.app_mode == AppMode.USER or app_settings.app_mode == AppMode.DEV) else hidden_style),
+            dbc.Row(children=[
+                dbc.Col(children=[
+                    dbc.Label('Evolution iterations:'),
+                    dcc.Slider(min=0,
+                            max=10,
+                            step=None,
+                            value=app_settings.emitter_steps,
+                            marks={
+                                0: '0',
+                                3: '3',
+                                5: '5',
+                                7: '7',
+                                10: '10'
+                                },
+                            tooltip={"placement": "bottom",
+                                        "always_visible": False},
+                            id='evo-iter-sldr')
+                    ],
+                    width=6)
+            ],
+                    id='emitter-steps-div',
+                    style={'justify-content': 'center', 'text-align': 'center'} if (app_settings.app_mode == AppMode.USER or app_settings.app_mode == AppMode.DEV) else hidden_style),
             dbc.Row(children=[
                 dbc.Col(children=[
                     html.Br(),
@@ -1555,6 +1577,17 @@ def disable_privacy_modal_buttons(ny: int,
     return True, True
 
 
+@app.callback(
+    Output("evo-iter-sldr", "value"),
+    Input("evo-iter-sldr", "value"),
+    prevent_initial_call=True
+)
+def change_emitter_steps(n_steps: int) -> Any:
+    logging.getLogger('webapp').info(f'Setting evolution iterations to {n_steps}...')
+    app_settings.emitter_steps = n_steps
+    return n_steps
+
+
 @app.callback(Output('step-btn', 'disabled'),
               Output('download-btn', 'disabled'),
               Output('popdownload-btn', 'disabled'),
@@ -1591,6 +1624,7 @@ def disable_privacy_modal_buttons(ny: int,
               Output('color-picker-btn', 'disabled'),
               Output('voxel-preview-toggle', 'disabled'),
               Output('unsaferules-mode-toggle', 'disabled'),
+              Output('evo-iter-sldr', 'disabled'),
 
               State({'type': 'fitness-sldr', 'index': ALL}, 'disabled'),
               State('method-radio', 'options'),
@@ -1681,6 +1715,7 @@ def interval_updates(fdis: List[Dict[str, bool]],
         'color-picker-btn.disabled': running_something,
         'voxel-preview-toggle.disabled': running_something,
         'unsaferules-mode-toggle.disabled': running_something,
+        'evo-iter-sldr.disabled': running_something,
     }
 
     if running_something and consent_loading_data_children == []:
@@ -2074,7 +2109,7 @@ def _apply_step(mapelites: MAPElites,
     global app_settings
     global time_elapsed_emitter
 
-    perc_step = 100 / (1 + N_EMITTER_STEPS)
+    perc_step = 100 / (1 + app_settings.emitter_steps)
 
     valid = True
     if mapelites.enforce_qnt:
@@ -2095,12 +2130,12 @@ def _apply_step(mapelites: MAPElites,
                                                           gen=gen_counter)
         app_settings.step_progress += perc_step
         logging.getLogger('webapp').info(
-            msg=f'Completed step {gen_counter + 1} (created {mapelites.n_new_solutions} solutions); running {N_EMITTER_STEPS} additional emitter steps if available...')
+            msg=f'Completed step {gen_counter + 1} (created {mapelites.n_new_solutions} solutions); running {app_settings.emitter_steps} additional emitter steps if available...')
         mapelites.n_new_solutions = 0
         if only_emitter:
             tmp_emitter = mapelites.emitter
             mapelites.emitter = RandomEmitter()
-        with trange(N_EMITTER_STEPS, desc='Emitter steps: ') as iterations:
+        with trange(app_settings.emitter_steps, desc='Emitter steps: ') as iterations:
             for _ in iterations:
                 # if not only_human:
                 emitter_time += mapelites.emitter_step(gen=gen_counter)
@@ -2963,7 +2998,8 @@ def __consent(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
         'exp-progress-div.style': exp_progress_style,
         'study-progress-div.style': study_style,
         'qus-div.style': {} if app_settings.app_mode == AppMode.USERSTUDY else hidden_style,
-        'unsafemode-div.style': {'justify-content': 'center', 'text-align': 'center'} if app_settings.app_mode != AppMode.USERSTUDY else hidden_style
+        'unsafemode-div.style': {'justify-content': 'center', 'text-align': 'center'} if app_settings.app_mode != AppMode.USERSTUDY else hidden_style,
+        'emitter-steps-div.style': {'justify-content': 'center', 'text-align': 'center'} if app_settings.app_mode != AppMode.USERSTUDY else hidden_style
     }
 
 
@@ -3094,7 +3130,8 @@ def __quit_user_study(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
                                                   bin_idx=None,
                                                   pop=None),
         'spaceship-properties.children': get_properties_table(cs=None),
-        'unsafemode-div.style': {'justify-content': 'center', 'text-align': 'center'} if app_settings.app_mode != AppMode.USERSTUDY else hidden_style
+        'unsafemode-div.style': {'justify-content': 'center', 'text-align': 'center'} if app_settings.app_mode != AppMode.USERSTUDY else hidden_style,
+        'emitter-steps-div.style': {'justify-content': 'center', 'text-align': 'center'} if app_settings.app_mode != AppMode.USERSTUDY else hidden_style
     }
 
 
@@ -3246,6 +3283,7 @@ triggers_map = {
               Output('unsafemode-div', 'style'),
               Output('sm-modal-title', 'children'),
               Output('sm-modal-body', 'children'),
+              Output('emitter-steps-div', 'style'),
 
               State('heatmap-plot', 'figure'),
               State('hl-rules', 'value'),
@@ -3278,6 +3316,7 @@ triggers_map = {
               State('unsafemode-div', 'style'),
               State('sm-modal-title', 'children'),
               State('sm-modal-body', 'children'),
+              State('emitter-steps-div', 'style'),
 
               Input('population-feasible', 'n_clicks'),
               Input('population-infeasible', 'n_clicks'),
@@ -3362,6 +3401,7 @@ def general_callback(curr_heatmap: Dict[str, Any],
                      curr_unsafemode_div_style: Dict[str, str],
                      curr_unsafemode_title: str,
                      curr_unsafemode_body: str,
+                     curr_emittersteps_style: Dict[str, str],
                      
                      pop_feas: int,
                      pop_infeas: int,
@@ -3556,6 +3596,7 @@ def general_callback(curr_heatmap: Dict[str, Any],
         'unsafemode-div.style': curr_unsafemode_div_style,
         'sm-modal-title.children': curr_unsafemode_title,
         'sm-modal-body.children': curr_unsafemode_body,
+        'emitter-steps-div.style': curr_emittersteps_style,
     }
 
     logging.getLogger('webapp').debug(
