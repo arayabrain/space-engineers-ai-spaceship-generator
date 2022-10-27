@@ -8,6 +8,9 @@ You can check system messages in the "**Log**" window on the right.
 
 You can reinitialize the population by clicking the corresponding button (beware: it may take a while for the reinitialization to complete).
 
+You can also toggle between safe and unsafe mode. In safe mode, we ensure thrusters are placed on all six sides of the spaceships, at the cost of less diversity. Switching between modes requires the population to be reinitialized.
+
+The "Evolution iterations" slider will allow you to change how many steps the automated evolution takes. While this will increase the chances of obtaining more spaceships, it also comes at the cost of additional time per iteration, so be mindful when setting it!
 
 You can also follow this video tutorial:
 

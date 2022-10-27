@@ -10,6 +10,12 @@
   <img src="media/pcgsepy_banner.png" alt="pcgsepy_banner" height="120"/>
 </p>
 
+### Download
+
+#### Download AI Spaceship Generator for Windows from [the releases page](https://github.com/GoodAI/space-engineers-ai-spaceship-generator/releases).
+
+### Introduction
+
 Apps and code (`PCGSEPy` library) developed for the [Space Engineers](https://www.spaceengineersgame.com/) PCG project, supported by a [GoodAI research grant](https://www.goodai.com/using-open-ended-algorithms-to-generate-video-game-content-in-space-engineers/). The main app is the AI Spaceship Generator, which creates spaceships for Space Engineers using AI (for more information, see our [research explainer](#research) and [publications](#publications)). The second app is a Spaceships Ranker, which is used for conducting a user study. The AI Spaceship Generator and Spaceships Ranker apps are available for Windows on the [releases page](https://github.com/GoodAI/space-engineers-ai-spaceship-generator/releases).
 
 ## Apps
@@ -17,7 +23,7 @@ The following is a quick overview of the apps (AI Spaceship Generator and Spaces
 
 ### AI Spaceship Generator (user mode)
 <p align="center">
-  <img src="media/UI_usermode_preview.jpg" alt="ui_usermode_preview" height="300"/>
+  <img src="media/UI_usermode_preview.png" alt="ui_usermode_preview" height="300"/>
 </p>
 The default mode for the app (outside of the user study period). The AI generates an initial "population" of spaceships (top left). When a spaceship is selected from the population it is visualised (top middle) and its properties are displayed (top right). You can choose to "evolve" a new set of spaceships based on either the selected spaceship or a random spaceship (the "evolution" process tries to construct new spaceships based on an existing spaceship). You can also re-initialise the population of spaceships.
 
@@ -40,7 +46,7 @@ An advanced mode, with full access to every part of the system that can be chang
 This app is used for the user study. You can upload and rank different spaceships from the AI Spaceship Generator.
 
 ## Roadmap
-This project is under active development in the [Araya Inc. repository](https://github.com/arayabrain/space-engineers-ai-spaceship-generator) until the end of October 2022. This project will then transition to maintenance support in the [GoodAI fork repository](https://github.com/GoodAI/space-engineers-ai-spaceship-generator/releases) until the end of December 2022.
+This project is under active development in the [Araya Inc. repository](https://github.com/arayabrain/space-engineers-ai-spaceship-generator) until the end of October 2022. This project will be actively supported until the end of December 2022.
 
 The user study is planned to run from mid-October to mid-November 2022.
 
