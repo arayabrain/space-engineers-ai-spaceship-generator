@@ -42,8 +42,15 @@ args = parser.parse_args()
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    os.chdir(sys._MEIPASS)
+    curr_folder = os.path.dirname(sys.executable)
+else:
+    curr_folder = sys.path[0]
+
 current_datetime = datetime.now().strftime("%Y%m%d%H%M%S")
-file_handler = logging.FileHandler(filename=f'log_{current_datetime}.log', mode='w+')
+file_handler = logging.FileHandler(filename=os.path.join(curr_folder, f'log_{current_datetime}.log'),
+                                   mode='w+')
 file_handler.addFilter(lambda record: record.levelno >= logging.DEBUG)
 sysout_handler = logging.StreamHandler(sys.stdout)
 sysout_handler.addFilter(lambda record: record.levelno >= (logging.DEBUG if args.debug else logging.INFO))
