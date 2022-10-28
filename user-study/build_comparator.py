@@ -20,6 +20,7 @@ pyi_args = ['comparator_webapp_launcher.py',
             '--add-data', './configs.ini;.',
             '--add-data', './hl_atoms.json;.',
             '--add-data', './hlrules;.',
+            '--add-data', './hlrules_sm;.',
             '--add-data', './llrules;.']
 
 
