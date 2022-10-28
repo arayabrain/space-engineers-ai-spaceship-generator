@@ -2620,16 +2620,18 @@ def __toggle_voxelization(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
     """
     global app_settings
 
+    curr_content = kwargs['curr_content']
     curr_camera = kwargs['curr_camera']
     voxel_display = kwargs['curr_voxel_display']
 
-    lb = _switch([app_settings.selected_bins[-1]])[0]
-    curr_content = _get_elite_content(mapelites=app_settings.current_mapelites,
-                                      bin_idx=lb,
-                                      pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible',
-                                      camera=curr_camera.get(
-                                          'scene.camera', None),
-                                      show_voxel=voxel_display)
+    if app_settings.selected_bins:
+        lb = _switch([app_settings.selected_bins[-1]])[0]
+        curr_content = _get_elite_content(mapelites=app_settings.current_mapelites,
+                                        bin_idx=lb,
+                                        pop='feasible' if kwargs['pop_name'] == 'Feasible' else 'infeasible',
+                                        camera=curr_camera.get(
+                                            'scene.camera', None),
+                                        show_voxel=voxel_display)
 
     return {
         'content-plot.figure': curr_content,
