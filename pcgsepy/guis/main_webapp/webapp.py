@@ -39,7 +39,7 @@ from pcgsepy.guis.main_webapp.modals_msgs import (end_of_experiment,
                                                   toggle_safe_rules_off_msg,
                                                   toggle_safe_rules_on_msg)
 from pcgsepy.guis.utils import AppMode, AppSettings, DashLoggerHandler, Metric, Semaphore
-from pcgsepy.hullbuilder import HullBuilder
+from pcgsepy.hullbuilder import HullBuilder, enforce_symmetry
 from pcgsepy.lsystem.rules import RuleMaker, StochasticRules
 from pcgsepy.lsystem.solution import CandidateSolution
 from pcgsepy.mapelites.bin import MAPBin
@@ -807,7 +807,8 @@ def serve_layout() -> dbc.Container:
                                 fullscreen=False,
                                 color='#eeeeee',
                                 type='default',
-                                style={'justify-content': 'center'})
+                                style={'justify-content': 'center'}),
+                    html.Br()
                 ],
                     width={'size': 6, 'offset': 3},
                     style={'text-align': 'center', 'justify-content': 'center'})
@@ -903,12 +904,15 @@ def serve_layout() -> dbc.Container:
         children=[
             html.H4(children='Experiment Settings',
                     className='section-title'),
-            html.Br(),
             html.Div(children=[
-                html.P(children=f'Selected bin(s): {app_settings.selected_bins}',
-                       id='selected-bin')
-            ]),
-            html.Br(),
+                 html.Br(),
+                    html.Div(children=[
+                        html.P(children=f'Selected bin(s): {app_settings.selected_bins}',
+                            id='selected-bin')
+                    ]),
+                    html.Br(),
+                ],
+                    style={} if app_settings.app_mode == AppMode.DEV else hidden_style),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Feature Descriptors (X, Y):'),
                 dbc.DropdownMenu(label=app_settings.current_mapelites.b_descs[0].name,
@@ -997,20 +1001,13 @@ def serve_layout() -> dbc.Container:
                                      dbc.DropdownMenuItem(
                                          'X-axis', id='symmetry-x'),
                                      dbc.DropdownMenuItem(
-                                         'Y-axis', id='symmetry-y'),
-                                     dbc.DropdownMenuItem(
                                          'Z-axis', id='symmetry-z'),
                                  ],
                                  id='symmetry-dropdown',
-                                 style={} if app_settings.app_mode == AppMode.DEV else hidden_style),
-                dbc.RadioItems(id='symmetry-radio',
-                               options=[
-                                   {'label': 'Upper', 'value': 'Upper'},
-                                   {'label': 'Lower', 'value': 'Lower'}
-                               ],
-                               value='Upper')
+                                 style={} if app_settings.app_mode == AppMode.USER or app_settings.app_mode == AppMode.DEV else hidden_style),
             ],
-                style={} if app_settings.app_mode == AppMode.DEV else hidden_style,
+                id='symmetry-div',
+                style={} if app_settings.app_mode == AppMode.USER or app_settings.app_mode == AppMode.DEV else hidden_style,
                 className="mb-3"),
             dbc.InputGroup(children=[
                 dbc.InputGroupText('Save/Load Population:'),
@@ -1026,7 +1023,8 @@ def serve_layout() -> dbc.Container:
                 className="mb-3",
                 style={} if app_settings.app_mode == AppMode.DEV else hidden_style)
         ],
-        style={} if app_settings.app_mode == AppMode.DEV else hidden_style)
+        id='experiment-settings-div',
+        style={} if app_settings.app_mode == AppMode.USER or app_settings.app_mode == AppMode.DEV else hidden_style)
 
     experiment_controls = html.Div(
         children=[
@@ -1068,7 +1066,7 @@ def serve_layout() -> dbc.Container:
                                className='button-fullsize')
                 ],
                     id='reset-btn-div',
-                    style={'justify-content': 'center'} if app_settings.app_mode == AppMode.USER else {
+                    style={'justify-content': 'center'} if app_settings.app_mode == AppMode.USER or app_settings.app_mode == AppMode.DEV else {
                         **{'justify-content': 'center'}, **hidden_style},
                     width={'offset': 3, 'size': 6})]),
             dbc.Row(children=[
@@ -1526,6 +1524,9 @@ def download_content(curr_content: Dict[str, Any],
                                   [app_settings.selected_bins[-1]])[0],
                               pop='feasible')
             logging.getLogger('webapp').debug(msg=f'[{__name__}.write_archive] Loaded elite solution {elite=}.')
+            if app_settings.symmetry is not None:
+                elite.string = enforce_symmetry(string=elite.string,
+                                                    axis=app_settings.symmetry)
             tmp = CandidateSolution(string=elite.string)
             tmp.ll_string = elite.ll_string
             tmp.base_color = elite.base_color
@@ -1614,7 +1615,7 @@ def change_emitter_steps(n_steps: int) -> Any:
               Output('lsystem-modules', 'options'),
               Output('emitter-dropdown', 'disabled'),
               Output('symmetry-dropdown', 'disabled'),
-              Output('symmetry-radio', 'options'),
+            #   Output('symmetry-radio', 'options'),
               Output('color-picker', 'disabled'),
               Output('heatmap-plot-container', 'style'),
               Output({'type': 'fitness-sldr', 'index': ALL}, 'disabled'),
@@ -1636,7 +1637,7 @@ def change_emitter_steps(n_steps: int) -> Any:
               State({'type': 'fitness-sldr', 'index': ALL}, 'disabled'),
               State('method-radio', 'options'),
               State('lsystem-modules', 'options'),
-              State('symmetry-radio', 'options'),
+            #   State('symmetry-radio', 'options'),
               State('consent-body-loading', 'children'),
               State('eous-body-loading', 'children'),
               State('eus-body-loading', 'children'),
@@ -1647,7 +1648,7 @@ def change_emitter_steps(n_steps: int) -> Any:
 def interval_updates(fdis: List[Dict[str, bool]],
                      ms: List[Dict[str, str]],
                      lsysms: List[Dict[str, str]],
-                     symms: List[Dict[str, str]],
+                    #  symms: List[Dict[str, str]],
                      consent_loading_data_children: List[Any],
                      eous_loading_data_children: List[Any],
                      eus_loading_data_children: List[Any],
@@ -1676,8 +1677,6 @@ def interval_updates(fdis: List[Dict[str, bool]],
 
     for o in ms:
         o['disabled'] = running_something
-    for o in symms:
-        o['disabled'] = running_something
     for o in lsysms:
         o['disabled'] = running_something
 
@@ -1701,7 +1700,6 @@ def interval_updates(fdis: List[Dict[str, bool]],
         'lsystem-modules.options': lsysms,
         'emitter-dropdown.disabled': running_something,
         'symmetry-dropdown.disabled': running_something,
-        'symmetry-radio.options': symms,
         'color-picker.disabled': running_something,
         'heatmap-plot-container.style': {'visibility': 'visible' if running_something else 'hidden',
                                          'display': 'grid' if running_something else 'none',
@@ -1924,6 +1922,19 @@ def _get_elite_content(mapelites: MAPElites,
         elite = get_elite(mapelites=mapelites,
                           bin_idx=bin_idx,
                           pop=pop)
+        if app_settings.symmetry is not None:
+            original_string = elite.string
+            elite._content = None
+            elite.string = enforce_symmetry(string=elite.string,
+                                            axis=app_settings.symmetry)
+            elite = app_settings.current_mapelites.lsystem._set_structure(cs=app_settings.current_mapelites.lsystem._add_ll_strings(cs=elite),
+                                                                          make_graph=False)
+            elite.content._air_gridmask = None
+            if elite.is_feasible:
+                if app_settings.current_mapelites.hull_builder is not None:
+                    app_settings.current_mapelites.hull_builder.add_external_hull(structure=elite.content)
+            elite.string = original_string
+            elite.content.set_color(elite.base_color)
         structure = elite.content
         content = structure.as_grid_array
         arr = np.nonzero(content)
@@ -2531,7 +2542,6 @@ def __apply_symmetry(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
     global app_settings
 
     event_trig = kwargs['event_trig']
-    symm_orientation = kwargs['symm_orientation']
 
     logging.getLogger('webapp').info(
         msg=f'Updating all solutions to enforce symmetry...')
@@ -2539,27 +2549,28 @@ def __apply_symmetry(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
         symm_axis = 'None'
     elif event_trig == 'symmetry-x':
         symm_axis = 'X-axis'
-    elif event_trig == 'symmetry-y':
-        symm_axis = 'Y-axis'
     elif event_trig == 'symmetry-z':
         symm_axis = 'Z-axis'
     logging.getLogger('webapp').debug(
-        msg=f'[{__name__}.__apply_symmetry] {symm_axis=}; {symm_orientation=}')
+        msg=f'[{__name__}.__apply_symmetry] {symm_axis=}')
 
-    app_settings.current_mapelites.reassign_all_content(sym_axis=symm_axis[0].lower() if symm_axis != "None" else None,
-                                                        sym_upper=symm_orientation == 'Upper')
+    app_settings.symmetry = symm_axis[0].lower() if symm_axis != "None" else None
+    app_settings.selected_bins = []
+    curr_heatmap = _build_heatmap(mapelites=app_settings.current_mapelites,
+                                  pop_name=kwargs['pop_name'],
+                                  metric_name=kwargs['metric_name'],
+                                  method_name=kwargs['method_name'])
     curr_content = _get_elite_content(mapelites=app_settings.current_mapelites,
                                       bin_idx=None,
                                       pop=None)
     logging.getLogger('webapp').info(msg=f'Symmetry enforcement completed.')
 
-    app_settings.selected_bins = []
-
     return {
         'content-plot.figure': curr_content,
+        'heatmap-plot.figure': curr_heatmap,
         'content-string.value': '',
-        'spaceship-properties.children': get_properties_table(),
-        'symmetry-dropdown.label': symm_axis
+        'symmetry-dropdown.label': symm_axis,
+        'spaceship-properties.children': get_properties_table()
     }
 
 
@@ -3008,7 +3019,9 @@ def __consent(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
         'study-progress-div.style': study_style,
         'qus-div.style': {} if app_settings.app_mode == AppMode.USERSTUDY else hidden_style,
         'unsafemode-div.style': {'justify-content': 'center', 'text-align': 'center'} if app_settings.app_mode != AppMode.USERSTUDY else hidden_style,
-        'emitter-steps-div.style': {'justify-content': 'center', 'text-align': 'center'} if app_settings.app_mode != AppMode.USERSTUDY else hidden_style
+        'emitter-steps-div.style': {'justify-content': 'center', 'text-align': 'center'} if app_settings.app_mode != AppMode.USERSTUDY else hidden_style,
+        'symmetry-div.style': {'justify-content': 'center', 'text-align': 'center'} if app_settings.app_mode != AppMode.USERSTUDY else hidden_style,
+        'experiment-settings-div.style': {'justify-content': 'center', 'text-align': 'center'} if app_settings.app_mode != AppMode.USERSTUDY else hidden_style,
     }
 
 
@@ -3140,7 +3153,9 @@ def __quit_user_study(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
                                                   pop=None),
         'spaceship-properties.children': get_properties_table(cs=None),
         'unsafemode-div.style': {'justify-content': 'center', 'text-align': 'center'} if app_settings.app_mode != AppMode.USERSTUDY else hidden_style,
-        'emitter-steps-div.style': {'justify-content': 'center', 'text-align': 'center'} if app_settings.app_mode != AppMode.USERSTUDY else hidden_style
+        'emitter-steps-div.style': {'justify-content': 'center', 'text-align': 'center'} if app_settings.app_mode != AppMode.USERSTUDY else hidden_style,
+        'symmetry-div.style': {'justify-content': 'center', 'text-align': 'center'} if app_settings.app_mode != AppMode.USERSTUDY else hidden_style,
+        'experiment-settings-div.style': {'justify-content': 'center', 'text-align': 'center'} if app_settings.app_mode != AppMode.USERSTUDY else hidden_style,
     }
 
 
@@ -3224,9 +3239,7 @@ triggers_map = {
     'method-radio': __update_heatmap,
     'symmetry-none': __apply_symmetry,
     'symmetry-x': __apply_symmetry,
-    'symmetry-y': __apply_symmetry,
     'symmetry-z': __apply_symmetry,
-    'symmetry-radio': __apply_symmetry,
     'heatmap-plot': __update_content,
     'population_dropdown': __update_content,
     'selection-btn': __selection,
@@ -3293,6 +3306,8 @@ triggers_map = {
               Output('sm-modal-title', 'children'),
               Output('sm-modal-body', 'children'),
               Output('emitter-steps-div', 'style'),
+              Output('symmetry-div', 'style'),
+              Output('experiment-settings-div', 'style'),
 
               State('heatmap-plot', 'figure'),
               State('hl-rules', 'value'),
@@ -3365,9 +3380,7 @@ triggers_map = {
               Input('popupload-data', 'filename'),
               Input('symmetry-none', 'n_clicks'),
               Input('symmetry-x', 'n_clicks'),
-              Input('symmetry-y', 'n_clicks'),
               Input('symmetry-z', 'n_clicks'),
-              Input('symmetry-radio', 'value'),
               Input("consent-yes", "n_clicks"),
               Input("consent-no", "n_clicks"),
               Input("nbs-err-btn", "n_clicks"),
@@ -3450,9 +3463,7 @@ def general_callback(curr_heatmap: Dict[str, Any],
                      upload_filename: str,
                      symm_none: int,
                      symm_x: int,
-                     symm_y: int,
                      symm_z: int,
-                     symm_orientation: str,
                      nclicks_yes: int,
                      nclicks_no: int,
                      nbs_btn: int,
@@ -3606,6 +3617,8 @@ def general_callback(curr_heatmap: Dict[str, Any],
         'sm-modal-title.children': curr_unsafemode_title,
         'sm-modal-body.children': curr_unsafemode_body,
         'emitter-steps-div.style': curr_emittersteps_style,
+        'symmetry-div.style': dash.no_update,
+        'experiment-settings-div.style': dash.no_update
     }
 
     logging.getLogger('webapp').debug(

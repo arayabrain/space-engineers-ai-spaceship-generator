@@ -6,6 +6,7 @@ from typing import List, Tuple
 
 import numpy as np
 from pcgsepy.common.regex_handler import MyMatch, extract_regex
+from pcgsepy.common.str_utils import get_matching_brackets
 from pcgsepy.config import (CROSSOVER_P, MUTATION_DECAY, MUTATION_INITIAL_P,
                             PL_HIGH, PL_LOW)
 from pcgsepy.lsystem.rules import StochasticRules
@@ -195,45 +196,3 @@ def crossover(a1: CandidateSolution,
         logging.getLogger('genops').error(f'[{__name__}.crossover] No cross-over could be applied ({a1.string} w/ {a2.string}).')
         raise EvoException(f'No cross-over could be applied ({a1.string} w/ {a2.string}).')
     return childs[:n_childs]
-
-
-def get_matching_brackets(string: str) -> List[Tuple[int, int]]:
-    """Get indexes of matching square brackets.
-
-    Args:
-        string (str): The string.
-
-    Returns:
-        List[Tuple[int, int]]: The list of pair indexes.
-    """
-    brackets = []
-    for i, c in enumerate(string):
-        if c == '[':
-            # find first closing bracket
-            idx_c = string.index(']', i)
-            # update closing bracket position in case of nested brackets
-            ni_o = string.find('[', i + 1)
-            while ni_o != -1 and string.find('[', ni_o) < idx_c:
-                idx_c = string.index(']', idx_c + 1)
-                ni_o = string.find('[', ni_o + 1)
-            # add to list of brackets
-            brackets.append((i, idx_c))
-    return brackets
-
-
-def get_atom_indexes(string: str,
-                     atom: str) -> List[Tuple[int, int]]:
-    """Get the indexes of the positions of the given atom in the string.
-    Args:
-        string (str): The string.
-        atom (str): The atom.
-    Returns:
-        List[Tuple[int, int]]: The list of pair indexes.
-    """
-    indexes = []
-    for i, _ in enumerate(string):
-        if string[i:].startswith(atom):
-            cb = string.find(')', i + len(atom))
-            indexes.append((i, cb))
-            i = cb
-    return indexes

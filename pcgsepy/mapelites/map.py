@@ -472,22 +472,6 @@ class MAPElites:
             for cs in cbin._feasible:
                 cs.c_fitness = sum([self.feasible_fitnesses[i].weight * cs.fitness[i] for i in range(len(cs.fitness))]) + (self.nsc - cs.ncv)
 
-    def reassign_all_content(self, **kwargs) -> None:
-        """Reassign all content to the solutions"""
-        for (_, _), cbin in np.ndenumerate(self.bins):
-            for pop in [cbin._feasible, cbin._infeasible]:
-                for cs in pop:
-                    cs._content = None
-                    cs = self.lsystem._set_structure(cs=self.lsystem._add_ll_strings(cs=cs),
-                                                     make_graph=False)
-                    if cs.is_feasible:
-                        if self.hull_builder is not None:
-                            self.hull_builder.add_external_hull(structure=cs.content)
-                        if kwargs.get('sym_axis', None) is not None:
-                            enforce_symmetry(structure=cs.content,
-                                             axis=kwargs.get('sym_axis', None),
-                                             upper=kwargs.get('sym_upper', None))
-
     def generate_initial_populations(self,
                                      pop_size: int = POP_SIZE,
                                      n_retries: int = N_RETRIES) -> None:

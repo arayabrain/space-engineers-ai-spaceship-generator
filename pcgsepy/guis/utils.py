@@ -165,6 +165,7 @@ class AppSettings:
         self.app_mode: AppMode = None
         self.consent_ok: bool = None
         self.emitter_steps: int = N_EMITTER_STEPS
+        self.symmetry: Optional[str] = None
 
     def initialize(self,
                    mapelites: MAPElites,

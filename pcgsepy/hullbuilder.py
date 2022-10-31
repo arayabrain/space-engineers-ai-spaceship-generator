@@ -3,6 +3,7 @@ from scipy.spatial import ConvexHull, Delaunay
 from scipy.ndimage import grey_erosion, binary_erosion, binary_dilation
 import numpy as np
 import numpy.typing as npt
+from pcgsepy.common.str_utils import get_matching_brackets
 from pcgsepy.common.vecs import Orientation, Vec, orientation_from_vec
 from pcgsepy.structure import Block, Structure, MountPoint
 from typing import List, Optional, Tuple
@@ -727,49 +728,60 @@ class HullBuilder:
         structure.sanify()
 
 
-def enforce_symmetry(structure: Structure,
-                     axis: str = 'z',
-                     upper: bool = True,
-                     pivot_blocktype: str = 'MyObjectBuilder_Cockpit_OpenCockpitLarge') -> None:
+def enforce_symmetry(string: str,
+                     axis: str = 'z') -> str:
     """Enforce a symmetry along an axis.
 
     Args:
-        structure (Structure): The structure.
+        string (str): The high-level string.
         axis (str, optional): The axis to enforce symmetry along to. Defaults to 'z'.
-        upper (bool, optional): Whether to keep the upper or the lower half of the structure. Defaults to True.
-        pivot_blocktype (str, optional): Block type used as pivot to determine the middle point. Defaults to 'MyObjectBuilder_Cockpit_OpenCockpitLarge'.
     """
-    def to_keep(v1: Vec,
-                v2: Vec,
-                axis: str,
-                upper: bool,
-                keep_equal: bool) -> bool:
-        if axis == 'x':
-            if upper:
-                return (v1.x > v2.x) or (keep_equal and v1.x == v2.x)
-            else:
-                return (v1.x < v2.x) or (keep_equal and v1.x == v2.x)
-        elif axis == 'y':
-            if upper:
-                return (v1.y > v2.y) or (keep_equal and v1.y == v2.y)
-            else:
-                return (v1.y < v2.y) or (keep_equal and v1.y == v2.y)
-        elif axis == 'z':
-            if upper:
-                return (v1.z > v2.z) or (keep_equal and v1.z == v2.z)
-            else:
-                return (v1.z < v2.z) or (keep_equal and v1.z == v2.z)
+    def __inverse(rot: str) -> str:
+        if rot.count('c') == 1:
+            return f"{rot[:rot.index('c')]}c{rot[rot.index('c'):]}"
+        elif rot.count('c') == 2:
+            return rot.replace('c', '', 1)
     
-    midpoint = [x for x in structure._blocks.values() if x.block_type == pivot_blocktype][0].position
-    structure._blocks = {k:v for k, v in structure._blocks.items() if to_keep(v1=v.position, v2=midpoint, axis=axis, upper=upper, keep_equal=True)}
-    half = [b for b in structure._blocks.values() if to_keep(v1=b.position, v2=midpoint, axis=axis, upper=upper, keep_equal=False)]
-    for b in half:
-        if axis == 'x':
-            b.position.x = midpoint.x - (b.position.x - midpoint.x)
-        elif axis == 'y':
-            b.position.y = midpoint.y - (b.position.y - midpoint.y)
-        elif axis == 'z':
-            b.position.z = midpoint.z - (b.position.z - midpoint.z)
-        structure.add_block(block=b,
-                            grid_position=b.position.as_tuple())
-    structure.sanify()
+    brackets = get_matching_brackets(string=string)
+    symm_points, to_remove = [], []
+    logging.getLogger('hullbuilder').debug(f'[{__name__}.enforce_symmetry] {string=}; {brackets=}')
+    
+    all_rotations = ['RotYcwX', 'RotYccwX', 'RotYcwZ', 'RotYccwZ']
+    
+    if axis == 'x':
+        rotations = ['RotYcwX', 'RotYccwX']
+    elif axis == 'z':
+        rotations = ['RotYcwZ', 'RotYccwZ']
+    else:
+        raise ValueError(f'Invalid rotation axis: {axis}.')
+    
+    for b0, b1 in brackets:
+        for rotation in rotations:
+            if string[b0 + 1:b0 + 1 + len(rotation)].startswith(rotation) or string[b0 + 1:b0 + 1 + len(rotation)].startswith(rotation):
+                symm_points.append(((b0, b1), rotation))
+    logging.getLogger('hullbuilder').debug(f'[{__name__}.enforce_symmetry] (pre) {symm_points=}')
+    
+    for i, ((b00, b01), rotation0) in enumerate(symm_points):
+        for j, ((b10, b11), rotation1) in enumerate(symm_points[i:]):
+            if j + i not in to_remove:
+                logging.getLogger('hullbuilder').debug(f'[{__name__}.enforce_symmetry] {((b00, b01), rotation0)}-{((b10, b11), rotation1)}; {b10 == b01 + 1=}; {rotation0 == __inverse(rotation1)=}; {b00 < b10 < b11 < b01=}')
+                if b10 == b01 + 1 and rotation0 == __inverse(rotation1):
+                    to_remove.append(i)
+                    to_remove.append(j + i)
+                    break
+                if b00 < b10 < b11 < b01:
+                    to_remove.append(j + i)
+    logging.getLogger('hullbuilder').debug(f'[{__name__}.enforce_symmetry] {to_remove=}')
+    
+    for i in reversed(sorted(to_remove)):
+        symm_points.pop(i)
+    logging.getLogger('hullbuilder').debug(f'[{__name__}.enforce_symmetry] (post) {symm_points=}')
+    
+    for (b0, b1), rotation in reversed(symm_points):
+        substring = string[b0:b1+1]
+        substring = substring.replace(rotation, __inverse(rotation))
+        string = string[:b1+1] + substring + string[b1+1:]
+    logging.getLogger('hullbuilder').debug(f'[{__name__}.enforce_symmetry] (post) {string=}')
+    
+    return string
+    
