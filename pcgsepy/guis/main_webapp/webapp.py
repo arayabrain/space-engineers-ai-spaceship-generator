@@ -7,7 +7,7 @@ import time
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 
 from pcgsepy.guis.voxel import VoxelData
 
@@ -1509,7 +1509,7 @@ def download_content(curr_content: Dict[str, Any],
     global download_semaphore
 
     def write_archive(bytes_io):
-        with ZipFile(bytes_io, mode="w") as zf:
+        with ZipFile(bytes_io, mode="w", compression=ZIP_DEFLATED) as zf:
             # with open('./assets/thumb.png', 'rb') as f:
             #     thumbnail_img = f.read()
             logging.getLogger('webapp').debug(msg=f'[{__name__}.write_archive] Started function, writing zip file...')
