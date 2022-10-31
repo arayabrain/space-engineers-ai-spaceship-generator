@@ -204,22 +204,22 @@ class HLtoMLTranslator:
             logging.getLogger('parser').debug(f'[{__name__}._add_intersections] {i+1}/{len(brackets)}; checking in substring={string[b[0]:b[1]+1]}')
             rot_scores = [len(string) for _ in Rotations]
             rots = [x.value for x in Rotations]
-            for i, r in enumerate(rots):
+            for j, r in enumerate(rots):
                 if string.find(r, b[0], b[1]) != -1:
-                    rot_scores[i] = string.index(r, b[0], b[1])
+                    rot_scores[j] = string.index(r, b[0], b[1])
             if max(rot_scores) != -1:
                 rot = rots[min(range(len(rot_scores)), key=lambda x : rot_scores[x])]
             logging.getLogger('parser').debug(f'[{__name__}._add_intersections] set {rot=}')
             # check for neighboring rotations
             has_neighbours = False
-            for t0, t1 in brackets[:i]:
-                if b[1] == t0 - 1:
+            for _, t1 in brackets[:i]:
+                if b[0] == t1 + 1:
                     has_neighbours = True
-                    if b[1] not in to_add.keys():
-                        to_add[t1] = [rot]
+                    if t1 not in to_add.keys():
+                        to_add[b[1]] = [rot]
                     else:
-                        to_add[t1] = [*to_add[b[1]], rot]
-                        to_add.pop(b[1])
+                        to_add[b[1]] = [*to_add[t1], rot]
+                        to_add.pop(t1)
                     break
             if not has_neighbours:
                 if b[1] not in to_add:
