@@ -335,7 +335,7 @@ class HullBuilder:
             new_idx = Vec.from_tuple(idx).sum(direction.value).as_tuple()
             if new_idx in self._blocks_set.keys():
                 adjs.append(new_idx)
-        return adjs
+        return adjs          
     
     def _get_neighbourhood(self,
                            idx: Vec,
@@ -662,15 +662,13 @@ class HullBuilder:
         logging.getLogger('hullbuilder').debug(f'[{__name__}.add_external_hull] Applied erosion.')
                 
         # add blocks to self._blocks_set
-        for i in range(hull.shape[0]):
-                for j in range(hull.shape[1]):
-                    for k in range(hull.shape[2]):
-                        if hull[i, j, k] != BlockValue.AIR_BLOCK:
-                            self._add_block(block_type=self.base_block,
-                                            idx=(i, j, k),
-                                            pos=Vec.v3i(i, j, k).scale(v=structure.grid_size),
-                                            orientation_forward=Orientation.FORWARD,
-                                            orientation_up=Orientation.UP)
+        for (i, j, k), _ in np.ndenumerate(hull):
+            if hull[i, j, k] != BlockValue.AIR_BLOCK:
+                self._add_block(block_type=self.base_block,
+                                idx=(i, j, k),
+                                pos=Vec.v3i(i, j, k).scale(v=structure.grid_size),
+                                orientation_forward=Orientation.FORWARD,
+                                orientation_up=Orientation.UP)
         
         # remove all blocks that obstruct target block type
         hull = self._remove_obstructing_blocks(hull=hull,
@@ -683,6 +681,17 @@ class HullBuilder:
                                             structure=structure)
         logging.getLogger('hullbuilder').debug(f'[{__name__}.add_external_hull] Removed non-connected blocks.')
 
+        # replace structure's blocks if adjacent to hull
+        for idx in self._blocks_set.keys():
+            for direction in _orientations:
+                new_idx = Vec.from_tuple(idx).sum(direction.value).scale(structure.grid_size).as_tuple()
+                if new_idx in structure._blocks.keys():
+                    curr_block = structure._blocks[new_idx]
+                    structure._blocks[new_idx] = Block(block_type=block_value_types[BlockValue.BASE_BLOCK],
+                                                       orientation_forward=orientation_from_vec(curr_block.orientation_forward),
+                                                       orientation_up=orientation_from_vec(curr_block.orientation_up))
+        logging.getLogger('hullbuilder').debug(f'[{__name__}.add_external_hull] Replaced existing adjacent structure blocks.')
+        
         # apply iterative smoothing algorithm
         if self.apply_smoothing:
             logging.getLogger('hullbuilder').debug(f'[{__name__}.add_external_hull] Applying smoothing...')
@@ -745,8 +754,6 @@ def enforce_symmetry(string: str,
     brackets = get_matching_brackets(string=string)
     symm_points, to_remove = [], []
     logging.getLogger('hullbuilder').debug(f'[{__name__}.enforce_symmetry] {string=}; {brackets=}')
-    
-    all_rotations = ['RotYcwX', 'RotYccwX', 'RotYcwZ', 'RotYccwZ']
     
     if axis == 'x':
         rotations = ['RotYcwX', 'RotYccwX']
