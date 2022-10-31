@@ -599,7 +599,7 @@ class HullBuilder:
             for other_block in neighbourhood:                
                 oo = (orientation_from_vec(other_block.orientation_forward),
                         orientation_from_vec(other_block.orientation_up))
-                priority_scores[_valid_orientations.index(oo)] = priority_scores[_valid_orientations.index(oo)] + 1
+                priority_scores[_valid_orientations.index(oo)] = priority_scores[_valid_orientations.index(oo)] + (1 if other_block.block_type == block_type else 0)
             idxs = [x for _, x in sorted(zip(priority_scores, np.arange(len(_valid_orientations)).tolist()))]
             priority_orientations = [_valid_orientations[i] for i in idxs]
             for possible_type in _smoothing_order[block_type]:
@@ -700,7 +700,8 @@ class HullBuilder:
             my_arr[np.nonzero(hull)] = BlockValue.BASE_BLOCK
             within_arr = binary_erosion(my_arr)
             my_arr[np.where(within_arr == BlockValue.AIR_BLOCK)] = BlockValue.AIR_BLOCK
-            idxs = self._get_outer_indices(arr=my_arr, edges_only=True)
+            # idxs = self._get_outer_indices(arr=my_arr, edges_only=True)
+            idxs = self._get_outer_indices(arr=my_arr)
             ii, jj, kk = idxs
             curr_checking = [(i, j, k) for (i, j, k) in zip(ii, jj, kk)]
             while len(curr_checking) != 0:
