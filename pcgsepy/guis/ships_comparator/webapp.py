@@ -182,8 +182,7 @@ def parse_contents(filename: str,
         Tuple[int, int, str]: The RNG seed, the number of the experiment, and the content string.
     """
     if filename.endswith('.zip'):
-        raise ValueError('Do not upload the .zip file; only upload the spaceship file (`spaceship_{YOUR_ID}_exp{N}`).')
-    logging.getLogger('webapp').error(msg=f'[{__name__}.parse_contents] {filename=}')
+        raise ValueError('Do not upload the `.zip` file; only upload the spaceship file (`spaceship_{YOUR_ID}_exp{N}`).')
     _, rngseed, exp_n = filename.split('_')
     rngseed = int(rngseed)
     exp_n = int(exp_n.replace('exp', ''))
