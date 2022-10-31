@@ -56,6 +56,7 @@ sysout_handler = logging.StreamHandler(sys.stdout)
 sysout_handler.addFilter(lambda record: record.levelno >= (logging.DEBUG if args.debug else logging.INFO))
 
 logging.basicConfig(level=logging.WARNING,
+                    format='[%(asctime)s] %(message)s',
                     handlers=[
                         sysout_handler,
                         file_handler

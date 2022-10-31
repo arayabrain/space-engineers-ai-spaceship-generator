@@ -1514,22 +1514,27 @@ def download_content(curr_content: Dict[str, Any],
         with ZipFile(bytes_io, mode="w") as zf:
             # with open('./assets/thumb.png', 'rb') as f:
             #     thumbnail_img = f.read()
+            logging.getLogger('webapp').debug(msg=f'[{__name__}.write_archive] Started function, writing zip file...')
             content_fig = go.Figure(data=curr_content['data'],
                                     layout=curr_content['layout'])
             content_fig.update_layout(scene_camera=curr_camera.get('scene.camera', None))
             thumbnail_img = content_fig.to_image(format="png")
             zf.writestr('thumb.png', thumbnail_img)
+            logging.getLogger('webapp').debug(msg=f'[{__name__}.write_archive] Loaded and saved thumbnail.')
             elite = get_elite(mapelites=app_settings.current_mapelites,
                               bin_idx=_switch(
                                   [app_settings.selected_bins[-1]])[0],
                               pop='feasible')
+            logging.getLogger('webapp').debug(msg=f'[{__name__}.write_archive] Loaded elite solution {elite=}.')
             tmp = CandidateSolution(string=elite.string)
             tmp.ll_string = elite.ll_string
             tmp.base_color = elite.base_color
             app_settings.current_mapelites.lsystem._set_structure(cs=tmp)
+            logging.getLogger('webapp').debug(msg=f'[{__name__}.write_archive] Copied threadsafe elite solution, starting hullbuilding...')
             hullbuilder = HullBuilder(erosion_type=app_settings.current_mapelites.hull_builder.erosion_type,
                                       apply_erosion=True,
                                       apply_smoothing=True)
+            logging.getLogger('webapp').debug(msg=f'[{__name__}.write_archive] Added external hull, unlocking semaphore...')
             download_semaphore.unlock()
             download_semaphore._running = 'YES'
             logging.getLogger('webapp').debug(
@@ -1540,12 +1545,14 @@ def download_content(curr_content: Dict[str, Any],
                 f'[{__name__}.write_archive] {tmp.string=}; {tmp.content=}; {tmp.base_color=}')
             zf.writestr('bp.sbc', convert_structure_to_xml(structure=tmp.content,
                         name=f'My Spaceship ({app_settings.rngseed}) (exp{app_settings.exp_n})'))
+            logging.getLogger('webapp').debug(msg=f'[{__name__}.write_archive] Created game blueprint, saving spaceship string representation...')
             content_properties = {
                 'string': tmp.string,
                 'base_color': tmp.base_color.as_dict()
             }
             zf.writestr(f'spaceship_{app_settings.rngseed}_exp{app_settings.exp_n}', json.dumps(
                 content_properties))
+            logging.getLogger('webapp').debug(msg=f'[{__name__}.write_archive] Zip file completed and ready to be downloaded.')
             download_semaphore._running = 'NO'
 
     if app_settings.selected_bins:
