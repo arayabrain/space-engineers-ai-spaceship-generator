@@ -181,6 +181,9 @@ def parse_contents(filename: str,
     Returns:
         Tuple[int, int, str]: The RNG seed, the number of the experiment, and the content string.
     """
+    if filename.endswith('.zip'):
+        raise ValueError('Do not upload the .zip file; only upload the spaceship file (`spaceship_{YOUR_ID}_exp{N}`).')
+    logging.getLogger('webapp').error(msg=f'[{__name__}.parse_contents] {filename=}')
     _, rngseed, exp_n = filename.split('_')
     rngseed = int(rngseed)
     exp_n = int(exp_n.replace('exp', ''))
@@ -311,6 +314,18 @@ def set_app_layout():
         backdrop=True,
         is_open=False,
         scrollable=True)
+    exception_modal = dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle("❌ Error ❌"),
+                        style={'flex-direction': 'column-reverse'}, 
+                        close_button=False),
+        dbc.ModalBody(dcc.Markdown('',
+                                   id='exception-msg'))
+    ],
+        id='exception-modal',
+        centered=True,
+        backdrop=True,
+        is_open=False,
+        scrollable=True)
     ok_modal = dbc.Modal([
         dbc.ModalHeader(dbc.ModalTitle("✔️ Success ✔️"),
                         style={'flex-direction': 'column-reverse'}, 
@@ -380,6 +395,7 @@ def set_app_layout():
         children=[
             info_modal,
             err_modal,
+            exception_modal,
             ok_modal,
             header,
             html.Br(),
@@ -514,6 +530,8 @@ def download_scores(n_clicks: int,
     Output('upload-data', 'contents'),
     Output('upload-data', 'filename'),
     Output('save-btn', 'disabled'),
+    Output('exception-modal', 'is_open'),
+    Output('exception-msg', 'children'),
 
     Input('upload-data', 'contents'),
 
@@ -538,7 +556,9 @@ def general_callback(list_of_contents: List[str],
     global base_color
     
     savebtn_disabled = True
-
+    show_exception = False
+    exception_msg = ''
+    
     ctx = dash.callback_context
 
     if not ctx.triggered:
@@ -549,15 +569,19 @@ def general_callback(list_of_contents: List[str],
     logging.getLogger('webapp').debug(msg=f'[{__name__}.general_callback] {event_trig=}')
     
     if event_trig == 'upload-data':
-        children = [parse_contents(n, c) for c, n in zip(list_of_contents, list_of_names)]
-        progress = 0
-        for child in children:
-            progress += 100 / len(children)
-            rng_seed, exp_n, cs_string, cs_base_color = child
-            base_color = cs_base_color
-            cs = CandidateSolution(string=cs_string)
-            spaceship_plot[exp_n - 1] = get_content_plot(spaceship=cs)
-        progress = -1
-        savebtn_disabled = False
+        try:
+            children = [parse_contents(n, c) for c, n in zip(list_of_contents, list_of_names)]
+            progress = 0
+            for child in children:
+                progress += 100 / len(children)
+                rng_seed, exp_n, cs_string, cs_base_color = child
+                base_color = cs_base_color
+                cs = CandidateSolution(string=cs_string)
+                spaceship_plot[exp_n - 1] = get_content_plot(spaceship=cs)
+            progress = -1
+            savebtn_disabled = False
+        except ValueError as e:
+            show_exception = True
+            exception_msg = str(e)
 
-    return spaceship_plot, '', '', savebtn_disabled
+    return spaceship_plot, '', '', savebtn_disabled, show_exception, exception_msg
