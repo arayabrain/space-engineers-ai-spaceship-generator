@@ -8,7 +8,6 @@ from pcgsepy.structure import Block, Structure, MountPoint
 from typing import List, Optional, Tuple
 from itertools import product
 from pcgsepy.common.vecs import rotate, get_rotation_matrix
-from scipy.spatial.transform import Rotation
 from enum import IntEnum
 
 
@@ -31,8 +30,23 @@ block_value_types = {
     BlockValue.CORNERSQUAREINV_BLOCK: 'MyObjectBuilder_CubeBlock_LargeBlockArmorCornerSquareInverted',
 }
 
+_orientations = [Orientation.FORWARD, Orientation.BACKWARD, Orientation.UP, Orientation.DOWN, Orientation.LEFT, Orientation.RIGHT]
+_valid_orientations = [(of, ou) for (of, ou) in list(product(_orientations, _orientations)) if of != ou and of != orientation_from_vec(ou.value.opposite())]
+# _smoothing_order = {
+#     BlockValue.BASE_BLOCK: [BlockValue.SLOPE_BLOCK, BlockValue.CORNERSQUARE_BLOCK, BlockValue.CORNER_BLOCK],
+#     BlockValue.CORNERSQUAREINV_BLOCK: [],
+#     BlockValue.CORNERINV_BLOCK: [],
+#     BlockValue.SLOPE_BLOCK: [BlockValue.CORNERSQUARE_BLOCK, BlockValue.CORNER_BLOCK]
+#     }
+_smoothing_order = {
+    BlockValue.BASE_BLOCK: [BlockValue.SLOPE_BLOCK],
+    BlockValue.SLOPE_BLOCK: [BlockValue.CORNER_BLOCK]
+    }
+
 
 class HullBuilder:
+    __slots__ = ['available_erosion_types', 'erosion_type', 'erosion', 'footprint', 'iterations', 'apply_erosion', 'apply_smoothing', 'base_block', 'obstruction_targets', '_blocks_set']
+    
     def __init__(self,
                  erosion_type: str,
                  apply_erosion: bool,
@@ -68,19 +82,6 @@ class HullBuilder:
         self.base_block = 'MyObjectBuilder_CubeBlock_LargeBlockArmorBlock'
         self.obstruction_targets = ['window', 'thrust']
         self._blocks_set = {}
-        
-        self._orientations = [Orientation.FORWARD, Orientation.BACKWARD, Orientation.UP, Orientation.DOWN, Orientation.LEFT, Orientation.RIGHT]
-        self._valid_orientations = [(of, ou) for (of, ou) in list(product(self._orientations, self._orientations)) if of != ou and of != orientation_from_vec(ou.value.opposite())]
-        # self._smoothing_order = {
-        #     BlockValue.BASE_BLOCK: [BlockValue.SLOPE_BLOCK, BlockValue.CORNERSQUARE_BLOCK, BlockValue.CORNER_BLOCK],
-        #     BlockValue.CORNERSQUAREINV_BLOCK: [],
-        #     BlockValue.CORNERINV_BLOCK: [],
-        #     BlockValue.SLOPE_BLOCK: [BlockValue.CORNERSQUARE_BLOCK, BlockValue.CORNER_BLOCK]
-        #     }
-        self._smoothing_order = {
-            BlockValue.BASE_BLOCK: [BlockValue.SLOPE_BLOCK],
-            BlockValue.SLOPE_BLOCK: [BlockValue.CORNER_BLOCK]
-            }
     
     def _get_convex_hull(self,
                          arr: np.ndarray) -> np.ndarray:
@@ -229,7 +230,7 @@ class HullBuilder:
         for (i, j, k) in list(self._blocks_set.keys()):
             if hull[i, j, k] != BlockValue.AIR_BLOCK:  # skip removed blocks
                 loc = Vec.from_tuple((scale * i, scale * j, scale * k))
-                for direction in self._orientations:
+                for direction in _orientations:
                     ntt = self._next_to_target(loc=loc,
                                                structure=structure,
                                                direction=direction.value.scale(scale))
@@ -274,7 +275,7 @@ class HullBuilder:
             for block_position in to_check:
                 if mask[block_position] == BlockValue.BASE_BLOCK:
                     connected_blocks.add(block_position)
-                    for direction in self._orientations:
+                    for direction in _orientations:
                         dpos = Vec.from_tuple(block_position).sum(direction.value)
                         if 0 <= dpos.x < structure_shape.x and 0 <= dpos.y < structure_shape.y and 0 <= dpos.z < structure_shape.z:
                             to_add.add(dpos.as_tuple())
@@ -305,7 +306,7 @@ class HullBuilder:
         n_neighbours = np.zeros_like(arr)
         for idx, _ in np.ndenumerate(arr):
             if self._blocks_set.get(idx, None):
-                for offset in self._orientations:
+                for offset in _orientations:
                     pos = Vec.from_tuple(idx).sum(offset.value).as_tuple()
                     if self._blocks_set.get(pos, None):
                         n_neighbours[idx] = n_neighbours[idx] + 1
@@ -329,7 +330,7 @@ class HullBuilder:
             List[Tuple[int, int, int]]: The list of adjacent indices.
         """
         adjs = []
-        for direction in self._orientations:
+        for direction in _orientations:
             new_idx = Vec.from_tuple(idx).sum(direction.value).as_tuple()
             if new_idx in self._blocks_set.keys():
                 adjs.append(new_idx)
@@ -553,7 +554,7 @@ class HullBuilder:
         """
         valid = True
         area_err = 0
-        for direction in self._orientations:
+        for direction in _orientations:
             res, delta_area = self._check_valid_placement(idx=idx,
                                                           block=block,
                                                           direction=direction,
@@ -589,19 +590,19 @@ class HullBuilder:
         if not valid:
             return None, BlockValue.AIR_BLOCK
         # replacement check   
-        elif block_type in self._smoothing_order.keys():
+        elif block_type in _smoothing_order.keys():
             # give priority to surrounding blocks orientations
             neighbourhood = self._get_neighbourhood(idx=idx,
                                                     structure=structure)
-            priority_scores = np.zeros(shape=len(self._valid_orientations), dtype=np.int8).tolist()
+            priority_scores = np.zeros(shape=len(_valid_orientations), dtype=np.int8).tolist()
             for other_block in neighbourhood:                
                 oo = (orientation_from_vec(other_block.orientation_forward),
                         orientation_from_vec(other_block.orientation_up))
-                priority_scores[self._valid_orientations.index(oo)] = priority_scores[self._valid_orientations.index(oo)] + 1
-            idxs = [x for _, x in sorted(zip(priority_scores, np.arange(len(self._valid_orientations)).tolist()))]
-            priority_orientations = [self._valid_orientations[i] for i in idxs]
-            for possible_type in self._smoothing_order[block_type]:
-                orientation_scores, valids = np.zeros(shape=len(self._valid_orientations), dtype=np.float32), np.zeros(shape=len(self._valid_orientations), dtype=np.bool8)
+                priority_scores[_valid_orientations.index(oo)] = priority_scores[_valid_orientations.index(oo)] + 1
+            idxs = [x for _, x in sorted(zip(priority_scores, np.arange(len(_valid_orientations)).tolist()))]
+            priority_orientations = [_valid_orientations[i] for i in idxs]
+            for possible_type in _smoothing_order[block_type]:
+                orientation_scores, valids = np.zeros(shape=len(_valid_orientations), dtype=np.float32), np.zeros(shape=len(_valid_orientations), dtype=np.bool8)
                 # try replacement
                 for i, (of, ou) in enumerate(priority_orientations):
                     possible_block = Block(block_type=block_value_types[possible_type],

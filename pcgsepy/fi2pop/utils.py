@@ -27,6 +27,7 @@ def subdivide_solutions(lcs: List[CandidateSolution],
     logging.getLogger('fi2pop').debug(f'[{__name__}.subdivide_solutions] Initial {len(lcs)=}.')
     for i, cs in enumerate(lcs):
         try:
+            _ = cs.content.as_array
             for t in [ConstraintTime.DURING, ConstraintTime.END]:
                 sat = lsystem.hl_solver._check_constraints(cs=cs,
                                                            when=t,
@@ -45,8 +46,8 @@ def subdivide_solutions(lcs: List[CandidateSolution],
         except IntersectionException:
             logging.getLogger('fi2pop').debug(f'[{__name__}.subdivide_solutions] {cs.string} removed: intersection.')
             pass
-        except MemoryError:
-            logging.getLogger('fi2pop').debug(f'[{__name__}.subdivide_solutions] {cs.string} removed: too large.')
+        except (MemoryError, np.core._exceptions._ArrayMemoryError) as e:
+            logging.getLogger('fi2pop').debug(f'[{__name__}.subdivide_solutions] {cs.string} removed: too large ({type(e).__name__}).')
             removable.append(i)
     for i in list(reversed(removable)):
         lcs.pop(i)
@@ -116,13 +117,15 @@ def create_new_pool(population: List[CandidateSolution],
             logging.getLogger('fi2pop').debug(f'[{__name__}.create_new_pool] xover1p: Parent: {p.string=},{p.base_color}; Offsprings: {o1.string=},{o1.base_color}; {o2.string=},{o2.base_color}')
             childs = [o1, o2]
         for o in childs:
+            logging.getLogger('fi2pop').debug(f'[{__name__}.create_new_pool] xover1p: {len(o.string)=}; {MAX_STRING_LEN=} {len(o.string) <= MAX_STRING_LEN=}')
             if MAX_STRING_LEN == -1 or len(o.string) <= MAX_STRING_LEN:
                 # mutation
                 try:
                     mutate(cs=o, n_iteration=generation)
                 except EvoException as e:
                     logging.getLogger('fi2pop').error(f'[{__name__}.create_new_pool] xover1p: Parent: {e=}')
-                if o not in pool:
+                logging.getLogger('fi2pop').debug(f'[{__name__}.create_new_pool] xover1p: {o not in pool=}; {len(o.string) <= MAX_STRING_LEN=}')
+                if o not in pool and (MAX_STRING_LEN == -1 or len(o.string) <= MAX_STRING_LEN):
                     pool.append(o)
         if len(pool) == prev_len_pool:
             patience -= 1

@@ -214,9 +214,9 @@ class Structure:
 
         self._blocks: Dict[Tuple(int, int, int), Block] = {}
         self._has_intersections: bool = None
-        self._scaled_arr: npt.NDArray[np.uint32] = None
+        self._scaled_arr: npt.NDArray[np.uint16] = None
         self._air_gridmask: npt.NDArray[np.bool8] = None
-        self._arr: npt.NDArray[np.uint32] = None
+        self._arr: npt.NDArray[np.uint16] = None
 
     def __repr__(self) -> str:
         return f'{self.grid_size}x Structure with {len(self._blocks.keys())} blocks'
@@ -288,15 +288,15 @@ class Structure:
         return min_x, min_y, min_z
 
     @property
-    def as_array(self) -> npt.NDArray[np.uint32]:
+    def as_array(self) -> npt.NDArray[np.uint16]:
         """Convert the structure to its equivalent NumPy array.
         Each point in the XYZ matrix represents the block type.
 
         Returns:
-            npt.NDArray[np.uint32]: The 3D NumPy array.
+            npt.NDArray[np.uint16]: The 3D NumPy array.
         """
         if self._scaled_arr is None:
-            self._scaled_arr = np.zeros(shape=Vec.from_tuple(self._max_dims).add(v=self.grid_size).as_tuple(), dtype=np.uint32)
+            self._scaled_arr = np.zeros(shape=Vec.from_tuple(self._max_dims).add(v=self.grid_size).as_tuple(), dtype=np.uint16)
             for (i, j, k), block in self._blocks.items():
                 r = block.scaled_size
                 if np.sum(self._scaled_arr[i:i + r.x, j:j + r.y, k:k + r.z]) != 0:
@@ -305,15 +305,15 @@ class Structure:
         return self._scaled_arr
 
     @property
-    def as_grid_array(self) -> npt.NDArray[np.uint32]:
+    def as_grid_array(self) -> npt.NDArray[np.uint16]:
         """Convert the structure to the grid-sized array.
         Each point in the XYZ matrix represents the block type.
 
         Returns:
-            npt.NDArray[np.uint32]: The 3D NumPy grid-sized array.
+            npt.NDArray[np.uint16]: The 3D NumPy grid-sized array.
         """
         if self._arr is None:
-            self._arr = np.zeros(shape=Vec.from_tuple(self._max_dims).scale(v=1 / self.grid_size).to_veci().add(v=1).as_tuple(), dtype=np.uint32)
+            self._arr = np.zeros(shape=Vec.from_tuple(self._max_dims).scale(v=1 / self.grid_size).to_veci().add(v=1).as_tuple(), dtype=np.uint16)
             for r, block in self._blocks.items():
                 r = Vec.from_tuple(r).scale(v=1 / self.grid_size).to_veci().as_tuple()
                 if np.sum(self._arr[r]) != 0:
