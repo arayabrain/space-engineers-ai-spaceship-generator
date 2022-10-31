@@ -2316,7 +2316,6 @@ def __reset(**kwargs: Dict[str, Any]) -> Dict[str, Any]:
 
     logging.getLogger('webapp').info(
         msg='Started resetting all bins (this may take a while)...')
-    app_settings.current_mapelites.hull_builder.apply_smoothing = False
     app_settings.current_mapelites.reset()
     logging.getLogger('webapp').info(msg='Reset completed.')
     app_settings.gen_counter = 0
