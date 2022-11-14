@@ -290,6 +290,9 @@ class MAPElites:
             threadsafe_hullbuilder.add_external_hull(structure=cs.content)
         # set the color
         cs.content.set_color(color=cs.base_color)
+        # rotate according to tileset orientation
+        # TODO: this is hardcoded, but should be read from a config file
+        cs.content.rotate(along=1, k=3)
         return cs
     
     def _set_behavior_descriptors(self,
