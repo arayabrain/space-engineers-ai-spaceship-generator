@@ -53,6 +53,8 @@ The user study is planned to run from the duration of November 2022.
 ## Development
 This project requires Python 3. The `PCGSEPy` library (including its requirements) can be installed by running `pip install -e .`. To use PyTorch in the library (required for some research experiments, but not the apps), first set the `use_torch` flag in `configs.ini`.
 
+We recommend creating a conda environment for the application. Make sure to install [orca](https://github.com/plotly/orca) via `conda install -c plotly plotly-orca` in case the spaceship download hangs (spinner on the top right remains visible for over 30 seconds to a minute).
+
 ### Building the apps
 The apps can be built using the provided `.py` files placed in the `user-study` folder. The executable files will be created in the `user-study\dist` folder.
 
