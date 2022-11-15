@@ -91,4 +91,4 @@ Starting from an initial population of vessels, you can select a spaceship to "e
 
 > [Gallotta, R., Arulkumaran, K., & Soros, L. B. (2022). Surrogate Infeasible Fitness Acquirement FI-2Pop for Procedural Content Generation. In _IEEE Conference on Games_.](https://ieeexplore.ieee.org/document/9893592)
 
-> [Gallotta, R., Arulkumaran, K., & Soros, L. B. (2022). Preference-Learning Emitters for Mixed-Initiative Quality-Diversity Algorithms. _arXiv preprint arXiv:2210.13839._]( https://arxiv.org/abs/2210.13839)
+> [Gallotta, R., Arulkumaran, K., & Soros, L. B. (2022). Preference-Learning Emitters for Mixed-Initiative Quality-Diversity Algorithms. _arXiv preprint arXiv:2210.13839_.]( https://arxiv.org/abs/2210.13839)
