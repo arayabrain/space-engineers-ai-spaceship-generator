@@ -428,6 +428,7 @@ class Structure:
         self._blocks = updated_blocks
         self._scaled_arr = None
         self._arr = None
+        self._air_gridmask = None
 
     def update(self, origin: Vec,
                orientation_forward: Vec,
@@ -445,7 +446,39 @@ class Structure:
         self.orientation_up = orientation_up
         # update all blocks accordingly
         self.sanify()
+    
+    def rotate(self,
+               along: int,
+               k: int) -> None:
+        """Rotate the structure along an axis _k_ times ccw.
 
+        Args:
+            along (int): The axis to rotate along (0, 1, 2).
+            k (int): How many times to rotate for in the ccw direction.
+        """
+        rotated_blocks = {}
+        along = along % 3
+        k = k % 4
+        if k > 0:
+            for idx, block in self._blocks.items():
+                x, y, z = idx
+                if along == 0:
+                    if k == 1: p1 = Vec(x=x, y=-z, z=-y)
+                    elif k == 2: p1 = Vec(x=x, y=-y, z=z)
+                    elif k == 3: p1 = Vec(x=x, y=-z, z=y)
+                elif along == 1:
+                    if k == 1: p1 = Vec(x=z, y=y, z=x)
+                    elif k == 2: p1 = Vec(x=-x, y=y, z=-z)
+                    elif k == 3: p1 = Vec(x=-z, y=y, z=-x)
+                elif along == 2:
+                    if k == 1: p1 = Vec(x=y, y=-x, z=z)
+                    elif k == 2: p1 = Vec(x=-x, y=-y, z=z)
+                    elif k == 3: p1 = Vec(x=-y, y=x, z=z)
+                rot_idx = p1.as_tuple()
+                rotated_blocks[rot_idx] = block
+            self._blocks = rotated_blocks
+            self.sanify()
+    
     def get_all_blocks(self,
                        to_place: bool = True,
                        scaled: bool = False) -> List[Block]:

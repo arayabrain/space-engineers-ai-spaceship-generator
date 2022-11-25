@@ -1515,8 +1515,11 @@ def download_content(curr_content: Dict[str, Any],
             logging.getLogger('webapp').debug(msg=f'[{__name__}.write_archive] Started function, writing zip file...')
             content_fig = go.Figure(data=curr_content['data'],
                                     layout=curr_content['layout'])
+            logging.getLogger('webapp').debug(msg=f'[{__name__}.write_archive] Created thumbnail from plot...')
             content_fig.update_layout(scene_camera=curr_camera.get('scene.camera', None))
+            logging.getLogger('webapp').debug(msg=f'[{__name__}.write_archive] Updated thumbnail camera...')
             thumbnail_img = content_fig.to_image(format="png")
+            logging.getLogger('webapp').debug(msg=f'[{__name__}.write_archive] Converted to image...')
             zf.writestr('thumb.png', thumbnail_img)
             logging.getLogger('webapp').debug(msg=f'[{__name__}.write_archive] Loaded and saved thumbnail.')
             elite = get_elite(mapelites=app_settings.current_mapelites,

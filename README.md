@@ -53,6 +53,8 @@ The user study is planned to run from the duration of November 2022.
 ## Development
 This project requires Python 3. The `PCGSEPy` library (including its requirements) can be installed by running `pip install -e .`. To use PyTorch in the library (required for some research experiments, but not the apps), first set the `use_torch` flag in `configs.ini`.
 
+We recommend creating a conda environment for the application. Make sure to install [orca](https://github.com/plotly/orca) via `conda install -c plotly plotly-orca` in case the spaceship download hangs (spinner on the top right remains visible for over 30 seconds to a minute).
+
 ### Building the apps
 The apps can be built using the provided `.py` files placed in the `user-study` folder. The executable files will be created in the `user-study\dist` folder.
 
@@ -91,4 +93,4 @@ Starting from an initial population of vessels, you can select a spaceship to "e
 
 > [Gallotta, R., Arulkumaran, K., & Soros, L. B. (2022). Surrogate Infeasible Fitness Acquirement FI-2Pop for Procedural Content Generation. In _IEEE Conference on Games_.](https://ieeexplore.ieee.org/document/9893592)
 
-> [Gallotta, R., Arulkumaran, K., & Soros, L. B. (2022). Preference-Learning Emitters for Mixed-Initiative Quality-Diversity Algorithms. _arXiv preprint arXiv:2210.13839._]( https://arxiv.org/abs/2210.13839)
+> [Gallotta, R., Arulkumaran, K., & Soros, L. B. (2022). Preference-Learning Emitters for Mixed-Initiative Quality-Diversity Algorithms. _arXiv preprint arXiv:2210.13839_.]( https://arxiv.org/abs/2210.13839)
