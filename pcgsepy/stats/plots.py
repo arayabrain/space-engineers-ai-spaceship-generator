@@ -24,6 +24,7 @@ def plot_rankings(samples: List[NDArray],
     df = pd.DataFrame(data=data,
                       index=names)
     ax = df.plot.barh()
+    plt.legend(bbox_to_anchor=(1,1), loc="upper left")
     plt.title(title)
     if filename:
         plt.savefig(filename)
